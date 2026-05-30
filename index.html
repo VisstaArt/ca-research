@@ -190,9 +190,9 @@ function buildSystem(brief, lang) {
 
 PROJECT BRIEF (00_Project_Brief):
 ${Object.entries(brief).filter(([,v])=>v).map(([k,v])=>{
-  if (k==='geoCompany') return `- Company Geography (all markets the company operates in): ${v}`;
-  if (k==='geoMarket') return `- Research Market (THIS research is focused ONLY on this market): ${v}`;
-  return `- ${k}: ${v}`;
+  if (k==='geoCompany') return '- Company Geography (all markets the company operates in): ' + v;
+  if (k==='geoMarket') return '- Research Market (THIS research is focused ONLY on this market): ' + v;
+  return '- ' + k + ': ' + v;
 }).join('\n')}
 
 GEOGRAPHY RULES — CRITICAL:
@@ -1025,8 +1025,8 @@ export default function App() {
           ].map(f => (
             <div key={f.k}>
               <label style={{display:'block',fontSize:11,color:'#666',marginBottom:3}}>{f.l}</label>
-              <input value={brief[f.k]} onChange={e=>setBrief(p=>({...p,[f.k]:e.target.value}))} placeholder={f.ph}
-                style={f.k==='geoMarket'?{borderColor:'#378ADD'}:undefined}/>
+              <input value={brief[f.k]||''} onChange={e=>setBrief(p=>({...p,[f.k]:e.target.value}))} placeholder={f.ph}
+                style={f.k==='geoMarket'?{borderColor:'#378ADD',width:'100%'}:{width:'100%'}}/>
               {f.k==='geoCompany' && <p style={{fontSize:10,color:'#999',marginTop:2}}>Все рынки где работает компания — контекст масштаба бизнеса</p>}
               {f.k==='geoMarket' && <p style={{fontSize:10,color:'#0C447C',marginTop:2}}>★ Именно по этому рынку агент ищет статистику, конкурентов и семантику</p>}
             </div>
@@ -1127,7 +1127,7 @@ export default function App() {
           })}
         </div>
         <p style={{fontSize:11,color:'#888'}}>
-          {isRun ? `${doneIds.length+1}/${allMods.length} — ${curModData?.title}` : `${doneIds.length}/${allMods.length} modules done${pending.length?` · ${pending.length} pending`:''}`}
+          {isRun ? (doneIds.length+1)+'/'+(allMods.length)+' — '+(curModData?.title||'') : doneIds.length+'/'+(allMods.length)+' modules done'+(pending.length?' · '+pending.length+' pending':'') }
         </p>
       </div>
 
