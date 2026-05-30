@@ -8,27 +8,22 @@
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 <style>
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f5f5f5; color: #111; min-height: 100vh; }
-  #root { max-width: 760px; margin: 0 auto; padding: 2rem 1rem; }
-  input, textarea, select { font-family: inherit; font-size: 13px; border: 1px solid #ddd; border-radius: 8px; padding: 8px 11px; background: #fff; color: #111; outline: none; width: 100%; transition: border 0.15s; }
-  input:focus, textarea:focus { border-color: #378ADD; }
-  button { font-family: inherit; font-size: 13px; border: 1px solid #ddd; border-radius: 8px; padding: 7px 14px; background: #fff; color: #111; cursor: pointer; transition: background 0.12s, border 0.12s; }
-  button:hover:not(:disabled) { background: #f0f0f0; border-color: #bbb; }
-  button:disabled { opacity: 0.4; cursor: not-allowed; }
-  .card { background: #fff; border: 1px solid #e5e5e5; border-radius: 12px; padding: 1.25rem; margin-bottom: 1rem; }
-  label { display: block; font-size: 11px; color: #666; margin-bottom: 3px; }
-  h2 { font-size: 20px; font-weight: 500; }
-  h3 { font-size: 14px; font-weight: 500; }
-  table { border-collapse: collapse; width: 100%; font-size: 12px; }
-  th { padding: 5px 9px; background: #f8f8f8; border: 1px solid #eee; text-align: left; font-weight: 500; white-space: nowrap; }
-  td { padding: 4px 9px; border: 1px solid #eee; }
-  tr:nth-child(even) td { background: #fafafa; }
-  .tag { font-size: 10px; padding: 2px 7px; border-radius: 4px; border: 1px solid; display: inline-block; }
-  .btn-primary { background: #111; color: #fff; border-color: #111; font-weight: 500; }
-  .btn-primary:hover:not(:disabled) { background: #333; border-color: #333; }
-  .progress-bar { display: flex; gap: 3px; margin-bottom: 5px; }
-  .progress-seg { flex: 1; height: 3px; border-radius: 2px; background: #eee; transition: background 0.3s; }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f5f5f5; color: #111; min-height: 100vh; }
+#root { max-width: 760px; margin: 0 auto; padding: 2rem 1rem; }
+input, textarea { font-family: inherit; font-size: 13px; border: 1px solid #ddd; border-radius: 8px; padding: 8px 11px; background: #fff; color: #111; outline: none; width: 100%; transition: border 0.15s; }
+input:focus, textarea:focus { border-color: #378ADD; }
+button { font-family: inherit; font-size: 13px; border: 1px solid #ddd; border-radius: 8px; padding: 7px 14px; background: #fff; color: #111; cursor: pointer; transition: background 0.12s; }
+button:hover:not(:disabled) { background: #f0f0f0; }
+button:disabled { opacity: 0.4; cursor: not-allowed; }
+.card { background: #fff; border: 1px solid #e5e5e5; border-radius: 12px; padding: 1.25rem; margin-bottom: 1rem; }
+.btn-primary { background: #111; color: #fff; border-color: #111; font-weight: 500; }
+.btn-primary:hover:not(:disabled) { background: #333; }
+table { border-collapse: collapse; width: 100%; font-size: 12px; }
+th { padding: 5px 9px; background: #f8f8f8; border: 1px solid #eee; text-align: left; font-weight: 500; white-space: nowrap; }
+td { padding: 4px 9px; border: 1px solid #eee; }
+tr:nth-child(even) td { background: #fafafa; }
+.tag { font-size: 10px; padding: 2px 7px; border-radius: 4px; border: 1px solid; display: inline-block; }
 </style>
 </head>
 <body>
@@ -53,212 +48,229 @@ const loadAll = () => { try { return JSON.parse(localStorage.getItem(SK)||"[]");
 const saveAll = (l) => { try { localStorage.setItem(SK, JSON.stringify(l)); } catch {} };
 const upsert = (p) => { const a=loadAll(); const i=a.findIndex(x=>x.id===p.id); if(i>=0) a[i]=p; else a.unshift(p); saveAll(a); };
 
-async function callAPI(system, user, onChunk) {
-  const res = await fetch("https://api.anthropic.com/v1/messages", {
-    method:"POST", headers:{"Content-Type":"application/json"},
-    body: JSON.stringify({ model:"claude-sonnet-4-20250514", max_tokens:4000, system, messages:[{role:"user",content:user}], stream:true }),
+// OpenAI API via Vercel proxy — streaming
+async function callAPI(system, user, onChunk, model) {
+  const res = await fetch('/api/proxy', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      model: model || 'gpt-4o-mini',
+      max_tokens: 4000,
+      stream: true,
+      messages: [
+        { role: 'system', content: system },
+        { role: 'user', content: user }
+      ],
+    }),
   });
-  if (!res.ok) throw new Error("API "+res.status);
+  if (!res.ok) throw new Error('API ' + res.status);
   const reader = res.body.getReader();
   const dec = new TextDecoder();
-  let full = "";
-  while(true) {
-    const {done,value} = await reader.read();
-    if(done) break;
-    for(const line of dec.decode(value).split("\n")) {
-      if(!line.startsWith("data: ")) continue;
-      try { const d=JSON.parse(line.slice(6)); if(d.type==="content_block_delta"&&d.delta?.text){full+=d.delta.text;onChunk(d.delta.text);} } catch{}
+  let full = '';
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    for (const line of dec.decode(value).split('\n')) {
+      if (!line.startsWith('data: ') || line === 'data: [DONE]') continue;
+      try {
+        const d = JSON.parse(line.slice(6));
+        const text = d.choices?.[0]?.delta?.content;
+        if (text) { full += text; onChunk(text); }
+      } catch {}
     }
   }
   return full;
 }
 
 async function fetchSite(url) {
-  const base = url.replace(/\/$/, "");
+  const base = url.replace(/\/$/, '');
   const pages = [];
-  for(const u of [base, base+"/hakkimizda", base+"/about", base+"/hizmetler", base+"/services", base+"/urunler", base+"/products"]) {
+  for (const u of [base, base+'/hakkimizda', base+'/about', base+'/hizmetler', base+'/services', base+'/urunler', base+'/products']) {
     try {
       const r = await fetch(`${PROXY}?url=${encodeURIComponent(u)}`);
-      if(!r.ok) continue;
+      if (!r.ok) continue;
       const t = await r.text();
-      const clean = t.replace(/<[^>]+>/g," ").replace(/\s+/g," ").trim();
-      if(clean.length>300) { pages.push(clean.slice(0,2000)); if(pages.length>=3) break; }
-    } catch{}
+      const clean = t.replace(/<[^>]+>/g,' ').replace(/\s+/g,' ').trim();
+      if (clean.length > 300) { pages.push(clean.slice(0,2000)); if (pages.length >= 3) break; }
+    } catch {}
   }
-  return pages.join("\n\n---\n\n");
+  return pages.join('\n\n---\n\n');
 }
 
 function sysPr(brief, depth, lang) {
-  return `You are a market research analyst.\nPROJECT BRIEF:\n${Object.entries(brief).filter(([,v])=>v).map(([k,v])=>`- ${k}: ${v}`).join("\n")}\nCRITICAL: Write ALL output in ${lang} only. Every single word.\nDEPTH: ${depth==="fast"?"Quick — 5–8 rows per table, key insights":"Deep — 15–30 rows, all columns, sources"}\nFORMAT: Markdown tables with | separators. End each block with 3–5 next steps.`;
+  return `You are a market research analyst specialising in target audience research.\n\nPROJECT BRIEF:\n${Object.entries(brief).filter(([,v])=>v).map(([k,v])=>`- ${k}: ${v}`).join('\n')}\n\nCRITICAL: Write ALL output in ${lang} only. Every word, every table header, every cell.\nDEPTH: ${depth==='deep'?'Deep — 15–30 rows per table, all columns, sources, confidence scores':'Quick — 5–8 rows per table, key insights only'}\nFORMAT: Markdown tables with | separators. End each block with 3–5 concrete next steps.`;
 }
 
-function modPr(mod, lang, prev) {
-  const ctx = prev.length ? "\nPREVIOUS DATA:\n"+prev.map(r=>`[${r.id}] ${r.content.slice(0,250)}`).join("\n")+"\n" : "";
+function modPr(mod, lang, depth, prev) {
+  const ctx = prev.length ? '\nPREVIOUS DATA:\n'+prev.map(r=>`[${r.id}] ${r.content.slice(0,250)}`).join('\n')+'\n' : '';
+  const rows = depth==='deep' ? '15–25' : '5–8';
   const b = {
-    M1:`Fill M1 Market & Segments in ${lang}:\n**01 Geo** Region|Metric|Value|Year|Source|Note (8+)\n**02 Sources** Metric|Source|URL|Year|Figure|Unit|Comment (8+)\n**03 TAM→SAM→SOM** Describe TAM in text, then table: ID|Name|Population|Eligibility|Awareness|Need|Pay|Access|Adoption|SAM|SOM|Revenue|Confidence\n**04 Segments** ID|Name|Inclusion|Exclusion|Geo|Channels|Notes (6–10)\n**04_1 Effect** Segment|Verdict(Effective/Borderline/Ineffective)|Why|Sources\n**04_2 Niches** ID|Niche|Demand 1-5|SOM|Effect|Competition 1-5|Complexity 1-5|Risks 1-5|Score|Verdict(Go/Hold/Stop)|Why`,
-    M2:`Fill M2 Competitors & VoC in ${lang}:\n**05 Sources** Source|URL|Type|Extract|Usage (15+)\n**06 Competitors** ID|Name|URL|Offer|Price|Positioning|Strengths|Weaknesses|CTA|Proof|Barriers|Gap (8–15)\n**06_1 Gap** Criterion|Ours|Best competitor|Win/Parity/Lose|Gap|Action|Priority 1-3|KPI\n**07 VoC** Pain/motivation|Quote|Frequency|Source|URL|Response formula|Placement (20+)\n**08 Intent** Cluster|Queries|Awareness stage|Funnel role|Headline formula|Proof|Demand measure (15–25)`,
-    M3:`Fill M3 Customer Psychology in ${lang}:\n**09 Personas** ID|Role|Company|Context|JTBD1|JTBD2|JTBD3|Top-5 pains|Top-5 objections|Top-5 triggers|Channels|Formats|Tone|Quotes (4–8)\n**10 JTBD** Persona|When|I want|So that|Success criteria|Gaps|Ideas|Fears (8–15)\n**11 Awareness** Segment|Level(Unaware/Problem/Solution/OurSolution/Doubt/Ready)|Thinking|Queries|Message\n**12 Fears** Persona|Fear|Root causes|Proof artifact|Copy pattern|Placement|URL (15–25)\n**13 Criteria** Persona|Pain|Criterion|Desired outcome|Artifact|Where used (15–25)\n**14 CJM** Persona|Awareness|Stage|Goal|Trigger|Channel|Questions|Risks|Show|KPI|Next trigger\n**15 Tactics** Persona|Stage|Psych principle|Tactic|Artifact|Risk|Copy example|Metric`,
-    M4:`Fill M4 Offers & Hypotheses in ${lang}:\n**16 Hypotheses** ID|Niche|Segment|Awareness|Source|Hypothesis|Test what|Metric|MDE|Design|Artifacts|Risks|Confidence (10–15)\n**17A Input** Brand|Core skills|USP|Proof|Cases|Formats|Geo|Guarantees|Pricing|Tone\n**17B Workbench** ID|Niche|Segment|Awareness|Hook|Pain|Outcome|Mechanism|Proof (5–8)\n**17 Final** ID|Segment|Awareness|Headline|Subheadline|Problem|Result|Formula|Price|Proof|Risk reversal|CTA (2–3)`,
-    M5:`Fill M5 Content & Creatives in ${lang}:\n**18 Archetypes** ID|Role|Archetype|Awareness|Drivers|Triggers|Barriers|Tone|Anchor phrases|Channels|Key offer\n**19 Visual** Segment|Awareness|Message|Visual elements|Proof|Tactics|Channels|Metric|Refs (15–20)\n**19A Map** Persona|Audience archetype|Brand archetype|Motives|Taboos|Tone|Visual do|Visual don't|Verbal do|Verbal don't|Examples\n**20 Content** Segment|Format|KPI|Hook|Visual|Proof|CTA|A/B variants (20–30)\n**21 Briefs** ID|Segment|Awareness|Goal|Message|Visual|Artifacts|Sizes|Guardrails (8–12)\n**22 Landing** (1) Parameters table; (2) Screens: #|Name|Goal|Message|Data|Elements; (3) Draft copy per screen`,
-    M6:`Fill M6 SEO using open sources (Wordstat, Google Trends, SERPs) in ${lang}:\n**SEO-01 Search competitors** URL|Position|Page type|Key queries|URL structure|Title|Notes (10–15)\n**SEO-02 Semantic core** Cluster|Type(info/commercial/nav)|Queries|Frequency|Seasonality|Competition|Priority|Page type\n**SEO-03 Content audit** Competitor|Content type|Topics|Frequency|What works|How to beat\n**SEO-04 Site structure** Section|URL template|Page type|Query cluster|Priority|Comment\n**SEO-05 Links** Competitor|Donor types|Platforms|Context|Opportunities\n**SEO-06 UX/Tech** Competitor|Speed|Mobile|Catalog|Filters|Meta|Conclusion\n**SEO-07 Content plan** Priority|Page type|H1|Cluster|Volume|Funnel stage|Expected traffic`,
+    M1:`Fill M1 Market & Segments in ${lang}:\n**01 Geo** Region|Metric|Value|Year|Source|Note (${rows} rows)\n**02 Sources** Metric|Source|URL|Year|Figure|Unit|Comment (${rows} rows)\n**03 TAM→SAM→SOM** Describe TAM in text, then: ID|Name|Population|Eligibility|Awareness|Need|Pay|Access|Adoption|SAM|SOM|Revenue|Confidence\n**04 Segments** ID|Name|Inclusion criteria|Exclusion|Geo|Channels|Notes (6–10)\n**04_1 Effect** Segment|Verdict(Effective/Borderline/Ineffective)|Why|Sources\n**04_2 Niches** ID|Niche|Demand 1-5|SOM|Effect|Competition 1-5|Complexity 1-5|Risks 1-5|Score|Verdict(Go/Hold/Stop)|Rationale`,
+    M2:`Fill M2 Competitors & VoC in ${lang}:\n**05 Sources** Source|URL|Type|What to extract|Where used (${rows} rows)\n**06 Competitors** ID|Name|URL|Offer|Price|Positioning|Strengths|Weaknesses|CTA|Proof|Customer barriers|Gap/Opportunity (8–15)\n**06_1 Gap analysis** Criterion|Ours|Best competitor|Win/Parity/Lose|Gap|Action|Priority 1-3|KPI\n**07 VoC** Pain/motivation|Quote|Frequency|Source|URL|Response formula|Placement (${rows} rows)\n**08 Intent clusters** Cluster|Example queries|Awareness stage|Funnel role|Headline formula|Proof artifact|Demand measure (15–25)`,
+    M3:`Fill M3 Customer Psychology in ${lang}:\n**09 Personas** ID|Role|Company/niche|Context|JTBD1|JTBD2|JTBD3|Top-5 pains|Top-5 objections|Top-5 triggers|Channels|Formats|Tone|Quotes (4–8)\n**10 JTBD** Persona|When (situation)|I want|So that|Success criteria|Current gaps|Ideas|Related fears (8–15)\n**11 Awareness** Segment|Level(Unaware/Problem/Solution/OurSolution/Doubt/Ready)|How they think|Example queries|What to say\n**12 Fears** Persona|Fear/doubt|Root causes|Proof artifact|Copy pattern|Placement(LP/ADS/FAQ)|URL (${rows} rows)\n**13 Criteria** Persona|Pain|Decision criterion|Desired outcome|Artifact|Where used (${rows} rows)\n**14 CJM** Persona|Awareness|CJM stage|Goal|Trigger|Channel|Questions|Risks|What to show|KPI|Next trigger\n**15 Tactics** Persona|Stage|Psych principle|Ethical tactic|Artifact|Compliance risk|Example copy|Metric`,
+    M4:`Fill M4 Offers & Hypotheses in ${lang}:\n**16 Hypotheses** ID|Niche|Segment|Awareness|Insight source|Hypothesis|What to test|For whom|Metric|MDE|Test design|Artifacts|Risks|Confidence (10–15)\n**17A Offer Input** Brand|Core competencies|USP|Proof|Cases|Formats|Geo|Guarantees|Pricing|Tone\n**17B Offer Workbench** ID|Niche|Segment|Awareness|Hook candidates|Pain|Outcome|Mechanism|Proof (5–8)\n**17 Offer Final** ID|Segment|Awareness|Hero headline|Subheadline|Problem|Result|Formula|Price|Proof|Risk reversal|CTA (2–3)`,
+    M5:`Fill M5 Content & Creatives in ${lang}:\n**18 Archetypes** ID|Role|Archetype|Awareness level|Emotional drivers|Purchase triggers|Barriers|Tone & visual|Anchor phrases|Channels|Key offer\n**19 Visual Strategy** Segment|Awareness|Key message|Visual elements|Proof|Tactics|Channels|Metric|References (${rows} rows)\n**19A Archetype Map** Persona|Audience archetype|Brand archetype|Motives|Taboos|Tone|Visual do|Visual don't|Verbal do|Verbal don't|Example messages\n**20 Content System** Segment|Format|KPI|Hook|Visual motif|Proof|CTA|A/B variants (${rows} rows)\n**21 Creative Briefs** ID|Segment|Awareness|Test goal|Message|Visual|Artifacts|Sizes|Guardrails (8–12)\n**22 Landing TZ** (1) Parameters table; (2) Screen structure: #|Name|Goal|Message|Data|Elements; (3) Draft copy per screen`,
+    M6:`Fill M6 SEO using open sources only (Wordstat, Google Trends, SERPs, site structure) in ${lang}:\n**SEO-01 Search competitors** URL|Position|Page type|Key queries|URL structure|Title|Notes (10–15)\n**SEO-02 Semantic core** Cluster|Type(info/commercial/nav)|Example queries|Frequency|Seasonality|Competition|Priority|Page type\n**SEO-03 Content audit** Competitor|Content type|Topics|Frequency|What works|How to do better\n**SEO-04 Site structure** Section|URL template|Page type|Query cluster|Priority|Comment\n**SEO-05 Link mentions** Competitor|Donor types|Platforms|Context|Opportunities\n**SEO-06 UX/Tech** Competitor|Speed|Mobile|Catalog|Filters|Meta tags|Conclusion\n**SEO-07 Content plan** Priority|Page type|H1|Query cluster|Volume|Funnel stage|Expected traffic`,
   };
-  return ctx+(b[mod.id]||`Research ${mod.title} in ${lang}.`);
+  return ctx + (b[mod.id] || `Research ${mod.title} in ${lang}.`);
 }
 
 function repPr(results, depth, lang) {
-  return `Write a structured research report. ALL output in ${lang} ONLY.\n\nDATA:\n${results.map(r=>`=== ${r.id} ===\n${r.content.slice(0,800)}`).join("\n\n")}\n\nSTRUCTURE:\n1. Decision Brief — goal, core audience, priorities, 5-7 insights, 1-3 month focus\n${results.map((r,i)=>`${i+2}. ${MODULES.find(m=>m.id===r.id)?.title||r.id}`).join("\n")}\n${results.length+2}. Conclusions & recommendations\n\nMarkdown tables, ${depth==="fast"?"concise, 1-2 pages per section":"detailed with evidence"}.`;
+  return `Write a structured research report. ALL output in ${lang} ONLY.\n\nDATA FROM COMPLETED MODULES:\n${results.map(r=>`=== ${r.id}: ${MODULES.find(m=>m.id===r.id)?.title||r.id} ===\n${r.content.slice(0,1000)}`).join('\n\n')}\n\nSTRUCTURE:\n1. Decision Brief — goal, core audience, priorities, 5–7 key insights, strategic focus for 1–3 months\n${results.map((r,i)=>`${i+2}. ${MODULES.find(m=>m.id===r.id)?.title||r.id}`).join('\n')}\n${results.length+2}. Conclusions & strategic recommendations\n\nRules: use only data from this research, Markdown tables, ${depth==='deep'?'detailed with evidence and citations':'concise, 1–2 pages per section'}.`;
 }
 
 function MD({text}) {
-  if(!text) return null;
-  const lines=text.split("\n"); const out=[]; let tbl=[]; let k=0;
-  const ft=()=>{
-    if(tbl.length<2){tbl.forEach(l=>out.push(<p key={k++} style={{margin:"2px 0",fontSize:12,color:"#666"}}>{l}</p>));tbl=[];return;}
-    const hdrs=tbl[0].split("|").map(h=>h.trim()).filter(Boolean);
-    const rows=tbl.slice(2).map(r=>r.split("|").map(c=>c.trim()).filter(Boolean));
-    out.push(<div key={k++} style={{overflowX:"auto",margin:"8px 0"}}>
-      <table><thead><tr>{hdrs.map((h,i)=><th key={i}>{h}</th>)}</tr></thead>
-      <tbody>{rows.map((row,ri)=><tr key={ri}>{row.map((c,ci)=><td key={ci}>{c}</td>)}</tr>)}</tbody></table></div>);
+  if (!text) return null;
+  const lines = text.split('\n'); const out = []; let tbl = []; let k = 0;
+  const ft = () => {
+    if (tbl.length < 2) { tbl.forEach(l => out.push(<p key={k++} style={{margin:'2px 0',fontSize:12,color:'#666'}}>{l}</p>)); tbl=[]; return; }
+    const hdrs = tbl[0].split('|').map(h=>h.trim()).filter(Boolean);
+    const rows = tbl.slice(2).map(r=>r.split('|').map(c=>c.trim()).filter(Boolean));
+    out.push(<div key={k++} style={{overflowX:'auto',margin:'8px 0'}}><table><thead><tr>{hdrs.map((h,i)=><th key={i}>{h}</th>)}</tr></thead><tbody>{rows.map((row,ri)=><tr key={ri}>{row.map((c,ci)=><td key={ci}>{c}</td>)}</tr>)}</tbody></table></div>);
     tbl=[];
   };
-  for(const line of lines) {
-    if(line.trim().startsWith("|")){tbl.push(line);continue;}
-    if(tbl.length)ft();
-    if(line.startsWith("## ")) out.push(<h2 key={k++} style={{margin:"16px 0 5px",fontSize:15,fontWeight:500,borderBottom:"1px solid #eee",paddingBottom:3}}>{line.slice(3)}</h2>);
-    else if(line.startsWith("### ")) out.push(<h3 key={k++} style={{margin:"12px 0 4px"}}>{line.slice(4)}</h3>);
-    else if(line.startsWith("**")&&line.endsWith("**")&&line.length>4) out.push(<p key={k++} style={{margin:"10px 0 3px",fontSize:13,fontWeight:500}}>{line.slice(2,-2)}</p>);
-    else if(/^[-•]\s/.test(line)) out.push(<p key={k++} style={{margin:"2px 0 2px 12px",fontSize:13}}>· {line.slice(2)}</p>);
-    else if(!line.trim()) out.push(<div key={k++} style={{height:5}}/>);
-    else { const parts=line.split(/\*\*(.*?)\*\*/); out.push(<p key={k++} style={{margin:"3px 0",fontSize:13,lineHeight:1.6}}>{parts.map((p,i)=>i%2===1?<strong key={i}>{p}</strong>:p)}</p>); }
+  for (const line of lines) {
+    if (line.trim().startsWith('|')) { tbl.push(line); continue; }
+    if (tbl.length) ft();
+    if (line.startsWith('## ')) out.push(<h2 key={k++} style={{margin:'16px 0 5px',fontSize:15,fontWeight:500,borderBottom:'1px solid #eee',paddingBottom:3}}>{line.slice(3)}</h2>);
+    else if (line.startsWith('### ')) out.push(<h3 key={k++} style={{margin:'12px 0 4px',fontSize:13,fontWeight:500}}>{line.slice(4)}</h3>);
+    else if (line.startsWith('**') && line.endsWith('**') && line.length>4) out.push(<p key={k++} style={{margin:'10px 0 3px',fontSize:13,fontWeight:500}}>{line.slice(2,-2)}</p>);
+    else if (/^[-•]\s/.test(line)) out.push(<p key={k++} style={{margin:'2px 0 2px 12px',fontSize:13}}>· {line.slice(2)}</p>);
+    else if (!line.trim()) out.push(<div key={k++} style={{height:5}}/>);
+    else { const parts=line.split(/\*\*(.*?)\*\*/); out.push(<p key={k++} style={{margin:'3px 0',fontSize:13,lineHeight:1.6}}>{parts.map((p,i)=>i%2===1?<strong key={i}>{p}</strong>:p)}</p>); }
   }
-  if(tbl.length)ft();
-  return React.createElement(React.Fragment,null,...out);
+  if (tbl.length) ft();
+  return React.createElement(React.Fragment, null, ...out);
 }
 
 function App() {
-  const [sc,setSc]=useState("list");
-  const [projs,setProjs]=useState(()=>loadAll());
-  const [proj,setProj]=useState(null);
-  const empty={name:"",niche:"",geo:"",format:"",audience:"",result:"",price:"",competitors:"",extra:""};
-  const [brief,setBrief]=useState(empty);
-  const [lang,setLang]=useState("Russian");
-  const [mods,setMods]=useState(["M1","M2"]);
-  const [depth,setDepth]=useState("fast");
-  const [siteUrl,setSiteUrl]=useState("");
-  const [parsing,setParsing]=useState(false);
-  const [pMsg,setPMsg]=useState("");
-  const [curMod,setCurMod]=useState(null);
-  const [stream,setStream]=useState("");
-  const [exp,setExp]=useState({});
-  const [rep,setRep]=useState("");
-  const [repping,setRepping]=useState(false);
-  const [repOpen,setRepOpen]=useState(false);
-  const [xl,setXl]=useState("");
-  const [xlating,setXlating]=useState(false);
-  const [xled,setXled]=useState("");
+  const [sc, setSc] = useState('list');
+  const [projs, setProjs] = useState(() => loadAll());
+  const [proj, setProj] = useState(null);
+  const empty = {name:'',niche:'',geo:'',format:'',audience:'',result:'',price:'',competitors:'',extra:''};
+  const [brief, setBrief] = useState(empty);
+  const [lang, setLang] = useState('Russian');
+  const [mods, setMods] = useState(['M1','M2']);
+  const [depth, setDepth] = useState('fast');
+  const [siteUrl, setSiteUrl] = useState('');
+  const [parsing, setParsing] = useState(false);
+  const [pMsg, setPMsg] = useState('');
+  const [curMod, setCurMod] = useState(null);
+  const [stream, setStream] = useState('');
+  const [exp, setExp] = useState({});
+  const [rep, setRep] = useState('');
+  const [repping, setRepping] = useState(false);
+  const [repOpen, setRepOpen] = useState(false);
+  const [xl, setXl] = useState('');
+  const [xlating, setXlating] = useState(false);
+  const [xled, setXled] = useState('');
 
-  const ref=()=>setProjs(loadAll());
-  const sv=useCallback((p)=>{upsert(p);ref();return p;},[]);
+  const ref = () => setProjs(loadAll());
+  const sv = useCallback((p) => { upsert(p); ref(); return p; }, []);
 
-  const parseSite=useCallback(async()=>{
-    if(!siteUrl.trim())return;
-    setParsing(true);setPMsg("⟳ Reading site pages…");
-    try{
-      const content=await fetchSite(siteUrl.trim());
-      if(!content||content.length<50) throw new Error("Site returned no readable content. Check the URL or fill manually.");
-      setPMsg("⟳ Extracting brief data…");
-      let json="";
+  const getModel = (d) => d === 'deep' ? 'gpt-4o' : 'gpt-4o-mini';
+
+  const parseSite = useCallback(async () => {
+    if (!siteUrl.trim()) return;
+    setParsing(true); setPMsg('⟳ Reading site pages…');
+    try {
+      const content = await fetchSite(siteUrl.trim());
+      if (!content || content.length < 50) throw new Error('Site returned no readable content. Fill manually.');
+      setPMsg('⟳ Extracting brief data…');
+      let json = '';
       await callAPI(
-        "Extract a marketing brief from website content. Reply ONLY with valid JSON, no markdown fences, no extra text.",
-        `Extract from this website content:\n\n${content.slice(0,4000)}\n\nReturn ONLY this JSON object:\n{"name":"product or service name","niche":"industry or niche","geo":"city/country","format":"offline/online/SaaS/B2B service/etc","audience":"target audience description","result":"main value or result for client","price":"price range if visible, else empty","competitors":"","extra":"USP, key features, specialisation","lang":"detected language of the site e.g. Turkish, Russian, English"}`,
-        c=>{json+=c;}
+        'Extract a marketing brief from website content. Reply ONLY with valid JSON object, no markdown, no extra text.',
+        `Extract from this content:\n\n${content.slice(0,4000)}\n\nReturn ONLY this JSON:\n{"name":"product name","niche":"industry","geo":"city/country","format":"B2B/offline/online/SaaS/etc","audience":"target audience","result":"main client result","price":"price range or empty","competitors":"","extra":"USP and key features","lang":"detected language e.g. Turkish"}`,
+        c => { json += c; },
+        'gpt-4o-mini'
       );
-      const d=JSON.parse(json.replace(/```json|```/g,"").trim());
-      setBrief(p=>({...p,...Object.fromEntries(Object.entries(d).filter(([k,v])=>k!=="lang"&&v&&String(v).trim()&&empty.hasOwnProperty(k)))}));
-      if(d.lang){const m=LANGS.find(l=>l.toLowerCase()===d.lang.toLowerCase());if(m)setLang(m);}
-      setPMsg("✓ Brief filled from "+siteUrl+" — review and complete below");
-    }catch(e){setPMsg("✗ "+e.message);}
+      const d = JSON.parse(json.replace(/```json|```/g,'').trim());
+      setBrief(p => ({...p, ...Object.fromEntries(Object.entries(d).filter(([k,v]) => k!=='lang' && v && String(v).trim() && empty.hasOwnProperty(k)))}));
+      if (d.lang) { const m = LANGS.find(l => l.toLowerCase()===d.lang.toLowerCase()); if (m) setLang(m); }
+      setPMsg('✓ Brief filled — review and complete below');
+    } catch(e) { setPMsg('✗ ' + e.message); }
     setParsing(false);
-  },[siteUrl]);
+  }, [siteUrl]);
 
-  const openP=(p)=>{setProj(p);setBrief(p.brief);setLang(p.lang||"Russian");setMods(p.mods||["M1","M2"]);setDepth(p.depth||"fast");setRep(p.report||"");setExp({});setRepOpen(false);setXled("");setSc("work");};
-  const goNew=()=>{setProj(null);setBrief(empty);setLang("Russian");setMods(["M1","M2"]);setDepth("fast");setSiteUrl("");setPMsg("");setRep("");setExp({});setRepOpen(false);setXled("");setSc("form");};
+  const openP = (p) => { setProj(p); setBrief(p.brief); setLang(p.lang||'Russian'); setMods(p.mods||['M1','M2']); setDepth(p.depth||'fast'); setRep(p.report||''); setExp({}); setRepOpen(false); setXled(''); setSc('work'); };
+  const goNew = () => { setProj(null); setBrief(empty); setLang('Russian'); setMods(['M1','M2']); setDepth('fast'); setSiteUrl(''); setPMsg(''); setRep(''); setExp({}); setRepOpen(false); setXled(''); setSc('form'); };
 
-  const run=useCallback(async()=>{
-    if(!brief.name)return;
-    const id=proj?.id||("p"+Date.now());
-    const existing=proj?.results||[];
-    const doneIds=existing.map(r=>r.id);
-    const toRun=MODULES.filter(m=>mods.includes(m.id)&&!doneIds.includes(m.id));
-    if(!toRun.length){setSc("work");return;}
-    const p={id,createdAt:proj?.createdAt||new Date().toISOString(),updatedAt:new Date().toISOString(),brief,lang,mods,depth,results:existing,report:proj?.report||""};
-    setProj(p);setRep(p.report);sv(p);setSc("work");setStream("");
-    const sys=sysPr(brief,depth,lang);
-    const col=[...existing];
-    for(const mod of toRun){
-      setCurMod(mod.id);setStream("");
-      let full="";
-      try{full=await callAPI(sys,modPr(mod,lang,col.map(r=>({id:r.id,content:r.content.slice(0,250)}))),c=>setStream(s=>s+c));}
-      catch(e){full="Error: "+e.message;}
-      const result={id:mod.id,content:full,at:new Date().toISOString()};
+  const run = useCallback(async () => {
+    if (!brief.name) return;
+    const id = proj?.id || ('p' + Date.now());
+    const existing = proj?.results || [];
+    const doneIds = existing.map(r => r.id);
+    const toRun = MODULES.filter(m => mods.includes(m.id) && !doneIds.includes(m.id));
+    if (!toRun.length) { setSc('work'); return; }
+    const p = {id, createdAt: proj?.createdAt||new Date().toISOString(), updatedAt: new Date().toISOString(), brief, lang, mods, depth, results: existing, report: proj?.report||''};
+    setProj(p); setRep(p.report); sv(p); setSc('work'); setStream('');
+    const sys = sysPr(brief, depth, lang);
+    const model = getModel(depth);
+    const col = [...existing];
+    for (const mod of toRun) {
+      setCurMod(mod.id); setStream('');
+      let full = '';
+      try { full = await callAPI(sys, modPr(mod, lang, depth, col.map(r=>({id:r.id,content:r.content.slice(0,250)}))), c => setStream(s=>s+c), model); }
+      catch(e) { full = 'Error: ' + e.message; }
+      const result = {id: mod.id, content: full, at: new Date().toISOString(), model};
       col.push(result);
-      const upd={...p,results:col,updatedAt:new Date().toISOString()};
-      setProj(upd);sv(upd);
-      setExp(ex=>({...ex,[mod.id]:false}));
+      const upd = {...p, results: col, updatedAt: new Date().toISOString()};
+      setProj(upd); sv(upd);
+      setExp(ex => ({...ex, [mod.id]: false}));
     }
-    setCurMod(null);setStream("");
-  },[brief,lang,mods,depth,proj,sv]);
+    setCurMod(null); setStream('');
+  }, [brief, lang, mods, depth, proj, sv]);
 
-  const genRep=useCallback(async()=>{
-    if(!proj?.results?.length)return;
-    setRepping(true);setRepOpen(true);setRep("");setXled("");
-    let r="";
-    try{r=await callAPI(`Write research reports. ALL output in ${lang} only.`,repPr(proj.results,depth,lang),c=>setRep(s=>s+c));}
-    catch(e){r="Error: "+e.message;setRep(r);}
+  const genRep = useCallback(async () => {
+    if (!proj?.results?.length) return;
+    setRepping(true); setRepOpen(true); setRep(''); setXled('');
+    let r = '';
+    try { r = await callAPI(`Write a research report. ALL output in ${lang} only.`, repPr(proj.results, depth, lang), c => setRep(s=>s+c), 'gpt-4o'); }
+    catch(e) { r = 'Error: ' + e.message; setRep(r); }
     setRepping(false);
-    const upd={...proj,report:r,updatedAt:new Date().toISOString()};
-    setProj(upd);sv(upd);
-  },[lang,depth,proj,sv]);
+    const upd = {...proj, report: r, updatedAt: new Date().toISOString()};
+    setProj(upd); sv(upd);
+  }, [lang, depth, proj, sv]);
 
-  const doXl=useCallback(async()=>{
-    if(!rep||!xl.trim())return;
-    setXlating(true);setXled("");
-    try{await callAPI("Translate accurately. Preserve all Markdown formatting and | table separators.",`Translate the following research report to ${xl}. Keep all Markdown structure intact.\n\n${rep}`,c=>setXled(s=>s+c));}
-    catch(e){setXled("Error: "+e.message);}
+  const doXl = useCallback(async () => {
+    if (!rep || !xl.trim()) return;
+    setXlating(true); setXled('');
+    try { await callAPI('Translate accurately. Preserve all Markdown formatting and | table separators.', `Translate to ${xl}:\n\n${rep}`, c => setXled(s=>s+c), 'gpt-4o-mini'); }
+    catch(e) { setXled('Error: ' + e.message); }
     setXlating(false);
-  },[rep,xl]);
+  }, [rep, xl]);
 
-  const dlMd=(content,suf="")=>{const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([content],{type:"text/markdown;charset=utf-8"}));a.download="CA_"+(brief.name||"research").replace(/\s+/g,"_")+suf+".md";a.click();};
-  const dlCsv=()=>{if(!proj?.results)return;const csv=[["Module","Content"],...proj.results.map(r=>[r.id,'"'+r.content.replace(/"/g,'""')+'"'])].map(r=>r.join(",")).join("\n");const a=document.createElement("a");a.href=URL.createObjectURL(new Blob(["\uFEFF"+csv],{type:"text/csv;charset=utf-8"}));a.download="CA_"+(brief.name||"research").replace(/\s+/g,"_")+".csv";a.click();};
+  const dlMd = (content, suf='') => { const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([content],{type:'text/markdown;charset=utf-8'})); a.download='CA_'+(brief.name||'research').replace(/\s+/g,'_')+suf+'.md'; a.click(); };
+  const dlCsv = () => { if (!proj?.results) return; const csv=[['Module','Model','Content'],...proj.results.map(r=>[r.id,r.model||'','"'+r.content.replace(/"/g,'""')+'"'])].map(r=>r.join(',')).join('\n'); const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8'})); a.download='CA_'+(brief.name||'research').replace(/\s+/g,'_')+'.csv'; a.click(); };
 
   // LIST
-  if(sc==="list") return (
+  if (sc === 'list') return (
     <div>
-      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"1.5rem"}}>
-        <div><h2>CA Research</h2><p style={{fontSize:13,color:"#666",marginTop:3}}>Projects auto-saved in your browser</p></div>
-        <button className="btn-primary" onClick={goNew} style={{padding:"9px 18px",fontSize:13}}>+ New project</button>
+      <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'1.5rem'}}>
+        <div><h2 style={{fontSize:22,fontWeight:500}}>CA Research</h2><p style={{fontSize:13,color:'#666',marginTop:3}}>Projects auto-saved in your browser</p></div>
+        <button className="btn-primary" onClick={goNew} style={{padding:'9px 18px'}}>+ New project</button>
       </div>
-      {projs.length===0&&<div className="card" style={{textAlign:"center",padding:"3rem"}}>
-        <p style={{fontSize:15,color:"#666",marginBottom:8}}>No projects yet</p>
-        <p style={{fontSize:13,color:"#999",marginBottom:"1.5rem"}}>Start by entering a client website URL</p>
-        <button className="btn-primary" onClick={goNew} style={{padding:"10px 24px"}}>+ New project</button>
+      {projs.length===0 && <div className="card" style={{textAlign:'center',padding:'3rem'}}>
+        <p style={{fontSize:15,color:'#666',marginBottom:8}}>No projects yet</p>
+        <p style={{fontSize:13,color:'#999',marginBottom:'1.5rem'}}>Start by entering a client website URL</p>
+        <button className="btn-primary" onClick={goNew} style={{padding:'10px 24px'}}>+ New project</button>
       </div>}
-      {projs.map(p=>{
-        const done=(p.results||[]).map(r=>r.id);
-        return <div key={p.id} className="card" onClick={()=>openP(p)} style={{cursor:"pointer",marginBottom:10}}>
-          <div style={{display:"flex",gap:12,alignItems:"flex-start"}}>
+      {projs.map(p => {
+        const done = (p.results||[]).map(r=>r.id);
+        return <div key={p.id} className="card" onClick={()=>openP(p)} style={{cursor:'pointer',marginBottom:10}}>
+          <div style={{display:'flex',gap:12,alignItems:'flex-start'}}>
             <div style={{flex:1}}>
-              <p style={{fontSize:14,fontWeight:500,marginBottom:3}}>{p.brief?.name||"Untitled"}</p>
-              <p style={{fontSize:12,color:"#666",marginBottom:8}}>{[p.brief?.geo,p.brief?.niche,p.lang].filter(Boolean).join(" · ")}</p>
-              <div style={{display:"flex",gap:4,flexWrap:"wrap"}}>
-                {(p.mods||[]).map(mid=>{const m=MODULES.find(x=>x.id===mid);const d=done.includes(mid);return m?<span key={mid} className="tag" style={{background:d?m.color:"#f5f5f5",color:d?"#fff":"#666",borderColor:d?m.color:"#ddd"}}>{mid}{d?" ✓":""}</span>:null;})}
-                {p.report&&<span className="tag" style={{background:"#E6F1FB",color:"#0C447C",borderColor:"#85B7EB"}}>Report ✓</span>}
+              <p style={{fontSize:14,fontWeight:500,marginBottom:3}}>{p.brief?.name||'Untitled'}</p>
+              <p style={{fontSize:12,color:'#666',marginBottom:8}}>{[p.brief?.geo,p.brief?.niche,p.lang].filter(Boolean).join(' · ')}</p>
+              <div style={{display:'flex',gap:4,flexWrap:'wrap'}}>
+                {(p.mods||[]).map(mid=>{const m=MODULES.find(x=>x.id===mid);const d=done.includes(mid);return m?<span key={mid} className="tag" style={{background:d?m.color:'#f5f5f5',color:d?'#fff':'#666',borderColor:d?m.color:'#ddd'}}>{mid}{d?' ✓':''}</span>:null;})}
+                {p.report&&<span className="tag" style={{background:'#E6F1FB',color:'#0C447C',borderColor:'#85B7EB'}}>Report ✓</span>}
               </div>
             </div>
-            <div style={{textAlign:"right",flexShrink:0}}>
-              <p style={{fontSize:11,color:"#888",marginBottom:2}}>{done.length}/{(p.mods||[]).length} modules</p>
-              <p style={{fontSize:10,color:"#aaa",marginBottom:8}}>{new Date(p.updatedAt||p.createdAt).toLocaleDateString()}</p>
-              <button onClick={e=>{e.stopPropagation();saveAll(loadAll().filter(x=>x.id!==p.id));ref();}} style={{padding:"2px 8px",fontSize:10,color:"#e44",borderColor:"#e44"}}>delete</button>
+            <div style={{textAlign:'right',flexShrink:0}}>
+              <p style={{fontSize:11,color:'#888',marginBottom:2}}>{done.length}/{(p.mods||[]).length} modules</p>
+              <p style={{fontSize:10,color:'#aaa',marginBottom:8}}>{new Date(p.updatedAt||p.createdAt).toLocaleDateString()}</p>
+              <button onClick={e=>{e.stopPropagation();saveAll(loadAll().filter(x=>x.id!==p.id));ref();}} style={{padding:'2px 8px',fontSize:10,color:'#e44',borderColor:'#e44'}}>delete</button>
             </div>
           </div>
         </div>;
@@ -267,162 +279,166 @@ function App() {
   );
 
   // FORM
-  if(sc==="form") return (
+  if (sc === 'form') return (
     <div>
-      <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:"1.5rem"}}>
-        <button onClick={()=>setSc("list")}>← Back</button>
-        <h2>New project</h2>
+      <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:'1.5rem'}}>
+        <button onClick={()=>setSc('list')}>← Back</button>
+        <h2 style={{fontSize:20,fontWeight:500}}>New project</h2>
       </div>
 
       <div className="card">
         <p style={{fontSize:13,fontWeight:500,marginBottom:4}}>Auto-fill from website</p>
-        <p style={{fontSize:12,color:"#666",marginBottom:10}}>Enter the client site URL — the agent reads it via proxy and fills the brief automatically.</p>
-        <div style={{display:"flex",gap:8,marginBottom:8}}>
-          <input value={siteUrl} onChange={e=>setSiteUrl(e.target.value)} onKeyDown={e=>e.key==="Enter"&&parseSite()} placeholder="https://client-site.com" style={{flex:1}}/>
-          <button onClick={parseSite} disabled={!siteUrl.trim()||parsing} style={{whiteSpace:"nowrap",flexShrink:0,padding:"0 16px"}}>{parsing?"Reading…":"Read site ↗"}</button>
+        <p style={{fontSize:12,color:'#666',marginBottom:10}}>Enter the client site URL — the agent reads it via proxy and fills the brief automatically.</p>
+        <div style={{display:'flex',gap:8,marginBottom:8}}>
+          <input value={siteUrl} onChange={e=>setSiteUrl(e.target.value)} onKeyDown={e=>e.key==='Enter'&&parseSite()} placeholder="https://client-site.com" style={{flex:1}}/>
+          <button onClick={parseSite} disabled={!siteUrl.trim()||parsing} style={{whiteSpace:'nowrap',flexShrink:0,padding:'0 16px'}}>{parsing?'Reading…':'Read site ↗'}</button>
         </div>
-        {pMsg&&<p style={{fontSize:12,color:pMsg.startsWith("✓")?"#27500A":pMsg.startsWith("✗")?"#c00":"#666"}}>{pMsg}</p>}
+        {pMsg && <p style={{fontSize:12,color:pMsg.startsWith('✓')?'#27500A':pMsg.startsWith('✗')?'#c00':'#666'}}>{pMsg}</p>}
       </div>
 
       <div className="card">
-        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"1rem"}}>
+        <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'1rem'}}>
           <p style={{fontSize:13,fontWeight:500}}>Project Brief</p>
-          <span className="tag" style={{background:"#E6F1FB",color:"#0C447C",borderColor:"#85B7EB"}}>fill in any language</span>
+          <span className="tag" style={{background:'#E6F1FB',color:'#0C447C',borderColor:'#85B7EB'}}>fill in any language</span>
         </div>
-        <div style={{display:"grid",gap:10}}>
-          {[{k:"name",l:"Product / service name *",ph:"Nutrikey, ботулинотерапия…"},{k:"niche",l:"Niche / industry",ph:"Hayvan besleme, медицинская косметология…"},{k:"geo",l:"Geography",ph:"İzmir, Turkey / Краснодар…"},{k:"format",l:"Format",ph:"B2B service, online course, SaaS…"},{k:"audience",l:"Target audience",ph:"Yem fabrikaları, women 25–45…"},{k:"result",l:"Main result for client",ph:"Cost reduction, revenue growth…"},{k:"price",l:"Price range",ph:"On request, ₺5000+, $50–200…"},{k:"competitors",l:"Known competitors",ph:"Competitor A, site.com…"},].map(f=>(
+        <div style={{display:'grid',gap:10}}>
+          {[{k:'name',l:'Product / service name *',ph:'Nutrikey, ботулинотерапия…'},{k:'niche',l:'Niche / industry',ph:'Hayvan besleme, EdTech…'},{k:'geo',l:'Geography',ph:'İzmir, Turkey / Краснодар…'},{k:'format',l:'Format',ph:'B2B service, online course, SaaS…'},{k:'audience',l:'Target audience',ph:'Yem fabrikaları, women 25–45…'},{k:'result',l:'Main result for client',ph:'Cost reduction, revenue growth…'},{k:'price',l:'Price range',ph:'On request, ₺5000+…'},{k:'competitors',l:'Known competitors',ph:'Competitor A, site.com…'}].map(f=>(
             <div key={f.k}><label>{f.l}</label><input value={brief[f.k]} onChange={e=>setBrief(p=>({...p,[f.k]:e.target.value}))} placeholder={f.ph}/></div>
           ))}
-          <div><label>Additional context</label><textarea value={brief.extra} onChange={e=>setBrief(p=>({...p,extra:e.target.value}))} placeholder="USP, market specifics, constraints…" rows={2} style={{resize:"vertical"}}/></div>
+          <div><label>Additional context</label><textarea value={brief.extra} onChange={e=>setBrief(p=>({...p,extra:e.target.value}))} placeholder="USP, market specifics, constraints…" rows={2} style={{resize:'vertical'}}/></div>
         </div>
       </div>
 
       <div className="card">
         <p style={{fontSize:13,fontWeight:500,marginBottom:4}}>Research language</p>
-        <p style={{fontSize:12,color:"#666",marginBottom:10}}>All results and the report will be written in this language. Brief above is just input data.</p>
-        <div style={{display:"flex",gap:6,flexWrap:"wrap",marginBottom:8}}>
-          {LANGS.map(l=><button key={l} onClick={()=>setLang(l)} style={{padding:"5px 12px",fontSize:12,borderColor:l===lang?"#378ADD":"#ddd",background:l===lang?"#E6F1FB":"#fff",color:l===lang?"#0C447C":"#111",fontWeight:l===lang?500:400}}>{l}</button>)}
+        <p style={{fontSize:12,color:'#666',marginBottom:10}}>All results and the report will be written in this language. Brief is just input data.</p>
+        <div style={{display:'flex',gap:6,flexWrap:'wrap',marginBottom:8}}>
+          {LANGS.map(l=><button key={l} onClick={()=>setLang(l)} style={{padding:'5px 12px',fontSize:12,borderColor:l===lang?'#378ADD':'#ddd',background:l===lang?'#E6F1FB':'#fff',color:l===lang?'#0C447C':'#111',fontWeight:l===lang?500:400}}>{l}</button>)}
         </div>
-        <p style={{fontSize:11,color:"#666"}}>Selected: <strong>{lang}</strong></p>
+        <p style={{fontSize:11,color:'#666'}}>Selected: <strong>{lang}</strong></p>
       </div>
 
       <div className="card">
         <p style={{fontSize:13,fontWeight:500,marginBottom:10}}>Select modules</p>
-        <div style={{display:"grid",gap:7}}>
+        <div style={{display:'grid',gap:7}}>
           {MODULES.map(m=>{const on=mods.includes(m.id);return(
-            <div key={m.id} onClick={()=>setMods(p=>p.includes(m.id)?p.filter(x=>x!==m.id):[...p,m.id])} style={{display:"flex",gap:10,alignItems:"flex-start",padding:"10px 12px",borderRadius:8,border:"1px solid "+(on?m.border:"#e5e5e5"),background:on?m.bg:"#fff",cursor:"pointer"}}>
-              <div style={{width:16,height:16,marginTop:1,borderRadius:3,border:"2px solid "+(on?m.color:"#ccc"),background:on?m.color:"transparent",flexShrink:0,display:"flex",alignItems:"center",justifyContent:"center"}}>{on&&<span style={{color:"#fff",fontSize:10,lineHeight:1}}>✓</span>}</div>
-              <div><p style={{fontSize:13,fontWeight:500,color:on?m.dark:"#111",marginBottom:1}}>{m.id} · {m.title}</p><p style={{fontSize:11,color:on?m.color:"#888"}}>{m.desc}</p></div>
+            <div key={m.id} onClick={()=>setMods(p=>p.includes(m.id)?p.filter(x=>x!==m.id):[...p,m.id])} style={{display:'flex',gap:10,alignItems:'flex-start',padding:'10px 12px',borderRadius:8,border:'1px solid '+(on?m.border:'#e5e5e5'),background:on?m.bg:'#fff',cursor:'pointer'}}>
+              <div style={{width:16,height:16,marginTop:1,borderRadius:3,border:'2px solid '+(on?m.color:'#ccc'),background:on?m.color:'transparent',flexShrink:0,display:'flex',alignItems:'center',justifyContent:'center'}}>{on&&<span style={{color:'#fff',fontSize:10}}>✓</span>}</div>
+              <div><p style={{fontSize:13,fontWeight:500,color:on?m.dark:'#111',marginBottom:1}}>{m.id} · {m.title}</p><p style={{fontSize:11,color:on?m.color:'#888'}}>{m.desc}</p></div>
             </div>
           );})}
         </div>
       </div>
 
       <div className="card">
-        <p style={{fontSize:13,fontWeight:500,marginBottom:10}}>Research depth</p>
-        <div style={{display:"flex",gap:8}}>
-          {[{id:"fast",label:"Quick",desc:"Key insights, ~10 min/module"},{id:"deep",label:"Deep",desc:"Full detail, all columns, ~25 min/module"}].map(d=>{const on=depth===d.id;return(
-            <div key={d.id} onClick={()=>setDepth(d.id)} style={{flex:1,padding:"10px 12px",borderRadius:8,border:"1px solid "+(on?"#378ADD":"#e5e5e5"),background:on?"#E6F1FB":"#fff",cursor:"pointer"}}>
-              <p style={{fontSize:13,fontWeight:500,color:on?"#0C447C":"#111"}}>{d.label}</p>
-              <p style={{fontSize:11,color:on?"#185FA5":"#888",marginTop:2}}>{d.desc}</p>
+        <p style={{fontSize:13,fontWeight:500,marginBottom:4}}>Research depth</p>
+        <p style={{fontSize:12,color:'#666',marginBottom:10}}>
+          <strong>Quick</strong> uses <code>gpt-4o-mini</code> — fast and economical. <strong>Deep</strong> uses <code>gpt-4o</code> — maximum quality.
+        </p>
+        <div style={{display:'flex',gap:8}}>
+          {[{id:'fast',label:'Quick',desc:'gpt-4o-mini · key insights · ~3 min/module'},{id:'deep',label:'Deep',desc:'gpt-4o · full detail, all columns · ~8 min/module'}].map(d=>{const on=depth===d.id;return(
+            <div key={d.id} onClick={()=>setDepth(d.id)} style={{flex:1,padding:'10px 12px',borderRadius:8,border:'1px solid '+(on?'#378ADD':'#e5e5e5'),background:on?'#E6F1FB':'#fff',cursor:'pointer'}}>
+              <p style={{fontSize:13,fontWeight:500,color:on?'#0C447C':'#111'}}>{d.label}</p>
+              <p style={{fontSize:11,color:on?'#185FA5':'#888',marginTop:2}}>{d.desc}</p>
             </div>
           );})}
         </div>
       </div>
 
-      <button className="btn-primary" onClick={run} disabled={!brief.name||!mods.length} style={{width:"100%",padding:"13px",fontSize:14}}>
-        Start research in {lang} → {mods.length} module{mods.length!==1?"s":""} · {depth==="fast"?"Quick":"Deep"}
+      <button className="btn-primary" onClick={run} disabled={!brief.name||!mods.length} style={{width:'100%',padding:'13px',fontSize:14}}>
+        Start research in {lang} → {mods.length} module{mods.length!==1?'s':''} · {depth==='fast'?'Quick (gpt-4o-mini)':'Deep (gpt-4o)'}
       </button>
     </div>
   );
 
   // WORK
-  const allMods=MODULES.filter(m=>mods.includes(m.id));
-  const doneIds=(proj?.results||[]).map(r=>r.id);
-  const pending=allMods.filter(m=>!doneIds.includes(m.id)&&m.id!==curMod);
-  const isRun=!!curMod;
+  const allMods = MODULES.filter(m => mods.includes(m.id));
+  const doneIds = (proj?.results||[]).map(r=>r.id);
+  const pending = allMods.filter(m => !doneIds.includes(m.id) && m.id!==curMod);
+  const isRun = !!curMod;
 
   return (
     <div>
-      <div style={{display:"flex",alignItems:"flex-start",justifyContent:"space-between",marginBottom:"1rem",gap:12}}>
+      <div style={{display:'flex',alignItems:'flex-start',justifyContent:'space-between',marginBottom:'1rem',gap:12}}>
         <div>
-          <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:4}}>
-            <button onClick={()=>setSc("list")}>← Projects</button>
-            <h2 style={{fontSize:18}}>{brief.name}</h2>
+          <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:4}}>
+            <button onClick={()=>setSc('list')}>← Projects</button>
+            <h2 style={{fontSize:18,fontWeight:500}}>{brief.name}</h2>
           </div>
-          <p style={{fontSize:12,color:"#666"}}>
-            {[brief.geo,brief.niche].filter(Boolean).join(" · ")}
-            <span className="tag" style={{marginLeft:8,background:"#E6F1FB",color:"#0C447C",borderColor:"#85B7EB"}}>{lang}</span>
-            <span style={{marginLeft:8,fontSize:11,color:"#888"}}>{depth==="fast"?"Quick":"Deep"}</span>
+          <p style={{fontSize:12,color:'#666'}}>
+            {[brief.geo,brief.niche].filter(Boolean).join(' · ')}
+            <span className="tag" style={{marginLeft:8,background:'#E6F1FB',color:'#0C447C',borderColor:'#85B7EB'}}>{lang}</span>
+            <span className="tag" style={{marginLeft:4,background:'#f5f5f5',color:'#666',borderColor:'#ddd'}}>{depth==='fast'?'Quick · gpt-4o-mini':'Deep · gpt-4o'}</span>
           </p>
         </div>
-        {!isRun&&pending.length>0&&<button className="btn-primary" onClick={run} style={{flexShrink:0}}>+ Run {pending.map(m=>m.id).join(", ")} ↗</button>}
+        {!isRun&&pending.length>0&&<button className="btn-primary" onClick={run} style={{flexShrink:0}}>+ Run {pending.map(m=>m.id).join(', ')} ↗</button>}
       </div>
 
-      <div style={{marginBottom:"1.25rem"}}>
-        <div className="progress-bar">
-          {allMods.map(m=>{const d=doneIds.includes(m.id),a=curMod===m.id;return<div key={m.id} className="progress-seg" style={{background:d?m.color:a?m.border:"#eee"}}/>;})}</div>
-        <p style={{fontSize:11,color:"#888"}}>{isRun?`Generating ${curMod} in ${lang}…`:`${doneIds.length}/${allMods.length} modules done${pending.length?` · ${pending.length} pending`:""}`}</p>
+      <div style={{marginBottom:'1.25rem'}}>
+        <div style={{display:'flex',gap:3,marginBottom:5}}>
+          {allMods.map(m=>{const d=doneIds.includes(m.id),a=curMod===m.id;return<div key={m.id} title={m.title} style={{flex:1,height:3,borderRadius:2,background:d?m.color:a?m.border:'#eee',transition:'background 0.3s'}}/>;})}</div>
+        <p style={{fontSize:11,color:'#888'}}>{isRun?`Generating ${curMod} in ${lang} (${getModel(depth)})…`:`${doneIds.length}/${allMods.length} modules done${pending.length?` · ${pending.length} pending`:''}`}</p>
       </div>
 
       {(proj?.results||[]).map(r=>{const m=MODULES.find(x=>x.id===r.id);if(!m)return null;const open=exp[r.id];return(
-        <div key={r.id} style={{marginBottom:8,border:"1px solid "+m.border,borderRadius:12,overflow:"hidden"}}>
-          <div onClick={()=>setExp(e=>({...e,[r.id]:!e[r.id]}))} style={{display:"flex",alignItems:"center",gap:9,padding:"11px 14px",background:m.bg,cursor:"pointer"}}>
-            <span className="tag" style={{background:m.color,color:"#fff",borderColor:m.color}}>{m.id}</span>
+        <div key={r.id} style={{marginBottom:8,border:'1px solid '+m.border,borderRadius:12,overflow:'hidden'}}>
+          <div onClick={()=>setExp(e=>({...e,[r.id]:!e[r.id]}))} style={{display:'flex',alignItems:'center',gap:9,padding:'11px 14px',background:m.bg,cursor:'pointer'}}>
+            <span className="tag" style={{background:m.color,color:'#fff',borderColor:m.color}}>{m.id}</span>
             <span style={{flex:1,fontSize:13,fontWeight:500,color:m.dark}}>{m.title}</span>
-            <span style={{fontSize:10,color:"#888",marginRight:4}}>{r.at?new Date(r.at).toLocaleDateString():""}</span>
-            <span style={{fontSize:12,color:m.color}}>{open?"▲":"▼"}</span>
+            <span style={{fontSize:10,color:'#888',marginRight:4}}>{r.model||''} · {r.at?new Date(r.at).toLocaleDateString():''}</span>
+            <span style={{fontSize:12,color:m.color}}>{open?'▲':'▼'}</span>
           </div>
-          {open&&<div style={{padding:"14px 16px",background:"#fff",borderTop:"1px solid "+m.border}}><MD text={r.content}/></div>}
+          {open&&<div style={{padding:'14px 16px',background:'#fff',borderTop:'1px solid '+m.border}}><MD text={r.content}/></div>}
         </div>
       );})}
 
-      {curMod&&stream&&<div style={{marginBottom:8,border:"1px solid #ddd",borderRadius:12,overflow:"hidden"}}>
-        <div style={{display:"flex",alignItems:"center",gap:9,padding:"11px 14px",background:"#f8f8f8"}}>
-          <span className="tag" style={{background:"#eee",color:"#333",borderColor:"#ddd"}}>{curMod}</span>
+      {curMod&&stream&&<div style={{marginBottom:8,border:'1px solid #ddd',borderRadius:12,overflow:'hidden'}}>
+        <div style={{display:'flex',alignItems:'center',gap:9,padding:'11px 14px',background:'#f8f8f8'}}>
+          <span className="tag" style={{background:'#eee',color:'#333',borderColor:'#ddd'}}>{curMod}</span>
           <span style={{flex:1,fontSize:13}}>{MODULES.find(m=>m.id===curMod)?.title}</span>
-          <span style={{fontSize:11,color:"#888"}}>● generating in {lang}</span>
+          <span style={{fontSize:11,color:'#888'}}>● {getModel(depth)} · {lang}</span>
         </div>
-        <div style={{padding:"14px 16px",maxHeight:380,overflowY:"auto"}}><MD text={stream}/></div>
+        <div style={{padding:'14px 16px',maxHeight:400,overflowY:'auto'}}><MD text={stream}/></div>
       </div>}
 
       {!isRun&&<div style={{marginTop:16}}>
-        <div style={{border:"1px solid #e5e5e5",borderRadius:12,overflow:"hidden",marginBottom:10}}>
-          <div style={{display:"flex",alignItems:"center",gap:10,padding:"12px 14px",background:"#f8f8f8",borderBottom:"1px solid #e5e5e5"}}>
-            <span style={{flex:1,fontSize:14,fontWeight:500}}>Report <span style={{fontSize:11,fontWeight:400,color:"#888"}}>in {lang}</span></span>
+        <div style={{border:'1px solid #e5e5e5',borderRadius:12,overflow:'hidden',marginBottom:10}}>
+          <div style={{display:'flex',alignItems:'center',gap:10,padding:'12px 14px',background:'#f8f8f8',borderBottom:'1px solid #e5e5e5'}}>
+            <span style={{flex:1,fontSize:14,fontWeight:500}}>Report <span style={{fontSize:11,fontWeight:400,color:'#888'}}>in {lang} · gpt-4o</span></span>
             {!rep&&!repping&&<button className="btn-primary" onClick={genRep}>Generate ↗</button>}
             {rep&&!repping&&<button onClick={genRep}>Regenerate</button>}
-            {(rep||repping)&&<button onClick={()=>setRepOpen(o=>!o)}>{repOpen?"Collapse ▲":"Expand ▼"}</button>}
+            {(rep||repping)&&<button onClick={()=>setRepOpen(o=>!o)}>{repOpen?'Collapse ▲':'Expand ▼'}</button>}
           </div>
-          {repping&&!rep&&<p style={{padding:"14px",fontSize:13,color:"#888"}}>Generating report in {lang}…</p>}
+          {repping&&!rep&&<p style={{padding:'14px',fontSize:13,color:'#888'}}>Generating report in {lang} using gpt-4o…</p>}
           {rep&&repOpen&&<>
-            <div style={{padding:"14px",maxHeight:520,overflowY:"auto"}}><MD text={rep}/></div>
-            <div style={{padding:"10px 14px",borderTop:"1px solid #e5e5e5",background:"#f8f8f8",display:"flex",gap:8,alignItems:"center",flexWrap:"wrap"}}>
-              <span style={{fontSize:12,color:"#666",flexShrink:0}}>Translate to:</span>
-              <div style={{display:"flex",gap:5,flexWrap:"wrap",flex:1}}>
-                {["Russian","English","Turkish","Arabic","German"].filter(l=>l!==lang).map(l=><button key={l} onClick={()=>setXl(l)} style={{padding:"4px 10px",fontSize:11,borderColor:xl===l?"#378ADD":"#ddd",background:xl===l?"#E6F1FB":"#fff",color:xl===l?"#0C447C":"#111"}}>{l}</button>)}
-                <input value={xl} onChange={e=>setXl(e.target.value)} placeholder="other…" style={{width:90,fontSize:11,padding:"4px 8px"}}/>
+            <div style={{padding:'14px',maxHeight:560,overflowY:'auto'}}><MD text={rep}/></div>
+            <div style={{padding:'10px 14px',borderTop:'1px solid #e5e5e5',background:'#f8f8f8',display:'flex',gap:8,alignItems:'center',flexWrap:'wrap'}}>
+              <span style={{fontSize:12,color:'#666',flexShrink:0}}>Translate to:</span>
+              <div style={{display:'flex',gap:5,flexWrap:'wrap',flex:1}}>
+                {['Russian','English','Turkish','Arabic','German'].filter(l=>l!==lang).map(l=><button key={l} onClick={()=>setXl(l)} style={{padding:'4px 10px',fontSize:11,borderColor:xl===l?'#378ADD':'#ddd',background:xl===l?'#E6F1FB':'#fff',color:xl===l?'#0C447C':'#111'}}>{l}</button>)}
+                <input value={xl} onChange={e=>setXl(e.target.value)} placeholder="other…" style={{width:90,fontSize:11,padding:'4px 8px'}}/>
               </div>
-              <button className="btn-primary" onClick={doXl} disabled={!xl.trim()||xlating}>{xlating?"Translating…":"Translate ↗"}</button>
+              <button className="btn-primary" onClick={doXl} disabled={!xl.trim()||xlating}>{xlating?'Translating…':'Translate ↗'}</button>
             </div>
-            {xled&&<div style={{padding:"14px",borderTop:"1px solid #e5e5e5",maxHeight:380,overflowY:"auto"}}>
-              <p style={{fontSize:11,fontWeight:500,color:"#888",marginBottom:8}}>TRANSLATION — {xl}</p>
+            {xled&&<div style={{padding:'14px',borderTop:'1px solid #e5e5e5',maxHeight:400,overflowY:'auto'}}>
+              <p style={{fontSize:11,fontWeight:500,color:'#888',marginBottom:8}}>TRANSLATION — {xl} · gpt-4o-mini</p>
               <MD text={xled}/>
             </div>}
           </>}
+          {repping&&rep&&<p style={{padding:'4px 14px 10px',fontSize:11,color:'#888'}}>● generating…</p>}
         </div>
-        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8}}>
-          <button onClick={()=>dlMd(rep||(proj?.results||[]).map(r=>`## ${r.id}\n\n${r.content}`).join("\n\n---\n\n"))}>↓ Report (.md)</button>
-          <button onClick={()=>xled&&dlMd(xled,"_translated")} disabled={!xled} style={{opacity:xled?1:0.4}}>↓ Translation (.md)</button>
+        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:8}}>
+          <button onClick={()=>dlMd(rep||(proj?.results||[]).map(r=>`## ${r.id}\n\n${r.content}`).join('\n\n---\n\n'))}>↓ Report (.md)</button>
+          <button onClick={()=>xled&&dlMd(xled,'_translated')} disabled={!xled} style={{opacity:xled?1:0.4}}>↓ Translation (.md)</button>
           <button onClick={dlCsv}>↓ Data (.csv)</button>
         </div>
-        <p style={{fontSize:11,color:"#888",textAlign:"center",marginTop:8}}>Auto-saved in browser · return anytime from Projects list</p>
+        <p style={{fontSize:11,color:'#888',textAlign:'center',marginTop:8}}>Auto-saved in browser · return anytime from Projects list</p>
       </div>}
     </div>
   );
 }
 
-ReactDOM.createRoot(document.getElementById("root")).render(React.createElement(App));
+ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(App));
 </script>
 </body>
 </html>
