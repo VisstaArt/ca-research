@@ -11,9 +11,9 @@
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f5f5f5; color: #111; }
-#root { max-width: 820px; margin: 0 auto; padding: 2rem 1rem; }
-input, textarea { font-family: inherit; font-size: 13px; border: 1px solid #ddd; border-radius: 8px; padding: 8px 11px; background: #fff; color: #111; outline: none; width: 100%; transition: border 0.15s; }
-input:focus, textarea:focus { border-color: #378ADD; }
+#root { max-width: 840px; margin: 0 auto; padding: 2rem 1rem; }
+input, textarea, select { font-family: inherit; font-size: 13px; border: 1px solid #ddd; border-radius: 8px; padding: 8px 11px; background: #fff; color: #111; outline: none; width: 100%; transition: border 0.15s; }
+input:focus, textarea:focus, select:focus { border-color: #378ADD; }
 button { font-family: inherit; font-size: 13px; border: 1px solid #ddd; border-radius: 8px; padding: 7px 14px; background: #fff; color: #111; cursor: pointer; transition: background 0.12s; }
 button:hover:not(:disabled) { background: #f0f0f0; }
 button:disabled { opacity: 0.4; cursor: not-allowed; }
@@ -27,6 +27,12 @@ tr:nth-child(even) td { background: #fafafa; }
 .tag { font-size: 10px; padding: 2px 7px; border-radius: 4px; border: 1px solid; display: inline-block; }
 .status-bar { background: #111; color: #fff; border-radius: 10px; padding: 14px 18px; margin-bottom: 12px; }
 .timer { font-size: 22px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.tooltip-box { font-size: 12px; color: #555; background: #f8f8f8; border: 1px solid #e0e0e0; border-radius: 8px; padding: 10px 12px; margin-top: 4px; line-height: 1.5; }
+.info-btn { width: 16px; height: 16px; border-radius: 50%; border: 1px solid #ccc; background: #fff; cursor: pointer; font-size: 10px; color: #888; padding: 0; display: inline-flex; align-items: center; justify-content: center; margin-left: 5px; flex-shrink: 0; }
+.info-btn:hover { background: #f0f0f0; }
+.field-label-row { display: flex; align-items: center; margin-bottom: 4px; }
+.field-label { font-size: 11px; color: #666; font-weight: 500; }
+.field-opt { font-size: 10px; color: #aaa; margin-left: 6px; }
 </style>
 </head>
 <body>
@@ -34,137 +40,276 @@ tr:nth-child(even) td { background: #fafafa; }
 <script type="text/babel">
 const { useState, useCallback, useEffect, useRef } = React;
 
-// ── CONFIG ─────────────────────────────────────────────────────────────────────
+// ── CONFIG
 const MODEL = 'gpt-4.1';
 const PROXY = 'https://red-wave-3f83.art-vissta-442.workers.dev';
-const SK = 'ca_v5';
+const SK = 'ca_v6';
 
+// ── i18n
+const T = {
+  en: {
+    appTitle: 'CA Research',
+    appSub: 'Professional target audience research',
+    newProject: '+ New project',
+    noProjects: 'No projects yet',
+    noProjectsSub: 'Enter a client website URL and the agent will fill the brief automatically',
+    autoFill: 'Auto-fill from website',
+    autoFillSub: 'Enter client site URL — agent reads up to 3 pages and fills the brief automatically.',
+    readSite: 'Read site ↗',
+    reading: 'Reading…',
+    briefTitle: 'Project brief',
+    briefSub: 'Fill in any language. Research will be conducted in the market language.',
+    fName: 'Product / service name *', fNamePh: 'Nutrikey, Botox clinic, KRASTECH…',
+    fNiche: 'Niche / industry', fNichePh: 'B2B animal feed analytics, medical cosmetology…',
+    fNicheInfo: 'Describe the industry as specifically as possible. Instead of "food" write "B2B animal feed additives for livestock". The more precise, the better the agent understands which competitors and data sources to look for.',
+    fGeoComp: 'Company geography', fGeoCompPh: 'Turkey, Kazakhstan, UAE — all company markets',
+    fGeoCompInfo: 'All markets where your company currently operates. Used as context about business scale — not for market statistics.',
+    fGeoMarket: 'Research market ★', fGeoMarketPh: 'İzmir, Turkey — this research only',
+    fGeoMarketInfo: 'The specific market THIS research focuses on. The agent will look for statistics, competitors and keywords only for this market.',
+    fFormat: 'Format', fFormatPh: 'Offline clinic, B2B consulting, SaaS…',
+    fAudience: 'Target audience', fAudiencePh: 'Women 30–55, feed mills, B2B owners…',
+    fResult: 'Main result for client', fResultPh: 'What the client gets — specific outcome…',
+    fPrice: 'Price range', fPricePh: '₽15 000–50 000, on request, ₺5000+…',
+    fCompetitors: 'Known competitors', fCompetitorsPh: 'Competitor A, site.com…',
+    fExtra: 'Additional context', fExtraPh: 'Market specifics, USP, constraints, existing data…',
+    companyDataTitle: 'Company data',
+    companyDataSub: 'optional — for market position analysis',
+    fRevenue: 'Current revenue', fRevenuePh: 'e.g. 5 000 000 TL',
+    fRevenueInfo: 'Your annual revenue from this niche. Used to calculate your current market share vs total SOM. If provided, the report shows "you occupy X% of the addressable market".',
+    fClients: 'Current clients', fClientsPh: 'e.g. 12',
+    fClientsInfo: 'Number of active clients right now. Helps calculate realistic growth potential: how many more clients fit in the SOM before the niche is saturated.',
+    fAvgCheck: 'Avg check', fAvgCheckPh: 'e.g. 320 000 TL',
+    fAvgCheckInfo: 'Your real average deal size. If different from market average, the agent recalculates SOM potential using your actual number.',
+    skipM1Title: 'Already know your market?',
+    skipM1Sub: 'Fill these if skipping M1',
+    fTargetSegment: 'Target segment', fTargetSegmentPh: 'e.g. Large feed mills, Kanatlı Entegre…',
+    fTargetSegmentInfo: 'Fill this if skipping M1. The agent will use this instead of generating segments from scratch.',
+    fPriceLayer: 'Price layer', fPriceLayerEco: 'Economy — basic services', fPriceLayerMid: 'Mid-market — analytics & recommendations', fPriceLayerPrem: 'Premium — full outsourcing',
+    fPriceLayerInfo: 'Your price positioning. If running M1, the agent detects layers automatically and you choose after seeing results.',
+    researchLang: 'Research language',
+    researchLangSub: 'All tables, analysis and report will be written in this language.',
+    selectModules: 'Select modules',
+    selectModulesSub: 'M1 is recommended if you don\'t know the market yet. You can start from any module.',
+    modelLabel: 'Model',
+    dataPolicy: 'Data policy',
+    dataPolicyVal: 'No fabricated data — agent writes "no public data" if unavailable',
+    estTime: 'Est. time',
+    startBtn: 'Start research in',
+    backProjects: '← Projects',
+    backBtn: '← Back',
+    continueBtn: '+ Continue',
+    generateReport: 'Generate report ↗',
+    regenerate: 'Regenerate',
+    collapse: 'Collapse ▲',
+    expand: 'Expand ▼',
+    translateTo: 'Translate to:',
+    translate: 'Translate ↗',
+    translating: 'Translating…',
+    generating: 'Generating…',
+    dlReport: '↓ Report (.md)',
+    dlTranslation: '↓ Translation (.md)',
+    dlData: '↓ Data (.csv)',
+    dlAgent: '↓ Agent Pack (.json)',
+    autoSaved: 'Auto-saved · return anytime',
+    modules: 1, pending: 'pending',
+    chooseLayer: 'Choose price layer',
+    chooseLayerSub: 'Based on M1 results, the agent detected price layers in your market. Choose the layer for the remaining modules — competitors, VoC, offers, and SEO will be researched in this context.',
+    layerNote: 'You can select multiple layers — separate research will be run for each. Results are saved independently.',
+    continueToM2: 'Continue → M2 ↗',
+    backToM1: '← Review M1',
+    layerSelected: 'selected',
+    generating2: 'Detecting price layers…',
+  },
+  ru: {
+    appTitle: 'CA Research',
+    appSub: 'Профессиональное исследование целевой аудитории',
+    newProject: '+ Новый проект',
+    noProjects: 'Проектов пока нет',
+    noProjectsSub: 'Введите URL сайта клиента — агент прочитает страницы и заполнит бриф автоматически',
+    autoFill: 'Автозаполнение с сайта',
+    autoFillSub: 'Введите URL сайта клиента — агент читает до 3 страниц и заполняет бриф автоматически.',
+    readSite: 'Читать сайт ↗',
+    reading: 'Читаю…',
+    briefTitle: 'Бриф проекта',
+    briefSub: 'Заполняйте на любом языке. Исследование проводится на языке рынка.',
+    fName: 'Название продукта / услуги *', fNamePh: 'Nutrikey, Ботулинотерапия, КРАСТЕХ…',
+    fNiche: 'Ниша / отрасль', fNichePh: 'B2B-аналитика кормов, медицинская косметология…',
+    fNicheInfo: 'Опишите отрасль как можно точнее. Вместо "еда" напишите "B2B кормовые добавки для животноводства". Чем точнее, тем лучше агент понимает какие конкуренты и источники искать.',
+    fGeoComp: 'География компании', fGeoCompPh: 'Турция, Казахстан, ОАЭ — все рынки компании',
+    fGeoCompInfo: 'Все рынки где работает компания. Используется как контекст масштаба — не для рыночной статистики.',
+    fGeoMarket: 'Рынок исследования ★', fGeoMarketPh: 'Стамбул, Турция — только этот рынок',
+    fGeoMarketInfo: 'Конкретный рынок для ЭТОГО исследования. Агент ищет статистику, конкурентов и семантику только здесь.',
+    fFormat: 'Формат', fFormatPh: 'Офлайн клиника, B2B консалтинг, SaaS…',
+    fAudience: 'Целевая аудитория', fAudiencePh: 'Женщины 30–55, yem fabrikaları, B2B owners…',
+    fResult: 'Главный результат для клиента', fResultPh: 'Что получает клиент — конкретный результат…',
+    fPrice: 'Ценовой диапазон', fPricePh: '₽15 000–50 000, по запросу, ₺5000+…',
+    fCompetitors: 'Известные конкуренты', fCompetitorsPh: 'Конкурент А, site.com…',
+    fExtra: 'Дополнительный контекст', fExtraPh: 'Специфика рынка, УТП, ограничения, имеющиеся данные…',
+    companyDataTitle: 'Данные компании',
+    companyDataSub: 'опционально — для анализа позиции на рынке',
+    fRevenue: 'Текущая выручка', fRevenuePh: 'напр. 5 000 000 TL',
+    fRevenueInfo: 'Годовая выручка компании в этой нише. Используется для расчёта текущей доли рынка vs SOM. Если указано — отчёт покажет "вы занимаете X% адресного рынка".',
+    fClients: 'Текущих клиентов', fClientsPh: 'напр. 12',
+    fClientsInfo: 'Количество активных клиентов сейчас. Помогает рассчитать реальный потенциал роста: сколько ещё клиентов вмещает SOM до насыщения ниши.',
+    fAvgCheck: 'Средний чек', fAvgCheckPh: 'напр. 320 000 TL',
+    fAvgCheckInfo: 'Реальный средний чек компании. Если отличается от рыночного — агент пересчитывает потенциал SOM используя ваши реальные цифры.',
+    skipM1Title: 'Знаете свой рынок?',
+    skipM1Sub: 'Заполните если пропускаете M1',
+    fTargetSegment: 'Целевой сегмент', fTargetSegmentPh: 'напр. Крупные yem fabrikaları, Kanatlı Entegre…',
+    fTargetSegmentInfo: 'Заполните если пропускаете M1. Агент использует это вместо генерации сегментов с нуля.',
+    fPriceLayer: 'Ценовой слой', fPriceLayerEco: 'Эконом — базовые услуги', fPriceLayerMid: 'Средний — аналитика и рекомендации', fPriceLayerPrem: 'Премиум — полный аутсорсинг',
+    fPriceLayerInfo: 'Ваше ценовое позиционирование. Если запускаете M1 — агент выявит слои автоматически, вы выберете после результатов.',
+    researchLang: 'Язык исследования',
+    researchLangSub: 'Все таблицы, анализ и отчёт будут написаны на этом языке.',
+    selectModules: 'Выбор модулей',
+    selectModulesSub: 'M1 рекомендуется если вы ещё не знаете рынок. Можно начать с любого модуля.',
+    modelLabel: 'Модель',
+    dataPolicy: 'Данные',
+    dataPolicyVal: 'Без выдуманных данных — агент пишет "нет публичных данных" если информация недоступна',
+    estTime: 'Примерное время',
+    startBtn: 'Запустить исследование на',
+    backProjects: '← Проекты',
+    backBtn: '← Назад',
+    continueBtn: '+ Продолжить',
+    generateReport: 'Генерировать отчёт ↗',
+    regenerate: 'Перегенерировать',
+    collapse: 'Свернуть ▲',
+    expand: 'Развернуть ▼',
+    translateTo: 'Перевести на:',
+    translate: 'Перевести ↗',
+    translating: 'Перевожу…',
+    generating: 'Генерирую…',
+    dlReport: '↓ Отчёт (.md)',
+    dlTranslation: '↓ Перевод (.md)',
+    dlData: '↓ Данные (.csv)',
+    dlAgent: '↓ Agent Pack (.json)',
+    autoSaved: 'Автосохранение · можно вернуться в любой момент',
+    modules: 1, pending: 'ожидает',
+    chooseLayer: 'Выбор ценового слоя',
+    chooseLayerSub: 'По результатам M1 агент выявил ценовые слои рынка. Выберите слой — модули M2–M7 будут исследованы именно в нём.',
+    layerNote: 'Можно выбрать несколько слоёв — по каждому будет отдельное исследование. Результаты сохраняются независимо.',
+    continueToM2: 'Продолжить → M2 ↗',
+    backToM1: '← Пересмотреть M1',
+    layerSelected: 'выбран',
+    generating2: 'Определяю ценовые слои…',
+  }
+};
+
+// ── MODULES CONFIG
 const MODULES = [
   {
     id: 'M1', color: '#639922', bg: '#EAF3DE', border: '#97C459', dark: '#27500A',
     title: 'Market & Segments',
     titleRu: 'Рынок, ёмкость и сегменты',
-    desc: 'Blocks 01–04_2: geo stats, sources, TAM→SAM→SOM, segments, niche prioritization',
+    taglineEn: 'Market size, who your customers are, and which niches to prioritize',
+    taglineRu: 'Размер рынка, кто ваши клиенты и какие ниши приоритизировать',
+    whatEn: 'Answers: How big is the market? Who are the target segments? Which niche is worth entering first? Where is your company right now relative to the total addressable market?',
+    whatRu: 'Отвечает: Каков размер рынка? Кто целевые сегменты? В какую нишу входить первой? Где компания сейчас относительно адресного рынка?',
+    outputsEn: ['TAM → SAM → SOM model','Segment map (6–12 segments)','Niche prioritization matrix','Price layer detection','Market position dashboard'],
+    outputsRu: ['Модель TAM → SAM → SOM','Карта сегментов (6–12)','Матрица приоритизации ниш','Определение ценовых слоёв','Дашборд позиции на рынке'],
     estimatedMin: 8,
-    steps: [
-      'Collecting geo & demographic statistics (Block 01)…',
-      'Mapping open data sources (Block 02)…',
-      'Building TAM→SAM→SOM model (Block 03)…',
-      'Describing target audience segments (Block 04)…',
-      'Evaluating service effectiveness per segment (Block 04_1)…',
-      'Prioritizing niches with scoring (Block 04_2)…',
-      'Generating market share chart data…',
-    ]
+    steps: ['Collecting geo & demographic statistics (Block 01)…','Mapping open data sources (Block 02)…','Building TAM→SAM→SOM model (Block 03)…','Describing target audience segments (Block 04)…','Evaluating service effectiveness per segment (Block 04_1)…','Prioritizing niches with scoring (Block 04_2)…','Generating market share chart data…'],
   },
   {
     id: 'M2', color: '#0F6E56', bg: '#E1F5EE', border: '#5DCAA5', dark: '#085041',
     title: 'Competitors & Gap Analysis',
     titleRu: 'Конкуренты и гэп-анализ',
-    desc: 'Blocks 05–06_1: open sources index, competitor map, gap analysis',
+    taglineEn: 'Who you compete with, how they position, and where the gaps are',
+    taglineRu: 'Кто конкуренты, как позиционируются и где незакрытые возможности',
+    whatEn: 'Answers: Who are the real competitors in your price layer? What do they offer and at what price? Where are the gaps (Win/Parity/Lose) that you can exploit?',
+    whatRu: 'Отвечает: Кто реальные конкуренты в вашем ценовом слое? Что предлагают и по какой цене? Где гэпы (Win/Parity/Lose) которые можно использовать?',
+    outputsEn: ['Competitor map (10–20)','Win / Parity / Lose table','Positioning gaps & opportunities','Competitor positioning chart'],
+    outputsRu: ['Карта конкурентов (10–20)','Таблица Win / Parity / Lose','Гэпы и возможности','График позиционирования'],
     estimatedMin: 8,
-    steps: [
-      'Building open sources index (Block 05)…',
-      'Mapping competitors — offers, pricing, positioning (Block 06)…',
-      'Running Win/Parity/Lose gap analysis (Block 06_1)…',
-      'Generating competitor positioning chart…',
-    ]
+    steps: ['Building open sources index (Block 05)…','Mapping competitors — offers, pricing, positioning (Block 06)…','Running Win/Parity/Lose gap analysis (Block 06_1)…','Generating competitor positioning chart…'],
   },
   {
     id: 'M3', color: '#1565A8', bg: '#E3EFFE', border: '#7EB3F0', dark: '#0D3E6E',
     title: 'Voice of Customer',
-    titleRu: 'Голос клиента и намерения',
-    desc: 'Blocks 07–08: real quotes from open sources, intent clusters by Schwartz stages',
+    titleRu: 'Голос клиента',
+    taglineEn: 'Real words your customers use — pain, desire, doubt',
+    taglineRu: 'Реальные слова клиентов — боль, желание, сомнение',
+    whatEn: 'Answers: What exact words do customers use to describe their problem? What do they fear? What do they really want? Used for ad copy, landing headlines, and sales scripts.',
+    whatRu: 'Отвечает: Какими словами клиенты описывают проблему? Чего боятся? Чего хотят? Используется для текстов рекламы, заголовков лендинга и скриптов продаж.',
+    outputsEn: ['VoC table (25–40 real quotes)','Intent clusters by awareness stage','Customer language glossary'],
+    outputsRu: ['Таблица VoC (25–40 реальных цитат)','Кластеры намерений по стадиям','Словарь языка клиента'],
     estimatedMin: 7,
-    steps: [
-      'Collecting VoC quotes from reviews, forums, social media (Block 07)…',
-      'Clustering search intents by awareness stage (Block 08)…',
-      'Mapping funnel roles and headline formulas…',
-    ]
+    steps: ['Collecting VoC quotes from reviews, forums, social media (Block 07)…','Clustering search intents by awareness stage (Block 08)…','Mapping funnel roles and headline formulas…'],
   },
   {
     id: 'M4', color: '#3C3489', bg: '#EEEDFE', border: '#AFA9EC', dark: '#26215C',
     title: 'Customer Psychology',
     titleRu: 'Психология покупки и путь клиента',
-    desc: 'Blocks 09–15: LPR personas, JTBD, awareness levels, fears, criteria, CJM, tactics',
+    taglineEn: 'How customers think, decide, and what stops them from buying',
+    taglineRu: 'Как клиенты думают, принимают решения и что мешает покупке',
+    whatEn: 'Answers: What job does the customer hire your product for? What awareness stage are they at? What fears and criteria drive the final decision? What cognitive triggers to use?',
+    whatRu: 'Отвечает: Зачем клиент нанимает ваш продукт? На какой стадии осознанности он находится? Какие страхи и критерии движут решением? Какие когнитивные триггеры использовать?',
+    outputsEn: ['LPR personas (4–8)','JTBD map','Fears & decision criteria','Customer Journey Map','Cognitive tactics'],
+    outputsRu: ['Персоны LPR (4–8)','Карта JTBD','Страхи и критерии выбора','Карта пути клиента CJM','Когнитивные тактики'],
     estimatedMin: 10,
-    steps: [
-      'Building LPR personas with real language (Block 09)…',
-      'Mapping Jobs-to-be-Done per segment (Block 10)…',
-      'Assessing awareness levels by Schwartz (Block 11)…',
-      'Cataloguing fears and doubts (Block 12)…',
-      'Mapping decision criteria and trust triggers (Block 13)…',
-      'Building customer journey map CJM (Block 14)…',
-      'Identifying cognitive tactics and influence patterns (Block 15)…',
-    ]
+    steps: ['Building LPR personas with real language (Block 09)…','Mapping Jobs-to-be-Done per segment (Block 10)…','Assessing awareness levels by Schwartz (Block 11)…','Cataloguing fears and doubts (Block 12)…','Mapping decision criteria and trust triggers (Block 13)…','Building customer journey map CJM (Block 14)…','Identifying cognitive tactics and influence patterns (Block 15)…'],
   },
   {
     id: 'M5', color: '#633806', bg: '#FAEEDA', border: '#EF9F27', dark: '#412402',
     title: 'Offers & Hypotheses',
     titleRu: 'Офферы и гипотезы',
-    desc: 'Blocks 16–17: hypotheses, offer workshop, final offer per segment',
+    taglineEn: 'What to sell, how to position it, and which offers to test first',
+    taglineRu: 'Что продавать, как позиционировать и какие офферы тестировать первыми',
+    whatEn: 'Answers: What hypotheses should we test first? What is the strongest offer per segment? How to structure the value proposition to maximize conversion?',
+    whatRu: 'Отвечает: Какие гипотезы тестировать первыми? Какой оффер сильнейший по сегменту? Как структурировать ценностное предложение для максимальной конверсии?',
+    outputsEn: ['Marketing hypotheses (10–15)','Offer workshop (draft variants)','Final offers per segment'],
+    outputsRu: ['Маркетинговые гипотезы (10–15)','Воркшоп офферов (черновики)','Финальные офферы по сегментам'],
     estimatedMin: 8,
-    steps: [
-      'Generating marketing hypotheses (Block 16)…',
-      'Collecting offer input data (Block 17A)…',
-      'Running offer workbench — draft options (Block 17B)…',
-      'Finalising offers per segment (Block 17 Final)…',
-    ]
+    steps: ['Generating marketing hypotheses (Block 16)…','Collecting offer input data (Block 17A)…','Running offer workbench — draft options (Block 17B)…','Finalising offers per segment (Block 17 Final)…'],
   },
   {
     id: 'M6', color: '#712B13', bg: '#FAECE7', border: '#F0997B', dark: '#4A1B0C',
     title: 'Content & Creatives',
     titleRu: 'Контент-система и лендинг',
-    desc: 'Blocks 18–22: archetypes, visual strategy, content system, creative briefs, landing TZ',
+    taglineEn: 'Content system, ad creatives, and landing page structure',
+    taglineRu: 'Контент-система, рекламные креативы и структура лендинга',
+    whatEn: 'Answers: What content formats work for each segment? What should ads and creatives look like? What is the full landing page structure with copy?',
+    whatRu: 'Отвечает: Какие форматы контента работают для каждого сегмента? Как должны выглядеть реклама и креативы? Какова полная структура лендинга с текстами?',
+    outputsEn: ['Persona archetypes & visual strategy','Content system by channel (20–30 formats)','Creative briefs (8–12)','Landing page TZ with screen structure'],
+    outputsRu: ['Архетипы персон и визуальная стратегия','Контент-система по каналам (20–30 форматов)','Креативные брифы (8–12)','ТЗ на лендинг со структурой экранов'],
     estimatedMin: 10,
-    steps: [
-      'Building persona archetypes and archetype map (Blocks 18–19A)…',
-      'Designing content system by channel (Block 20)…',
-      'Writing creative briefs (Block 21)…',
-      'Creating landing page TZ with screen structure (Block 22)…',
-    ]
+    steps: ['Building persona archetypes and archetype map (Blocks 18–19A)…','Designing content system by channel (Block 20)…','Writing creative briefs (Block 21)…','Creating landing page TZ with screen structure (Block 22)…'],
   },
   {
     id: 'M7', color: '#72243E', bg: '#FBEAF0', border: '#ED93B1', dark: '#4B1528',
-    title: 'SEO',
+    title: 'SEO Strategy',
     titleRu: 'SEO-стратегия',
-    desc: 'Semantic core, search competitors, site structure, content plan — open sources only',
+    taglineEn: 'Semantic core, site structure, and organic content plan',
+    taglineRu: 'Семантическое ядро, структура сайта и план органического контента',
+    whatEn: 'Answers: What keywords does your audience search for? Who are the SEO competitors? What site structure and content plan will bring organic traffic?',
+    whatRu: 'Отвечает: По каким запросам ищет ваша аудитория? Кто SEO-конкуренты? Какая структура сайта и контент-план приведут органический трафик?',
+    outputsEn: ['Search competitor analysis','Semantic core by clusters','Site structure for organic','SEO content plan'],
+    outputsRu: ['Анализ поисковых конкурентов','Семантическое ядро по кластерам','Структура сайта для органики','SEO контент-план'],
     estimatedMin: 7,
-    steps: [
-      'Analysing search competitors (SEO-01)…',
-      'Building semantic core by clusters (SEO-02)…',
-      'Auditing competitor content (SEO-03)…',
-      'Designing site structure for organic (SEO-04)…',
-      'Creating SEO content plan (SEO-07)…',
-    ]
+    steps: ['Analysing search competitors (SEO-01)…','Building semantic core by clusters (SEO-02)…','Auditing competitor content (SEO-03)…','Designing site structure for organic (SEO-04)…','Creating SEO content plan (SEO-07)…'],
   },
 ];
 
 const LANGS = ['Russian','Turkish','English','Arabic','Kazakh','Ukrainian','Uzbek','German','Spanish','French'];
 
-// ── STORAGE ────────────────────────────────────────────────────────────────────
+// ── STORAGE
 const loadAll = () => { try { return JSON.parse(localStorage.getItem(SK)||'[]'); } catch { return []; } };
 const saveAll = l => { try { localStorage.setItem(SK, JSON.stringify(l)); } catch {} };
-const upsert  = p => { const a=loadAll(); const i=a.findIndex(x=>x.id===p.id); if(i>=0)a[i]=p; else a.unshift(p); saveAll(a); };
+const upsert = p => { const a=loadAll(); const i=a.findIndex(x=>x.id===p.id); if(i>=0)a[i]=p; else a.unshift(p); saveAll(a); };
+const loadUiLang = () => { try { return localStorage.getItem('ca_uilang')||'en'; } catch { return 'en'; } };
+const saveUiLang = l => { try { localStorage.setItem('ca_uilang', l); } catch {} };
 
-// ── API ────────────────────────────────────────────────────────────────────────
+// ── API
 async function callGPT(system, user) {
   const res = await fetch('/api/proxy', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      model: MODEL,
-      max_tokens: 8000,
-      stream: false,
-      messages: [
-        { role: 'system', content: system },
-        { role: 'user',   content: user   },
-      ],
-    }),
+    method: 'POST', headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({model:MODEL, max_tokens:8000, stream:false,
+      messages:[{role:'system',content:system},{role:'user',content:user}]}),
   });
   if (!res.ok) throw new Error('API ' + res.status);
   const d = await res.json();
-  if (d.error) throw new Error(d.error.message || 'API error');
-  return d.choices?.[0]?.message?.content || '';
+  if (d.error) throw new Error(d.error.message||'API error');
+  return d.choices?.[0]?.message?.content||'';
 }
 
 async function fetchSite(url) {
@@ -174,34 +319,44 @@ async function fetchSite(url) {
     base+'/services', base+'/o-nas', base+'/uslugi', base+'/products', base+'/o-kompanii'];
   for (const u of candidates) {
     try {
-      const r = await fetch(`${PROXY}?url=${encodeURIComponent(u)}`);
+      const r = await fetch(PROXY+'?url='+encodeURIComponent(u));
       if (!r.ok) continue;
       const t = await r.text();
       const clean = t.replace(/<[^>]+>/g,' ').replace(/\s+/g,' ').trim();
-      if (clean.length > 300) { pages.push({ url: u, text: clean.slice(0, 2500) }); if (pages.length >= 3) break; }
+      if (clean.length>300) { pages.push({url:u, text:clean.slice(0,2500)}); if(pages.length>=3) break; }
     } catch {}
   }
   return pages;
 }
 
-// ── SYSTEM PROMPT ──────────────────────────────────────────────────────────────
+// ── SYSTEM PROMPT
 function buildSystem(brief, lang) {
-  return `You are a senior market research analyst producing a professional-grade target audience research report.
-
-PROJECT BRIEF (00_Project_Brief):
-${Object.entries(brief).filter(([,v])=>v).map(([k,v])=>k==='geoCompany'?'- Company Geography: '+v:k==='geoMarket'?'- Research Market: '+v:'- '+k+': '+v).join('\n')}
-
-GEOGRAPHY: Use Research Market for ALL stats/competitors/keywords. Company Geography = context only.\n\nCRITICAL RULES — non-negotiable:
-1. LANGUAGE: Write every single word of your output in ${lang}. No exceptions.
-2. NO FABRICATED DATA: Never invent statistics, URLs, company names, or figures. If a data point is unavailable publicly, write "нет публичных данных" (or equivalent in ${lang}) and set Confidence=1.
-3. SOURCES: Every quantitative claim must have a source column with a real, verifiable URL or "нет публичных данных".
-4. TABLES: Always use Markdown pipe tables (| col | col |) with a separator row. No other formats.
-5. QUALITY: This is a premium research document worth thousands of dollars to the client. Be thorough, specific, and evidence-based.
-6. TERMS: When using professional abbreviations (TAM, SAM, SOM, JTBD, CJM, LPR, VoC, etc.), add a brief explanation below the table.
-7. END OF EACH BLOCK: Add "Итог / Следующие шаги" with 3–5 specific actionable next steps.`;
+  const lines = Object.entries(brief).filter(([,v])=>v).map(([k,v])=>{
+    if(k==='geoCompany') return '- Company Geography (all markets): '+v;
+    if(k==='geoMarket') return '- Research Market (focus of this research): '+v;
+    if(k==='currentRevenue') return '- Company Current Revenue: '+v;
+    if(k==='currentClients') return '- Company Current Clients: '+v;
+    if(k==='currentAvgCheck') return '- Company Avg Check: '+v;
+    if(k==='targetSegment') return '- Target Segment (pre-defined, skip M1): '+v;
+    if(k==='priceLayer') return '- Price Layer: '+v;
+    return '- '+k+': '+v;
+  }).join('\n');
+  return 'You are a senior market research analyst producing a professional-grade target audience research report.\n\n'+
+    'PROJECT BRIEF (00_Project_Brief):\n'+lines+'\n\n'+
+    'GEOGRAPHY RULES — CRITICAL:\n'+
+    '- Use Research Market ('+(brief.geoMarket||brief.geo||'—')+') for ALL statistics, competitor search, pricing, keyword volumes.\n'+
+    '- Use Company Geography ('+(brief.geoCompany||'—')+') only as context about business scale.\n\n'+
+    'COMPANY DATA: If currentRevenue/currentClients/currentAvgCheck are provided, use them to calculate the company\'s current market share vs SOM and growth potential.\n\n'+
+    'RULES:\n'+
+    '1. ALL output in '+lang+' only. No exceptions.\n'+
+    '2. No invented data — write "нет публичных данных" + Confidence=1 if unavailable.\n'+
+    '3. Every stat needs a real verifiable URL.\n'+
+    '4. Markdown pipe tables only.\n'+
+    '5. Explain abbreviations (TAM/SAM/SOM/JTBD/CJM/LPR/VoC) below tables.\n'+
+    '6. End each block with "Итог / Следующие шаги" (3-5 steps).';
 }
 
-// ── MODULE PROMPTS ─────────────────────────────────────────────────────────────
+
 function buildM1Prompt(brief, lang, prev) {
   const ctx = prev ? `\nCONTEXT FROM PREVIOUS MODULES:\n${prev}\n` : '';
   return `${ctx}
@@ -545,27 +700,34 @@ Output JSON between <<<CHART_DATA_START>>> and <<<CHART_DATA_END>>>:
 }
 
 function buildReportPrompt(brief, results, lang) {
-  const sections = results.map(r => `=== ${r.id}: ${MODULES.find(m=>m.id===r.id)?.titleRu||r.id} ===\n${r.content.slice(0,800)}`).join('\n\n');
-  return `Create a professional research report. ALL output in ${lang} ONLY.
-
-DATA FROM COMPLETED MODULES:
-${sections}
-
-REPORT STRUCTURE:
-1. Обложка и оглавление
-2. Decision Brief (1–2 страницы) — цель исследования, ядро ЦА (кто приносит деньги), приоритизация сегментов (таблица), 5–7 ключевых инсайтов, стратегический фокус на 1–3 месяца
-3. Сегменты и персоны — карта сегментов, персоны (мини-профиль), JTBD по сегментам
-4. Боли, страхи, критерии выбора — карта болей→решений, страхи (топ), критерии и триггеры доверия
-5. Голос клиента (VoC) — таблица цитат, "клиент говорит vs мы говорим", список ключевых формулировок
-6. Путь клиента (CJM) и осведомлённость — уровни осведомлённости, карта пути, узкие места
-7. Конкуренты и позиционирование — карта конкурентов, гэп-анализ, возможности
-8. Офферы — финальные офферы по сегментам, матрица офферов
-9. Контент и каналы — контент-система, каналы, гипотезы тестов
-10. SEO-стратегия (если модуль выполнен)
-11. Выводы и стратегические рекомендации — топ-3 приоритета, план на 1–3 месяца, KPI
-
-Include only sections for completed modules. Use Markdown tables. Be specific and evidence-based.`;
+  const completedIds = results.map(r=>r.id);
+  const sections = results.map(r => {
+    const m = MODULES.find(x=>x.id===r.id);
+    return '=== '+r.id+': '+(m?m.titleRu:r.id)+' ===\n'+r.content.slice(0,3000);
+  }).join('\n\n---\n\n');
+  const sectionMap = {
+    M1: '## Рынок, ёмкость и сегменты\n- TAM→SAM→SOM модель\n- Карта сегментов\n- Приоритизация ниш\n- Позиция компании на рынке (если есть данные)',
+    M2: '## Конкуренты и позиционирование\n- Карта конкурентов\n- Гэп-анализ Win/Parity/Lose\n- Возможности',
+    M3: '## Голос клиента (VoC)\n- Таблица цитат\n- "Клиент говорит vs мы говорим"\n- Ключевые формулировки',
+    M4: '## Психология покупки\n- Персоны\n- JTBD\n- Страхи и критерии\n- CJM',
+    M5: '## Офферы\n- Финальные офферы по сегментам',
+    M6: '## Контент и каналы\n- Контент-система\n- Креативные брифы',
+    M7: '## SEO-стратегия\n- Семантическое ядро\n- Структура сайта',
+  };
+  const structureLines = completedIds.map(id=>sectionMap[id]).filter(Boolean).join('\n');
+  return 'Write a professional research report. ALL output in '+lang+' only. No fabricated data.\n\n'+
+    'COMPLETED MODULES DATA:\n'+sections+'\n\n'+
+    'REPORT RULES:\n'+
+    '1. Write ONLY sections for completed modules: '+completedIds.join(', ')+'\n'+
+    '2. DO NOT invent sections for missing modules.\n'+
+    '3. Start with Decision Brief (1 page): research goal, core audience, 5-7 key insights from real data, 1-3 month focus.\n'+
+    '4. Then one section per completed module using the real data above.\n'+
+    '5. End with: Top-3 priorities, 90-day action plan, KPIs.\n'+
+    '6. Use Markdown tables. Be specific and evidence-based. No generic statements.\n\n'+
+    'STRUCTURE FOR THIS REPORT:\n'+
+    '# Decision Brief\n'+structureLines+'\n# Выводы и план на 90 дней';
 }
+
 
 // ── MARKDOWN ────────────────────────────────────────────────────────────────────
 function MD({ text }) {
@@ -747,65 +909,241 @@ function ModuleCharts({ moduleId, chartData }) {
   } catch { return null; }
 }
 
-// ── MAIN APP ────────────────────────────────────────────────────────────────────
+
+// ── TOOLTIP COMPONENT
+function InfoTip({ text }) {
+  const [show, setShow] = React.useState(false);
+  return (
+    <span style={{display:'inline-flex',flexDirection:'column',marginLeft:4}}>
+      <button className="info-btn" onClick={()=>setShow(s=>!s)} title="Info">i</button>
+      {show && <span className="tooltip-box" style={{display:'block',marginTop:4}}>{text}</span>}
+    </span>
+  );
+}
+
+// ── FIELD COMPONENT
+function Field({ label, optional, info, children }) {
+  return (
+    <div style={{marginBottom:10}}>
+      <div className="field-label-row">
+        <span className="field-label">{label}</span>
+        {optional && <span className="field-opt">optional</span>}
+        {info && <InfoTip text={info}/>}
+      </div>
+      {children}
+    </div>
+  );
+}
+
+// ── MODULE CARD
+function ModuleCard({ m, on, onToggle, uiLang }) {
+  const t = T[uiLang];
+  const tagline = uiLang==='ru' ? m.taglineRu : m.taglineEn;
+  const what = uiLang==='ru' ? m.whatRu : m.whatEn;
+  const outputs = uiLang==='ru' ? m.outputsRu : m.outputsEn;
+  return (
+    <div onClick={onToggle} style={{border:on?'2px solid '+m.color:'1px solid #e5e5e5',borderRadius:12,overflow:'hidden',cursor:'pointer',marginBottom:8,background:'#fff',transition:'border 0.15s'}}>
+      <div style={{display:'flex',alignItems:'center',gap:10,padding:'11px 14px'}}>
+        <span style={{fontSize:11,fontWeight:500,padding:'3px 8px',borderRadius:4,background:m.bg,color:m.dark,flexShrink:0}}>{m.id}</span>
+        <div style={{flex:1}}>
+          <div style={{fontSize:13,fontWeight:500,color:'#111'}}>{m.title}</div>
+          <div style={{fontSize:11,color:'#888',marginTop:1}}>{tagline}</div>
+        </div>
+        <span style={{fontSize:10,color:'#aaa',flexShrink:0}}>{m.estimatedMin} min</span>
+        <div style={{width:18,height:18,borderRadius:4,border:on?'none':'1.5px solid #ccc',background:on?m.color:'transparent',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
+          {on && <span style={{color:'#fff',fontSize:11}}>✓</span>}
+        </div>
+      </div>
+      {on && (
+        <div style={{padding:'0 14px 12px',borderTop:'1px solid '+m.border}}>
+          <p style={{fontSize:12,color:'#555',lineHeight:1.6,margin:'10px 0 8px'}}>{what}</p>
+          <div style={{display:'flex',flexWrap:'wrap',gap:4}}>
+            {outputs.map((o,i)=><span key={i} style={{fontSize:10,padding:'2px 7px',borderRadius:3,background:'#f5f5f5',color:'#666'}}>{o}</span>)}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── PRICE LAYER SCREEN
+function PriceLayerScreen({ layers, selected, onToggle, onContinue, onBack, uiLang, generating }) {
+  const t = T[uiLang];
+  if (generating) return (
+    <div className="card" style={{textAlign:'center',padding:'3rem'}}>
+      <p style={{fontSize:14,color:'#666',marginBottom:8}}>{t.generating2}</p>
+      <p style={{fontSize:12,color:'#aaa'}}>~30 seconds</p>
+    </div>
+  );
+  return (
+    <div>
+      <div className="card">
+        <h2 style={{fontSize:18,fontWeight:500,marginBottom:6}}>{t.chooseLayer}</h2>
+        <p style={{fontSize:13,color:'#666',marginBottom:16,lineHeight:1.5}}>{t.chooseLayerSub}</p>
+        {layers.map((layer, i) => {
+          const isOn = selected.includes(i);
+          const colors = ['#1565A8','#639922','#633806'];
+          const bgs = ['#E3EFFE','#EAF3DE','#FAEEDA'];
+          const darks = ['#0D3E6E','#27500A','#412402'];
+          return (
+            <div key={i} onClick={()=>onToggle(i)}
+              style={{border:isOn?'2px solid '+colors[i]:'1px solid #e5e5e5',borderRadius:12,padding:'1rem 1.25rem',marginBottom:10,cursor:'pointer',background:isOn?bgs[i]:'#fff'}}>
+              <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:isOn?10:0}}>
+                <div style={{flex:1}}>
+                  <div style={{fontSize:14,fontWeight:500,color:isOn?darks[i]:'#111'}}>{layer.name}</div>
+                  <div style={{fontSize:12,color:isOn?colors[i]:'#888',marginTop:2}}>{layer.priceRange}</div>
+                </div>
+                <div style={{width:18,height:18,borderRadius:50,border:isOn?'none':'1.5px solid #ccc',background:isOn?colors[i]:'transparent',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
+                  {isOn && <span style={{color:'#fff',fontSize:11}}>✓</span>}
+                </div>
+              </div>
+              {isOn && (
+                <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:8,marginBottom:10}}>
+                  {[['SOM',layer.som],['Competition',layer.competition],['AOV/CAC',layer.efficiency]].map(([l,v])=>(
+                    <div key={l} style={{background:'rgba(255,255,255,0.6)',borderRadius:8,padding:'8px 10px'}}>
+                      <div style={{fontSize:10,color:darks[i],marginBottom:2}}>{l}</div>
+                      <div style={{fontSize:13,fontWeight:500,color:darks[i]}}>{v}</div>
+                    </div>
+                  ))}
+                </div>
+              )}
+              {isOn && layer.players && (
+                <div>
+                  <div style={{fontSize:10,color:darks[i],marginBottom:4}}>Key players</div>
+                  <div style={{display:'flex',flexWrap:'wrap',gap:4}}>
+                    {layer.players.map((p,j)=><span key={j} style={{fontSize:11,padding:'2px 8px',borderRadius:3,background:'rgba(255,255,255,0.7)',color:darks[i]}}>{p}</span>)}
+                  </div>
+                </div>
+              )}
+            </div>
+          );
+        })}
+        <p style={{fontSize:12,color:'#888',marginTop:4}}>{t.layerNote}</p>
+      </div>
+      <div style={{display:'flex',gap:10}}>
+        <button onClick={onBack}>{t.backToM1}</button>
+        <button className="btn-primary" onClick={onContinue} disabled={selected.length===0}>{t.continueToM2}</button>
+      </div>
+    </div>
+  );
+}
+
+// ── MAIN APP
 function App() {
-  const [sc, setSc] = useState('list');
-  const [projs, setProjs] = useState(() => loadAll());
-  const [proj, setProj] = useState(null);
-  const empty = { name:'', niche:'', geoCompany:'', geoMarket:'', format:'', audience:'', result:'', price:'', competitors:'', extra:'' };
-  const [brief, setBrief] = useState(empty);
-  const [lang, setLang] = useState('Russian');
-  const [mods, setMods] = useState(['M1','M2']);
-  const [siteUrl, setSiteUrl] = useState('');
-  const [parsing, setParsing] = useState(false);
-  const [pMsg, setPMsg] = useState('');
-  const [curMod, setCurMod] = useState(null);
-  const [curStep, setCurStep] = useState('');
-  const [curStepIdx, setCurStepIdx] = useState(0);
-  const [exp, setExp] = useState({});
-  const [rep, setRep] = useState('');
-  const [repping, setRepping] = useState(false);
-  const [repOpen, setRepOpen] = useState(false);
-  const [xl, setXl] = useState('');
-  const [xlating, setXlating] = useState(false);
-  const [xled, setXled] = useState('');
+  const [uiLang, setUiLang] = React.useState(loadUiLang);
+  const t = T[uiLang];
+
+  const [sc, setSc] = React.useState('list');
+  const [projs, setProjs] = React.useState(() => loadAll());
+  const [proj, setProj] = React.useState(null);
+
+  const empty = { name:'', niche:'', geoCompany:'', geoMarket:'', format:'', audience:'', result:'', price:'', competitors:'', extra:'', currentRevenue:'', currentClients:'', currentAvgCheck:'', targetSegment:'', priceLayer:'' };
+  const [brief, setBrief] = React.useState(empty);
+  const [lang, setLang] = React.useState('Russian');
+  const [mods, setMods] = React.useState(['M1','M2']);
+  const [siteUrl, setSiteUrl] = React.useState('');
+  const [parsing, setParsing] = React.useState(false);
+  const [pMsg, setPMsg] = React.useState('');
+
+  const [curMod, setCurMod] = React.useState(null);
+  const [curStep, setCurStep] = React.useState('');
+  const [curStepIdx, setCurStepIdx] = React.useState(0);
+  const [exp, setExp] = React.useState({});
+  const [rep, setRep] = React.useState('');
+  const [repping, setRepping] = React.useState(false);
+  const [repOpen, setRepOpen] = React.useState(false);
+  const [xl, setXl] = React.useState('');
+  const [xlating, setXlating] = React.useState(false);
+  const [xled, setXled] = React.useState('');
+
+  // Price layer state
+  const [showLayers, setShowLayers] = React.useState(false);
+  const [priceLayers, setPriceLayers] = React.useState([]);
+  const [selectedLayers, setSelectedLayers] = React.useState([]);
+  const [generatingLayers, setGeneratingLayers] = React.useState(false);
+
+  const switchUiLang = () => { const nl = uiLang==='en'?'ru':'en'; setUiLang(nl); saveUiLang(nl); };
 
   const ref = () => setProjs(loadAll());
-  const sv = useCallback(p => { upsert(p); ref(); return p; }, []);
+  const sv = React.useCallback(p => { upsert(p); ref(); return p; }, []);
 
   // Site reading
-  const parseSite = useCallback(async () => {
+  const parseSite = React.useCallback(async () => {
     if (!siteUrl.trim()) return;
     setParsing(true); setPMsg('⟳ Reading site pages…');
     try {
       const pages = await fetchSite(siteUrl.trim());
       if (!pages.length) throw new Error('No readable content found. Fill manually.');
-      const combined = pages.map(p=>`[${p.url}]\n${p.text}`).join('\n\n---\n\n');
-      setPMsg(`⟳ Read ${pages.length} page(s) — extracting brief…`);
+      const combined = pages.map(p=>'['+p.url+']\n'+p.text).join('\n\n---\n\n');
+      setPMsg('⟳ Read '+pages.length+' page(s) — extracting brief…');
       const result = await callGPT(
         'Extract a marketing brief from website content. Reply ONLY with valid JSON, no markdown.',
-        `Extract from:\n\n${combined}\n\nReturn ONLY:\n{"name":"","niche":"","geoCompany":"","geoMarket":"","format":"","audience":"","result":"","price":"","competitors":"","extra":"","lang":"detected language e.g. Turkish"}`
+        'Extract from:\n\n'+combined+'\n\nReturn ONLY:\n{"name":"","niche":"","geoCompany":"all markets company operates in","geoMarket":"primary research market","format":"","audience":"","result":"","price":"","competitors":"","extra":"","lang":"detected language e.g. Turkish"}'
       );
       const d = JSON.parse(result.replace(/```json|```/g,'').trim());
       setBrief(p => ({...p, ...Object.fromEntries(Object.entries(d).filter(([k,v])=>k!=='lang'&&v&&empty.hasOwnProperty(k)))}));
       if (d.lang) { const m=LANGS.find(l=>l.toLowerCase()===d.lang.toLowerCase()); if(m) setLang(m); }
-      setPMsg(`✓ Brief filled from ${pages.length} page(s) — review below`);
+      setPMsg('✓ Brief filled from '+pages.length+' page(s) — review below');
     } catch(e) { setPMsg('✗ ' + e.message); }
     setParsing(false);
   }, [siteUrl]);
 
   const openP = p => {
-    const b={...(p.brief||{})}; if(b.geo&&!b.geoMarket){b.geoMarket=b.geo;delete b.geo;}
+    const b={...(p.brief||{})};
+    if(b.geo&&!b.geoMarket){b.geoMarket=b.geo;delete b.geo;}
     setProj(p); setBrief({...empty,...b}); setLang(p.lang||'Russian');
     setMods(p.mods||['M1','M2']); setRep(p.report||'');
-    setExp({}); setRepOpen(false); setXled(''); setSc('work');
+    setExp({}); setRepOpen(false); setXled('');
+    setShowLayers(false); setPriceLayers(p.priceLayers||[]); setSelectedLayers(p.selectedLayers||[]);
+    setSc('work');
   };
 
   const goNew = () => {
     setProj(null); setBrief(empty); setLang('Russian'); setMods(['M1','M2']);
     setSiteUrl(''); setPMsg(''); setRep(''); setExp({}); setRepOpen(false); setXled('');
+    setShowLayers(false); setPriceLayers([]); setSelectedLayers([]);
     setSc('form');
   };
+
+  // Extract chart data — flexible parser (handles markdown code blocks too)
+  const extractChartData = content => {
+    // Try direct tags first
+    let m = content.match(/<<<CHART_DATA_START>>>([\s\S]*?)<<<CHART_DATA_END>>>/);
+    if (m) { try { return JSON.parse(m[1].trim()); } catch {} }
+    // Try inside markdown code block
+    m = content.match(/<<<CHART_DATA_START>>>\s*```(?:json)?\s*([\s\S]*?)```\s*<<<CHART_DATA_END>>>/);
+    if (m) { try { return JSON.parse(m[1].trim()); } catch {} }
+    // Try finding JSON after the tag even without closing tag
+    m = content.match(/<<<CHART_DATA_START>>>\s*(?:```(?:json)?)?\s*(\{[\s\S]*?\})\s*(?:```)?\s*(?:<<<CHART_DATA_END>>>)?/);
+    if (m) { try { return JSON.parse(m[1].trim()); } catch {} }
+    return null;
+  };
+
+  const cleanContent = content => content.replace(/<<<CHART_DATA_START>>>[\s\S]*?<<<CHART_DATA_END>>>/g,'').replace(/<<<CHART_DATA_START>>>[\s\S]*/g,'').trim();
+
+  // Generate price layers after M1
+  const generatePriceLayers = React.useCallback(async (m1Content) => {
+    setGeneratingLayers(true);
+    try {
+      const result = await callGPT(
+        'You are a market analyst. Analyze the M1 research data and identify 3 price layers in the market. Reply ONLY with valid JSON, no markdown or explanation.',
+        'Based on this M1 research:\n\n'+m1Content.slice(0,3000)+'\n\nIdentify exactly 3 price layers. Return ONLY this JSON:\n[{"name":"Economy — basic services","priceRange":"price range with currency","som":"~N clients/year","competition":"High/Medium/Low","efficiency":"~Nx","players":["player1","player2","player3"]},{"name":"Mid-market — analytics & recommendations","priceRange":"...","som":"...","competition":"...","efficiency":"...","players":["..."]},{"name":"Premium — full outsourcing","priceRange":"...","som":"...","competition":"...","efficiency":"...","players":["..."]}]'
+      );
+      const cleaned = result.replace(/```json|```/g,'').trim();
+      const layers = JSON.parse(cleaned);
+      setPriceLayers(layers);
+      return layers;
+    } catch(e) {
+      // fallback generic layers
+      const fallback = [
+        {name:'Economy — basic services', priceRange:'—', som:'—', competition:'High', efficiency:'—', players:[]},
+        {name:'Mid-market — analytics & recommendations', priceRange:'—', som:'—', competition:'Medium', efficiency:'—', players:[]},
+        {name:'Premium — full outsourcing', priceRange:'—', som:'—', competition:'Low', efficiency:'—', players:[]},
+      ];
+      setPriceLayers(fallback);
+      return fallback;
+    } finally { setGeneratingLayers(false); }
+  }, []);
 
   const getModulePrompt = (modId, brief, lang, prevContent) => {
     const p = prevContent ? prevContent.slice(0, 2000) : '';
@@ -817,27 +1155,20 @@ function App() {
       case 'M5': return buildM5Prompt(brief, lang, p);
       case 'M6': return buildM6Prompt(brief, lang, p);
       case 'M7': return buildM7Prompt(brief, lang, p);
-      default: return `Research module ${modId} for this project in ${lang}.`;
+      default: return 'Research module '+modId+' for this project in '+lang+'.';
     }
   };
 
-  const extractChartData = content => {
-    const m = content.match(/<<<CHART_DATA_START>>>([\s\S]*?)<<<CHART_DATA_END>>>/);
-    if (!m) return null;
-    try { return JSON.parse(m[1].trim()); } catch { return null; }
-  };
-
-  const cleanContent = content => content.replace(/<<<CHART_DATA_START>>>[\s\S]*?<<<CHART_DATA_END>>>/g, '').trim();
-
-  const run = useCallback(async () => {
+  const run = React.useCallback(async (modsToRun) => {
     if (!brief.name) return;
     const id = proj?.id || ('p' + Date.now());
     const existing = proj?.results || [];
     const doneIds = existing.map(r => r.id);
-    const toRun = MODULES.filter(m => mods.includes(m.id) && !doneIds.includes(m.id));
+    const allSelected = modsToRun || mods;
+    const toRun = MODULES.filter(m => allSelected.includes(m.id) && !doneIds.includes(m.id));
     if (!toRun.length) { setSc('work'); return; }
 
-    const p = { id, createdAt: proj?.createdAt||new Date().toISOString(), updatedAt: new Date().toISOString(), brief, lang, mods, results: existing, report: proj?.report||'' };
+    const p = { id, createdAt: proj?.createdAt||new Date().toISOString(), updatedAt: new Date().toISOString(), brief, lang, mods:allSelected, results:existing, report:proj?.report||'', priceLayers, selectedLayers };
     setProj(p); setRep(p.report); sv(p); setSc('work');
 
     const sys = buildSystem(brief, lang);
@@ -845,54 +1176,71 @@ function App() {
 
     for (const mod of toRun) {
       setCurMod(mod.id); setCurStep(mod.steps[0]); setCurStepIdx(0);
-
-      // Animate steps
       let stepI = 0;
       const stepTimer = setInterval(() => {
-        stepI = Math.min(stepI + 1, mod.steps.length - 1);
+        stepI = Math.min(stepI+1, mod.steps.length-1);
         setCurStep(mod.steps[stepI]); setCurStepIdx(stepI);
-      }, Math.floor((mod.estimatedMin * 60 * 1000) / mod.steps.length));
+      }, Math.floor((mod.estimatedMin*60*1000)/mod.steps.length));
 
       let full = '';
       try {
         const prevContent = col.length ? col[col.length-1].content : '';
         full = await callGPT(sys, getModulePrompt(mod.id, brief, lang, prevContent));
-      } catch(e) { full = `Error: ${e.message}`; }
-
+      } catch(e) { full = 'Error: '+e.message; }
       clearInterval(stepTimer);
 
       const chartData = extractChartData(full);
       const cleanedContent = cleanContent(full);
-      const result = { id: mod.id, content: cleanedContent, chartData, at: new Date().toISOString() };
+      const result = { id:mod.id, content:cleanedContent, chartData, at:new Date().toISOString() };
       col.push(result);
-      const upd = { ...p, results: col, updatedAt: new Date().toISOString() };
+      const upd = { ...p, results:col, updatedAt:new Date().toISOString() };
       setProj(upd); sv(upd);
-      setExp(ex => ({...ex, [mod.id]: false}));
+      setExp(ex => ({...ex, [mod.id]:false}));
+
+      // After M1 — show price layer selection
+      if (mod.id === 'M1') {
+        setCurMod(null); setCurStep(''); setCurStepIdx(0);
+        setShowLayers(true);
+        await generatePriceLayers(cleanedContent);
+        return; // stop — wait for user layer selection
+      }
     }
-
     setCurMod(null); setCurStep(''); setCurStepIdx(0);
-  }, [brief, lang, mods, proj, sv]);
+  }, [brief, lang, mods, proj, sv, priceLayers, selectedLayers, generatePriceLayers]);
 
-  const genRep = useCallback(async () => {
+  const continueAfterLayers = React.useCallback(() => {
+    setShowLayers(false);
+    // Add selected layer info to brief context
+    const layerNames = selectedLayers.map(i => priceLayers[i]?.name).filter(Boolean);
+    if (layerNames.length > 0) {
+      setBrief(b => ({...b, priceLayer: layerNames.join(', ')}));
+    }
+    // Run remaining modules
+    const doneIds = (proj?.results||[]).map(r=>r.id);
+    const remaining = mods.filter(id => !doneIds.includes(id));
+    if (remaining.length > 0) run(remaining);
+  }, [selectedLayers, priceLayers, proj, mods, run]);
+
+  const genRep = React.useCallback(async () => {
     if (!proj?.results?.length) return;
     setRepping(true); setRepOpen(true); setRep(''); setXled('');
     try {
       const r = await callGPT(
-        `Write a professional research report. ALL output in ${lang} only. No fabricated data.`,
+        'Write a professional research report. ALL output in '+lang+' only. No fabricated data.',
         buildReportPrompt(brief, proj.results, lang)
       );
       setRep(r);
-      const upd = {...proj, report: r, updatedAt: new Date().toISOString()};
+      const upd = {...proj, report:r, updatedAt:new Date().toISOString()};
       setProj(upd); sv(upd);
-    } catch(e) { setRep('Error: ' + e.message); }
+    } catch(e) { setRep('Error: '+e.message); }
     setRepping(false);
   }, [lang, brief, proj, sv]);
 
-  const doXl = useCallback(async () => {
+  const doXl = React.useCallback(async () => {
     if (!rep||!xl.trim()) return;
     setXlating(true); setXled('');
     try {
-      const r = await callGPT('Translate accurately. Preserve all Markdown formatting.', `Translate to ${xl}:\n\n${rep}`);
+      const r = await callGPT('Translate accurately. Preserve all Markdown formatting.', 'Translate to '+xl+':\n\n'+rep);
       setXled(r);
     } catch(e) { setXled('Error: '+e.message); }
     setXlating(false);
@@ -914,8 +1262,7 @@ function App() {
   };
   const dlJson = () => {
     if (!proj?.results) return;
-    const pkg = {
-      project: brief, lang,
+    const pkg = { project:brief, lang, priceLayers, selectedLayers,
       segments: proj.results.find(r=>r.id==='M1')?.content?.slice(0,3000)||'',
       voc: proj.results.find(r=>r.id==='M3')?.content?.slice(0,3000)||'',
       offers: proj.results.find(r=>r.id==='M5')?.content?.slice(0,3000)||'',
@@ -929,25 +1276,31 @@ function App() {
     a.click();
   };
 
-  // ── LIST ────────────────────────────────────────────────────────────────────
+  // ── HEADER
+  const Header = () => (
+    <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'1.5rem'}}>
+      <div>
+        <h2 style={{fontSize:22,fontWeight:500}}>{t.appTitle}</h2>
+        <p style={{fontSize:13,color:'#666',marginTop:3}}>{t.appSub} · {MODEL}</p>
+      </div>
+      <button onClick={switchUiLang} style={{padding:'5px 12px',fontSize:12,fontWeight:500}}>{uiLang==='en'?'RU':'EN'}</button>
+    </div>
+  );
+
+  // ── LIST
   if (sc === 'list') return (
     <div>
-      <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'1.5rem'}}>
-        <div>
-          <h2 style={{fontSize:22,fontWeight:500}}>CA Research</h2>
-          <p style={{fontSize:13,color:'#666',marginTop:3}}>Professional target audience research · {MODEL}</p>
-        </div>
-        <button className="btn-primary" onClick={goNew} style={{padding:'9px 18px'}}>+ New project</button>
+      <Header/>
+      <div style={{display:'flex',justifyContent:'flex-end',marginBottom:'1rem'}}>
+        <button className="btn-primary" onClick={goNew} style={{padding:'9px 18px'}}>{t.newProject}</button>
       </div>
-
       {projs.length === 0 && (
         <div className="card" style={{textAlign:'center',padding:'3rem'}}>
-          <p style={{fontSize:15,color:'#666',marginBottom:8}}>No projects yet</p>
-          <p style={{fontSize:13,color:'#999',marginBottom:'1.5rem'}}>Enter a client website URL and the agent will fill the brief automatically</p>
-          <button className="btn-primary" onClick={goNew} style={{padding:'10px 24px'}}>+ New project</button>
+          <p style={{fontSize:15,color:'#666',marginBottom:8}}>{t.noProjects}</p>
+          <p style={{fontSize:13,color:'#999',marginBottom:'1.5rem'}}>{t.noProjectsSub}</p>
+          <button className="btn-primary" onClick={goNew} style={{padding:'10px 24px'}}>{t.newProject}</button>
         </div>
       )}
-
       {projs.map(p => {
         const done = (p.results||[]).map(r=>r.id);
         return (
@@ -976,21 +1329,24 @@ function App() {
     </div>
   );
 
-  // ── FORM ─────────────────────────────────────────────────────────────────────
+  // ── FORM
   if (sc === 'form') return (
     <div>
       <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:'1.5rem'}}>
-        <button onClick={()=>setSc('list')}>← Back</button>
+        <button onClick={()=>setSc('list')}>{t.backBtn}</button>
         <h2 style={{fontSize:20,fontWeight:500}}>New project</h2>
+        <div style={{marginLeft:'auto'}}>
+          <button onClick={switchUiLang} style={{padding:'5px 12px',fontSize:12,fontWeight:500}}>{uiLang==='en'?'RU':'EN'}</button>
+        </div>
       </div>
 
       <div className="card">
-        <p style={{fontSize:13,fontWeight:500,marginBottom:4}}>Auto-fill from website</p>
-        <p style={{fontSize:12,color:'#666',marginBottom:10}}>Enter client site URL — agent reads up to 3 pages and fills the brief automatically.</p>
+        <p style={{fontSize:13,fontWeight:500,marginBottom:4}}>{t.autoFill}</p>
+        <p style={{fontSize:12,color:'#666',marginBottom:10}}>{t.autoFillSub}</p>
         <div style={{display:'flex',gap:8,marginBottom:8}}>
           <input value={siteUrl} onChange={e=>setSiteUrl(e.target.value)} onKeyDown={e=>e.key==='Enter'&&parseSite()} placeholder="https://client-site.com" style={{flex:1}}/>
           <button onClick={parseSite} disabled={!siteUrl.trim()||parsing} style={{whiteSpace:'nowrap',flexShrink:0,padding:'0 16px'}}>
-            {parsing ? 'Reading…' : 'Read site ↗'}
+            {parsing ? t.reading : t.readSite}
           </button>
         </div>
         {pMsg && <p style={{fontSize:12,color:pMsg.startsWith('✓')?'#27500A':pMsg.startsWith('✗')?'#c00':'#666'}}>{pMsg}</p>}
@@ -998,36 +1354,46 @@ function App() {
 
       <div className="card">
         <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'1rem'}}>
-          <p style={{fontSize:13,fontWeight:500}}>Project Brief (00_Project_Brief)</p>
+          <p style={{fontSize:13,fontWeight:500}}>{t.briefTitle}</p>
           <span className="tag" style={{background:'#E6F1FB',color:'#0C447C',borderColor:'#85B7EB'}}>fill in any language</span>
         </div>
-        <div style={{display:'grid',gap:10}}>
-          {[
-            {k:'name',      l:'Product / service name *',  ph:'Ботулинотерапия, Nutrikey, КРАСТЕХ…'},
-            {k:'niche',     l:'Niche / industry',           ph:'Медицинская косметология, hayvan besleme…'},
-            {k:'geoCompany', l:'Company geography', ph:'Türkiye, KZ, UAE — all company markets'},
-            {k:'geoMarket',  l:'Research market *', ph:'Izmir, Turkey — this research only'},
-            {k:'format',    l:'Format',                     ph:'Offline clinic, B2B consulting, SaaS…'},
-            {k:'audience',  l:'Target audience',            ph:'Women 30–55, yem fabrikaları, B2B owners…'},
-            {k:'result',    l:'Main result for client',     ph:'What the client gets — specific outcome…'},
-            {k:'price',     l:'Price range',                ph:'₽15 000–50 000, on request, ₺5000+…'},
-            {k:'competitors',l:'Known competitors',         ph:'Competitor A, site.com…'},
-          ].map(f => (
-            <div key={f.k}>
-              <label style={{display:'block',fontSize:11,color:'#666',marginBottom:3}}>{f.l}</label>
-              <input value={brief[f.k]} onChange={e=>setBrief(p=>({...p,[f.k]:e.target.value}))} placeholder={f.ph}/>
-            </div>
-          ))}
-          <div>
-            <label style={{display:'block',fontSize:11,color:'#666',marginBottom:3}}>Additional context</label>
-            <textarea value={brief.extra} onChange={e=>setBrief(p=>({...p,extra:e.target.value}))} placeholder="Market specifics, USP, constraints, existing data…" rows={2} style={{resize:'vertical'}}/>
-          </div>
+        <div style={{display:'grid',gap:2}}>
+          <Field label={t.fName}><input value={brief.name} onChange={e=>setBrief(p=>({...p,name:e.target.value}))} placeholder={t.fNamePh}/></Field>
+          <Field label={t.fNiche} info={t.fNicheInfo}><input value={brief.niche} onChange={e=>setBrief(p=>({...p,niche:e.target.value}))} placeholder={t.fNichePh}/></Field>
+          <Field label={t.fGeoComp} info={t.fGeoCompInfo}><input value={brief.geoCompany} onChange={e=>setBrief(p=>({...p,geoCompany:e.target.value}))} placeholder={t.fGeoCompPh}/></Field>
+          <Field label={t.fGeoMarket} info={t.fGeoMarketInfo}><input value={brief.geoMarket} onChange={e=>setBrief(p=>({...p,geoMarket:e.target.value}))} placeholder={t.fGeoMarketPh} style={{borderColor:'#378ADD'}}/></Field>
+          <Field label={t.fFormat}><input value={brief.format} onChange={e=>setBrief(p=>({...p,format:e.target.value}))} placeholder={t.fFormatPh}/></Field>
+          <Field label={t.fAudience}><input value={brief.audience} onChange={e=>setBrief(p=>({...p,audience:e.target.value}))} placeholder={t.fAudiencePh}/></Field>
+          <Field label={t.fResult}><input value={brief.result} onChange={e=>setBrief(p=>({...p,result:e.target.value}))} placeholder={t.fResultPh}/></Field>
+          <Field label={t.fPrice}><input value={brief.price} onChange={e=>setBrief(p=>({...p,price:e.target.value}))} placeholder={t.fPricePh}/></Field>
+          <Field label={t.fCompetitors}><input value={brief.competitors} onChange={e=>setBrief(p=>({...p,competitors:e.target.value}))} placeholder={t.fCompetitorsPh}/></Field>
+          <Field label={t.fExtra}><textarea value={brief.extra} onChange={e=>setBrief(p=>({...p,extra:e.target.value}))} placeholder={t.fExtraPh} rows={2} style={{resize:'vertical'}}/></Field>
         </div>
+
+        <div style={{borderTop:'1px solid #eee',margin:'1rem 0'}}/>
+        <p style={{fontSize:12,fontWeight:500,color:'#666',marginBottom:8}}>{t.companyDataTitle} <span style={{fontSize:11,fontWeight:400,color:'#aaa'}}>— {t.companyDataSub}</span></p>
+        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:8}}>
+          <Field label={t.fRevenue} optional info={t.fRevenueInfo}><input value={brief.currentRevenue} onChange={e=>setBrief(p=>({...p,currentRevenue:e.target.value}))} placeholder={t.fRevenuePh}/></Field>
+          <Field label={t.fClients} optional info={t.fClientsInfo}><input value={brief.currentClients} onChange={e=>setBrief(p=>({...p,currentClients:e.target.value}))} placeholder={t.fClientsPh}/></Field>
+          <Field label={t.fAvgCheck} optional info={t.fAvgCheckInfo}><input value={brief.currentAvgCheck} onChange={e=>setBrief(p=>({...p,currentAvgCheck:e.target.value}))} placeholder={t.fAvgCheckPh}/></Field>
+        </div>
+
+        <div style={{borderTop:'1px solid #eee',margin:'1rem 0'}}/>
+        <p style={{fontSize:12,fontWeight:500,color:'#666',marginBottom:8}}>{t.skipM1Title} <span style={{fontSize:11,fontWeight:400,color:'#aaa'}}>— {t.skipM1Sub}</span></p>
+        <Field label={t.fTargetSegment} optional info={t.fTargetSegmentInfo}><input value={brief.targetSegment} onChange={e=>setBrief(p=>({...p,targetSegment:e.target.value}))} placeholder={t.fTargetSegmentPh}/></Field>
+        <Field label={t.fPriceLayer} optional info={t.fPriceLayerInfo}>
+          <select value={brief.priceLayer} onChange={e=>setBrief(p=>({...p,priceLayer:e.target.value}))}>
+            <option value="">— select if known —</option>
+            <option value="economy">{t.fPriceLayerEco}</option>
+            <option value="midmarket">{t.fPriceLayerMid}</option>
+            <option value="premium">{t.fPriceLayerPrem}</option>
+          </select>
+        </Field>
       </div>
 
       <div className="card">
-        <p style={{fontSize:13,fontWeight:500,marginBottom:4}}>Research language</p>
-        <p style={{fontSize:12,color:'#666',marginBottom:10}}>All tables, analysis and report will be written in this language. Brief above is input only.</p>
+        <p style={{fontSize:13,fontWeight:500,marginBottom:4}}>{t.researchLang}</p>
+        <p style={{fontSize:12,color:'#666',marginBottom:10}}>{t.researchLangSub}</p>
         <div style={{display:'flex',gap:6,flexWrap:'wrap',marginBottom:8}}>
           {LANGS.map(l => (
             <button key={l} onClick={()=>setLang(l)} style={{padding:'5px 12px',fontSize:12,borderColor:l===lang?'#378ADD':'#ddd',background:l===lang?'#E6F1FB':'#fff',color:l===lang?'#0C447C':'#111',fontWeight:l===lang?500:400}}>
@@ -1035,49 +1401,51 @@ function App() {
             </button>
           ))}
         </div>
-        <p style={{fontSize:11,color:'#666'}}>Selected: <strong>{lang}</strong></p>
       </div>
 
       <div className="card">
-        <p style={{fontSize:13,fontWeight:500,marginBottom:10}}>Select modules</p>
-        <div style={{display:'grid',gap:7}}>
-          {MODULES.map(m => {
-            const on = mods.includes(m.id);
-            return (
-              <div key={m.id} onClick={()=>setMods(p=>p.includes(m.id)?p.filter(x=>x!==m.id):[...p,m.id])}
-                style={{display:'flex',gap:10,alignItems:'flex-start',padding:'10px 12px',borderRadius:8,border:'1px solid '+(on?m.border:'#e5e5e5'),background:on?m.bg:'#fff',cursor:'pointer'}}>
-                <div style={{width:16,height:16,marginTop:1,borderRadius:3,border:'2px solid '+(on?m.color:'#ccc'),background:on?m.color:'transparent',flexShrink:0,display:'flex',alignItems:'center',justifyContent:'center'}}>
-                  {on && <span style={{color:'#fff',fontSize:10}}>✓</span>}
-                </div>
-                <div style={{flex:1}}>
-                  <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
-                    <p style={{fontSize:13,fontWeight:500,color:on?m.dark:'#111',marginBottom:1}}>{m.id} · {m.title}</p>
-                    <span style={{fontSize:10,color:'#888',flexShrink:0,marginLeft:8}}>~{m.estimatedMin} min</span>
-                  </div>
-                  <p style={{fontSize:11,color:on?m.color:'#888'}}>{m.desc}</p>
-                </div>
-              </div>
-            );
-          })}
-        </div>
+        <p style={{fontSize:13,fontWeight:500,marginBottom:4}}>{t.selectModules}</p>
+        <p style={{fontSize:12,color:'#666',marginBottom:10}}>{t.selectModulesSub}</p>
+        {MODULES.map(m => (
+          <ModuleCard key={m.id} m={m} on={mods.includes(m.id)} onToggle={()=>setMods(p=>p.includes(m.id)?p.filter(x=>x!==m.id):[...p,m.id])} uiLang={uiLang}/>
+        ))}
       </div>
 
       <div className="card" style={{background:'#fffbf0',borderColor:'#f5d89e'}}>
         <p style={{fontSize:12,color:'#7a5f00'}}>
-          <strong>Model:</strong> {MODEL} &nbsp;·&nbsp;
-          <strong>Data policy:</strong> No fabricated data — if unavailable, the agent writes "нет публичных данных" &nbsp;·&nbsp;
-          <strong>Est. time:</strong> ~{mods.reduce((s,id)=>s+(MODULES.find(m=>m.id===id)?.estimatedMin||8),0)} min total
+          <strong>{t.modelLabel}:</strong> {MODEL} &nbsp;·&nbsp;
+          <strong>{t.dataPolicy}:</strong> {t.dataPolicyVal} &nbsp;·&nbsp;
+          <strong>{t.estTime}:</strong> ~{mods.reduce((s,id)=>s+(MODULES.find(m=>m.id===id)?.estimatedMin||8),0)} min
         </p>
       </div>
 
-      <button className="btn-primary" onClick={run} disabled={!brief.name||!mods.length}
+      <button className="btn-primary" onClick={()=>run()} disabled={!brief.name||!mods.length}
         style={{width:'100%',padding:'13px',fontSize:14,opacity:brief.name&&mods.length?1:0.4}}>
-        Start research in {lang} → {mods.length} module{mods.length!==1?'s':''} · {MODEL}
+        {t.startBtn} {lang} → {mods.length} module{mods.length!==1?'s':''} · {MODEL}
       </button>
     </div>
   );
 
-  // ── WORK ─────────────────────────────────────────────────────────────────────
+  // ── PRICE LAYER SCREEN
+  if (sc === 'work' && showLayers) return (
+    <div>
+      <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:'1.5rem'}}>
+        <button onClick={()=>setSc('list')}>{t.backProjects}</button>
+        <h2 style={{fontSize:18,fontWeight:500}}>{brief.name}</h2>
+      </div>
+      <PriceLayerScreen
+        layers={priceLayers}
+        selected={selectedLayers}
+        onToggle={i=>setSelectedLayers(s=>s.includes(i)?s.filter(x=>x!==i):[...s,i])}
+        onContinue={continueAfterLayers}
+        onBack={()=>setShowLayers(false)}
+        uiLang={uiLang}
+        generating={generatingLayers}
+      />
+    </div>
+  );
+
+  // ── WORK
   const allMods = MODULES.filter(m => mods.includes(m.id));
   const doneIds = (proj?.results||[]).map(r=>r.id);
   const pending = allMods.filter(m => !doneIds.includes(m.id) && m.id !== curMod);
@@ -1086,39 +1454,38 @@ function App() {
 
   return (
     <div>
-      <div style={{display:'flex',alignItems:'flex-start',justifyContent:'space-between',marginBottom:'1rem',gap:12}}>
+      <div style={{display:'flex',alignItems:'flex-start',justifyContent:'space-between',marginBottom:'1rem'}}>
         <div>
           <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:4}}>
-            <button onClick={()=>setSc('list')}>← Projects</button>
+            <button onClick={()=>setSc('list')}>{t.backProjects}</button>
             <h2 style={{fontSize:18,fontWeight:500}}>{brief.name}</h2>
           </div>
           <p style={{fontSize:12,color:'#666'}}>
             {[brief.geoMarket||brief.geo,brief.niche].filter(Boolean).join(' · ')}
             <span className="tag" style={{marginLeft:8,background:'#E6F1FB',color:'#0C447C',borderColor:'#85B7EB'}}>{lang}</span>
             <span className="tag" style={{marginLeft:4,background:'#f0f0f0',color:'#444',borderColor:'#ddd'}}>{MODEL}</span>
+            {brief.priceLayer && <span className="tag" style={{marginLeft:4,background:'#FAEEDA',color:'#633806',borderColor:'#EF9F27'}}>{brief.priceLayer}</span>}
           </p>
         </div>
         {!isRun && pending.length > 0 && (
-          <button className="btn-primary" onClick={run} style={{flexShrink:0}}>
-            + Continue: {pending.map(m=>m.id).join(', ')} ↗
+          <button className="btn-primary" onClick={()=>run()} style={{flexShrink:0}}>
+            {t.continueBtn}: {pending.map(m=>m.id).join(', ')} ↗
           </button>
         )}
       </div>
 
-      {/* Progress */}
       <div style={{marginBottom:'1.25rem'}}>
         <div style={{display:'flex',gap:3,marginBottom:5}}>
           {allMods.map(m => {
             const d=doneIds.includes(m.id), a=curMod===m.id;
-            return <div key={m.id} title={m.title} style={{flex:1,height:4,borderRadius:2,background:d?m.color:a?m.border:'#eee',transition:'background 0.3s'}}/>;
+            return <div key={m.id} title={m.title} style={{flex:1,height:4,borderRadius:2,background:d?m.color:a?m.color+'99':'#e0e0e0'}}/>;
           })}
         </div>
         <p style={{fontSize:11,color:'#888'}}>
-          {isRun ? (doneIds.length+1)+'/'+allMods.length+' - '+(curModData ? curModData.title : '') : doneIds.length+'/'+allMods.length+' modules done'+(pending.length ? ' - '+pending.length+' pending' : '')}
+          {isRun ? (doneIds.length+1)+'/'+allMods.length+' — '+(curModData ? curModData.title : '') : doneIds.length+'/'+allMods.length+' modules done'+(pending.length?' · '+pending.length+' '+t.pending:'')}
         </p>
       </div>
 
-      {/* Active module status */}
       {isRun && curModData && (
         <div className="status-bar">
           <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',gap:16}}>
@@ -1126,7 +1493,7 @@ function App() {
               <p style={{fontSize:12,color:'#aaa',marginBottom:4}}>{curModData.id} · {curModData.title}</p>
               <p style={{fontSize:14,fontWeight:500,marginBottom:10}}>{curStep}</p>
               <div style={{display:'flex',gap:4}}>
-                {curModData.steps.map((s,i) => (
+                {curModData.steps.map((_,i)=>(
                   <div key={i} style={{flex:1,height:2,borderRadius:1,background:i<=curStepIdx?curModData.color:'#333'}}/>
                 ))}
               </div>
@@ -1137,7 +1504,6 @@ function App() {
         </div>
       )}
 
-      {/* Completed modules */}
       {(proj?.results||[]).map(r => {
         const m = MODULES.find(x=>x.id===r.id); if (!m) return null;
         const open = exp[r.id];
@@ -1159,29 +1525,28 @@ function App() {
         );
       })}
 
-      {/* Report & export */}
       {!isRun && (
         <div style={{marginTop:16}}>
           <div style={{border:'1px solid #e5e5e5',borderRadius:12,overflow:'hidden',marginBottom:10}}>
             <div style={{display:'flex',alignItems:'center',gap:10,padding:'12px 14px',background:'#f8f8f8',borderBottom:'1px solid #e5e5e5'}}>
               <span style={{flex:1,fontSize:14,fontWeight:500}}>Report <span style={{fontSize:11,fontWeight:400,color:'#888'}}>in {lang}</span></span>
-              {!rep&&!repping&&<button className="btn-primary" onClick={genRep}>Generate ↗</button>}
-              {rep&&!repping&&<button onClick={genRep}>Regenerate</button>}
-              {(rep||repping)&&<button onClick={()=>setRepOpen(o=>!o)}>{repOpen?'Collapse ▲':'Expand ▼'}</button>}
+              {!rep&&!repping&&<button className="btn-primary" onClick={genRep}>{t.generateReport}</button>}
+              {rep&&!repping&&<button onClick={genRep}>{t.regenerate}</button>}
+              {(rep||repping)&&<button onClick={()=>setRepOpen(o=>!o)}>{repOpen?t.collapse:t.expand}</button>}
             </div>
-            {repping && <p style={{padding:'14px',fontSize:13,color:'#888'}}>Generating report in {lang}… (~2–3 min)</p>}
+            {repping && <p style={{padding:'14px',fontSize:13,color:'#888'}}>{t.generating} (~2–3 min)</p>}
             {rep && repOpen && (
               <>
                 <div style={{padding:'14px',maxHeight:600,overflowY:'auto'}}><MD text={rep}/></div>
                 <div style={{padding:'10px 14px',borderTop:'1px solid #e5e5e5',background:'#f8f8f8',display:'flex',gap:8,alignItems:'center',flexWrap:'wrap'}}>
-                  <span style={{fontSize:12,color:'#666',flexShrink:0}}>Translate to:</span>
+                  <span style={{fontSize:12,color:'#666',flexShrink:0}}>{t.translateTo}</span>
                   <div style={{display:'flex',gap:5,flexWrap:'wrap',flex:1}}>
                     {['Russian','English','Turkish','Arabic','German'].filter(l=>l!==lang).map(l=>(
                       <button key={l} onClick={()=>setXl(l)} style={{padding:'4px 10px',fontSize:11,borderColor:xl===l?'#378ADD':'#ddd',background:xl===l?'#E6F1FB':'#fff',color:xl===l?'#0C447C':'#111'}}>{l}</button>
                     ))}
                     <input value={xl} onChange={e=>setXl(e.target.value)} placeholder="other…" style={{width:90,fontSize:11,padding:'4px 8px'}}/>
                   </div>
-                  <button className="btn-primary" onClick={doXl} disabled={!xl.trim()||xlating}>{xlating?'Translating…':'Translate ↗'}</button>
+                  <button className="btn-primary" onClick={doXl} disabled={!xl.trim()||xlating}>{xlating?t.translating:t.translate}</button>
                 </div>
                 {xled && (
                   <div style={{padding:'14px',borderTop:'1px solid #e5e5e5',maxHeight:400,overflowY:'auto'}}>
@@ -1192,16 +1557,13 @@ function App() {
               </>
             )}
           </div>
-
           <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr 1fr',gap:8}}>
-            <button onClick={()=>dlMd(rep||(proj?.results||[]).map(r=>`## ${r.id}\n\n${r.content}`).join('\n\n---\n\n'))}>↓ Report (.md)</button>
-            <button onClick={()=>xled&&dlMd(xled,'_translated')} disabled={!xled} style={{opacity:xled?1:0.4}}>↓ Translation (.md)</button>
-            <button onClick={dlCsv}>↓ Data (.csv)</button>
-            <button onClick={dlJson} style={{borderColor:'#EF9F27',color:'#633806'}} title="JSON package for Agent 2 (content, landing, SEO)">↓ Agent Pack (.json)</button>
+            <button onClick={()=>dlMd(rep||proj.results.map(r=>'## '+r.id+'\n\n'+r.content).join('\n\n---\n\n'))}>{t.dlReport}</button>
+            <button onClick={()=>xled&&dlMd(xled,'_translated')} disabled={!xled} style={{opacity:xled?1:0.4}}>{t.dlTranslation}</button>
+            <button onClick={dlCsv}>{t.dlData}</button>
+            <button onClick={dlJson} style={{borderColor:'#EF9F27',color:'#633806'}}>{t.dlAgent}</button>
           </div>
-          <p style={{fontSize:11,color:'#888',textAlign:'center',marginTop:8}}>
-            Auto-saved · return anytime · Agent Pack = data package for content & landing agents
-          </p>
+          <p style={{fontSize:11,color:'#888',textAlign:'center',marginTop:8}}>{t.autoSaved}</p>
         </div>
       )}
     </div>
