@@ -1108,7 +1108,7 @@ function App() {
           })}
         </div>
         <p style={{fontSize:11,color:'#888'}}>
-          {isRun ? (doneIds.length+1)+'/'+allMods.length+' — '+(curModData?.title||'') : ''+doneIds.length+'/'+allMods.length+' modules done'+(pending.length?' · '+pending.length+' pending':'')`}
+          {isRun ? (doneIds.length+1)+'/'+allMods.length+' — '+(curModData?.title||'') : ''+doneIds.length+'/'+allMods.length+' modules done'+(pending.length?' · '+pending.length+' pending':'') }
         </p>
       </div>
 
