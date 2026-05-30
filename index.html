@@ -346,7 +346,7 @@ function buildSystem(brief, lang) {
     'GEOGRAPHY RULES — CRITICAL:\n'+
     '- Use Research Market ('+(brief.geoMarket||brief.geo||'—')+') for ALL statistics, competitor search, pricing, keyword volumes.\n'+
     '- Use Company Geography ('+(brief.geoCompany||'—')+') only as context about business scale.\n\n'+
-    'COMPANY DATA: If currentRevenue/currentClients/currentAvgCheck are provided, use them to calculate the company\'s current market share vs SOM and growth potential.\n\n'+
+    'COMPANY DATA — CRITICAL: If brief contains currentRevenue, currentClients, or currentAvgCheck — you MUST include a dedicated section called \'## Company Market Position\' that calculates: current market share (company revenue / SOM revenue * 100%), growth potential (SOM clients - current clients), and revenue gap (SOM - current revenue). If these fields are empty, write \'No company data provided — fill Current Revenue, Clients and Avg Check in the brief for market position analysis.\' in that section.\n\n'+
     'RULES:\n'+
     '1. ALL output in '+lang+' only. No exceptions.\n'+
     '2. No invented data — write "нет публичных данных" + Confidence=1 if unavailable.\n'+
@@ -1285,6 +1285,15 @@ function App() {
     setSc('work');
   };
 
+  // Auto-save brief when it changes on work screen
+  React.useEffect(() => {
+    if (proj && sc === 'work') {
+      const upd = {...proj, brief, lang, updatedAt: new Date().toISOString()};
+      setProj(upd);
+      sv(upd);
+    }
+  }, [brief, lang]);
+
   const goNew = () => {
     setProj(null); setBrief(empty); setLang('Russian'); setMods(['M1','M2']);
     setSiteUrl(''); setPMsg(''); setRep(''); setExp({}); setRepOpen(false); setXled('');
@@ -1520,8 +1529,8 @@ function App() {
   if (sc === 'form') return (
     <div>
       <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:'1.5rem'}}>
-        <button onClick={()=>setSc('list')}>{t.backBtn}</button>
-        <h2 style={{fontSize:20,fontWeight:500}}>New project</h2>
+        <button onClick={()=>proj ? setSc('work') : setSc('list')}>{proj ? '← Back to project' : t.backBtn}</button>
+        <h2 style={{fontSize:20,fontWeight:500}}>{proj ? 'Edit brief: '+brief.name : 'New project'}</h2>
         <div style={{marginLeft:'auto'}}>
           <button onClick={switchUiLang} style={{padding:'5px 12px',fontSize:12,fontWeight:500}}>{uiLang==='en'?'RU':'EN'}</button>
         </div>
@@ -1606,10 +1615,17 @@ function App() {
         </p>
       </div>
 
-      <button className="btn-primary" onClick={()=>run()} disabled={!brief.name||!mods.length}
-        style={{width:'100%',padding:'13px',fontSize:14,opacity:brief.name&&mods.length?1:0.4}}>
-        {t.startBtn} {lang} → {mods.length} module{mods.length!==1?'s':''} · {MODEL}
-      </button>
+      {proj ? (
+        <button className="btn-primary" onClick={()=>setSc('work')}
+          style={{width:'100%',padding:'13px',fontSize:14}}>
+          Save & back to project →
+        </button>
+      ) : (
+        <button className="btn-primary" onClick={()=>run()} disabled={!brief.name||!mods.length}
+          style={{width:'100%',padding:'13px',fontSize:14,opacity:brief.name&&mods.length?1:0.4}}>
+          {t.startBtn} {lang} → {mods.length} module{mods.length!==1?'s':''} · {MODEL}
+        </button>
+      )}
     </div>
   );
 
@@ -1640,6 +1656,11 @@ function App() {
             {t.continueBtn}: {pending.map(m=>m.id).join(', ')} ↗
           </button>
         )}
+      {!isRun && (
+        <button onClick={()=>setSc('form')} style={{flexShrink:0,fontSize:11,padding:'5px 10px',color:'#888',borderColor:'#ddd'}}>
+          Edit brief ✎
+        </button>
+      )}
       </div>
 
       <div style={{marginBottom:'1.25rem'}}>
