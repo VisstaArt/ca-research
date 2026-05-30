@@ -1285,14 +1285,14 @@ function App() {
     setSc('work');
   };
 
-  // Auto-save brief when it changes on work screen
-  React.useEffect(() => {
-    if (proj && sc === 'work') {
+  // Save brief to project when returning from edit form
+  const saveBriefToProject = React.useCallback(() => {
+    if (proj) {
       const upd = {...proj, brief, lang, updatedAt: new Date().toISOString()};
       setProj(upd);
       sv(upd);
     }
-  }, [brief, lang]);
+  }, [proj, brief, lang, sv]);
 
   const goNew = () => {
     setProj(null); setBrief(empty); setLang('Russian'); setMods(['M1','M2']);
@@ -1616,7 +1616,7 @@ function App() {
       </div>
 
       {proj ? (
-        <button className="btn-primary" onClick={()=>setSc('work')}
+        <button className="btn-primary" onClick={()=>{saveBriefToProject();setSc('work');}}
           style={{width:'100%',padding:'13px',fontSize:14}}>
           Save & back to project →
         </button>
@@ -1651,16 +1651,21 @@ function App() {
             {brief.priceLayer && <span className="tag" style={{marginLeft:4,background:'#FAEEDA',color:'#633806',borderColor:'#EF9F27'}}>{brief.priceLayer}</span>}
           </p>
         </div>
-        {!isRun && pending.length > 0 && (
-          <button className="btn-primary" onClick={()=>run()} style={{flexShrink:0}}>
-            {t.continueBtn}: {pending.map(m=>m.id).join(', ')} ↗
+        <div style={{display:'flex',gap:8,flexShrink:0,flexWrap:'wrap'}}>
+          {!isRun && pending.length > 0 && (
+            <button className="btn-primary" onClick={()=>run()}>
+              ▶ Run: {pending.map(m=>m.id).join(', ')} ↗
+            </button>
+          )}
+          {!isRun && pending.length === 0 && doneIds.length > 0 && (
+            <button className="btn-primary" onClick={()=>setSc('form')} style={{background:'#378ADD',borderColor:'#378ADD'}}>
+              + Add modules ↗
+            </button>
+          )}
+          <button onClick={()=>setSc('form')} style={{fontSize:12,padding:'7px 12px',color:'#666',borderColor:'#ddd'}}>
+            Edit brief ✎
           </button>
-        )}
-      {!isRun && (
-        <button onClick={()=>setSc('form')} style={{flexShrink:0,fontSize:11,padding:'5px 10px',color:'#888',borderColor:'#ddd'}}>
-          Edit brief ✎
-        </button>
-      )}
+        </div>
       </div>
 
       <div style={{marginBottom:'1.25rem'}}>
@@ -1699,11 +1704,20 @@ function App() {
         return (
           <React.Fragment key={r.id}>
             <div style={{marginBottom:8,border:'1px solid '+m.border,borderRadius:12,overflow:'hidden'}}>
-              <div onClick={()=>setExp(e=>({...e,[r.id]:!e[r.id]}))} style={{display:'flex',alignItems:'center',gap:9,padding:'11px 14px',background:m.bg,cursor:'pointer'}}>
-                <span className="tag" style={{background:m.color,color:'#fff',borderColor:m.color}}>{m.id}</span>
-                <span style={{flex:1,fontSize:13,fontWeight:500,color:m.dark}}>{m.title}</span>
-                <span style={{fontSize:10,color:'#888',marginRight:4}}>{r.at?new Date(r.at).toLocaleDateString():''}</span>
-                <span style={{fontSize:12,color:m.color}}>{open?'▲':'▼'}</span>
+              <div style={{display:'flex',alignItems:'center',background:m.bg}}>
+                <div onClick={()=>setExp(e=>({...e,[r.id]:!e[r.id]}))} style={{display:'flex',alignItems:'center',gap:9,padding:'11px 14px',cursor:'pointer',flex:1}}>
+                  <span className="tag" style={{background:m.color,color:'#fff',borderColor:m.color}}>{m.id}</span>
+                  <span style={{flex:1,fontSize:13,fontWeight:500,color:m.dark}}>{m.title}</span>
+                  <span style={{fontSize:10,color:'#888',marginRight:4}}>{r.at?new Date(r.at).toLocaleDateString():''}</span>
+                  <span style={{fontSize:12,color:m.color}}>{open?'▲':'▼'}</span>
+                </div>
+                {!isRun && (
+                  <button onClick={e=>{e.stopPropagation();const upd={...proj,results:(proj.results||[]).filter(x=>x.id!==r.id),updatedAt:new Date().toISOString()};setProj(upd);sv(upd);run([r.id]);}}
+                    style={{margin:'0 10px',padding:'3px 8px',fontSize:10,color:m.dark,borderColor:m.border,background:'rgba(255,255,255,0.7)',flexShrink:0}}
+                    title="Re-run this module">
+                    ↺ Re-run
+                  </button>
+                )}
               </div>
               {open && (
                 <div style={{padding:'14px 16px',background:'#fff',borderTop:'1px solid '+m.border}}>
