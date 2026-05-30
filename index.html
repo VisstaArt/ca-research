@@ -7,10 +7,11 @@
 <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
-body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f5f5f5; color: #111; min-height: 100vh; }
-#root { max-width: 760px; margin: 0 auto; padding: 2rem 1rem; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f5f5f5; color: #111; }
+#root { max-width: 820px; margin: 0 auto; padding: 2rem 1rem; }
 input, textarea { font-family: inherit; font-size: 13px; border: 1px solid #ddd; border-radius: 8px; padding: 8px 11px; background: #fff; color: #111; outline: none; width: 100%; transition: border 0.15s; }
 input:focus, textarea:focus { border-color: #378ADD; }
 button { font-family: inherit; font-size: 13px; border: 1px solid #ddd; border-radius: 8px; padding: 7px 14px; background: #fff; color: #111; cursor: pointer; transition: background 0.12s; }
@@ -21,130 +22,754 @@ button:disabled { opacity: 0.4; cursor: not-allowed; }
 .btn-primary:hover:not(:disabled) { background: #333; }
 table { border-collapse: collapse; width: 100%; font-size: 12px; }
 th { padding: 5px 9px; background: #f8f8f8; border: 1px solid #eee; text-align: left; font-weight: 500; white-space: nowrap; }
-td { padding: 4px 9px; border: 1px solid #eee; }
+td { padding: 4px 9px; border: 1px solid #eee; vertical-align: top; }
 tr:nth-child(even) td { background: #fafafa; }
 .tag { font-size: 10px; padding: 2px 7px; border-radius: 4px; border: 1px solid; display: inline-block; }
+.status-bar { background: #111; color: #fff; border-radius: 10px; padding: 14px 18px; margin-bottom: 12px; }
+.timer { font-size: 22px; font-weight: 600; font-variant-numeric: tabular-nums; }
 </style>
 </head>
 <body>
 <div id="root"></div>
 <script type="text/babel">
-const { useState, useCallback } = React;
+const { useState, useCallback, useEffect, useRef } = React;
+
+// ── CONFIG ─────────────────────────────────────────────────────────────────────
+const MODEL = 'gpt-4.1';
+const PROXY = 'https://red-wave-3f83.art-vissta-442.workers.dev';
+const SK = 'ca_v5';
 
 const MODULES = [
-  { id:"M1", color:"#639922", bg:"#EAF3DE", border:"#97C459", dark:"#27500A", title:"Market & Segments", desc:"Geo, TAM→SAM→SOM, segments, niches" },
-  { id:"M2", color:"#0F6E56", bg:"#E1F5EE", border:"#5DCAA5", dark:"#085041", title:"Competitors & VoC", desc:"Competitors, gap analysis, VoC, intent clusters" },
-  { id:"M3", color:"#3C3489", bg:"#EEEDFE", border:"#AFA9EC", dark:"#26215C", title:"Customer Psychology", desc:"Personas, JTBD, awareness, fears, CJM" },
-  { id:"M4", color:"#633806", bg:"#FAEEDA", border:"#EF9F27", dark:"#412402", title:"Offers & Hypotheses", desc:"Hypotheses, offer workshop, final offer" },
-  { id:"M5", color:"#712B13", bg:"#FAECE7", border:"#F0997B", dark:"#4A1B0C", title:"Content & Creatives", desc:"Archetypes, visual strategy, landing TZ" },
-  { id:"M6", color:"#72243E", bg:"#FBEAF0", border:"#ED93B1", dark:"#4B1528", title:"SEO", desc:"Semantic core, search competitors, structure" },
+  {
+    id: 'M1', color: '#639922', bg: '#EAF3DE', border: '#97C459', dark: '#27500A',
+    title: 'Market & Segments',
+    titleRu: 'Рынок, ёмкость и сегменты',
+    desc: 'Blocks 01–04_2: geo stats, sources, TAM→SAM→SOM, segments, niche prioritization',
+    estimatedMin: 8,
+    steps: [
+      'Collecting geo & demographic statistics (Block 01)…',
+      'Mapping open data sources (Block 02)…',
+      'Building TAM→SAM→SOM model (Block 03)…',
+      'Describing target audience segments (Block 04)…',
+      'Evaluating service effectiveness per segment (Block 04_1)…',
+      'Prioritizing niches with scoring (Block 04_2)…',
+      'Generating market share chart data…',
+    ]
+  },
+  {
+    id: 'M2', color: '#0F6E56', bg: '#E1F5EE', border: '#5DCAA5', dark: '#085041',
+    title: 'Competitors & Gap Analysis',
+    titleRu: 'Конкуренты и гэп-анализ',
+    desc: 'Blocks 05–06_1: open sources index, competitor map, gap analysis',
+    estimatedMin: 8,
+    steps: [
+      'Building open sources index (Block 05)…',
+      'Mapping competitors — offers, pricing, positioning (Block 06)…',
+      'Running Win/Parity/Lose gap analysis (Block 06_1)…',
+      'Generating competitor positioning chart…',
+    ]
+  },
+  {
+    id: 'M3', color: '#1565A8', bg: '#E3EFFE', border: '#7EB3F0', dark: '#0D3E6E',
+    title: 'Voice of Customer',
+    titleRu: 'Голос клиента и намерения',
+    desc: 'Blocks 07–08: real quotes from open sources, intent clusters by Schwartz stages',
+    estimatedMin: 7,
+    steps: [
+      'Collecting VoC quotes from reviews, forums, social media (Block 07)…',
+      'Clustering search intents by awareness stage (Block 08)…',
+      'Mapping funnel roles and headline formulas…',
+    ]
+  },
+  {
+    id: 'M4', color: '#3C3489', bg: '#EEEDFE', border: '#AFA9EC', dark: '#26215C',
+    title: 'Customer Psychology',
+    titleRu: 'Психология покупки и путь клиента',
+    desc: 'Blocks 09–15: LPR personas, JTBD, awareness levels, fears, criteria, CJM, tactics',
+    estimatedMin: 10,
+    steps: [
+      'Building LPR personas with real language (Block 09)…',
+      'Mapping Jobs-to-be-Done per segment (Block 10)…',
+      'Assessing awareness levels by Schwartz (Block 11)…',
+      'Cataloguing fears and doubts (Block 12)…',
+      'Mapping decision criteria and trust triggers (Block 13)…',
+      'Building customer journey map CJM (Block 14)…',
+      'Identifying cognitive tactics and influence patterns (Block 15)…',
+    ]
+  },
+  {
+    id: 'M5', color: '#633806', bg: '#FAEEDA', border: '#EF9F27', dark: '#412402',
+    title: 'Offers & Hypotheses',
+    titleRu: 'Офферы и гипотезы',
+    desc: 'Blocks 16–17: hypotheses, offer workshop, final offer per segment',
+    estimatedMin: 8,
+    steps: [
+      'Generating marketing hypotheses (Block 16)…',
+      'Collecting offer input data (Block 17A)…',
+      'Running offer workbench — draft options (Block 17B)…',
+      'Finalising offers per segment (Block 17 Final)…',
+    ]
+  },
+  {
+    id: 'M6', color: '#712B13', bg: '#FAECE7', border: '#F0997B', dark: '#4A1B0C',
+    title: 'Content & Creatives',
+    titleRu: 'Контент-система и лендинг',
+    desc: 'Blocks 18–22: archetypes, visual strategy, content system, creative briefs, landing TZ',
+    estimatedMin: 10,
+    steps: [
+      'Building persona archetypes and archetype map (Blocks 18–19A)…',
+      'Designing content system by channel (Block 20)…',
+      'Writing creative briefs (Block 21)…',
+      'Creating landing page TZ with screen structure (Block 22)…',
+    ]
+  },
+  {
+    id: 'M7', color: '#72243E', bg: '#FBEAF0', border: '#ED93B1', dark: '#4B1528',
+    title: 'SEO',
+    titleRu: 'SEO-стратегия',
+    desc: 'Semantic core, search competitors, site structure, content plan — open sources only',
+    estimatedMin: 7,
+    steps: [
+      'Analysing search competitors (SEO-01)…',
+      'Building semantic core by clusters (SEO-02)…',
+      'Auditing competitor content (SEO-03)…',
+      'Designing site structure for organic (SEO-04)…',
+      'Creating SEO content plan (SEO-07)…',
+    ]
+  },
 ];
 
-const LANGS = ["Russian","Turkish","English","Arabic","Kazakh","Ukrainian","Uzbek","German","Spanish","French"];
-const SK = "ca_v4";
-const PROXY = "https://red-wave-3f83.art-vissta-442.workers.dev";
+const LANGS = ['Russian','Turkish','English','Arabic','Kazakh','Ukrainian','Uzbek','German','Spanish','French'];
 
-const loadAll = () => { try { return JSON.parse(localStorage.getItem(SK)||"[]"); } catch { return []; } };
-const saveAll = (l) => { try { localStorage.setItem(SK, JSON.stringify(l)); } catch {} };
-const upsert = (p) => { const a=loadAll(); const i=a.findIndex(x=>x.id===p.id); if(i>=0) a[i]=p; else a.unshift(p); saveAll(a); };
+// ── STORAGE ────────────────────────────────────────────────────────────────────
+const loadAll = () => { try { return JSON.parse(localStorage.getItem(SK)||'[]'); } catch { return []; } };
+const saveAll = l => { try { localStorage.setItem(SK, JSON.stringify(l)); } catch {} };
+const upsert  = p => { const a=loadAll(); const i=a.findIndex(x=>x.id===p.id); if(i>=0)a[i]=p; else a.unshift(p); saveAll(a); };
 
-// OpenAI API via Vercel proxy — streaming
-async function callAPI(system, user, onChunk, model) {
+// ── API ────────────────────────────────────────────────────────────────────────
+async function callGPT(system, user) {
   const res = await fetch('/api/proxy', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      model: model || 'gpt-4o-mini',
-      max_tokens: 4000,
+      model: MODEL,
+      max_tokens: 8000,
       stream: false,
       messages: [
         { role: 'system', content: system },
-        { role: 'user', content: user }
+        { role: 'user',   content: user   },
       ],
     }),
   });
   if (!res.ok) throw new Error('API ' + res.status);
-  const data = await res.json();
-  const text = data.choices?.[0]?.message?.content || '';
-  onChunk(text);
-  return text;
+  const d = await res.json();
+  if (d.error) throw new Error(d.error.message || 'API error');
+  return d.choices?.[0]?.message?.content || '';
 }
 
 async function fetchSite(url) {
   const base = url.replace(/\/$/, '');
   const pages = [];
-  for (const u of [base, base+'/hakkimizda', base+'/about', base+'/hizmetler', base+'/services', base+'/urunler', base+'/products']) {
+  const candidates = [base, base+'/hakkimizda', base+'/about', base+'/hizmetler',
+    base+'/services', base+'/o-nas', base+'/uslugi', base+'/products', base+'/o-kompanii'];
+  for (const u of candidates) {
     try {
       const r = await fetch(`${PROXY}?url=${encodeURIComponent(u)}`);
       if (!r.ok) continue;
       const t = await r.text();
       const clean = t.replace(/<[^>]+>/g,' ').replace(/\s+/g,' ').trim();
-      if (clean.length > 300) { pages.push(clean.slice(0,2000)); if (pages.length >= 3) break; }
+      if (clean.length > 300) { pages.push({ url: u, text: clean.slice(0, 2500) }); if (pages.length >= 3) break; }
     } catch {}
   }
-  return pages.join('\n\n---\n\n');
+  return pages;
 }
 
-function sysPr(brief, depth, lang) {
-  return `You are a market research analyst specialising in target audience research.\n\nPROJECT BRIEF:\n${Object.entries(brief).filter(([,v])=>v).map(([k,v])=>`- ${k}: ${v}`).join('\n')}\n\nCRITICAL: Write ALL output in ${lang} only. Every word, every table header, every cell.\nDEPTH: ${depth==='deep'?'Deep — 15–30 rows per table, all columns, sources, confidence scores':'Quick — 5–8 rows per table, key insights only'}\nFORMAT: Markdown tables with | separators. End each block with 3–5 concrete next steps.`;
+// ── SYSTEM PROMPT ──────────────────────────────────────────────────────────────
+function buildSystem(brief, lang) {
+  return `You are a senior market research analyst producing a professional-grade target audience research report.
+
+PROJECT BRIEF (00_Project_Brief):
+${Object.entries(brief).filter(([,v])=>v).map(([k,v])=>{
+  if (k==='geoCompany') return `- Company Geography (all markets the company operates in): ${v}`;
+  if (k==='geoMarket') return `- Research Market (THIS research is focused ONLY on this market): ${v}`;
+  return `- ${k}: ${v}`;
+}).join('\n')}
+
+GEOGRAPHY RULES — CRITICAL:
+- Use "Research Market" (${brief.geoMarket||brief.geo||'—'}) for ALL statistics, competitor search, pricing, keyword volumes, and audience data.
+- Use "Company Geography" (${brief.geoCompany||'—'}) only as context about the business scale — do NOT mix it into market statistics.
+
+CRITICAL RULES — non-negotiable:
+1. LANGUAGE: Write every single word of your output in ${lang}. No exceptions.
+2. NO FABRICATED DATA: Never invent statistics, URLs, company names, or figures. If a data point is unavailable publicly, write "нет публичных данных" (or equivalent in ${lang}) and set Confidence=1.
+3. SOURCES: Every quantitative claim must have a source column with a real, verifiable URL or "нет публичных данных".
+4. TABLES: Always use Markdown pipe tables (| col | col |) with a separator row. No other formats.
+5. QUALITY: This is a premium research document worth thousands of dollars to the client. Be thorough, specific, and evidence-based.
+6. TERMS: When using professional abbreviations (TAM, SAM, SOM, JTBD, CJM, LPR, VoC, etc.), add a brief explanation below the table.
+7. END OF EACH BLOCK: Add "Итог / Следующие шаги" with 3–5 specific actionable next steps.`;
 }
 
-function modPr(mod, lang, depth, prev) {
-  const ctx = prev.length ? '\nPREVIOUS DATA:\n'+prev.map(r=>`[${r.id}] ${r.content.slice(0,250)}`).join('\n')+'\n' : '';
-  const rows = depth==='deep' ? '15–25' : '5–8';
-  const b = {
-    M1:`Fill M1 Market & Segments in ${lang}:\n**01 Geo** Region|Metric|Value|Year|Source|Note (${rows} rows)\n**02 Sources** Metric|Source|URL|Year|Figure|Unit|Comment (${rows} rows)\n**03 TAM→SAM→SOM** Describe TAM in text, then: ID|Name|Population|Eligibility|Awareness|Need|Pay|Access|Adoption|SAM|SOM|Revenue|Confidence\n**04 Segments** ID|Name|Inclusion criteria|Exclusion|Geo|Channels|Notes (6–10)\n**04_1 Effect** Segment|Verdict(Effective/Borderline/Ineffective)|Why|Sources\n**04_2 Niches** ID|Niche|Demand 1-5|SOM|Effect|Competition 1-5|Complexity 1-5|Risks 1-5|Score|Verdict(Go/Hold/Stop)|Rationale`,
-    M2:`Fill M2 Competitors & VoC in ${lang}:\n**05 Sources** Source|URL|Type|What to extract|Where used (${rows} rows)\n**06 Competitors** ID|Name|URL|Offer|Price|Positioning|Strengths|Weaknesses|CTA|Proof|Customer barriers|Gap/Opportunity (8–15)\n**06_1 Gap analysis** Criterion|Ours|Best competitor|Win/Parity/Lose|Gap|Action|Priority 1-3|KPI\n**07 VoC** Pain/motivation|Quote|Frequency|Source|URL|Response formula|Placement (${rows} rows)\n**08 Intent clusters** Cluster|Example queries|Awareness stage|Funnel role|Headline formula|Proof artifact|Demand measure (15–25)`,
-    M3:`Fill M3 Customer Psychology in ${lang}:\n**09 Personas** ID|Role|Company/niche|Context|JTBD1|JTBD2|JTBD3|Top-5 pains|Top-5 objections|Top-5 triggers|Channels|Formats|Tone|Quotes (4–8)\n**10 JTBD** Persona|When (situation)|I want|So that|Success criteria|Current gaps|Ideas|Related fears (8–15)\n**11 Awareness** Segment|Level(Unaware/Problem/Solution/OurSolution/Doubt/Ready)|How they think|Example queries|What to say\n**12 Fears** Persona|Fear/doubt|Root causes|Proof artifact|Copy pattern|Placement(LP/ADS/FAQ)|URL (${rows} rows)\n**13 Criteria** Persona|Pain|Decision criterion|Desired outcome|Artifact|Where used (${rows} rows)\n**14 CJM** Persona|Awareness|CJM stage|Goal|Trigger|Channel|Questions|Risks|What to show|KPI|Next trigger\n**15 Tactics** Persona|Stage|Psych principle|Ethical tactic|Artifact|Compliance risk|Example copy|Metric`,
-    M4:`Fill M4 Offers & Hypotheses in ${lang}:\n**16 Hypotheses** ID|Niche|Segment|Awareness|Insight source|Hypothesis|What to test|For whom|Metric|MDE|Test design|Artifacts|Risks|Confidence (10–15)\n**17A Offer Input** Brand|Core competencies|USP|Proof|Cases|Formats|Geo|Guarantees|Pricing|Tone\n**17B Offer Workbench** ID|Niche|Segment|Awareness|Hook candidates|Pain|Outcome|Mechanism|Proof (5–8)\n**17 Offer Final** ID|Segment|Awareness|Hero headline|Subheadline|Problem|Result|Formula|Price|Proof|Risk reversal|CTA (2–3)`,
-    M5:`Fill M5 Content & Creatives in ${lang}:\n**18 Archetypes** ID|Role|Archetype|Awareness level|Emotional drivers|Purchase triggers|Barriers|Tone & visual|Anchor phrases|Channels|Key offer\n**19 Visual Strategy** Segment|Awareness|Key message|Visual elements|Proof|Tactics|Channels|Metric|References (${rows} rows)\n**19A Archetype Map** Persona|Audience archetype|Brand archetype|Motives|Taboos|Tone|Visual do|Visual don't|Verbal do|Verbal don't|Example messages\n**20 Content System** Segment|Format|KPI|Hook|Visual motif|Proof|CTA|A/B variants (${rows} rows)\n**21 Creative Briefs** ID|Segment|Awareness|Test goal|Message|Visual|Artifacts|Sizes|Guardrails (8–12)\n**22 Landing TZ** (1) Parameters table; (2) Screen structure: #|Name|Goal|Message|Data|Elements; (3) Draft copy per screen`,
-    M6:`Fill M6 SEO using open sources only (Wordstat, Google Trends, SERPs, site structure) in ${lang}:\n**SEO-01 Search competitors** URL|Position|Page type|Key queries|URL structure|Title|Notes (10–15)\n**SEO-02 Semantic core** Cluster|Type(info/commercial/nav)|Example queries|Frequency|Seasonality|Competition|Priority|Page type\n**SEO-03 Content audit** Competitor|Content type|Topics|Frequency|What works|How to do better\n**SEO-04 Site structure** Section|URL template|Page type|Query cluster|Priority|Comment\n**SEO-05 Link mentions** Competitor|Donor types|Platforms|Context|Opportunities\n**SEO-06 UX/Tech** Competitor|Speed|Mobile|Catalog|Filters|Meta tags|Conclusion\n**SEO-07 Content plan** Priority|Page type|H1|Query cluster|Volume|Funnel stage|Expected traffic`,
-  };
-  return ctx + (b[mod.id] || `Research ${mod.title} in ${lang}.`);
+// ── MODULE PROMPTS ─────────────────────────────────────────────────────────────
+function buildM1Prompt(brief, lang, prev) {
+  const ctx = prev ? `\nCONTEXT FROM PREVIOUS MODULES:\n${prev}\n` : '';
+  return `${ctx}
+Fill the following research blocks for module M1. ALL output in ${lang}. Use only verifiable open sources.
+
+═══════════════════════════════════════════════
+BLOCK 01 — Geo & Open Statistics (01_Geo_OpenStats)
+═══════════════════════════════════════════════
+Task: Collect relevant geo and demographic data for the market/region. Include population, income levels, business density, demand dynamics, and trends.
+
+Format (15–25 rows):
+| Регион/район | Показатель | Значение | Единицы | Год | Источник/URL | Вывод для воронки (локация/расписание/формат) | Примечание |
+
+Rules: Source/URL required with year. Only metrics affecting market capacity, payment ability, or audience accessibility.
+
+═══════════════════════════════════════════════
+BLOCK 02 — Sources Index (02_Sources)
+═══════════════════════════════════════════════
+Task: List open numeric sources for market sizing and segment evaluation.
+
+Format (minimum 10 rows):
+| Метрика | Источник | URL | Год | Цифра/оценка | Единицы | Комментарий |
+
+Rules: Only official/public repositories. No commercial promo articles.
+
+═══════════════════════════════════════════════
+BLOCK 03 — Segment Share Model TAM→SAM→SOM (03_Segment_Share_Model)
+═══════════════════════════════════════════════
+Task: Build a quantitative TAM→SAM→SOM model.
+
+Step 1: Describe TAM in text (total buyers estimate, total revenue estimate, key assumptions, sources).
+
+Step 2: Table (5–10 segments):
+| Segment_ID | Название сегмента | Base_Population | Eligibility_Rate | Awareness_Rate | Need_Rate | Ability_to_Pay_Rate | Access_Rate | Adoption_Rate | Conversion_Rate_to_Sale | Avg_Order_Value | Purchase_Frequency_per_year | SAM | SOM_Buyers | Annual_Revenue | Share_of_TAM_Buyers | Share_of_TAM_Revenue | Confidence (1-5) | Evidence_URLs |
+
+Formulas:
+SAM = Base_Population × Eligibility × Awareness × Need × Ability_to_Pay × Access × Adoption
+SOM_Buyers = SAM × Conversion_Rate_to_Sale
+Annual_Revenue = SOM_Buyers × Avg_Order_Value × Purchase_Frequency_per_year
+
+After table: "Quality check" — verify SOM_Buyers ≤ TAM_Total_Buyers, note top 2–3 sensitive coefficients.
+
+═══════════════════════════════════════════════
+BLOCK 04 — Target Audience Segments (04_Сегменты_ЦА)
+═══════════════════════════════════════════════
+Task: Describe 6–12 non-overlapping segments with verifiable inclusion/exclusion criteria.
+
+Format:
+| Segment_ID | Название сегмента | Критерии включения | Критерии исключения | Proxy-ключевые слова (поиск/OSINT) | Гео | Профиль каналов/форматов | Заметки |
+
+Rules: S01, S02… IDs. No overlaps. Real search phrases for proxy keywords.
+
+═══════════════════════════════════════════════
+BLOCK 04_1 — Service Effectiveness per Segment (04_1_эффект)
+═══════════════════════════════════════════════
+Task: Evaluate economic viability of targeting each segment.
+
+Format:
+| Сегмент | CAC_proxy (расчёт) | AOV | AOV/CAC_proxy | Вердикт (Эффективно/Погранично/Неэффективно) | Почему так | Условия перевода в "Эффективно" | Confidence | Источники |
+
+Rules: Show formula behind CAC_proxy. If data unavailable — say so, set Confidence=1–2.
+
+═══════════════════════════════════════════════
+BLOCK 04_2 — Niche Prioritization (04_2_Niche_Prioritization)
+═══════════════════════════════════════════════
+Task: Score and prioritize niches for go-to-market focus.
+
+Format:
+| Niche_ID | Ниша | Спрос (1-5) | SOM (оценка) | Эффект услуги | Конкуренция (1-5) | Экономика (CAC/AOV) | Сложность входа (1-5) | Риски (1-5) | Итоговый балл | Вердикт (В работу/Резерв/Стоп) | Обоснование |
+
+After table: top-3 recommended niches with rationale.
+
+═══════════════════════════════════════════════
+CHART DATA (for visualisation — output as JSON block at the very end)
+═══════════════════════════════════════════════
+After all tables, output a JSON block between <<<CHART_DATA_START>>> and <<<CHART_DATA_END>>> tags:
+{
+  "marketShare": [
+    { "label": "Segment name", "value": number, "color": "#hex" }
+  ],
+  "tamSamSom": {
+    "tam": number,
+    "sam": number,
+    "som": number,
+    "currency": "RUB/USD/EUR/etc"
+  },
+  "niches": [
+    { "name": "niche name", "demand": 1-5, "competition": 1-5, "score": number, "verdict": "Go/Hold/Stop" }
+  ]
+}
+Use real numbers from your analysis. If unavailable, use null.`;
 }
 
-function repPr(results, depth, lang) {
-  return `Write a structured research report. ALL output in ${lang} ONLY.\n\nDATA FROM COMPLETED MODULES:\n${results.map(r=>`=== ${r.id}: ${MODULES.find(m=>m.id===r.id)?.title||r.id} ===\n${r.content.slice(0,1000)}`).join('\n\n')}\n\nSTRUCTURE:\n1. Decision Brief — goal, core audience, priorities, 5–7 key insights, strategic focus for 1–3 months\n${results.map((r,i)=>`${i+2}. ${MODULES.find(m=>m.id===r.id)?.title||r.id}`).join('\n')}\n${results.length+2}. Conclusions & strategic recommendations\n\nRules: use only data from this research, Markdown tables, ${depth==='deep'?'detailed with evidence and citations':'concise, 1–2 pages per section'}.`;
+function buildM2Prompt(brief, lang, prev) {
+  const ctx = prev ? `\nCONTEXT FROM PREVIOUS MODULES:\n${prev.slice(0,1500)}\n` : '';
+  return `${ctx}
+Fill the following research blocks for module M2. ALL output in ${lang}. Use only verifiable open sources.
+
+═══════════════════════════════════════════════
+BLOCK 05 — Open Sources Index (05_OpenSources_Index)
+═══════════════════════════════════════════════
+Task: Map all open sources for competitor and VoC research. Cover: maps/reviews, forums, social media, statistics, SERP.
+
+Format (minimum 20 rows):
+| Источник | URL | Тип (отзывы/форум/соцсеть/карты/статистика/выдача) | Что извлекаем (боли/критерии/лексика/барьеры/метрики) | Где используем (лист/блок LP/этап CJM) | Дата проверки | Примечание |
+
+═══════════════════════════════════════════════
+BLOCK 06 — Competitor Map (06_Конкуренты)
+═══════════════════════════════════════════════
+Task: Analyse 10–20 competitors (direct, indirect, substitutes). Only open sources.
+
+Format:
+| Comp_ID | Название | Сайт/URL | Ниша/продукт | Оффер (обещание/пакеты) | Модель ценообразования | Позиционирование (ключевая идея) | Сильные стороны | Слабые стороны | CTA (формулировка/расположение) | Доказательства (кейсы/рейтинги) | Барьеры клиента (по отзывам) | Ответ конкурента на барьеры | Триггеры дефицита/якоря | URL блока/скрина | Gap/Возможность для нас | Заметки |
+
+Rules: C001, C002… IDs. If price not public — "по запросу". No invented URLs.
+
+═══════════════════════════════════════════════
+BLOCK 06_1 — Gap Analysis (06_1_Конкуренты_Гэп-анализ)
+═══════════════════════════════════════════════
+Task: Compare our offer vs competitors on key criteria. Assign Win/Parity/Lose.
+
+Format (15–25 rows):
+| Критерий | Наше текущее состояние | Лучшее у конкурентов (Название) | URL примера | Статус (Win/Parity/Lose) | В чём гэп | Действие (что делаем) | Приоритет (1–3) | KPI | Срок | Ответственный | Примечание |
+
+After table: "Top-3 priorities" + "What to defer" + "What data/tests needed".
+
+═══════════════════════════════════════════════
+CHART DATA
+═══════════════════════════════════════════════
+Output JSON between <<<CHART_DATA_START>>> and <<<CHART_DATA_END>>>:
+{
+  "competitorMatrix": [
+    { "name": "competitor name", "price": 1-5, "quality": 1-5, "isUs": false }
+  ],
+  "gapSummary": {
+    "win": number,
+    "parity": number,
+    "lose": number
+  }
+}`;
 }
 
-function MD({text}) {
+function buildM3Prompt(brief, lang, prev) {
+  const ctx = prev ? `\nCONTEXT:\n${prev.slice(0,1500)}\n` : '';
+  return `${ctx}
+Fill module M3 blocks. ALL output in ${lang}. Only open sources, no invented data.
+
+═══════════════════════════════════════════════
+BLOCK 07 — Voice of Customer (07_VoiceOfCustomer_Public)
+═══════════════════════════════════════════════
+Task: Collect real client language from open sources (reviews, forums, social media, Q&A). 25–40 rows.
+
+Format:
+| Тема боли/мотива | Цитата (кратко, обезличено) | Частотность (упоминаний) | Единица частоты | Источник (площадка) | URL | Дата | Формула ответа (оффер/LP) | Микро-KPI (CTR/CR) | Комментарий |
+
+Rules: Short anonymised quotes only. Real URLs. No personal data.
+
+═══════════════════════════════════════════════
+BLOCK 08 — Intent Clusters (08_Intent_Clusters)
+═══════════════════════════════════════════════
+Task: Map search intent clusters by Eugene Schwartz awareness stages. 20–30 clusters.
+
+Format:
+| Кластер намерений | Примеры запросов | Стадия осознанности (Schwartz) | Роль в воронке (ads/lead-magnet/LP/FAQ) | Формула заголовка/оффера | Доказательство/артефакт | Мера спроса (Trends/подсказки/частота) | Примечание |
+
+Schwartz stages: Unaware / Problem Aware / Solution Aware / Product Aware / Most Aware.`;
+}
+
+function buildM4Prompt(brief, lang, prev) {
+  const ctx = prev ? `\nCONTEXT:\n${prev.slice(0,1500)}\n` : '';
+  return `${ctx}
+Fill module M4 blocks. ALL output in ${lang}. Only open sources.
+
+═══════════════════════════════════════════════
+BLOCK 09 — LPR Personas (09_Образ_LPR)
+═══════════════════════════════════════════════
+Task: Build 4–8 decision-maker personas based on real VoC and segment data.
+
+Format:
+| Persona_ID | Роль/должность | Компания/ниша | SD-уровень | Контекст/ситуация | JTBD_1 | JTBD_2 | JTBD_3 | Боли (топ-5) | Возражения (топ-5) | Триггеры (топ-5) | Каналы (топ-3) | Форматы коммуникации | Тон/Дизайн | Цитаты/язык клиента | Источники (URL) | Примечание |
+
+JTBD format: "Когда… я хочу… чтобы…"
+
+After table: note persona overlaps, top-2–3 priority personas (by SOM/Revenue), hypotheses to A/B test.
+
+═══════════════════════════════════════════════
+BLOCK 10 — JTBD (10_JTBD)
+═══════════════════════════════════════════════
+Format (8–15 rows):
+| Сегмент/персона | Когда (ситуация-триггер) | Я хочу (действие/задача) | Чтобы (результат/выгода) | Что считается успехом | Текущие пробелы | Идеи решения | Связанные страхи | Источники |
+
+═══════════════════════════════════════════════
+BLOCK 11 — Awareness Levels (11_Уровень_Осведомлённости)
+═══════════════════════════════════════════════
+Format:
+| Сегмент | Уровень (Unaware/Problem/Solution/Product/Most Aware) | Как думает (внутренний монолог) | Примеры запросов | Что важно услышать | Рекомендуемые форматы и каналы |
+
+═══════════════════════════════════════════════
+BLOCK 12 — Fears & Doubts (12_Страхи)
+═══════════════════════════════════════════════
+Format (15–25 rows):
+| Персона | Страх/сомнение | Глубинная причина | Артефакт для снятия страха | Паттерн копирайта | Где размещаем (LP/ADS/FAQ/скрипт) | URL источника |
+
+═══════════════════════════════════════════════
+BLOCK 13 — Decision Criteria (13_Критерии_Выбора)
+═══════════════════════════════════════════════
+Format (15–25 rows):
+| Персона | Боль/задача | Критерий выбора | Желаемый результат | Артефакт/доказательство | Где используем | Источник |
+
+═══════════════════════════════════════════════
+BLOCK 14 — Customer Journey Map (14_CJM_Public)
+═══════════════════════════════════════════════
+Format:
+| Персона | Уровень осведомлённости | Этап CJM | Цель клиента | Контекст/триггер | Канал | Ключевые вопросы | Риски потери | Что показать/дать | Микро-KPI | Триггер перехода на следующий этап |
+
+═══════════════════════════════════════════════
+BLOCK 15 — Cognitive Tactics (15_Bias_to_Tactics)
+═══════════════════════════════════════════════
+Format:
+| Персона | Уровень осведомлённости | Этап CJM | Психологический принцип | Этичная тактика | Артефакт/инструмент | Риск комплаенса | Пример формулировки | Метрика эффекта |
+
+═══════════════════════════════════════════════
+CHART DATA
+═══════════════════════════════════════════════
+Output JSON between <<<CHART_DATA_START>>> and <<<CHART_DATA_END>>>:
+{
+  "awarenessLevels": [
+    { "segment": "segment name", "unaware": 30, "problem": 25, "solution": 20, "product": 15, "most": 10 }
+  ],
+  "cjmStages": [
+    { "stage": "stage name", "touchpoints": number, "dropRisk": "low/medium/high" }
+  ]
+}`;
+}
+
+function buildM5Prompt(brief, lang, prev) {
+  const ctx = prev ? `\nCONTEXT:\n${prev.slice(0,1500)}\n` : '';
+  return `${ctx}
+Fill module M5 blocks. ALL output in ${lang}.
+
+═══════════════════════════════════════════════
+BLOCK 16 — Hypotheses (16_Гипотезы)
+═══════════════════════════════════════════════
+Format (10–15 rows):
+| Hypo_ID | Ниша | Segment_ID | Уровень осведомлённости | Источник инсайта | Формулировка гипотезы | Что тестируем | Для кого/где в CJM | Ожидаемый эффект | Метрика | MDE | Дизайн теста | Артефакты | Риски | Статус | Confidence (1-5) |
+
+═══════════════════════════════════════════════
+BLOCK 17A — Offer Input (17A_Оффер_Input)
+═══════════════════════════════════════════════
+Format:
+| Seller_ID | Бренд/название | Компетенции | Отличия/УТП | Доказательства | Кейсы | Форматы продукта | Гео/расписание | Ограничения | Гарантии | Прайс/пакеты | Способы оплаты | Тон коммуникации | Запрещённые формулировки |
+
+═══════════════════════════════════════════════
+BLOCK 17B — Offer Workbench (17B_Оффер_Workbench)
+═══════════════════════════════════════════════
+Format (5–8 draft offers):
+| Offer_ID | Ниша | Segment_ID | Уровень осведомлённости | Hook-кандидаты (3 варианта) | Боль | Желаемый результат | Механизм/почему работает | Доказательства | Источники |
+
+═══════════════════════════════════════════════
+BLOCK 17 FINAL — Final Offers (17_Оффер_Final)
+═══════════════════════════════════════════════
+Format (2–3 final offers):
+| Offer_ID | Сегмент | Уровень осведомлённости | Hero (заголовок) | Subhero (подзаголовок) | Проблема | Результат | Формула оффера | Состав/пакет | Формат | Цена | Proof | Risk Reversal | CTA | Куда ведёт |`;
+}
+
+function buildM6Prompt(brief, lang, prev) {
+  const ctx = prev ? `\nCONTEXT:\n${prev.slice(0,1500)}\n` : '';
+  return `${ctx}
+Fill module M6 blocks. ALL output in ${lang}.
+
+═══════════════════════════════════════════════
+BLOCK 18 — Persona Archetypes (18_Persona_Archetypes)
+═══════════════════════════════════════════════
+Format:
+| Persona_ID | Роль | Сегмент | Архетип/ценностный уровень | Уровень осведомлённости | Эмоциональные драйверы | Триггеры покупки | Барьеры | Тон и визуальный стиль | Фразы-якоря | Каналы/форматы | Ключевой оффер | Источники |
+
+BLOCK 19 — Visual Strategy:
+| Segment_ID | Осведомлённость | Ключевое сообщение | Визуальные элементы | Доказательства | Тактики | Каналы | Целевая метрика | Референсы |
+
+BLOCK 19A — Archetype Map:
+| Персона | Архетип ЦА | Архетип бренда | Ключевые мотивы | Страхи/табу | Эмоц. тон | Визуальные паттерны ✓ | Визуальные паттерны ✗ | Вербальные паттерны ✓ | Вербальные паттерны ✗ | Примеры сообщений |
+
+═══════════════════════════════════════════════
+BLOCK 20 — Content System (20_Content_System)
+═══════════════════════════════════════════════
+Format (20–30 rows):
+| Segment_ID | Осведомлённость | Формат контента | Цель (микро-KPI) | Hook/1-й кадр | Визуальный мотив | Proof/цифры | CTA | Варианты A/B | Источники |
+
+═══════════════════════════════════════════════
+BLOCK 21 — Creative Briefs (21_Creative_Briefs)
+═══════════════════════════════════════════════
+Format (8–12 briefs):
+| Brief_ID | Сегмент | Осведомлённость | Цель теста | Сообщение | Визуал | Артефакты | Deliverables/форматы | Guardrails | Источники |
+
+═══════════════════════════════════════════════
+BLOCK 22 — Landing Page TZ (22_LP_TZ)
+═══════════════════════════════════════════════
+Part 1 — General Parameters (table):
+| Параметр | Значение |
+(goal, traffic source, target persona, core offer, primary CTA, key objections to handle, social proof types, tone)
+
+Part 2 — Screen Structure:
+| № экрана | Название | Цель экрана | Ключевой месседж | Данные/proof | Элементы блока |
+
+Part 3 — Draft Copy (for each screen):
+H1, subheadline, bullet points, CTA text`;
+}
+
+function buildM7Prompt(brief, lang, prev) {
+  const ctx = prev ? `\nCONTEXT:\n${prev.slice(0,1500)}\n` : '';
+  return `${ctx}
+Fill module M7 SEO blocks. ALL output in ${lang}. Open sources only (Wordstat, Google Trends, SERPs, visible site structures).
+
+SEO-01 — Search Competitors:
+| URL | Позиция (топ-10) | Тип страницы | Ключевые запросы | Структура URL | Title | Особенности |
+
+SEO-02 — Semantic Core:
+| Кластер | Тип (инфо/коммерч/навигац) | Примеры запросов | Частотность (Вордстат/Trends) | Сезонность | Конкуренция | Приоритет | Тип страницы |
+
+SEO-03 — Content Audit:
+| Конкурент | Тип контента | Темы | Частота публикаций | Что работает | Как сделать лучше |
+
+SEO-04 — Site Structure:
+| Раздел | URL-шаблон | Тип страницы | Кластер запросов | Приоритет | Комментарий |
+
+SEO-05 — Link Profile:
+| Конкурент | Типы доноров | Площадки | Контекст упоминаний | Возможности для нас |
+
+SEO-07 — SEO Content Plan:
+| Приоритет | Тип страницы | H1 | Кластер запросов | Объём (знаки) | Этап воронки | Ожидаемый трафик |
+
+═══════════════════════════════════════════════
+CHART DATA
+═══════════════════════════════════════════════
+Output JSON between <<<CHART_DATA_START>>> and <<<CHART_DATA_END>>>:
+{
+  "semanticClusters": [
+    { "cluster": "cluster name", "volume": number, "type": "info/commercial/nav", "priority": 1-3 }
+  ]
+}`;
+}
+
+function buildReportPrompt(brief, results, lang) {
+  const sections = results.map(r => `=== ${r.id}: ${MODULES.find(m=>m.id===r.id)?.titleRu||r.id} ===\n${r.content.slice(0,800)}`).join('\n\n');
+  return `Create a professional research report. ALL output in ${lang} ONLY.
+
+DATA FROM COMPLETED MODULES:
+${sections}
+
+REPORT STRUCTURE:
+1. Обложка и оглавление
+2. Decision Brief (1–2 страницы) — цель исследования, ядро ЦА (кто приносит деньги), приоритизация сегментов (таблица), 5–7 ключевых инсайтов, стратегический фокус на 1–3 месяца
+3. Сегменты и персоны — карта сегментов, персоны (мини-профиль), JTBD по сегментам
+4. Боли, страхи, критерии выбора — карта болей→решений, страхи (топ), критерии и триггеры доверия
+5. Голос клиента (VoC) — таблица цитат, "клиент говорит vs мы говорим", список ключевых формулировок
+6. Путь клиента (CJM) и осведомлённость — уровни осведомлённости, карта пути, узкие места
+7. Конкуренты и позиционирование — карта конкурентов, гэп-анализ, возможности
+8. Офферы — финальные офферы по сегментам, матрица офферов
+9. Контент и каналы — контент-система, каналы, гипотезы тестов
+10. SEO-стратегия (если модуль выполнен)
+11. Выводы и стратегические рекомендации — топ-3 приоритета, план на 1–3 месяца, KPI
+
+Include only sections for completed modules. Use Markdown tables. Be specific and evidence-based.`;
+}
+
+// ── MARKDOWN ────────────────────────────────────────────────────────────────────
+function MD({ text }) {
   if (!text) return null;
-  const lines = text.split('\n'); const out = []; let tbl = []; let k = 0;
+  const lines = text.split('\n');
+  const out = []; let tbl = []; let k = 0;
   const ft = () => {
     if (tbl.length < 2) { tbl.forEach(l => out.push(<p key={k++} style={{margin:'2px 0',fontSize:12,color:'#666'}}>{l}</p>)); tbl=[]; return; }
     const hdrs = tbl[0].split('|').map(h=>h.trim()).filter(Boolean);
     const rows = tbl.slice(2).map(r=>r.split('|').map(c=>c.trim()).filter(Boolean));
-    out.push(<div key={k++} style={{overflowX:'auto',margin:'8px 0'}}><table><thead><tr>{hdrs.map((h,i)=><th key={i}>{h}</th>)}</tr></thead><tbody>{rows.map((row,ri)=><tr key={ri}>{row.map((c,ci)=><td key={ci}>{c}</td>)}</tr>)}</tbody></table></div>);
+    out.push(
+      <div key={k++} style={{overflowX:'auto',margin:'10px 0'}}>
+        <table>
+          <thead><tr>{hdrs.map((h,i)=><th key={i}>{h}</th>)}</tr></thead>
+          <tbody>{rows.map((row,ri)=><tr key={ri}>{row.map((c,ci)=><td key={ci}>{c}</td>)}</tr>)}</tbody>
+        </table>
+      </div>
+    );
     tbl=[];
   };
   for (const line of lines) {
     if (line.trim().startsWith('|')) { tbl.push(line); continue; }
     if (tbl.length) ft();
     if (line.startsWith('## ')) out.push(<h2 key={k++} style={{margin:'16px 0 5px',fontSize:15,fontWeight:500,borderBottom:'1px solid #eee',paddingBottom:3}}>{line.slice(3)}</h2>);
-    else if (line.startsWith('### ')) out.push(<h3 key={k++} style={{margin:'12px 0 4px',fontSize:13,fontWeight:500}}>{line.slice(4)}</h3>);
+    else if (line.startsWith('### ')) out.push(<h3 key={k++} style={{margin:'12px 0 4px',fontSize:14,fontWeight:500}}>{line.slice(4)}</h3>);
+    else if (line.startsWith('#### ')) out.push(<h4 key={k++} style={{margin:'10px 0 3px',fontSize:13,fontWeight:500}}>{line.slice(5)}</h4>);
     else if (line.startsWith('**') && line.endsWith('**') && line.length>4) out.push(<p key={k++} style={{margin:'10px 0 3px',fontSize:13,fontWeight:500}}>{line.slice(2,-2)}</p>);
     else if (/^[-•]\s/.test(line)) out.push(<p key={k++} style={{margin:'2px 0 2px 12px',fontSize:13}}>· {line.slice(2)}</p>);
     else if (!line.trim()) out.push(<div key={k++} style={{height:5}}/>);
-    else { const parts=line.split(/\*\*(.*?)\*\*/); out.push(<p key={k++} style={{margin:'3px 0',fontSize:13,lineHeight:1.6}}>{parts.map((p,i)=>i%2===1?<strong key={i}>{p}</strong>:p)}</p>); }
+    else {
+      const parts = line.split(/\*\*(.*?)\*\*/);
+      out.push(<p key={k++} style={{margin:'3px 0',fontSize:13,lineHeight:1.6}}>{parts.map((p,i)=>i%2===1?<strong key={i}>{p}</strong>:p)}</p>);
+    }
   }
   if (tbl.length) ft();
   return React.createElement(React.Fragment, null, ...out);
 }
 
-function App() {
+// ── TIMER COMPONENT ─────────────────────────────────────────────────────────────
+function CountdownTimer({ totalSeconds, label }) {
+  const [elapsed, setElapsed] = useState(0);
+  const ref = useRef(null);
+  useEffect(() => {
+    ref.current = setInterval(() => setElapsed(e => e + 1), 1000);
+    return () => clearInterval(ref.current);
+  }, []);
+  const remaining = Math.max(0, totalSeconds - elapsed);
+  const mm = String(Math.floor(remaining / 60)).padStart(2, '0');
+  const ss = String(remaining % 60).padStart(2, '0');
+  const pct = Math.min(100, (elapsed / totalSeconds) * 100);
+  return (
+    <div>
+      <div style={{fontSize:11,color:'#aaa',marginBottom:4}}>{label}</div>
+      <div className="timer">{mm}:{ss}</div>
+      <div style={{marginTop:8,height:3,background:'#333',borderRadius:2}}>
+        <div style={{height:'100%',width:`${pct}%`,background:'#4ade80',borderRadius:2,transition:'width 1s linear'}}/>
+      </div>
+    </div>
+  );
+}
+
+// ── CHART COMPONENTS ─────────────────────────────────────────────────────────────
+function PieChart({ data, title }) {
+  const canvasRef = useRef(null);
+  const chartRef = useRef(null);
+  useEffect(() => {
+    if (!canvasRef.current || !data?.length) return;
+    if (chartRef.current) chartRef.current.destroy();
+    chartRef.current = new Chart(canvasRef.current, {
+      type: 'doughnut',
+      data: {
+        labels: data.map(d=>d.label),
+        datasets: [{ data: data.map(d=>d.value), backgroundColor: data.map((d,i)=>d.color||['#639922','#0F6E56','#3C3489','#633806','#712B13','#72243E'][i%6]) }]
+      },
+      options: { plugins: { legend: { position: 'right' } }, responsive: true }
+    });
+    return () => { if(chartRef.current) chartRef.current.destroy(); };
+  }, [data]);
+  return (
+    <div style={{background:'#fff',border:'1px solid #eee',borderRadius:10,padding:'1rem',marginBottom:10}}>
+      <p style={{fontSize:13,fontWeight:500,marginBottom:8}}>{title}</p>
+      <canvas ref={canvasRef} height={200}/>
+    </div>
+  );
+}
+
+function BarChart({ labels, values, title, color='#639922' }) {
+  const canvasRef = useRef(null);
+  const chartRef = useRef(null);
+  useEffect(() => {
+    if (!canvasRef.current || !values?.length) return;
+    if (chartRef.current) chartRef.current.destroy();
+    chartRef.current = new Chart(canvasRef.current, {
+      type: 'bar',
+      data: { labels, datasets: [{ label: title, data: values, backgroundColor: color }] },
+      options: { plugins: { legend: { display: false } }, responsive: true, scales: { y: { beginAtZero: true } } }
+    });
+    return () => { if(chartRef.current) chartRef.current.destroy(); };
+  }, [labels, values]);
+  return (
+    <div style={{background:'#fff',border:'1px solid #eee',borderRadius:10,padding:'1rem',marginBottom:10}}>
+      <p style={{fontSize:13,fontWeight:500,marginBottom:8}}>{title}</p>
+      <canvas ref={canvasRef} height={200}/>
+    </div>
+  );
+}
+
+function ScatterChart({ data, title }) {
+  const canvasRef = useRef(null);
+  const chartRef = useRef(null);
+  useEffect(() => {
+    if (!canvasRef.current || !data?.length) return;
+    if (chartRef.current) chartRef.current.destroy();
+    const colors = { Go:'#639922', Hold:'#EF9F27', Stop:'#e44' };
+    chartRef.current = new Chart(canvasRef.current, {
+      type: 'bubble',
+      data: {
+        datasets: data.map(d => ({
+          label: d.name,
+          data: [{ x: d.demand||0, y: d.competition||0, r: Math.max(6, (d.score||3)*3) }],
+          backgroundColor: (colors[d.verdict]||'#888') + '99'
+        }))
+      },
+      options: {
+        responsive: true,
+        scales: {
+          x: { title: { display: true, text: 'Demand (1-5)' }, min: 0, max: 6 },
+          y: { title: { display: true, text: 'Competition (1-5)' }, min: 0, max: 6 }
+        }
+      }
+    });
+    return () => { if(chartRef.current) chartRef.current.destroy(); };
+  }, [data]);
+  return (
+    <div style={{background:'#fff',border:'1px solid #eee',borderRadius:10,padding:'1rem',marginBottom:10}}>
+      <p style={{fontSize:13,fontWeight:500,marginBottom:4}}>{title}</p>
+      <p style={{fontSize:11,color:'#888',marginBottom:8}}>Size = score. Green=Go, Orange=Hold, Red=Stop</p>
+      <canvas ref={canvasRef} height={220}/>
+    </div>
+  );
+}
+
+function ModuleCharts({ moduleId, chartData }) {
+  if (!chartData) return null;
+  try {
+    const d = typeof chartData === 'string' ? JSON.parse(chartData) : chartData;
+    if (moduleId === 'M1') return (
+      <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10,marginTop:12}}>
+        {d.marketShare?.length > 0 && <PieChart data={d.marketShare} title="Market Share by Segment"/>}
+        {d.tamSamSom && <BarChart
+          labels={['TAM','SAM','SOM']}
+          values={[d.tamSamSom.tam, d.tamSamSom.sam, d.tamSamSom.som].map(v=>v||0)}
+          title={`TAM→SAM→SOM (${d.tamSamSom.currency||''})`}
+        />}
+        {d.niches?.length > 0 && <div style={{gridColumn:'1/-1'}}><ScatterChart data={d.niches} title="Niche Prioritization Matrix"/></div>}
+      </div>
+    );
+    if (moduleId === 'M2') return (
+      <div style={{marginTop:12}}>
+        {d.gapSummary && <BarChart
+          labels={['Win','Parity','Lose']}
+          values={[d.gapSummary.win||0, d.gapSummary.parity||0, d.gapSummary.lose||0]}
+          title="Gap Analysis Summary"
+          color='#0F6E56'
+        />}
+      </div>
+    );
+    if (moduleId === 'M7' && d.semanticClusters?.length > 0) return (
+      <div style={{marginTop:12}}>
+        <BarChart
+          labels={d.semanticClusters.map(c=>c.cluster)}
+          values={d.semanticClusters.map(c=>c.volume||0)}
+          title="Semantic Clusters by Volume"
+          color='#72243E'
+        />
+      </div>
+    );
+    return null;
+  } catch { return null; }
+}
+
+// ── MAIN APP ────────────────────────────────────────────────────────────────────
+export default function App() {
   const [sc, setSc] = useState('list');
   const [projs, setProjs] = useState(() => loadAll());
   const [proj, setProj] = useState(null);
-  const empty = {name:'',niche:'',geo:'',format:'',audience:'',result:'',price:'',competitors:'',extra:''};
+  const empty = { name:'', niche:'', geoCompany:'', geoMarket:'', format:'', audience:'', result:'', price:'', competitors:'', extra:'' };
   const [brief, setBrief] = useState(empty);
   const [lang, setLang] = useState('Russian');
   const [mods, setMods] = useState(['M1','M2']);
-  const [depth, setDepth] = useState('fast');
   const [siteUrl, setSiteUrl] = useState('');
   const [parsing, setParsing] = useState(false);
   const [pMsg, setPMsg] = useState('');
   const [curMod, setCurMod] = useState(null);
-  const [stream, setStream] = useState('');
+  const [curStep, setCurStep] = useState('');
+  const [curStepIdx, setCurStepIdx] = useState(0);
   const [exp, setExp] = useState({});
   const [rep, setRep] = useState('');
   const [repping, setRepping] = useState(false);
@@ -154,34 +779,65 @@ function App() {
   const [xled, setXled] = useState('');
 
   const ref = () => setProjs(loadAll());
-  const sv = useCallback((p) => { upsert(p); ref(); return p; }, []);
+  const sv = useCallback(p => { upsert(p); ref(); return p; }, []);
 
-  const getModel = (d) => d === 'deep' ? 'gpt-4o' : 'gpt-4o-mini';
-
+  // Site reading
   const parseSite = useCallback(async () => {
     if (!siteUrl.trim()) return;
     setParsing(true); setPMsg('⟳ Reading site pages…');
     try {
-      const content = await fetchSite(siteUrl.trim());
-      if (!content || content.length < 50) throw new Error('Site returned no readable content. Fill manually.');
-      setPMsg('⟳ Extracting brief data…');
-      let json = '';
-      await callAPI(
-        'Extract a marketing brief from website content. Reply ONLY with valid JSON object, no markdown, no extra text.',
-        `Extract from this content:\n\n${content.slice(0,4000)}\n\nReturn ONLY this JSON:\n{"name":"product name","niche":"industry","geo":"city/country","format":"B2B/offline/online/SaaS/etc","audience":"target audience","result":"main client result","price":"price range or empty","competitors":"","extra":"USP and key features","lang":"detected language e.g. Turkish"}`,
-        c => { json += c; },
-        'gpt-4o-mini'
+      const pages = await fetchSite(siteUrl.trim());
+      if (!pages.length) throw new Error('No readable content found. Fill manually.');
+      const combined = pages.map(p=>`[${p.url}]\n${p.text}`).join('\n\n---\n\n');
+      setPMsg(`⟳ Read ${pages.length} page(s) — extracting brief…`);
+      const result = await callGPT(
+        'Extract a marketing brief from website content. Reply ONLY with valid JSON, no markdown.',
+        `Extract from:\n\n${combined}\n\nReturn ONLY:\n{"name":"","niche":"","geoCompany":"all markets/countries the company operates in","geoMarket":"primary/main market from the site","format":"","audience":"","result":"","price":"","competitors":"","extra":"","lang":"detected language e.g. Turkish"}`
       );
-      const d = JSON.parse(json.replace(/```json|```/g,'').trim());
-      setBrief(p => ({...p, ...Object.fromEntries(Object.entries(d).filter(([k,v]) => k!=='lang' && v && String(v).trim() && empty.hasOwnProperty(k)))}));
-      if (d.lang) { const m = LANGS.find(l => l.toLowerCase()===d.lang.toLowerCase()); if (m) setLang(m); }
-      setPMsg('✓ Brief filled — review and complete below');
+      const d = JSON.parse(result.replace(/```json|```/g,'').trim());
+      setBrief(p => ({...p, ...Object.fromEntries(Object.entries(d).filter(([k,v])=>k!=='lang'&&v&&empty.hasOwnProperty(k)))}));
+      if (d.lang) { const m=LANGS.find(l=>l.toLowerCase()===d.lang.toLowerCase()); if(m) setLang(m); }
+      setPMsg(`✓ Brief filled from ${pages.length} page(s) — review below`);
     } catch(e) { setPMsg('✗ ' + e.message); }
     setParsing(false);
   }, [siteUrl]);
 
-  const openP = (p) => { setProj(p); setBrief(p.brief); setLang(p.lang||'Russian'); setMods(p.mods||['M1','M2']); setDepth(p.depth||'fast'); setRep(p.report||''); setExp({}); setRepOpen(false); setXled(''); setSc('work'); };
-  const goNew = () => { setProj(null); setBrief(empty); setLang('Russian'); setMods(['M1','M2']); setDepth('fast'); setSiteUrl(''); setPMsg(''); setRep(''); setExp({}); setRepOpen(false); setXled(''); setSc('form'); };
+  const openP = p => {
+    const b = p.brief || {};
+    // backward compat: if old single geo field exists, migrate it to geoMarket
+    if (b.geo && !b.geoMarket) { b.geoMarket = b.geo; delete b.geo; }
+    setProj(p); setBrief({...empty, ...b}); setLang(p.lang||'Russian');
+    setMods(p.mods||['M1','M2']); setRep(p.report||'');
+    setExp({}); setRepOpen(false); setXled(''); setSc('work');
+  };
+
+  const goNew = () => {
+    setProj(null); setBrief(empty); setLang('Russian'); setMods(['M1','M2']);
+    setSiteUrl(''); setPMsg(''); setRep(''); setExp({}); setRepOpen(false); setXled('');
+    setSc('form');
+  };
+
+  const getModulePrompt = (modId, brief, lang, prevContent) => {
+    const p = prevContent ? prevContent.slice(0, 2000) : '';
+    switch(modId) {
+      case 'M1': return buildM1Prompt(brief, lang, p);
+      case 'M2': return buildM2Prompt(brief, lang, p);
+      case 'M3': return buildM3Prompt(brief, lang, p);
+      case 'M4': return buildM4Prompt(brief, lang, p);
+      case 'M5': return buildM5Prompt(brief, lang, p);
+      case 'M6': return buildM6Prompt(brief, lang, p);
+      case 'M7': return buildM7Prompt(brief, lang, p);
+      default: return `Research module ${modId} for this project in ${lang}.`;
+    }
+  };
+
+  const extractChartData = content => {
+    const m = content.match(/<<<CHART_DATA_START>>>([\s\S]*?)<<<CHART_DATA_END>>>/);
+    if (!m) return null;
+    try { return JSON.parse(m[1].trim()); } catch { return null; }
+  };
+
+  const cleanContent = content => content.replace(/<<<CHART_DATA_START>>>[\s\S]*?<<<CHART_DATA_END>>>/g, '').trim();
 
   const run = useCallback(async () => {
     if (!brief.name) return;
@@ -190,83 +846,147 @@ function App() {
     const doneIds = existing.map(r => r.id);
     const toRun = MODULES.filter(m => mods.includes(m.id) && !doneIds.includes(m.id));
     if (!toRun.length) { setSc('work'); return; }
-    const p = {id, createdAt: proj?.createdAt||new Date().toISOString(), updatedAt: new Date().toISOString(), brief, lang, mods, depth, results: existing, report: proj?.report||''};
-    setProj(p); setRep(p.report); sv(p); setSc('work'); setStream('');
-    const sys = sysPr(brief, depth, lang);
-    const model = getModel(depth);
+
+    const p = { id, createdAt: proj?.createdAt||new Date().toISOString(), updatedAt: new Date().toISOString(), brief, lang, mods, results: existing, report: proj?.report||'' };
+    setProj(p); setRep(p.report); sv(p); setSc('work');
+
+    const sys = buildSystem(brief, lang);
     const col = [...existing];
+
     for (const mod of toRun) {
-      setCurMod(mod.id); setStream('');
+      setCurMod(mod.id); setCurStep(mod.steps[0]); setCurStepIdx(0);
+
+      // Animate steps
+      let stepI = 0;
+      const stepTimer = setInterval(() => {
+        stepI = Math.min(stepI + 1, mod.steps.length - 1);
+        setCurStep(mod.steps[stepI]); setCurStepIdx(stepI);
+      }, Math.floor((mod.estimatedMin * 60 * 1000) / mod.steps.length));
+
       let full = '';
-      try { full = await callAPI(sys, modPr(mod, lang, depth, col.map(r=>({id:r.id,content:r.content.slice(0,250)}))), c => setStream(s=>s+c), model); }
-      catch(e) { full = 'Error: ' + e.message; }
-      const result = {id: mod.id, content: full, at: new Date().toISOString(), model};
+      try {
+        const prevContent = col.length ? col[col.length-1].content : '';
+        full = await callGPT(sys, getModulePrompt(mod.id, brief, lang, prevContent));
+      } catch(e) { full = `Error: ${e.message}`; }
+
+      clearInterval(stepTimer);
+
+      const chartData = extractChartData(full);
+      const cleanedContent = cleanContent(full);
+      const result = { id: mod.id, content: cleanedContent, chartData, at: new Date().toISOString() };
       col.push(result);
-      const upd = {...p, results: col, updatedAt: new Date().toISOString()};
+      const upd = { ...p, results: col, updatedAt: new Date().toISOString() };
       setProj(upd); sv(upd);
       setExp(ex => ({...ex, [mod.id]: false}));
     }
-    setCurMod(null); setStream('');
-  }, [brief, lang, mods, depth, proj, sv]);
+
+    setCurMod(null); setCurStep(''); setCurStepIdx(0);
+  }, [brief, lang, mods, proj, sv]);
 
   const genRep = useCallback(async () => {
     if (!proj?.results?.length) return;
     setRepping(true); setRepOpen(true); setRep(''); setXled('');
-    let r = '';
-    try { r = await callAPI(`Write a research report. ALL output in ${lang} only.`, repPr(proj.results, depth, lang), c => setRep(s=>s+c), 'gpt-4o'); }
-    catch(e) { r = 'Error: ' + e.message; setRep(r); }
+    try {
+      const r = await callGPT(
+        `Write a professional research report. ALL output in ${lang} only. No fabricated data.`,
+        buildReportPrompt(brief, proj.results, lang)
+      );
+      setRep(r);
+      const upd = {...proj, report: r, updatedAt: new Date().toISOString()};
+      setProj(upd); sv(upd);
+    } catch(e) { setRep('Error: ' + e.message); }
     setRepping(false);
-    const upd = {...proj, report: r, updatedAt: new Date().toISOString()};
-    setProj(upd); sv(upd);
-  }, [lang, depth, proj, sv]);
+  }, [lang, brief, proj, sv]);
 
   const doXl = useCallback(async () => {
-    if (!rep || !xl.trim()) return;
+    if (!rep||!xl.trim()) return;
     setXlating(true); setXled('');
-    try { await callAPI('Translate accurately. Preserve all Markdown formatting and | table separators.', `Translate to ${xl}:\n\n${rep}`, c => setXled(s=>s+c), 'gpt-4o-mini'); }
-    catch(e) { setXled('Error: ' + e.message); }
+    try {
+      const r = await callGPT('Translate accurately. Preserve all Markdown formatting.', `Translate to ${xl}:\n\n${rep}`);
+      setXled(r);
+    } catch(e) { setXled('Error: '+e.message); }
     setXlating(false);
   }, [rep, xl]);
 
-  const dlMd = (content, suf='') => { const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([content],{type:'text/markdown;charset=utf-8'})); a.download='CA_'+(brief.name||'research').replace(/\s+/g,'_')+suf+'.md'; a.click(); };
-  const dlCsv = () => { if (!proj?.results) return; const csv=[['Module','Model','Content'],...proj.results.map(r=>[r.id,r.model||'','"'+r.content.replace(/"/g,'""')+'"'])].map(r=>r.join(',')).join('\n'); const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8'})); a.download='CA_'+(brief.name||'research').replace(/\s+/g,'_')+'.csv'; a.click(); };
+  const dlMd = (content, suf='') => {
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([content],{type:'text/markdown;charset=utf-8'}));
+    a.download = 'CA_'+(brief.name||'research').replace(/\s+/g,'_')+suf+'.md';
+    a.click();
+  };
+  const dlCsv = () => {
+    if (!proj?.results) return;
+    const csv = [['Module','Content'],...proj.results.map(r=>[r.id,'"'+r.content.replace(/"/g,'""')+'"'])].map(r=>r.join(',')).join('\n');
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8'}));
+    a.download = 'CA_'+(brief.name||'research').replace(/\s+/g,'_')+'.csv';
+    a.click();
+  };
+  const dlJson = () => {
+    if (!proj?.results) return;
+    const pkg = {
+      project: brief, lang,
+      segments: proj.results.find(r=>r.id==='M1')?.content?.slice(0,3000)||'',
+      voc: proj.results.find(r=>r.id==='M3')?.content?.slice(0,3000)||'',
+      offers: proj.results.find(r=>r.id==='M5')?.content?.slice(0,3000)||'',
+      seo: proj.results.find(r=>r.id==='M7')?.content?.slice(0,3000)||'',
+      landingTZ: proj.results.find(r=>r.id==='M6')?.content?.slice(0,3000)||'',
+      report: rep?.slice(0,5000)||'',
+    };
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([JSON.stringify(pkg,null,2)],{type:'application/json;charset=utf-8'}));
+    a.download = 'CA_'+(brief.name||'research').replace(/\s+/g,'_')+'_agent_package.json';
+    a.click();
+  };
 
-  // LIST
+  // ── LIST ────────────────────────────────────────────────────────────────────
   if (sc === 'list') return (
     <div>
       <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'1.5rem'}}>
-        <div><h2 style={{fontSize:22,fontWeight:500}}>CA Research</h2><p style={{fontSize:13,color:'#666',marginTop:3}}>Projects auto-saved in your browser</p></div>
+        <div>
+          <h2 style={{fontSize:22,fontWeight:500}}>CA Research</h2>
+          <p style={{fontSize:13,color:'#666',marginTop:3}}>Professional target audience research · {MODEL}</p>
+        </div>
         <button className="btn-primary" onClick={goNew} style={{padding:'9px 18px'}}>+ New project</button>
       </div>
-      {projs.length===0 && <div className="card" style={{textAlign:'center',padding:'3rem'}}>
-        <p style={{fontSize:15,color:'#666',marginBottom:8}}>No projects yet</p>
-        <p style={{fontSize:13,color:'#999',marginBottom:'1.5rem'}}>Start by entering a client website URL</p>
-        <button className="btn-primary" onClick={goNew} style={{padding:'10px 24px'}}>+ New project</button>
-      </div>}
+
+      {projs.length === 0 && (
+        <div className="card" style={{textAlign:'center',padding:'3rem'}}>
+          <p style={{fontSize:15,color:'#666',marginBottom:8}}>No projects yet</p>
+          <p style={{fontSize:13,color:'#999',marginBottom:'1.5rem'}}>Enter a client website URL and the agent will fill the brief automatically</p>
+          <button className="btn-primary" onClick={goNew} style={{padding:'10px 24px'}}>+ New project</button>
+        </div>
+      )}
+
       {projs.map(p => {
         const done = (p.results||[]).map(r=>r.id);
-        return <div key={p.id} className="card" onClick={()=>openP(p)} style={{cursor:'pointer',marginBottom:10}}>
-          <div style={{display:'flex',gap:12,alignItems:'flex-start'}}>
-            <div style={{flex:1}}>
-              <p style={{fontSize:14,fontWeight:500,marginBottom:3}}>{p.brief?.name||'Untitled'}</p>
-              <p style={{fontSize:12,color:'#666',marginBottom:8}}>{[p.brief?.geo,p.brief?.niche,p.lang].filter(Boolean).join(' · ')}</p>
-              <div style={{display:'flex',gap:4,flexWrap:'wrap'}}>
-                {(p.mods||[]).map(mid=>{const m=MODULES.find(x=>x.id===mid);const d=done.includes(mid);return m?<span key={mid} className="tag" style={{background:d?m.color:'#f5f5f5',color:d?'#fff':'#666',borderColor:d?m.color:'#ddd'}}>{mid}{d?' ✓':''}</span>:null;})}
-                {p.report&&<span className="tag" style={{background:'#E6F1FB',color:'#0C447C',borderColor:'#85B7EB'}}>Report ✓</span>}
+        return (
+          <div key={p.id} className="card" onClick={()=>openP(p)} style={{cursor:'pointer',marginBottom:10}}>
+            <div style={{display:'flex',gap:12,alignItems:'flex-start'}}>
+              <div style={{flex:1}}>
+                <p style={{fontSize:14,fontWeight:500,marginBottom:3}}>{p.brief?.name||'Untitled'}</p>
+                <p style={{fontSize:12,color:'#666',marginBottom:8}}>{[p.brief?.geoMarket||p.brief?.geo,p.brief?.niche,p.lang].filter(Boolean).join(' · ')}</p>
+                <div style={{display:'flex',gap:4,flexWrap:'wrap'}}>
+                  {(p.mods||[]).map(mid => {
+                    const m=MODULES.find(x=>x.id===mid); const d=done.includes(mid);
+                    return m ? <span key={mid} className="tag" style={{background:d?m.color:'#f5f5f5',color:d?'#fff':'#666',borderColor:d?m.color:'#ddd'}}>{mid}{d?' ✓':''}</span> : null;
+                  })}
+                  {p.report && <span className="tag" style={{background:'#E6F1FB',color:'#0C447C',borderColor:'#85B7EB'}}>Report ✓</span>}
+                </div>
+              </div>
+              <div style={{textAlign:'right',flexShrink:0}}>
+                <p style={{fontSize:11,color:'#888',marginBottom:2}}>{done.length}/{(p.mods||[]).length} modules</p>
+                <p style={{fontSize:10,color:'#aaa',marginBottom:8}}>{new Date(p.updatedAt||p.createdAt).toLocaleDateString()}</p>
+                <button onClick={e=>{e.stopPropagation();saveAll(loadAll().filter(x=>x.id!==p.id));ref();}} style={{padding:'2px 8px',fontSize:10,color:'#e44',borderColor:'#e44'}}>delete</button>
               </div>
             </div>
-            <div style={{textAlign:'right',flexShrink:0}}>
-              <p style={{fontSize:11,color:'#888',marginBottom:2}}>{done.length}/{(p.mods||[]).length} modules</p>
-              <p style={{fontSize:10,color:'#aaa',marginBottom:8}}>{new Date(p.updatedAt||p.createdAt).toLocaleDateString()}</p>
-              <button onClick={e=>{e.stopPropagation();saveAll(loadAll().filter(x=>x.id!==p.id));ref();}} style={{padding:'2px 8px',fontSize:10,color:'#e44',borderColor:'#e44'}}>delete</button>
-            </div>
           </div>
-        </div>;
+        );
       })}
     </div>
   );
 
-  // FORM
+  // ── FORM ─────────────────────────────────────────────────────────────────────
   if (sc === 'form') return (
     <div>
       <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:'1.5rem'}}>
@@ -276,32 +996,57 @@ function App() {
 
       <div className="card">
         <p style={{fontSize:13,fontWeight:500,marginBottom:4}}>Auto-fill from website</p>
-        <p style={{fontSize:12,color:'#666',marginBottom:10}}>Enter the client site URL — the agent reads it via proxy and fills the brief automatically.</p>
+        <p style={{fontSize:12,color:'#666',marginBottom:10}}>Enter client site URL — agent reads up to 3 pages and fills the brief automatically.</p>
         <div style={{display:'flex',gap:8,marginBottom:8}}>
           <input value={siteUrl} onChange={e=>setSiteUrl(e.target.value)} onKeyDown={e=>e.key==='Enter'&&parseSite()} placeholder="https://client-site.com" style={{flex:1}}/>
-          <button onClick={parseSite} disabled={!siteUrl.trim()||parsing} style={{whiteSpace:'nowrap',flexShrink:0,padding:'0 16px'}}>{parsing?'Reading…':'Read site ↗'}</button>
+          <button onClick={parseSite} disabled={!siteUrl.trim()||parsing} style={{whiteSpace:'nowrap',flexShrink:0,padding:'0 16px'}}>
+            {parsing ? 'Reading…' : 'Read site ↗'}
+          </button>
         </div>
         {pMsg && <p style={{fontSize:12,color:pMsg.startsWith('✓')?'#27500A':pMsg.startsWith('✗')?'#c00':'#666'}}>{pMsg}</p>}
       </div>
 
       <div className="card">
         <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'1rem'}}>
-          <p style={{fontSize:13,fontWeight:500}}>Project Brief</p>
+          <p style={{fontSize:13,fontWeight:500}}>Project Brief (00_Project_Brief)</p>
           <span className="tag" style={{background:'#E6F1FB',color:'#0C447C',borderColor:'#85B7EB'}}>fill in any language</span>
         </div>
         <div style={{display:'grid',gap:10}}>
-          {[{k:'name',l:'Product / service name *',ph:'Nutrikey, ботулинотерапия…'},{k:'niche',l:'Niche / industry',ph:'Hayvan besleme, EdTech…'},{k:'geo',l:'Geography',ph:'İzmir, Turkey / Краснодар…'},{k:'format',l:'Format',ph:'B2B service, online course, SaaS…'},{k:'audience',l:'Target audience',ph:'Yem fabrikaları, women 25–45…'},{k:'result',l:'Main result for client',ph:'Cost reduction, revenue growth…'},{k:'price',l:'Price range',ph:'On request, ₺5000+…'},{k:'competitors',l:'Known competitors',ph:'Competitor A, site.com…'}].map(f=>(
-            <div key={f.k}><label>{f.l}</label><input value={brief[f.k]} onChange={e=>setBrief(p=>({...p,[f.k]:e.target.value}))} placeholder={f.ph}/></div>
+          {[
+            {k:'name',      l:'Product / service name *',  ph:'Ботулинотерапия, Nutrikey, КРАСТЕХ…'},
+            {k:'niche',       l:'Niche / industry',                 ph:'Медицинская косметология, hayvan besleme…'},
+            {k:'geoCompany',  l:'Company geography',                 ph:'Турция, Казахстан, ОАЭ — все рынки компании'},
+            {k:'geoMarket',   l:'Research market ★',                 ph:'Стамбул / İzmir, Turkey — конкретный рынок исследования'},
+            {k:'format',    l:'Format',                     ph:'Offline clinic, B2B consulting, SaaS…'},
+            {k:'audience',  l:'Target audience',            ph:'Women 30–55, yem fabrikaları, B2B owners…'},
+            {k:'result',    l:'Main result for client',     ph:'What the client gets — specific outcome…'},
+            {k:'price',     l:'Price range',                ph:'₽15 000–50 000, on request, ₺5000+…'},
+            {k:'competitors',l:'Known competitors',         ph:'Competitor A, site.com…'},
+          ].map(f => (
+            <div key={f.k}>
+              <label style={{display:'block',fontSize:11,color:'#666',marginBottom:3}}>{f.l}</label>
+              <input value={brief[f.k]} onChange={e=>setBrief(p=>({...p,[f.k]:e.target.value}))} placeholder={f.ph}
+                style={f.k==='geoMarket'?{borderColor:'#378ADD'}:undefined}/>
+              {f.k==='geoCompany' && <p style={{fontSize:10,color:'#999',marginTop:2}}>Все рынки где работает компания — контекст масштаба бизнеса</p>}
+              {f.k==='geoMarket' && <p style={{fontSize:10,color:'#0C447C',marginTop:2}}>★ Именно по этому рынку агент ищет статистику, конкурентов и семантику</p>}
+            </div>
           ))}
-          <div><label>Additional context</label><textarea value={brief.extra} onChange={e=>setBrief(p=>({...p,extra:e.target.value}))} placeholder="USP, market specifics, constraints…" rows={2} style={{resize:'vertical'}}/></div>
+          <div>
+            <label style={{display:'block',fontSize:11,color:'#666',marginBottom:3}}>Additional context</label>
+            <textarea value={brief.extra} onChange={e=>setBrief(p=>({...p,extra:e.target.value}))} placeholder="Market specifics, USP, constraints, existing data…" rows={2} style={{resize:'vertical'}}/>
+          </div>
         </div>
       </div>
 
       <div className="card">
         <p style={{fontSize:13,fontWeight:500,marginBottom:4}}>Research language</p>
-        <p style={{fontSize:12,color:'#666',marginBottom:10}}>All results and the report will be written in this language. Brief is just input data.</p>
+        <p style={{fontSize:12,color:'#666',marginBottom:10}}>All tables, analysis and report will be written in this language. Brief above is input only.</p>
         <div style={{display:'flex',gap:6,flexWrap:'wrap',marginBottom:8}}>
-          {LANGS.map(l=><button key={l} onClick={()=>setLang(l)} style={{padding:'5px 12px',fontSize:12,borderColor:l===lang?'#378ADD':'#ddd',background:l===lang?'#E6F1FB':'#fff',color:l===lang?'#0C447C':'#111',fontWeight:l===lang?500:400}}>{l}</button>)}
+          {LANGS.map(l => (
+            <button key={l} onClick={()=>setLang(l)} style={{padding:'5px 12px',fontSize:12,borderColor:l===lang?'#378ADD':'#ddd',background:l===lang?'#E6F1FB':'#fff',color:l===lang?'#0C447C':'#111',fontWeight:l===lang?500:400}}>
+              {l}
+            </button>
+          ))}
         </div>
         <p style={{fontSize:11,color:'#666'}}>Selected: <strong>{lang}</strong></p>
       </div>
@@ -309,41 +1054,48 @@ function App() {
       <div className="card">
         <p style={{fontSize:13,fontWeight:500,marginBottom:10}}>Select modules</p>
         <div style={{display:'grid',gap:7}}>
-          {MODULES.map(m=>{const on=mods.includes(m.id);return(
-            <div key={m.id} onClick={()=>setMods(p=>p.includes(m.id)?p.filter(x=>x!==m.id):[...p,m.id])} style={{display:'flex',gap:10,alignItems:'flex-start',padding:'10px 12px',borderRadius:8,border:'1px solid '+(on?m.border:'#e5e5e5'),background:on?m.bg:'#fff',cursor:'pointer'}}>
-              <div style={{width:16,height:16,marginTop:1,borderRadius:3,border:'2px solid '+(on?m.color:'#ccc'),background:on?m.color:'transparent',flexShrink:0,display:'flex',alignItems:'center',justifyContent:'center'}}>{on&&<span style={{color:'#fff',fontSize:10}}>✓</span>}</div>
-              <div><p style={{fontSize:13,fontWeight:500,color:on?m.dark:'#111',marginBottom:1}}>{m.id} · {m.title}</p><p style={{fontSize:11,color:on?m.color:'#888'}}>{m.desc}</p></div>
-            </div>
-          );})}
+          {MODULES.map(m => {
+            const on = mods.includes(m.id);
+            return (
+              <div key={m.id} onClick={()=>setMods(p=>p.includes(m.id)?p.filter(x=>x!==m.id):[...p,m.id])}
+                style={{display:'flex',gap:10,alignItems:'flex-start',padding:'10px 12px',borderRadius:8,border:'1px solid '+(on?m.border:'#e5e5e5'),background:on?m.bg:'#fff',cursor:'pointer'}}>
+                <div style={{width:16,height:16,marginTop:1,borderRadius:3,border:'2px solid '+(on?m.color:'#ccc'),background:on?m.color:'transparent',flexShrink:0,display:'flex',alignItems:'center',justifyContent:'center'}}>
+                  {on && <span style={{color:'#fff',fontSize:10}}>✓</span>}
+                </div>
+                <div style={{flex:1}}>
+                  <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+                    <p style={{fontSize:13,fontWeight:500,color:on?m.dark:'#111',marginBottom:1}}>{m.id} · {m.title}</p>
+                    <span style={{fontSize:10,color:'#888',flexShrink:0,marginLeft:8}}>~{m.estimatedMin} min</span>
+                  </div>
+                  <p style={{fontSize:11,color:on?m.color:'#888'}}>{m.desc}</p>
+                </div>
+              </div>
+            );
+          })}
         </div>
       </div>
 
-      <div className="card">
-        <p style={{fontSize:13,fontWeight:500,marginBottom:4}}>Research depth</p>
-        <p style={{fontSize:12,color:'#666',marginBottom:10}}>
-          <strong>Quick</strong> uses <code>gpt-4o-mini</code> — fast and economical. <strong>Deep</strong> uses <code>gpt-4o</code> — maximum quality.
+      <div className="card" style={{background:'#fffbf0',borderColor:'#f5d89e'}}>
+        <p style={{fontSize:12,color:'#7a5f00'}}>
+          <strong>Model:</strong> {MODEL} &nbsp;·&nbsp;
+          <strong>Data policy:</strong> No fabricated data — if unavailable, the agent writes "нет публичных данных" &nbsp;·&nbsp;
+          <strong>Est. time:</strong> ~{mods.reduce((s,id)=>s+(MODULES.find(m=>m.id===id)?.estimatedMin||8),0)} min total
         </p>
-        <div style={{display:'flex',gap:8}}>
-          {[{id:'fast',label:'Quick',desc:'gpt-4o-mini · key insights · ~3 min/module'},{id:'deep',label:'Deep',desc:'gpt-4o · full detail, all columns · ~8 min/module'}].map(d=>{const on=depth===d.id;return(
-            <div key={d.id} onClick={()=>setDepth(d.id)} style={{flex:1,padding:'10px 12px',borderRadius:8,border:'1px solid '+(on?'#378ADD':'#e5e5e5'),background:on?'#E6F1FB':'#fff',cursor:'pointer'}}>
-              <p style={{fontSize:13,fontWeight:500,color:on?'#0C447C':'#111'}}>{d.label}</p>
-              <p style={{fontSize:11,color:on?'#185FA5':'#888',marginTop:2}}>{d.desc}</p>
-            </div>
-          );})}
-        </div>
       </div>
 
-      <button className="btn-primary" onClick={run} disabled={!brief.name||!mods.length} style={{width:'100%',padding:'13px',fontSize:14}}>
-        Start research in {lang} → {mods.length} module{mods.length!==1?'s':''} · {depth==='fast'?'Quick (gpt-4o-mini)':'Deep (gpt-4o)'}
+      <button className="btn-primary" onClick={run} disabled={!brief.name||!mods.length}
+        style={{width:'100%',padding:'13px',fontSize:14,opacity:brief.name&&mods.length?1:0.4}}>
+        Start research in {lang} → {mods.length} module{mods.length!==1?'s':''} · {MODEL}
       </button>
     </div>
   );
 
-  // WORK
+  // ── WORK ─────────────────────────────────────────────────────────────────────
   const allMods = MODULES.filter(m => mods.includes(m.id));
   const doneIds = (proj?.results||[]).map(r=>r.id);
-  const pending = allMods.filter(m => !doneIds.includes(m.id) && m.id!==curMod);
+  const pending = allMods.filter(m => !doneIds.includes(m.id) && m.id !== curMod);
   const isRun = !!curMod;
+  const curModData = MODULES.find(m=>m.id===curMod);
 
   return (
     <div>
@@ -354,74 +1106,117 @@ function App() {
             <h2 style={{fontSize:18,fontWeight:500}}>{brief.name}</h2>
           </div>
           <p style={{fontSize:12,color:'#666'}}>
-            {[brief.geo,brief.niche].filter(Boolean).join(' · ')}
+            {[brief.geoMarket||brief.geo,brief.niche].filter(Boolean).join(' · ')}
             <span className="tag" style={{marginLeft:8,background:'#E6F1FB',color:'#0C447C',borderColor:'#85B7EB'}}>{lang}</span>
-            <span className="tag" style={{marginLeft:4,background:'#f5f5f5',color:'#666',borderColor:'#ddd'}}>{depth==='fast'?'Quick · gpt-4o-mini':'Deep · gpt-4o'}</span>
+            <span className="tag" style={{marginLeft:4,background:'#f0f0f0',color:'#444',borderColor:'#ddd'}}>{MODEL}</span>
           </p>
         </div>
-        {!isRun&&pending.length>0&&<button className="btn-primary" onClick={run} style={{flexShrink:0}}>+ Run {pending.map(m=>m.id).join(', ')} ↗</button>}
+        {!isRun && pending.length > 0 && (
+          <button className="btn-primary" onClick={run} style={{flexShrink:0}}>
+            + Continue: {pending.map(m=>m.id).join(', ')} ↗
+          </button>
+        )}
       </div>
 
+      {/* Progress */}
       <div style={{marginBottom:'1.25rem'}}>
         <div style={{display:'flex',gap:3,marginBottom:5}}>
-          {allMods.map(m=>{const d=doneIds.includes(m.id),a=curMod===m.id;return<div key={m.id} title={m.title} style={{flex:1,height:3,borderRadius:2,background:d?m.color:a?m.border:'#eee',transition:'background 0.3s'}}/>;})}</div>
-        <p style={{fontSize:11,color:'#888'}}>{isRun?`Generating ${curMod} in ${lang} (${getModel(depth)})…`:`${doneIds.length}/${allMods.length} modules done${pending.length?` · ${pending.length} pending`:''}`}</p>
+          {allMods.map(m => {
+            const d=doneIds.includes(m.id), a=curMod===m.id;
+            return <div key={m.id} title={m.title} style={{flex:1,height:4,borderRadius:2,background:d?m.color:a?m.border:'#eee',transition:'background 0.3s'}}/>;
+          })}
+        </div>
+        <p style={{fontSize:11,color:'#888'}}>
+          {isRun ? `${doneIds.length+1}/${allMods.length} — ${curModData?.title}` : `${doneIds.length}/${allMods.length} modules done${pending.length?` · ${pending.length} pending`:''}`}
+        </p>
       </div>
 
-      {(proj?.results||[]).map(r=>{const m=MODULES.find(x=>x.id===r.id);if(!m)return null;const open=exp[r.id];return(
-        <div key={r.id} style={{marginBottom:8,border:'1px solid '+m.border,borderRadius:12,overflow:'hidden'}}>
-          <div onClick={()=>setExp(e=>({...e,[r.id]:!e[r.id]}))} style={{display:'flex',alignItems:'center',gap:9,padding:'11px 14px',background:m.bg,cursor:'pointer'}}>
-            <span className="tag" style={{background:m.color,color:'#fff',borderColor:m.color}}>{m.id}</span>
-            <span style={{flex:1,fontSize:13,fontWeight:500,color:m.dark}}>{m.title}</span>
-            <span style={{fontSize:10,color:'#888',marginRight:4}}>{r.model||''} · {r.at?new Date(r.at).toLocaleDateString():''}</span>
-            <span style={{fontSize:12,color:m.color}}>{open?'▲':'▼'}</span>
-          </div>
-          {open&&<div style={{padding:'14px 16px',background:'#fff',borderTop:'1px solid '+m.border}}><MD text={r.content}/></div>}
-        </div>
-      );})}
-
-      {curMod&&stream&&<div style={{marginBottom:8,border:'1px solid #ddd',borderRadius:12,overflow:'hidden'}}>
-        <div style={{display:'flex',alignItems:'center',gap:9,padding:'11px 14px',background:'#f8f8f8'}}>
-          <span className="tag" style={{background:'#eee',color:'#333',borderColor:'#ddd'}}>{curMod}</span>
-          <span style={{flex:1,fontSize:13}}>{MODULES.find(m=>m.id===curMod)?.title}</span>
-          <span style={{fontSize:11,color:'#888'}}>● {getModel(depth)} · {lang}</span>
-        </div>
-        <div style={{padding:'14px 16px',maxHeight:400,overflowY:'auto'}}><MD text={stream}/></div>
-      </div>}
-
-      {!isRun&&<div style={{marginTop:16}}>
-        <div style={{border:'1px solid #e5e5e5',borderRadius:12,overflow:'hidden',marginBottom:10}}>
-          <div style={{display:'flex',alignItems:'center',gap:10,padding:'12px 14px',background:'#f8f8f8',borderBottom:'1px solid #e5e5e5'}}>
-            <span style={{flex:1,fontSize:14,fontWeight:500}}>Report <span style={{fontSize:11,fontWeight:400,color:'#888'}}>in {lang} · gpt-4o</span></span>
-            {!rep&&!repping&&<button className="btn-primary" onClick={genRep}>Generate ↗</button>}
-            {rep&&!repping&&<button onClick={genRep}>Regenerate</button>}
-            {(rep||repping)&&<button onClick={()=>setRepOpen(o=>!o)}>{repOpen?'Collapse ▲':'Expand ▼'}</button>}
-          </div>
-          {repping&&!rep&&<p style={{padding:'14px',fontSize:13,color:'#888'}}>Generating report in {lang} using gpt-4o…</p>}
-          {rep&&repOpen&&<>
-            <div style={{padding:'14px',maxHeight:560,overflowY:'auto'}}><MD text={rep}/></div>
-            <div style={{padding:'10px 14px',borderTop:'1px solid #e5e5e5',background:'#f8f8f8',display:'flex',gap:8,alignItems:'center',flexWrap:'wrap'}}>
-              <span style={{fontSize:12,color:'#666',flexShrink:0}}>Translate to:</span>
-              <div style={{display:'flex',gap:5,flexWrap:'wrap',flex:1}}>
-                {['Russian','English','Turkish','Arabic','German'].filter(l=>l!==lang).map(l=><button key={l} onClick={()=>setXl(l)} style={{padding:'4px 10px',fontSize:11,borderColor:xl===l?'#378ADD':'#ddd',background:xl===l?'#E6F1FB':'#fff',color:xl===l?'#0C447C':'#111'}}>{l}</button>)}
-                <input value={xl} onChange={e=>setXl(e.target.value)} placeholder="other…" style={{width:90,fontSize:11,padding:'4px 8px'}}/>
+      {/* Active module status */}
+      {isRun && curModData && (
+        <div className="status-bar">
+          <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',gap:16}}>
+            <div style={{flex:1}}>
+              <p style={{fontSize:12,color:'#aaa',marginBottom:4}}>{curModData.id} · {curModData.title}</p>
+              <p style={{fontSize:14,fontWeight:500,marginBottom:10}}>{curStep}</p>
+              <div style={{display:'flex',gap:4}}>
+                {curModData.steps.map((s,i) => (
+                  <div key={i} style={{flex:1,height:2,borderRadius:1,background:i<=curStepIdx?curModData.color:'#333'}}/>
+                ))}
               </div>
-              <button className="btn-primary" onClick={doXl} disabled={!xl.trim()||xlating}>{xlating?'Translating…':'Translate ↗'}</button>
+              <p style={{fontSize:10,color:'#666',marginTop:4}}>{curStepIdx+1} / {curModData.steps.length} steps</p>
             </div>
-            {xled&&<div style={{padding:'14px',borderTop:'1px solid #e5e5e5',maxHeight:400,overflowY:'auto'}}>
-              <p style={{fontSize:11,fontWeight:500,color:'#888',marginBottom:8}}>TRANSLATION — {xl} · gpt-4o-mini</p>
-              <MD text={xled}/>
-            </div>}
-          </>}
-          {repping&&rep&&<p style={{padding:'4px 14px 10px',fontSize:11,color:'#888'}}>● generating…</p>}
+            <CountdownTimer totalSeconds={curModData.estimatedMin*60} label="Est. remaining"/>
+          </div>
         </div>
-        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:8}}>
-          <button onClick={()=>dlMd(rep||(proj?.results||[]).map(r=>`## ${r.id}\n\n${r.content}`).join('\n\n---\n\n'))}>↓ Report (.md)</button>
-          <button onClick={()=>xled&&dlMd(xled,'_translated')} disabled={!xled} style={{opacity:xled?1:0.4}}>↓ Translation (.md)</button>
-          <button onClick={dlCsv}>↓ Data (.csv)</button>
+      )}
+
+      {/* Completed modules */}
+      {(proj?.results||[]).map(r => {
+        const m = MODULES.find(x=>x.id===r.id); if (!m) return null;
+        const open = exp[r.id];
+        return (
+          <div key={r.id} style={{marginBottom:8,border:'1px solid '+m.border,borderRadius:12,overflow:'hidden'}}>
+            <div onClick={()=>setExp(e=>({...e,[r.id]:!e[r.id]}))} style={{display:'flex',alignItems:'center',gap:9,padding:'11px 14px',background:m.bg,cursor:'pointer'}}>
+              <span className="tag" style={{background:m.color,color:'#fff',borderColor:m.color}}>{m.id}</span>
+              <span style={{flex:1,fontSize:13,fontWeight:500,color:m.dark}}>{m.title}</span>
+              <span style={{fontSize:10,color:'#888',marginRight:4}}>{r.at?new Date(r.at).toLocaleDateString():''}</span>
+              <span style={{fontSize:12,color:m.color}}>{open?'▲':'▼'}</span>
+            </div>
+            {open && (
+              <div style={{padding:'14px 16px',background:'#fff',borderTop:'1px solid '+m.border}}>
+                <ModuleCharts moduleId={r.id} chartData={r.chartData}/>
+                <MD text={r.content}/>
+              </div>
+            )}
+          </div>
+        );
+      })}
+
+      {/* Report & export */}
+      {!isRun && (
+        <div style={{marginTop:16}}>
+          <div style={{border:'1px solid #e5e5e5',borderRadius:12,overflow:'hidden',marginBottom:10}}>
+            <div style={{display:'flex',alignItems:'center',gap:10,padding:'12px 14px',background:'#f8f8f8',borderBottom:'1px solid #e5e5e5'}}>
+              <span style={{flex:1,fontSize:14,fontWeight:500}}>Report <span style={{fontSize:11,fontWeight:400,color:'#888'}}>in {lang}</span></span>
+              {!rep&&!repping&&<button className="btn-primary" onClick={genRep}>Generate ↗</button>}
+              {rep&&!repping&&<button onClick={genRep}>Regenerate</button>}
+              {(rep||repping)&&<button onClick={()=>setRepOpen(o=>!o)}>{repOpen?'Collapse ▲':'Expand ▼'}</button>}
+            </div>
+            {repping && <p style={{padding:'14px',fontSize:13,color:'#888'}}>Generating report in {lang}… (~2–3 min)</p>}
+            {rep && repOpen && (
+              <>
+                <div style={{padding:'14px',maxHeight:600,overflowY:'auto'}}><MD text={rep}/></div>
+                <div style={{padding:'10px 14px',borderTop:'1px solid #e5e5e5',background:'#f8f8f8',display:'flex',gap:8,alignItems:'center',flexWrap:'wrap'}}>
+                  <span style={{fontSize:12,color:'#666',flexShrink:0}}>Translate to:</span>
+                  <div style={{display:'flex',gap:5,flexWrap:'wrap',flex:1}}>
+                    {['Russian','English','Turkish','Arabic','German'].filter(l=>l!==lang).map(l=>(
+                      <button key={l} onClick={()=>setXl(l)} style={{padding:'4px 10px',fontSize:11,borderColor:xl===l?'#378ADD':'#ddd',background:xl===l?'#E6F1FB':'#fff',color:xl===l?'#0C447C':'#111'}}>{l}</button>
+                    ))}
+                    <input value={xl} onChange={e=>setXl(e.target.value)} placeholder="other…" style={{width:90,fontSize:11,padding:'4px 8px'}}/>
+                  </div>
+                  <button className="btn-primary" onClick={doXl} disabled={!xl.trim()||xlating}>{xlating?'Translating…':'Translate ↗'}</button>
+                </div>
+                {xled && (
+                  <div style={{padding:'14px',borderTop:'1px solid #e5e5e5',maxHeight:400,overflowY:'auto'}}>
+                    <p style={{fontSize:11,fontWeight:500,color:'#888',marginBottom:8}}>TRANSLATION — {xl}</p>
+                    <MD text={xled}/>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+
+          <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr 1fr',gap:8}}>
+            <button onClick={()=>dlMd(rep||(proj?.results||[]).map(r=>`## ${r.id}\n\n${r.content}`).join('\n\n---\n\n'))}>↓ Report (.md)</button>
+            <button onClick={()=>xled&&dlMd(xled,'_translated')} disabled={!xled} style={{opacity:xled?1:0.4}}>↓ Translation (.md)</button>
+            <button onClick={dlCsv}>↓ Data (.csv)</button>
+            <button onClick={dlJson} style={{borderColor:'#EF9F27',color:'#633806'}} title="JSON package for Agent 2 (content, landing, SEO)">↓ Agent Pack (.json)</button>
+          </div>
+          <p style={{fontSize:11,color:'#888',textAlign:'center',marginTop:8}}>
+            Auto-saved · return anytime · Agent Pack = data package for content & landing agents
+          </p>
         </div>
-        <p style={{fontSize:11,color:'#888',textAlign:'center',marginTop:8}}>Auto-saved in browser · return anytime from Projects list</p>
-      </div>}
+      )}
     </div>
   );
 }
