@@ -1188,7 +1188,13 @@ function App() {
           </div>
 
           <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr 1fr',gap:8}}>
-            <button onClick={()=>dlMd(rep||(proj?.results||[]).map(r=>`## ${r.id}\n\n${r.content}`).join('\n\n---\n\n'))}>↓ Report (.md)</button>
+            <button onClick={()=>{const c=rep||(proj?.results||[]).map(r=>'## '+r.id+'
+
+'+r.content).join('
+
+---
+
+');dlMd(c);}}>↓ Report (.md)</button>
             <button onClick={()=>xled&&dlMd(xled,'_translated')} disabled={!xled} style={{opacity:xled?1:0.4}}>↓ Translation (.md)</button>
             <button onClick={dlCsv}>↓ Data (.csv)</button>
             <button onClick={dlJson} style={{borderColor:'#EF9F27',color:'#633806'}} title="JSON package for Agent 2 (content, landing, SEO)">↓ Agent Pack (.json)</button>
