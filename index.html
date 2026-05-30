@@ -56,7 +56,7 @@ async function callAPI(system, user, onChunk, model) {
     body: JSON.stringify({
       model: model || 'gpt-4o-mini',
       max_tokens: 4000,
-      stream: true,
+      stream: false,
       messages: [
         { role: 'system', content: system },
         { role: 'user', content: user }
@@ -64,22 +64,10 @@ async function callAPI(system, user, onChunk, model) {
     }),
   });
   if (!res.ok) throw new Error('API ' + res.status);
-  const reader = res.body.getReader();
-  const dec = new TextDecoder();
-  let full = '';
-  while (true) {
-    const { done, value } = await reader.read();
-    if (done) break;
-    for (const line of dec.decode(value).split('\n')) {
-      if (!line.startsWith('data: ') || line === 'data: [DONE]') continue;
-      try {
-        const d = JSON.parse(line.slice(6));
-        const text = d.choices?.[0]?.delta?.content;
-        if (text) { full += text; onChunk(text); }
-      } catch {}
-    }
-  }
-  return full;
+  const data = await res.json();
+  const text = data.choices?.[0]?.message?.content || '';
+  onChunk(text);
+  return text;
 }
 
 async function fetchSite(url) {
