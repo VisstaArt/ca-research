@@ -358,24 +358,37 @@ function buildSystem(brief, lang) {
 
 
 function buildM1Prompt(brief, lang, prev) {
-  const ctx = prev ? `\nCONTEXT FROM PREVIOUS MODULES:\n${prev}\n` : '';
-  return `${ctx}
-Fill the following research blocks for module M1. ALL output in ${lang}. Use only verifiable open sources.
+  const ctx = prev ? '\nCONTEXT FROM PREVIOUS MODULES:\n'+prev+'\n' : '';
+  const companyCtx = (brief.currentRevenue || brief.currentClients || brief.currentAvgCheck)
+    ? '\nCOMPANY DATA PROVIDED: Revenue='+( brief.currentRevenue||'?')+', Clients='+(brief.currentClients||'?')+', AvgCheck='+(brief.currentAvgCheck||'?')+'. You MUST use these to calculate current market share vs SOM and growth potential.'
+    : '\nNo company data provided — skip market share calculation.';
+  return ctx + companyCtx + `
+
+Fill the following research blocks for module M1. ALL output in ${lang}. ONLY verifiable open sources with real URLs.
+
+WRITING RULES — CRITICAL:
+- Write for a CEO/founder, not a marketing analyst. Every number must answer "so what does this mean for my business?"
+- Before each table write 1-2 sentences explaining WHY we are collecting this data and what decision it helps make.
+- After each table write "Вывод:" — 1-2 sentences in plain language what the data shows for THIS specific business.
+- NO generic conclusions like "market is large and growing". Only specific, actionable insights.
+- Every abbreviation (TAM, SAM, SOM, CAC, AOV, JTBD etc.) must be explained in brackets on first use.
 
 ═══════════════════════════════════════════════
-BLOCK 01 — Geo & Open Statistics (01_Geo_OpenStats)
+BLOCK 01 — Geo & Open Statistics
 ═══════════════════════════════════════════════
-Task: Collect relevant geo and demographic data for the market/region. Include population, income levels, business density, demand dynamics, and trends.
+Why we collect this: To understand how many potential buyers are in the market, their purchasing power, and what external factors affect demand.
 
 Format (15–25 rows):
-| Регион/район | Показатель | Значение | Единицы | Год | Источник/URL | Вывод для воронки (локация/расписание/формат) | Примечание |
+| Регион/район | Показатель | Значение | Единицы | Год | Источник/URL | Что это значит для бизнеса |
 
-Rules: Source/URL required with year. Only metrics affecting market capacity, payment ability, or audience accessibility.
+Rules: Source/URL required. Only metrics affecting market capacity, payment ability, or audience accessibility.
+
+Вывод: [2 sentences — what the geo data means for THIS business specifically]
 
 ═══════════════════════════════════════════════
-BLOCK 02 — Sources Index (02_Sources)
+BLOCK 02 — Sources Index
 ═══════════════════════════════════════════════
-Task: List open numeric sources for market sizing and segment evaluation.
+Why we collect this: To show where every number in this research comes from — so the client can verify and update data independently.
 
 Format (minimum 10 rows):
 | Метрика | Источник | URL | Год | Цифра/оценка | Единицы | Комментарий |
@@ -383,71 +396,75 @@ Format (minimum 10 rows):
 Rules: Only official/public repositories. No commercial promo articles.
 
 ═══════════════════════════════════════════════
-BLOCK 03 — Segment Share Model TAM→SAM→SOM (03_Segment_Share_Model)
+BLOCK 03 — Market Size Model TAM→SAM→SOM
 ═══════════════════════════════════════════════
-Task: Build a quantitative TAM→SAM→SOM model.
+Why we collect this: To answer — how many clients are there in this market, how many can we realistically reach, and how many can we convert in year 1. TAM = everyone who could theoretically buy. SAM = those we can actually reach. SOM = realistic target for year 1.
 
-Step 1: Describe TAM in text (total buyers estimate, total revenue estimate, key assumptions, sources).
+Step 1: Describe TAM in plain language (total buyers, total revenue estimate, key assumptions, sources).
 
 Step 2: Table (5–10 segments):
-| Segment_ID | Название сегмента | Base_Population | Eligibility_Rate | Awareness_Rate | Need_Rate | Ability_to_Pay_Rate | Access_Rate | Adoption_Rate | Conversion_Rate_to_Sale | Avg_Order_Value | Purchase_Frequency_per_year | SAM | SOM_Buyers | Annual_Revenue | Share_of_TAM_Buyers | Share_of_TAM_Revenue | Confidence (1-5) | Evidence_URLs |
+| Segment_ID | Название сегмента | Base_Population | Eligibility_Rate | Awareness_Rate | Need_Rate | Ability_to_Pay_Rate | Access_Rate | Adoption_Rate | Conversion_Rate_to_Sale | Avg_Order_Value | Purchase_Frequency_per_year | SAM | SOM_Buyers | Annual_Revenue | Confidence (1-5) | Evidence_URLs |
 
 Formulas:
 SAM = Base_Population × Eligibility × Awareness × Need × Ability_to_Pay × Access × Adoption
 SOM_Buyers = SAM × Conversion_Rate_to_Sale
 Annual_Revenue = SOM_Buyers × Avg_Order_Value × Purchase_Frequency_per_year
 
-After table: "Quality check" — verify SOM_Buyers ≤ TAM_Total_Buyers, note top 2–3 sensitive coefficients.
+Quality check: verify SOM_Buyers ≤ TAM total. Note top 2–3 sensitive assumptions.
+
+${brief.currentClients || brief.currentRevenue ? `COMPANY POSITION BLOCK (mandatory):
+Calculate and show in a separate table:
+| Показатель | Рынок (SOM) | Компания сейчас | Доля рынка | Потенциал роста |
+Using company data: clients=${brief.currentClients||'?'}, revenue=${brief.currentRevenue||'?'}, avg_check=${brief.currentAvgCheck||'?'}
+Write in plain language: "Компания занимает X% рынка. До насыщения SOM осталось Y клиентов / Z выручки."` : ''}
+
+Вывод: [Plain language: how big is the opportunity, is it worth entering, what is realistic in year 1]
 
 ═══════════════════════════════════════════════
-BLOCK 04 — Target Audience Segments (04_Сегменты_ЦА)
+BLOCK 04 — Target Audience Segments
 ═══════════════════════════════════════════════
-Task: Describe 6–12 non-overlapping segments with verifiable inclusion/exclusion criteria.
+Why we collect this: To understand exactly WHO are the buyers — with specific criteria so we can find them, reach them, and not waste budget on wrong audiences.
 
 Format:
 | Segment_ID | Название сегмента | Критерии включения | Критерии исключения | Proxy-ключевые слова (поиск/OSINT) | Гео | Профиль каналов/форматов | Заметки |
 
 Rules: S01, S02… IDs. No overlaps. Real search phrases for proxy keywords.
 
+Вывод: [Which segment to start with and why — specific reasoning]
+
 ═══════════════════════════════════════════════
-BLOCK 04_1 — Service Effectiveness per Segment (04_1_эффект)
+BLOCK 04_1 — Economic Viability per Segment
 ═══════════════════════════════════════════════
-Task: Evaluate economic viability of targeting each segment.
+Why we collect this: To understand which segments are worth the sales effort — does the deal size justify the cost to acquire the client. CAC = cost to acquire one client. AOV = average deal size. AOV/CAC ratio shows efficiency.
 
 Format:
-| Сегмент | CAC_proxy (расчёт) | AOV | AOV/CAC_proxy | Вердикт (Эффективно/Погранично/Неэффективно) | Почему так | Условия перевода в "Эффективно" | Confidence | Источники |
+| Сегмент | CAC_proxy (расчёт) | AOV | AOV/CAC_proxy | Вердикт | Почему так | Условия перевода в "Эффективно" | Confidence | Источники |
 
 Rules: Show formula behind CAC_proxy. If data unavailable — say so, set Confidence=1–2.
 
+Вывод: [Top-2 most economically efficient segments and why]
+
 ═══════════════════════════════════════════════
-BLOCK 04_2 — Niche Prioritization (04_2_Niche_Prioritization)
+BLOCK 04_2 — Niche Prioritization Matrix
 ═══════════════════════════════════════════════
-Task: Score and prioritize niches for go-to-market focus.
+Why we collect this: To decide where to focus first — which niche gives the best combination of demand, deal size, low competition, and ease of entry.
 
 Format:
-| Niche_ID | Ниша | Спрос (1-5) | SOM (оценка) | Эффект услуги | Конкуренция (1-5) | Экономика (CAC/AOV) | Сложность входа (1-5) | Риски (1-5) | Итоговый балл | Вердикт (В работу/Резерв/Стоп) | Обоснование |
+| Niche_ID | Ниша | Спрос (1-5) | SOM (оценка) | Эффект услуги | Конкуренция (1-5) | Экономика (CAC/AOV) | Сложность входа (1-5) | Итоговый балл | Вердикт (В работу/Резерв/Стоп) | Обоснование |
 
-After table: top-3 recommended niches with rationale.
+After table: Top-3 recommended niches. For each write: "Идти сюда потому что [specific reason with numbers]. Первый шаг: [concrete action]."
+
+Вывод: [Single most important insight from this analysis — which niche and why NOW]
 
 ═══════════════════════════════════════════════
-CHART DATA (for visualisation — output as JSON block at the very end)
+CHART DATA (output as JSON at the very end)
 ═══════════════════════════════════════════════
-After all tables, output a JSON block between <<<CHART_DATA_START>>> and <<<CHART_DATA_END>>> tags:
+After all tables, output JSON between <<<CHART_DATA_START>>> and <<<CHART_DATA_END>>>:
 {
-  "marketShare": [
-    { "label": "Segment name", "value": number, "color": "#hex" }
-  ],
-  "tamSamSom": {
-    "tam": number,
-    "sam": number,
-    "som": number,
-    "currency": "RUB/USD/EUR/etc"
-  },
-  "niches": [
-    { "name": "niche name", "demand": 1-5, "competition": 1-5, "score": number, "verdict": "Go/Hold/Stop" }
-  ]
-}
-Use real numbers from your analysis. If unavailable, use null.`;
+  "marketShare": [{ "label": "Segment name", "value": number, "color": "#hex" }],
+  "tamSamSom": { "tam": number, "sam": number, "som": number, "currency": "TRY/RUB/USD" },
+  "niches": [{ "name": "niche name", "demand": 1-5, "competition": 1-5, "score": number, "verdict": "Go/Hold/Stop" }]
+}`;
 }
 
 function buildM2Prompt(brief, lang, prev) {
@@ -703,30 +720,39 @@ function buildReportPrompt(brief, results, lang) {
   const completedIds = results.map(r=>r.id);
   const sections = results.map(r => {
     const m = MODULES.find(x=>x.id===r.id);
-    return '=== '+r.id+': '+(m?m.titleRu:r.id)+' ===\n'+r.content.slice(0,3000);
+    return '=== '+r.id+': '+(m?m.title:r.id)+' ===\n'+r.content.slice(0,4000);
   }).join('\n\n---\n\n');
-  const sectionMap = {
-    M1: '## Рынок, ёмкость и сегменты\n- TAM→SAM→SOM модель\n- Карта сегментов\n- Приоритизация ниш\n- Позиция компании на рынке (если есть данные)',
-    M2: '## Конкуренты и позиционирование\n- Карта конкурентов\n- Гэп-анализ Win/Parity/Lose\n- Возможности',
-    M3: '## Голос клиента (VoC)\n- Таблица цитат\n- "Клиент говорит vs мы говорим"\n- Ключевые формулировки',
-    M4: '## Психология покупки\n- Персоны\n- JTBD\n- Страхи и критерии\n- CJM',
-    M5: '## Офферы\n- Финальные офферы по сегментам',
-    M6: '## Контент и каналы\n- Контент-система\n- Креативные брифы',
-    M7: '## SEO-стратегия\n- Семантическое ядро\n- Структура сайта',
-  };
-  const structureLines = completedIds.map(id=>sectionMap[id]).filter(Boolean).join('\n');
-  return 'Write a professional research report. ALL output in '+lang+' only. No fabricated data.\n\n'+
+
+  const hasCompany = brief.currentRevenue || brief.currentClients || brief.currentAvgCheck;
+  const companyBlock = hasCompany
+    ? '\n\nCOMPANY DATA: Revenue='+( brief.currentRevenue||'—')+', Clients='+(brief.currentClients||'—')+', AvgCheck='+(brief.currentAvgCheck||'—')+'. Include company market position in Decision Brief.'
+    : '';
+
+  return 'Write a professional market research report. ALL output in '+lang+' only. No fabricated data. No sections for modules not in: '+completedIds.join(', ')+'.'+companyBlock+'\n\n'+
     'COMPLETED MODULES DATA:\n'+sections+'\n\n'+
-    'REPORT RULES:\n'+
-    '1. Write ONLY sections for completed modules: '+completedIds.join(', ')+'\n'+
-    '2. DO NOT invent sections for missing modules.\n'+
-    '3. Start with Decision Brief (1 page): research goal, core audience, 5-7 key insights from real data, 1-3 month focus.\n'+
-    '4. Then one section per completed module using the real data above.\n'+
-    '5. End with: Top-3 priorities, 90-day action plan, KPIs.\n'+
-    '6. Use Markdown tables. Be specific and evidence-based. No generic statements.\n\n'+
-    'STRUCTURE FOR THIS REPORT:\n'+
-    '# Decision Brief\n'+structureLines+'\n# Выводы и план на 90 дней';
+    'REPORT WRITING RULES:\n'+
+    '1. Write for a CEO/founder — every insight must answer "so what does this mean for my business?"\n'+
+    '2. NO generic statements. Only specific insights with real numbers from the data above.\n'+
+    '3. Every section starts with 1-2 sentences explaining what we studied and why it matters.\n'+
+    '4. Every section ends with "Что это значит для вас:" — 2-3 specific actionable conclusions.\n'+
+    '5. NO recommendations about modules not yet done (no "study competitors next" etc.).\n'+
+    '6. Explain abbreviations (TAM, SAM, SOM, CAC, AOV etc.) in brackets on first use.\n'+
+    '7. Use Markdown pipe tables for all data.\n\n'+
+    'STRUCTURE (only completed modules):\n'+
+    '# Decision Brief\n'+
+    '## Цель исследования\n'+
+    '## Ключевые инсайты (5-7 пунктов — конкретные цифры, не общие слова)\n'+
+    (hasCompany ? '## Позиция компании на рынке (текущая доля, потенциал роста в цифрах)\n' : '')+
+    '## Фокус прямо сейчас (3 конкретных действия из реальных данных)\n\n'+
+    completedIds.map(id => {
+      const m = MODULES.find(x=>x.id===id);
+      return '# '+(m ? (m.title+' ('+id+')') : id)+'\n[full section with all data, tables, and "Что это значит для вас:" block]';
+    }).join('\n\n')+'\n\n'+
+    '# Выводы\n'+
+    '## Топ-3 приоритета (с обоснованием из данных)\n'+
+    '## План на 90 дней (конкретные шаги, не общие рекомендации)';
 }
+
 
 
 // ── MARKDOWN ────────────────────────────────────────────────────────────────────
@@ -909,6 +935,143 @@ function ModuleCharts({ moduleId, chartData }) {
   } catch { return null; }
 }
 
+
+
+// ── HTML REPORT GENERATOR
+function generateHTMLReport(brief, results, lang, priceLayers, selectedLayers) {
+  const completedMods = MODULES.filter(m => results.find(r=>r.id===m.id));
+  const date = new Date().toLocaleDateString('ru-RU');
+  const hasCompany = brief.currentRevenue || brief.currentClients || brief.currentAvgCheck;
+  const chosenLayer = selectedLayers && selectedLayers.length > 0 && priceLayers && priceLayers.length > 0
+    ? selectedLayers.map(i => priceLayers[i]?.name).filter(Boolean).join(', ')
+    : null;
+
+  const moduleColors = { M1:'#639922', M2:'#0F6E56', M3:'#1565A8', M4:'#3C3489', M5:'#633806', M6:'#712B13', M7:'#72243E' };
+  const moduleBgs = { M1:'#EAF3DE', M2:'#E1F5EE', M3:'#E3EFFE', M4:'#EEEDFE', M5:'#FAEEDA', M6:'#FAECE7', M7:'#FBEAF0' };
+  const moduleDarks = { M1:'#27500A', M2:'#085041', M3:'#0C447C', M4:'#26215C', M5:'#412402', M6:'#4A1B0C', M7:'#4B1528' };
+
+  function escHtml(s) {
+    return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  function mdToHtml(text) {
+    if (!text) return '';
+    const lines = text.split('\n');
+    let html = ''; let inTable = false; let tableRows = [];
+    const flushTable = () => {
+      if (tableRows.length < 2) { tableRows.forEach(r => html += '<p style="font-size:13px;color:#555;margin:2px 0">'+escHtml(r)+'</p>'); tableRows=[]; inTable=false; return; }
+      const hdrs = tableRows[0].split('|').map(h=>h.trim()).filter(Boolean);
+      const rows = tableRows.slice(2).map(r=>r.split('|').map(c=>c.trim()).filter(Boolean));
+      html += '<div style="overflow-x:auto;margin:12px 0"><table style="border-collapse:collapse;width:100%;font-size:12px"><thead><tr>';
+      hdrs.forEach(h => html += '<th style="padding:7px 10px;background:#f8f8f8;border:1px solid #e5e5e5;text-align:left;font-weight:500;white-space:normal;min-width:80px">'+escHtml(h)+'</th>');
+      html += '</tr></thead><tbody>';
+      rows.forEach((row,ri) => {
+        html += '<tr style="background:'+(ri%2===0?'#fff':'#fafafa')+'">';
+        row.forEach(c => html += '<td style="padding:6px 10px;border:1px solid #e5e5e5;vertical-align:top;word-break:break-word;max-width:220px;line-height:1.4">'+escHtml(c)+'</td>');
+        html += '</tr>';
+      });
+      html += '</tbody></table></div>';
+      tableRows=[]; inTable=false;
+    };
+    for (const line of lines) {
+      if (line.trim().startsWith('|')) { inTable=true; tableRows.push(line); continue; }
+      if (inTable) flushTable();
+      if (line.startsWith('## ')) html += '<h2 style="font-size:16px;font-weight:500;margin:20px 0 6px;padding-bottom:4px;border-bottom:1px solid #eee">'+escHtml(line.slice(3))+'</h2>';
+      else if (line.startsWith('### ')) html += '<h3 style="font-size:14px;font-weight:500;margin:14px 0 4px">'+escHtml(line.slice(4))+'</h3>';
+      else if (line.startsWith('#### ')) html += '<h4 style="font-size:13px;font-weight:500;margin:10px 0 3px">'+escHtml(line.slice(5))+'</h4>';
+      else if (/^\*\*(.+)\*\*$/.test(line.trim())) html += '<p style="font-size:13px;font-weight:500;margin:8px 0 3px">'+escHtml(line.trim().slice(2,-2))+'</p>';
+      else if (/^[-•]\s/.test(line)) html += '<p style="margin:3px 0 3px 16px;font-size:13px;color:#333">· '+escHtml(line.slice(2))+'</p>';
+      else if (line.trim().startsWith('**') && line.includes('**')) {
+        const t = line.replace(/\*\*([^*]+)\*\*/g,'<strong>$1</strong>');
+        html += '<p style="margin:4px 0;font-size:13px;line-height:1.6">'+t+'</p>';
+      }
+      else if (!line.trim()) html += '<div style="height:6px"></div>';
+      else html += '<p style="margin:4px 0;font-size:13px;line-height:1.6;color:#333">'+escHtml(line)+'</p>';
+    }
+    if (inTable) flushTable();
+    return html;
+  }
+
+  let chartScripts = '';
+  let chartDivs = '';
+  const m1result = results.find(r=>r.id==='M1');
+  if (m1result && m1result.chartData) {
+    const d = typeof m1result.chartData === 'string' ? JSON.parse(m1result.chartData) : m1result.chartData;
+    if (d && (d.marketShare || d.tamSamSom || d.niches)) {
+      chartDivs = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:16px 0"><div style="background:#f8f8f8;border-radius:10px;padding:14px"><p style="font-size:12px;font-weight:500;color:#555;margin-bottom:8px">Доли сегментов в SOM</p><canvas id="rpt_pie" height="180"></canvas></div><div style="background:#f8f8f8;border-radius:10px;padding:14px"><p style="font-size:12px;font-weight:500;color:#555;margin-bottom:8px">TAM → SAM → SOM</p><canvas id="rpt_bar" height="180"></canvas></div></div><div style="background:#f8f8f8;border-radius:10px;padding:14px;margin-bottom:16px"><p style="font-size:12px;font-weight:500;color:#555;margin-bottom:8px">Матрица ниш: спрос vs конкуренция</p><canvas id="rpt_bubble" height="200"></canvas></div>';
+      const dStr = JSON.stringify(d).replace(/</g,'\\u003c').replace(/>/g,'\\u003e');
+      chartScripts = '<script>window.addEventListener("load",function(){try{var d='+dStr+';if(d.marketShare&&document.getElementById("rpt_pie")){new Chart(document.getElementById("rpt_pie"),{type:"doughnut",data:{labels:d.marketShare.map(function(x){return x.label}),datasets:[{data:d.marketShare.map(function(x){return x.value}),backgroundColor:d.marketShare.map(function(x,i){return x.color||["#639922","#0F6E56","#1565A8","#633806","#72243E","#3C3489","#888780"][i%7]}),borderWidth:0}]},options:{plugins:{legend:{position:"bottom",labels:{font:{size:9},padding:5,boxWidth:10}}},cutout:"55%",responsive:true}});}if(d.tamSamSom&&document.getElementById("rpt_bar")){new Chart(document.getElementById("rpt_bar"),{type:"bar",data:{labels:["TAM","SAM","SOM"],datasets:[{data:[d.tamSamSom.tam,d.tamSamSom.sam,d.tamSamSom.som],backgroundColor:["#B4B2A9","#97C459","#639922"],borderRadius:4}]},options:{plugins:{legend:{display:false}},responsive:true,scales:{y:{beginAtZero:true,ticks:{font:{size:9}}},x:{ticks:{font:{size:11}}}}}});}if(d.niches&&document.getElementById("rpt_bubble")){new Chart(document.getElementById("rpt_bubble"),{type:"bubble",data:{datasets:d.niches.map(function(n){return{label:n.name,data:[{x:n.demand||1,y:n.competition||1,r:Math.max(5,(n.score||5)*2)}],backgroundColor:n.verdict==="Go"?"rgba(99,153,34,0.65)":n.verdict==="Hold"?"rgba(239,159,39,0.6)":"rgba(136,135,128,0.5)"};})},options:{responsive:true,plugins:{legend:{position:"bottom",labels:{font:{size:9},padding:4,boxWidth:10}}},scales:{x:{title:{display:true,text:"Спрос (1-5)",font:{size:10}},min:0,max:6,ticks:{font:{size:9}}},y:{title:{display:true,text:"Конкуренция (1-5)",font:{size:10}},min:0,max:6,ticks:{font:{size:9}}}}}});}if(d.tamSamSom){var you=parseInt("'+(brief.currentClients||'0')+'")||0;var som=d.tamSamSom.som||0;var pct=som>0?Math.min(100,Math.round(you/som*100)):0;var bar=document.getElementById("rpt_pos_bar");if(bar){bar.style.width=Math.max(2,pct)+"%";}var lbl=document.getElementById("rpt_pos_lbl");if(lbl){lbl.textContent=you+" / "+som+" = "+pct+"%";}}}catch(e){console.warn("Chart error",e);}});<'+'/script>';
+    }
+  }
+
+  const companySection = hasCompany ? '<div style="background:#E3EFFE;border-radius:10px;padding:14px;margin-bottom:12px"><p style="font-size:11px;font-weight:500;color:#185FA5;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:10px">Данные компании</p><div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">'+(brief.currentRevenue?'<div style="background:#fff;border-radius:8px;padding:10px 12px"><div style="font-size:10px;color:#185FA5;margin-bottom:2px">Текущая выручка</div><div style="font-size:18px;font-weight:500;color:#0C447C">'+escHtml(brief.currentRevenue)+'</div></div>':'')+(brief.currentClients?'<div style="background:#fff;border-radius:8px;padding:10px 12px"><div style="font-size:10px;color:#185FA5;margin-bottom:2px">Активных клиентов</div><div style="font-size:18px;font-weight:500;color:#0C447C">'+escHtml(brief.currentClients)+'</div></div>':'')+(brief.currentAvgCheck?'<div style="background:#fff;border-radius:8px;padding:10px 12px"><div style="font-size:10px;color:#185FA5;margin-bottom:2px">Средний чек</div><div style="font-size:18px;font-weight:500;color:#0C447C">'+escHtml(brief.currentAvgCheck)+'</div></div>':'')+'</div></div>' : '';
+
+  const positionSection = hasCompany && m1result && m1result.chartData ? '<div style="margin:12px 0"><div style="display:flex;justify-content:space-between;margin-bottom:4px"><span style="font-size:12px;color:#555">Доля рынка (SAM)</span><span style="font-size:12px;font-weight:500;color:#27500A" id="rpt_pos_lbl">загрузка...</span></div><div style="height:12px;background:#e5e5e5;border-radius:6px;overflow:hidden"><div id="rpt_pos_bar" style="height:100%;background:#639922;border-radius:6px;width:2%;transition:width 0.6s"></div></div></div>' : '';
+
+  const html = `<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>CA Research — ${escHtml(brief.name||'Report')}</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"><\/script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f5f5f5;color:#111;padding:2rem 1rem;font-size:14px}
+.report{max-width:780px;margin:0 auto}
+.cover{background:#fff;border-radius:14px;padding:2rem;margin-bottom:1.25rem;border:1px solid #e5e5e5}
+.section{background:#fff;border-radius:14px;padding:1.75rem;margin-bottom:1.25rem;border:1px solid #e5e5e5}
+.section-title{font-size:16px;font-weight:500;margin-bottom:1rem;padding-bottom:8px;border-bottom:2px solid}
+@media print{body{background:#fff;padding:0}.section,.cover{break-inside:avoid;border:1px solid #ddd;box-shadow:none}button{display:none}}
+</style>
+</head>
+<body>
+<div class="report">
+
+<div style="text-align:right;margin-bottom:12px">
+  <button onclick="window.print()" style="padding:8px 20px;background:#111;color:#fff;border:none;border-radius:8px;font-size:13px;cursor:pointer;font-family:inherit">Печать / PDF ↓</button>
+</div>
+
+<div class="cover">
+  <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:1.5rem">
+    <div>
+      <div style="font-size:11px;color:#888;text-transform:uppercase;letter-spacing:0.07em;margin-bottom:5px">Исследование целевой аудитории</div>
+      <div style="font-size:26px;font-weight:500;margin-bottom:3px">${escHtml(brief.name||'—')}</div>
+      <div style="font-size:13px;color:#666">${escHtml([brief.niche,brief.format].filter(Boolean).join(' · ')||'—')}</div>
+    </div>
+    <div style="text-align:right;flex-shrink:0">
+      <div style="font-size:11px;color:#888;margin-bottom:4px">${date}</div>
+      <div style="display:flex;gap:5px;flex-wrap:wrap;justify-content:flex-end">
+        ${completedMods.map(m=>'<span style="font-size:11px;font-weight:500;padding:3px 9px;border-radius:4px;background:'+moduleBgs[m.id]+';color:'+moduleDarks[m.id]+'">'+m.id+' ✓</span>').join('')}
+      </div>
+    </div>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px;margin-bottom:1.25rem">
+    <div style="background:#f8f8f8;border-radius:8px;padding:10px 12px"><div style="font-size:10px;color:#888;margin-bottom:3px">Рынок</div><div style="font-size:13px;font-weight:500">${escHtml(brief.geoMarket||brief.geo||'—')}</div></div>
+    <div style="background:#f8f8f8;border-radius:8px;padding:10px 12px"><div style="font-size:10px;color:#888;margin-bottom:3px">Язык</div><div style="font-size:13px;font-weight:500">${escHtml(lang||'—')}</div></div>
+    ${brief.geoCompany ? '<div style="background:#f8f8f8;border-radius:8px;padding:10px 12px"><div style="font-size:10px;color:#888;margin-bottom:3px">География компании</div><div style="font-size:13px;font-weight:500">'+escHtml(brief.geoCompany)+'</div></div>' : ''}
+    ${chosenLayer ? '<div style="background:#FAEEDA;border-radius:8px;padding:10px 12px"><div style="font-size:10px;color:#633806;margin-bottom:3px">Ценовой слой</div><div style="font-size:13px;font-weight:500;color:#412402">'+escHtml(chosenLayer)+'</div></div>' : ''}
+  </div>
+  ${companySection}
+  ${positionSection}
+</div>
+
+${results.map(r => {
+  const m = MODULES.find(x=>x.id===r.id);
+  const col = moduleColors[r.id]||'#639922';
+  const bg = moduleBgs[r.id]||'#EAF3DE';
+  const dark = moduleDarks[r.id]||'#27500A';
+  let content = mdToHtml(r.content);
+  const charts = r.id === 'M1' ? chartDivs : '';
+  return '<div class="section"><div class="section-title" style="border-color:'+col+';color:'+dark+'"><span style="background:'+bg+';color:'+dark+';padding:2px 8px;border-radius:4px;font-size:12px;margin-right:8px">'+r.id+'</span>'+(m?m.title:'Module')+'</div>'+charts+content+'</div>';
+}).join('')}
+
+</div>
+${chartScripts}
+</body>
+</html>`;
+  return html;
+}
 
 // ── TOOLTIP COMPONENT
 function InfoTip({ text }) {
@@ -1818,6 +1981,7 @@ function App() {
           </div>
           <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr 1fr',gap:8}}>
             <button onClick={()=>dlMd(rep||proj.results.map(r=>'## '+r.id+'\n\n'+r.content).join('\n\n---\n\n'))}>{t.dlReport}</button>
+            <button onClick={()=>{const html=generateHTMLReport(brief,proj.results,lang,priceLayers,selectedLayers);const w=window.open('','_blank');w.document.write(html);w.document.close();}} style={{background:'#111',color:'#fff',borderColor:'#111',fontWeight:500}}>↗ HTML отчёт</button>
             <button onClick={()=>xled&&dlMd(xled,'_translated')} disabled={!xled} style={{opacity:xled?1:0.4}}>{t.dlTranslation}</button>
             <button onClick={dlCsv}>{t.dlData}</button>
             <button onClick={dlJson} style={{borderColor:'#EF9F27',color:'#633806'}}>{t.dlAgent}</button>
