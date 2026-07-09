@@ -89,7 +89,9 @@ const T = {
     researchLang: 'Research language',
     researchLangSub: 'All tables, analysis and report will be written in this language.',
     selectModules: 'Select modules',
-    selectModulesSub: 'M1 is recommended if you don\'t know the market yet. You can start from any module.',
+    selectModulesSub: 'M1 is temporarily unavailable — it is being upgraded to use real statistics sources. Fill "Target segment" and "Price layer" in the brief instead, and start from any module.',
+    moduleDisabledBadge: 'Coming soon',
+    moduleDisabledNote: 'Module in development: waiting for real statistics data integration',
     modelLabel: 'Model',
     dataPolicy: 'Data policy',
     dataPolicyVal: 'No fabricated data — agent writes "no public data" if unavailable',
@@ -162,7 +164,9 @@ const T = {
     researchLang: 'Язык исследования',
     researchLangSub: 'Все таблицы, анализ и отчёт будут написаны на этом языке.',
     selectModules: 'Выбор модулей',
-    selectModulesSub: 'M1 рекомендуется если вы ещё не знаете рынок. Можно начать с любого модуля.',
+    selectModulesSub: 'M1 временно недоступен — дорабатываем его на реальных источниках статистики. Заполните в брифе «Целевой сегмент» и «Ценовой слой» и начинайте с любого модуля.',
+    moduleDisabledBadge: 'Скоро',
+    moduleDisabledNote: 'Модуль в доработке: ждёт подключения реальных данных статистики',
     modelLabel: 'Модель',
     dataPolicy: 'Данные',
     dataPolicyVal: 'Без выдуманных данных — агент пишет "нет публичных данных" если информация недоступна',
@@ -199,6 +203,7 @@ const T = {
 const MODULES = [
   {
     id: 'M1', color: '#639922', bg: '#EAF3DE', border: '#97C459', dark: '#27500A',
+    disabled: true, // временно отключён: ждёт подключения реальных данных статистики (Tavily/загрузка файлов)
     title: 'Market & Segments',
     titleRu: 'Рынок, ёмкость и сегменты',
     taglineEn: 'Market size, who your customers are, and which niches to prioritize',
@@ -1167,6 +1172,18 @@ function ModuleCard({ m, on, onToggle, uiLang }) {
   const tagline = uiLang==='ru' ? m.taglineRu : m.taglineEn;
   const what = uiLang==='ru' ? m.whatRu : m.whatEn;
   const outputs = uiLang==='ru' ? m.outputsRu : m.outputsEn;
+  if (m.disabled) return (
+    <div style={{border:'1px dashed #ddd',borderRadius:12,overflow:'hidden',cursor:'not-allowed',marginBottom:8,background:'#fafafa',opacity:0.65}}>
+      <div style={{display:'flex',alignItems:'center',gap:10,padding:'11px 14px'}}>
+        <span style={{fontSize:11,fontWeight:500,padding:'3px 8px',borderRadius:4,background:'#eee',color:'#999',flexShrink:0}}>{m.id}</span>
+        <div style={{flex:1}}>
+          <div style={{fontSize:13,fontWeight:500,color:'#999'}}>{m.title}</div>
+          <div style={{fontSize:11,color:'#aaa',marginTop:1}}>{t.moduleDisabledNote}</div>
+        </div>
+        <span style={{fontSize:9,fontWeight:600,letterSpacing:0.5,padding:'3px 8px',borderRadius:4,background:'#f0f0f0',color:'#999',flexShrink:0,textTransform:'uppercase'}}>{t.moduleDisabledBadge}</span>
+      </div>
+    </div>
+  );
   return (
     <div onClick={onToggle} style={{border:on?'2px solid '+m.color:'1px solid #e5e5e5',borderRadius:12,overflow:'hidden',cursor:'pointer',marginBottom:8,background:'#fff',transition:'border 0.15s'}}>
       <div style={{display:'flex',alignItems:'center',gap:10,padding:'11px 14px'}}>
@@ -1453,7 +1470,7 @@ function App() {
   const empty = { name:'', niche:'', geoCompany:'', geoMarket:'', format:'', audience:'', result:'', price:'', competitors:'', extra:'', currentRevenue:'', currentClients:'', currentAvgCheck:'', targetSegment:'', priceLayer:'' };
   const [brief, setBrief] = React.useState(empty);
   const [lang, setLang] = React.useState('Russian');
-  const [mods, setMods] = React.useState(['M1','M2']);
+  const [mods, setMods] = React.useState(['M2']);
   const [siteUrl, setSiteUrl] = React.useState('');
   const [parsing, setParsing] = React.useState(false);
   const [pMsg, setPMsg] = React.useState('');
@@ -1505,7 +1522,7 @@ function App() {
     const b={...(p.brief||{})};
     if(b.geo&&!b.geoMarket){b.geoMarket=b.geo;delete b.geo;}
     setProj(p); setBrief({...empty,...b}); setLang(p.lang||'Russian');
-    setMods(p.mods||['M1','M2']); setRep(p.report||'');
+    setMods((p.mods||['M2']).filter(id => !MODULES.find(m=>m.id===id)?.disabled)); setRep(p.report||'');
     setExp({}); setRepOpen(false); setXled('');
     setShowLayers(false); setPriceLayers(p.priceLayers||[]); setSelectedLayers(p.selectedLayers||[]);
     setSc('work');
@@ -1521,7 +1538,7 @@ function App() {
   }, [proj, brief, lang, sv]);
 
   const goNew = () => {
-    setProj(null); setBrief(empty); setLang('Russian'); setMods(['M1','M2']);
+    setProj(null); setBrief(empty); setLang('Russian'); setMods(['M2']);
     setSiteUrl(''); setPMsg(''); setRep(''); setExp({}); setRepOpen(false); setXled('');
     setShowLayers(false); setPriceLayers([]); setSelectedLayers([]);
     setSc('form');
@@ -1587,7 +1604,7 @@ function App() {
     const existing = proj?.results || [];
     const doneIds = existing.map(r => r.id);
     const allSelected = modsToRun || mods;
-    const toRun = MODULES.filter(m => allSelected.includes(m.id) && !doneIds.includes(m.id));
+    const toRun = MODULES.filter(m => !m.disabled && allSelected.includes(m.id) && !doneIds.includes(m.id));
     if (!toRun.length) { setSc('work'); return; }
 
     const p = { id, createdAt: proj?.createdAt||new Date().toISOString(), updatedAt: new Date().toISOString(), brief, lang, mods:allSelected, results:existing, report:proj?.report||'', priceLayers, selectedLayers };
