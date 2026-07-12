@@ -92,6 +92,11 @@ const T = {
     selectModulesSub: 'M1 is temporarily unavailable — it is being upgraded to use real statistics sources. Fill "Target segment" and "Price layer" in the brief instead, and start from any module.',
     moduleDisabledBadge: 'Coming soon',
     moduleDisabledNote: 'Module in development: waiting for real statistics data integration',
+    lockTitle: 'Access',
+    lockSub: 'Enter the access password to use the service',
+    lockPlaceholder: 'Password',
+    lockButton: 'Sign in',
+    lockError: 'Wrong password. Try again.',
     modelLabel: 'Model',
     dataPolicy: 'Data policy',
     dataPolicyVal: 'No fabricated data — agent writes "no public data" if unavailable',
@@ -167,6 +172,11 @@ const T = {
     selectModulesSub: 'M1 временно недоступен — дорабатываем его на реальных источниках статистики. Заполните в брифе «Целевой сегмент» и «Ценовой слой» и начинайте с любого модуля.',
     moduleDisabledBadge: 'Скоро',
     moduleDisabledNote: 'Модуль в доработке: ждёт подключения реальных данных статистики',
+    lockTitle: 'Доступ',
+    lockSub: 'Введите пароль доступа, чтобы пользоваться сервисом',
+    lockPlaceholder: 'Пароль',
+    lockButton: 'Войти',
+    lockError: 'Неверный пароль. Попробуйте ещё раз.',
     modelLabel: 'Модель',
     dataPolicy: 'Данные',
     dataPolicyVal: 'Без выдуманных данных — агент пишет "нет публичных данных" если информация недоступна',
@@ -305,9 +315,21 @@ const loadUiLang = () => { try { return localStorage.getItem('ca_uilang')||'en';
 const saveUiLang = l => { try { localStorage.setItem('ca_uilang', l); } catch {} };
 
 // ── API
+const AK = 'ca_appkey'; // localStorage: пароль доступа к прокси
+const getAppKey = () => { try { return localStorage.getItem(AK)||''; } catch { return ''; } };
+const setAppKey = v => { try { localStorage.setItem(AK, v); } catch {} };
+
+async function pingProxy(key) {
+  const res = await fetch('/api/proxy', {
+    method: 'POST', headers: {'Content-Type':'application/json','X-App-Key':key},
+    body: JSON.stringify({ping:true}),
+  });
+  return res.ok;
+}
+
 async function callGPT(system, user) {
   const res = await fetch('/api/proxy', {
-    method: 'POST', headers: {'Content-Type':'application/json'},
+    method: 'POST', headers: {'Content-Type':'application/json','X-App-Key':getAppKey()},
     body: JSON.stringify({model:MODEL, max_tokens:8000, stream:false,
       messages:[{role:'system',content:system},{role:'user',content:user}]}),
   });
@@ -1459,9 +1481,46 @@ function MarketPositionBlock({ chartData, brief, lang }) {
 }
 
 // ── MAIN APP
+// ── LOCK SCREEN (защита доступа)
+function LockScreen({ t, onUnlock }) {
+  const [pw, setPw] = React.useState('');
+  const [err, setErr] = React.useState(false);
+  const [busy, setBusy] = React.useState(false);
+  const submit = async e => {
+    e.preventDefault();
+    if (!pw.trim() || busy) return;
+    setBusy(true); setErr(false);
+    const ok = await pingProxy(pw.trim()).catch(()=>false);
+    setBusy(false);
+    if (ok) { setAppKey(pw.trim()); onUnlock(); } else setErr(true);
+  };
+  return (
+    <div style={{minHeight:'100vh',display:'flex',alignItems:'center',justifyContent:'center',background:'#f7f7f5'}}>
+      <form onSubmit={submit} style={{background:'#fff',border:'1px solid #e5e5e5',borderRadius:14,padding:'32px 36px',width:340,textAlign:'center'}}>
+        <div style={{fontSize:26,marginBottom:6}}>🔒</div>
+        <div style={{fontSize:17,fontWeight:600,color:'#111',marginBottom:4}}>{t.lockTitle}</div>
+        <div style={{fontSize:12,color:'#888',marginBottom:18,lineHeight:1.5}}>{t.lockSub}</div>
+        <input type="password" value={pw} onChange={e=>setPw(e.target.value)} placeholder={t.lockPlaceholder} autoFocus
+          style={{width:'100%',boxSizing:'border-box',padding:'10px 12px',fontSize:14,border:'1px solid '+(err?'#d33':'#ddd'),borderRadius:8,outline:'none',marginBottom:10}} />
+        {err && <div style={{fontSize:11,color:'#d33',marginBottom:10}}>{t.lockError}</div>}
+        <button type="submit" disabled={busy||!pw.trim()}
+          style={{width:'100%',padding:'10px 0',fontSize:14,fontWeight:500,color:'#fff',background:busy?'#999':'#111',border:'none',borderRadius:8,cursor:'pointer'}}>
+          {busy ? '…' : t.lockButton}
+        </button>
+      </form>
+    </div>
+  );
+}
+
 function App() {
   const [uiLang, setUiLang] = React.useState(loadUiLang);
   const t = T[uiLang];
+
+  // Защита доступа: null = проверяем, true = открыто, false = нужен пароль
+  const [unlocked, setUnlocked] = React.useState(null);
+  React.useEffect(() => {
+    pingProxy(getAppKey()).then(ok => setUnlocked(ok)).catch(() => setUnlocked(false));
+  }, []);
 
   const [sc, setSc] = React.useState('list');
   const [projs, setProjs] = React.useState(() => loadAll());
@@ -1725,6 +1784,12 @@ function App() {
       <button onClick={switchUiLang} style={{padding:'5px 12px',fontSize:12,fontWeight:500}}>{uiLang==='en'?'RU':'EN'}</button>
     </div>
   );
+
+  // ── ACCESS GATE (все хуки уже объявлены выше — условные возвраты безопасны)
+  if (unlocked === null) return (
+    <div style={{minHeight:'100vh',display:'flex',alignItems:'center',justifyContent:'center',color:'#999',fontSize:13}}>…</div>
+  );
+  if (unlocked === false) return <LockScreen t={t} onUnlock={()=>setUnlocked(true)} />;
 
   // ── LIST
   if (sc === 'list') return (
