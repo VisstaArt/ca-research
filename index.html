@@ -97,6 +97,14 @@ const T = {
     lockPlaceholder: 'Password',
     lockButton: 'Sign in',
     lockError: 'Wrong password. Try again.',
+    servicesTitle: 'Services found on the site',
+    servicesSub: 'select what to research',
+    servicesHint: 'Selected services become niche candidates in M1.2 Niche Scouting. Select none — the agent will scout across all of them.',
+    nichePickTitle: 'Niche scouting results — pick a niche',
+    nichePickSub: 'The research continues only for the selected niche. AI recommendation is marked, but the choice is yours (or your client\'s).',
+    nicheRecommended: 'AI recommends',
+    nicheContinue: 'Continue with this niche →',
+    nicheDemand: 'Demand', nicheCompetition: 'Competition', nicheEconomics: 'Economics', nicheScore: 'Score',
     modelLabel: 'Model',
     dataPolicy: 'Data policy',
     dataPolicyVal: 'No fabricated data — agent writes "no public data" if unavailable',
@@ -177,6 +185,14 @@ const T = {
     lockPlaceholder: 'Пароль',
     lockButton: 'Войти',
     lockError: 'Неверный пароль. Попробуйте ещё раз.',
+    servicesTitle: 'Услуги, найденные на сайте',
+    servicesSub: 'отметьте, что исследовать',
+    servicesHint: 'Отмеченные услуги станут кандидатами в ниши в модуле M1.2 «Разведка ниш». Ничего не отметите — агент разведает все.',
+    nichePickTitle: 'Итоги разведки — выберите нишу',
+    nichePickSub: 'Исследование продолжится только по выбранной нише. Рекомендация ИИ помечена, но выбор за вами (или за вашим заказчиком).',
+    nicheRecommended: 'ИИ рекомендует',
+    nicheContinue: 'Продолжить с этой нишей →',
+    nicheDemand: 'Спрос', nicheCompetition: 'Конкуренция', nicheEconomics: 'Экономика', nicheScore: 'Балл',
     modelLabel: 'Модель',
     dataPolicy: 'Данные',
     dataPolicyVal: 'Без выдуманных данных — агент пишет "нет публичных данных" если информация недоступна',
@@ -212,18 +228,31 @@ const T = {
 // ── MODULES CONFIG
 const MODULES = [
   {
-    id: 'M1', color: '#639922', bg: '#EAF3DE', border: '#97C459', dark: '#27500A',
-    disabled: true, // временно отключён: ждёт подключения реальных данных статистики (Tavily/загрузка файлов)
-    title: 'Market & Segments',
-    titleRu: 'Рынок, ёмкость и сегменты',
-    taglineEn: 'Market size, who your customers are, and which niches to prioritize',
-    taglineRu: 'Размер рынка, кто ваши клиенты и какие ниши приоритизировать',
-    whatEn: 'Answers: How big is the market? Who are the target segments? Which niche is worth entering first? Where is your company right now relative to the total addressable market?',
-    whatRu: 'Отвечает: Каков размер рынка? Кто целевые сегменты? В какую нишу входить первой? Где компания сейчас относительно адресного рынка?',
-    outputsEn: ['TAM → SAM → SOM model','Segment map (6–12 segments)','Niche prioritization matrix','Price layer detection','Market position dashboard'],
-    outputsRu: ['Модель TAM → SAM → SOM','Карта сегментов (6–12)','Матрица приоритизации ниш','Определение ценовых слоёв','Дашборд позиции на рынке'],
+    id: 'M1', label: 'M1.1', color: '#639922', bg: '#EAF3DE', border: '#97C459', dark: '#27500A',
+    disabled: true, // временно отключён: ждёт подключения реальных данных гос. статистики
+    title: 'Market Capacity',
+    titleRu: 'Ёмкость рынка (TAM/SAM/SOM)',
+    taglineEn: 'Market size, shares and growth potential from official statistics',
+    taglineRu: 'Размер рынка, доли и потенциал роста по официальной статистике',
+    whatEn: 'Answers: How big is the market (TAM→SAM→SOM)? Where is your company relative to the addressable market? Built on official statistics sources (blocks 01–03).',
+    whatRu: 'Отвечает: Каков размер рынка (TAM→SAM→SOM)? Где компания относительно адресного рынка? Строится на официальной статистике (блоки 01–03).',
+    outputsEn: ['Geo & open statistics','TAM → SAM → SOM model','Market share vs company position'],
+    outputsRu: ['Гео и открытая статистика','Модель TAM → SAM → SOM','Доля рынка и позиция компании'],
     estimatedMin: 8,
-    steps: ['Collecting geo & demographic statistics (Block 01)…','Mapping open data sources (Block 02)…','Building TAM→SAM→SOM model (Block 03)…','Describing target audience segments (Block 04)…','Evaluating service effectiveness per segment (Block 04_1)…','Prioritizing niches with scoring (Block 04_2)…','Generating market share chart data…'],
+    steps: ['Collecting geo & demographic statistics (Block 01)…','Mapping open data sources (Block 02)…','Building TAM→SAM→SOM model (Block 03)…'],
+  },
+  {
+    id: 'M1_2', label: 'M1.2', color: '#4A7C1F', bg: '#EFF6E4', border: '#A8CE6E', dark: '#2E4F0C',
+    title: 'Niche Scouting',
+    titleRu: 'Разведка ниш',
+    taglineEn: 'Map of services and niches with scoring — pick one to research deeply',
+    taglineRu: 'Карта услуг и ниш со скорингом — выбираете одну для глубокого исследования',
+    whatEn: 'Answers: Which niches exist around your services? Which are worth entering — by demand, competition and economics? Ends with a stop: you (or your client) pick ONE niche, and all further modules research only it. Based on blocks 04, 04_1, 04_2 of the methodology, grounded in real web search.',
+    whatRu: 'Отвечает: Какие ниши есть вокруг ваших услуг? В какие стоит входить — по спросу, конкуренции и экономике? Заканчивается стопом: вы (или заказчик) выбираете ОДНУ нишу, и все следующие модули исследуют только её. Блоки 04, 04_1, 04_2 методологии, заземление на реальный веб-поиск.',
+    outputsEn: ['Audience segments map','Service effectiveness per niche','Niche prioritization matrix (scoring)','Niche selection stop-point'],
+    outputsRu: ['Карта сегментов аудитории','Эффективность услуг по нишам','Матрица приоритизации ниш (скоринг)','Стоп-точка выбора ниши'],
+    estimatedMin: 6,
+    steps: ['Searching real market signals (web search)…','Describing target audience segments (Block 04)…','Evaluating service effectiveness per niche (Block 04_1)…','Prioritizing niches with scoring (Block 04_2)…','Preparing niche cards…'],
   },
   {
     id: 'M2', color: '#0F6E56', bg: '#E1F5EE', border: '#5DCAA5', dark: '#085041',
@@ -339,6 +368,40 @@ async function callGPT(system, user) {
   return d.choices?.[0]?.message?.content||'';
 }
 
+// Реальный веб-поиск (Tavily). Возвращает выдержки с URL; [] при недоступности поиска.
+async function callSearch(query, opts) {
+  try {
+    const res = await fetch('/api/search', {
+      method: 'POST', headers: {'Content-Type':'application/json','X-App-Key':getAppKey()},
+      body: JSON.stringify({query, ...(opts||{})}),
+    });
+    if (!res.ok) return [];
+    const d = await res.json();
+    return d.results || [];
+  } catch { return []; }
+}
+
+// Собирает поисковое досье для разведки ниш: по каждой услуге-кандидату — спрос и конкуренция
+async function gatherNicheEvidence(brief, lang) {
+  const market = brief.geoMarket || brief.geoCompany || '';
+  const base = (brief.selectedServices && brief.selectedServices.length ? brief.selectedServices : (brief.services||[])).slice(0, 6);
+  const topics = base.length ? base : [brief.niche || brief.name].filter(Boolean);
+  const queries = [];
+  for (const s of topics) {
+    queries.push(s+' '+market+' спрос отзывы форум');
+    queries.push(s+' '+market+' цена конкуренты');
+  }
+  queries.push((brief.niche||brief.name)+' '+market+' тренды рынка');
+  const all = [];
+  for (const q of queries.slice(0, 9)) {
+    const r = await callSearch(q, {max_results: 4});
+    for (const x of r) all.push({q, title: x.title, url: x.url, content: (x.content||'').slice(0, 400), date: x.published_date});
+  }
+  // Дедупликация по URL
+  const seen = new Set();
+  return all.filter(x => !seen.has(x.url) && seen.add(x.url)).slice(0, 24);
+}
+
 async function fetchSite(url) {
   const base = url.replace(/\/$/, '');
   const pages = [];
@@ -366,8 +429,14 @@ function buildSystem(brief, lang) {
     if(k==='currentAvgCheck') return '- Company Avg Check: '+v;
     if(k==='targetSegment') return '- Target Segment (pre-defined, skip M1): '+v;
     if(k==='priceLayer') return '- Price Layer: '+v;
+    if(k==='services') return Array.isArray(v)&&v.length ? '- Services offered (from site): '+v.join('; ') : '';
+    if(k==='selectedServices') return Array.isArray(v)&&v.length ? '- Services SELECTED for research: '+v.join('; ') : '';
+    if(k==='selectedNiche') return '- SELECTED NICHE (chosen at M1.2 stop-point): '+v;
     return '- '+k+': '+v;
-  }).join('\n');
+  }).filter(Boolean).join('\n');
+  const nicheFilter = brief.selectedNiche
+    ? '\n\nNICHE FILTER — MANDATORY:\nWork ONLY within the selected niche: "'+brief.selectedNiche+'". Ignore all other niches/segments. If a source or insight belongs to another niche — skip it and mark "вне фильтра". This rule applies to ALL modules, tables and conclusions.\n'
+    : '';
   return 'You are a senior market research analyst producing a professional-grade target audience research report.\n\n'+
     'PROJECT BRIEF (00_Project_Brief):\n'+lines+'\n\n'+
     'GEOGRAPHY RULES — CRITICAL:\n'+
@@ -380,9 +449,48 @@ function buildSystem(brief, lang) {
     '3. Every stat needs a real verifiable URL.\n'+
     '4. Markdown pipe tables only.\n'+
     '5. Explain abbreviations (TAM/SAM/SOM/JTBD/CJM/LPR/VoC) below tables.\n'+
-    '6. End each block with "Итог / Следующие шаги" (3-5 steps).';
+    '6. End each block with "Итог / Следующие шаги" (3-5 steps).'+
+    nicheFilter;
 }
 
+
+// M1.2 «Разведка ниш» — блоки 04, 04_1, 04_2 методологии. Заземление: реальные выдержки из веб-поиска.
+function buildM12Prompt(brief, lang, prev, evidence) {
+  const services = (brief.selectedServices && brief.selectedServices.length ? brief.selectedServices : (brief.services||[]));
+  const svcLine = services.length ? 'CANDIDATE SERVICES (from the client\'s site, research these as niche candidates): '+services.join('; ') : 'No service list provided — derive niche candidates from the brief (niche, audience, format).';
+  const evidenceBlock = (evidence && evidence.length)
+    ? '\nREAL WEB SEARCH EVIDENCE (collected just now — use ONLY this material for market signals, do NOT supplement from memory):\n'
+      + evidence.map((e,i)=>'['+(i+1)+'] '+(e.title||'')+' — '+e.url+(e.date?' ('+e.date+')':'')+'\n'+e.content).join('\n\n')
+      + '\n\nEVIDENCE RULES:\n- Every market signal (demand, competition, pricing) must cite evidence numbers [n] or state "нет данных (публично)" with Confidence=1–2.\n- Sources older than 12 months: mark "устаревшее" and weigh lower.\n- Note platform bias: review sites skew negative, forums skew skeptical/technical.\n'
+    : '\nNO WEB EVIDENCE AVAILABLE (search unconfigured or empty). Be conservative: mark ALL market size/demand claims with Confidence=1–2 and «нет данных (публично)» where applicable. Do not invent URLs.\n';
+  const ctx = prev ? '\nCONTEXT FROM PREVIOUS MODULES:\n'+prev+'\n' : '';
+  return ctx + '\n' + svcLine + '\n' + evidenceBlock + `
+
+Fill the following research blocks for module M1.2 «Niche Scouting». ALL output in ${lang} (table headers, labels, conclusions — everything; technical abbreviations like JTBD, CAC, AOV, Confidence stay as is).
+
+PURPOSE: this is a SCOUTING pass — short tables, just enough to CHOOSE one niche. Deep research happens later, only for the chosen niche. Keep it compact.
+
+BLOCK 04 — Target Audience Segments (methodology block 04)
+Before the table: 2-3 sentences why we map segments.
+Table (6-10 rows max): Segment_ID | Сегмент | Кто это (1 строка) | Ключевая потребность | Платёжеспособность (H/M/L) | Confidence (1-5)
+After: "CONCLUSION (in ${lang}):" — which segments look strongest for THIS business.
+
+BLOCK 04_1 — Service Effectiveness per Niche (methodology block 04_1)
+Before: 1-2 sentences why.
+Table (one row per candidate service/niche): Ниша/Услуга | Спрос (сигналы из evidence, [n]) | Конкуренция (сигналы, [n]) | Примерная экономика (чек × частота, эвристика) | Риски | Confidence (1-5)
+After: "CONCLUSION (in ${lang}):"
+
+BLOCK 04_2 — Niche Prioritization Matrix (methodology block 04_2)
+Before: 1-2 sentences.
+Table: Ниша | Спрос (1-5) | Конкуренция (1-5, где 5 = низкая) | Экономика (1-5) | Соответствие бизнесу (1-5) | ИТОГО (сумма) | Вердикт (Go / Maybe / No-Go)
+After: "CONCLUSION (in ${lang}):" — which ONE niche you recommend to enter first and why (2-3 sentences, plain language for a business owner).
+
+At the very END output niche data as JSON between exactly these tags (numbers, not strings; "name" in ${lang}):
+<<<NICHE_DATA_START>>>
+{"niches":[{"name":"...","demand":4,"competition":3,"economics":4,"fit":5,"score":16,"verdict":"Go","why":"1 short sentence in ${lang}","recommended":true}]}
+<<<NICHE_DATA_END>>>
+Exactly ONE niche must have "recommended":true.`;
+}
 
 function buildM1Prompt(brief, lang, prev) {
   const ctx = prev ? '\nCONTEXT FROM PREVIOUS MODULES:\n'+prev+'\n' : '';
@@ -1197,7 +1305,7 @@ function ModuleCard({ m, on, onToggle, uiLang }) {
   if (m.disabled) return (
     <div style={{border:'1px dashed #ddd',borderRadius:12,overflow:'hidden',cursor:'not-allowed',marginBottom:8,background:'#fafafa',opacity:0.65}}>
       <div style={{display:'flex',alignItems:'center',gap:10,padding:'11px 14px'}}>
-        <span style={{fontSize:11,fontWeight:500,padding:'3px 8px',borderRadius:4,background:'#eee',color:'#999',flexShrink:0}}>{m.id}</span>
+        <span style={{fontSize:11,fontWeight:500,padding:'3px 8px',borderRadius:4,background:'#eee',color:'#999',flexShrink:0}}>{m.label||m.id}</span>
         <div style={{flex:1}}>
           <div style={{fontSize:13,fontWeight:500,color:'#999'}}>{m.title}</div>
           <div style={{fontSize:11,color:'#aaa',marginTop:1}}>{t.moduleDisabledNote}</div>
@@ -1209,7 +1317,7 @@ function ModuleCard({ m, on, onToggle, uiLang }) {
   return (
     <div onClick={onToggle} style={{border:on?'2px solid '+m.color:'1px solid #e5e5e5',borderRadius:12,overflow:'hidden',cursor:'pointer',marginBottom:8,background:'#fff',transition:'border 0.15s'}}>
       <div style={{display:'flex',alignItems:'center',gap:10,padding:'11px 14px'}}>
-        <span style={{fontSize:11,fontWeight:500,padding:'3px 8px',borderRadius:4,background:m.bg,color:m.dark,flexShrink:0}}>{m.id}</span>
+        <span style={{fontSize:11,fontWeight:500,padding:'3px 8px',borderRadius:4,background:m.bg,color:m.dark,flexShrink:0}}>{m.label||m.id}</span>
         <div style={{flex:1}}>
           <div style={{fontSize:13,fontWeight:500,color:'#111'}}>{m.title}</div>
           <div style={{fontSize:11,color:'#888',marginTop:1}}>{tagline}</div>
@@ -1526,10 +1634,10 @@ function App() {
   const [projs, setProjs] = React.useState(() => loadAll());
   const [proj, setProj] = React.useState(null);
 
-  const empty = { name:'', niche:'', geoCompany:'', geoMarket:'', format:'', audience:'', result:'', price:'', competitors:'', extra:'', currentRevenue:'', currentClients:'', currentAvgCheck:'', targetSegment:'', priceLayer:'' };
+  const empty = { name:'', niche:'', geoCompany:'', geoMarket:'', format:'', audience:'', result:'', price:'', competitors:'', extra:'', currentRevenue:'', currentClients:'', currentAvgCheck:'', targetSegment:'', priceLayer:'', services:[], selectedServices:[], selectedNiche:'' };
   const [brief, setBrief] = React.useState(empty);
   const [lang, setLang] = React.useState('Russian');
-  const [mods, setMods] = React.useState(['M2']);
+  const [mods, setMods] = React.useState(['M1_2','M2']);
   const [siteUrl, setSiteUrl] = React.useState('');
   const [parsing, setParsing] = React.useState(false);
   const [pMsg, setPMsg] = React.useState('');
@@ -1546,6 +1654,9 @@ function App() {
   const [xled, setXled] = React.useState('');
 
   // Price layer state
+  const [showNiches, setShowNiches] = React.useState(false);
+  const [nicheOpts, setNicheOpts] = React.useState([]);
+  const [selNicheIdx, setSelNicheIdx] = React.useState(null);
   const [showLayers, setShowLayers] = React.useState(false);
   const [priceLayers, setPriceLayers] = React.useState([]);
   const [selectedLayers, setSelectedLayers] = React.useState([]);
@@ -1567,10 +1678,11 @@ function App() {
       setPMsg('⟳ Read '+pages.length+' page(s) — extracting brief…');
       const result = await callGPT(
         'Extract a marketing brief from website content. Reply ONLY with valid JSON, no markdown.',
-        'Extract from:\n\n'+combined+'\n\nReturn ONLY:\n{"name":"","niche":"","geoCompany":"all markets company operates in","geoMarket":"primary research market","format":"","audience":"","result":"","price":"","competitors":"","extra":"","lang":"detected language e.g. Turkish"}'
+        'Extract from:\n\n'+combined+'\n\nReturn ONLY:\n{"name":"","niche":"","geoCompany":"all markets company operates in","geoMarket":"primary research market","format":"","audience":"","result":"","price":"","competitors":"","extra":"","services":["list of distinct services/products/directions offered on the site, in the site\'s language, 3-15 items"],"lang":"detected language e.g. Turkish"}'
       );
       const d = JSON.parse(result.replace(/```json|```/g,'').trim());
       setBrief(p => ({...p, ...Object.fromEntries(Object.entries(d).filter(([k,v])=>k!=='lang'&&v&&empty.hasOwnProperty(k)))}));
+      if (Array.isArray(d.services) && d.services.length) setBrief(p => ({...p, services: d.services.map(String), selectedServices: []}));
       if (d.lang) { const m=LANGS.find(l=>l.toLowerCase()===d.lang.toLowerCase()); if(m) setLang(m); }
       setPMsg('✓ Brief filled from '+pages.length+' page(s) — review below');
     } catch(e) { setPMsg('✗ ' + e.message); }
@@ -1581,9 +1693,21 @@ function App() {
     const b={...(p.brief||{})};
     if(b.geo&&!b.geoMarket){b.geoMarket=b.geo;delete b.geo;}
     setProj(p); setBrief({...empty,...b}); setLang(p.lang||'Russian');
-    setMods((p.mods||['M2']).filter(id => !MODULES.find(m=>m.id===id)?.disabled)); setRep(p.report||'');
+    setMods((p.mods||['M1_2','M2']).filter(id => !MODULES.find(m=>m.id===id)?.disabled)); setRep(p.report||'');
     setExp({}); setRepOpen(false); setXled('');
     setShowLayers(false); setPriceLayers(p.priceLayers||[]); setSelectedLayers(p.selectedLayers||[]);
+    // Если разведка сделана, а ниша ещё не выбрана — восстановить стоп-точку выбора
+    const m12 = (p.results||[]).find(r=>r.id==='M1_2');
+    if (m12 && !b.selectedNiche) {
+      const nd = m12.nicheData || extractNicheData(m12.content||'');
+      const niches = nd && Array.isArray(nd.niches) ? nd.niches : [];
+      if (niches.length) {
+        setNicheOpts(niches);
+        const rec = niches.findIndex(x=>x.recommended);
+        setSelNicheIdx(rec>=0?rec:null);
+        setShowNiches(true);
+      } else setShowNiches(false);
+    } else setShowNiches(false);
     setSc('work');
   };
 
@@ -1597,7 +1721,7 @@ function App() {
   }, [proj, brief, lang, sv]);
 
   const goNew = () => {
-    setProj(null); setBrief(empty); setLang('Russian'); setMods(['M2']);
+    setProj(null); setBrief(empty); setLang('Russian'); setMods(['M1_2','M2']);
     setSiteUrl(''); setPMsg(''); setRep(''); setExp({}); setRepOpen(false); setXled('');
     setShowLayers(false); setPriceLayers([]); setSelectedLayers([]);
     setSc('form');
@@ -1617,7 +1741,16 @@ function App() {
     return null;
   };
 
-  const cleanContent = content => content.replace(/<<<CHART_DATA_START>>>[\s\S]*?<<<CHART_DATA_END>>>/g,'').replace(/<<<CHART_DATA_START>>>[\s\S]*/g,'').trim();
+  const cleanContent = content => content.replace(/<<<CHART_DATA_START>>>[\s\S]*?<<<CHART_DATA_END>>>/g,'').replace(/<<<CHART_DATA_START>>>[\s\S]*/g,'').replace(/<<<NICHE_DATA_START>>>[\s\S]*?<<<NICHE_DATA_END>>>/g,'').replace(/<<<NICHE_DATA_START>>>[\s\S]*/g,'').trim();
+
+  // Ниши из результата M1.2 — тот же гибкий парсер, что и для графиков
+  const extractNicheData = content => {
+    let m = content.match(/<<<NICHE_DATA_START>>>([\s\S]*?)<<<NICHE_DATA_END>>>/);
+    if (m) { try { return JSON.parse(m[1].replace(/```json|```/g,'').trim()); } catch {} }
+    m = content.match(/<<<NICHE_DATA_START>>>\s*(?:```(?:json)?)?\s*(\{[\s\S]*?\})\s*(?:```)?\s*(?:<<<NICHE_DATA_END>>>)?/);
+    if (m) { try { return JSON.parse(m[1].trim()); } catch {} }
+    return null;
+  };
 
   // Generate price layers after M1
   const generatePriceLayers = React.useCallback(async (m1Content) => {
@@ -1657,8 +1790,11 @@ function App() {
     }
   };
 
-  const run = React.useCallback(async (modsToRun) => {
-    if (!brief.name) return;
+  // briefOverride: свежий бриф для запуска сразу после setBrief (стейт обновляется асинхронно,
+  // без override модули получили бы старый бриф без выбранной ниши/слоя)
+  const run = React.useCallback(async (modsToRun, briefOverride) => {
+    const B = briefOverride || brief;
+    if (!B.name) return;
     const id = proj?.id || ('p' + Date.now());
     const existing = proj?.results || [];
     const doneIds = existing.map(r => r.id);
@@ -1666,10 +1802,10 @@ function App() {
     const toRun = MODULES.filter(m => !m.disabled && allSelected.includes(m.id) && !doneIds.includes(m.id));
     if (!toRun.length) { setSc('work'); return; }
 
-    const p = { id, createdAt: proj?.createdAt||new Date().toISOString(), updatedAt: new Date().toISOString(), brief, lang, mods:allSelected, results:existing, report:proj?.report||'', priceLayers, selectedLayers };
+    const p = { id, createdAt: proj?.createdAt||new Date().toISOString(), updatedAt: new Date().toISOString(), brief: B, lang, mods:allSelected, results:existing, report:proj?.report||'', priceLayers, selectedLayers };
     setProj(p); setRep(p.report); sv(p); setSc('work');
 
-    const sys = buildSystem(brief, lang);
+    const sys = buildSystem(B, lang);
     const col = [...existing];
 
     for (const mod of toRun) {
@@ -1683,17 +1819,37 @@ function App() {
       let full = '';
       try {
         const prevContent = col.length ? col[col.length-1].content : '';
-        full = await callGPT(sys, getModulePrompt(mod.id, brief, lang, prevContent));
+        let userPrompt;
+        if (mod.id === 'M1_2') {
+          // Разведка ниш: сначала собираем реальные выдержки из веб-поиска
+          const evidence = await gatherNicheEvidence(B, lang);
+          userPrompt = buildM12Prompt(B, lang, prevContent ? prevContent.slice(0, 2000) : '', evidence);
+        } else {
+          userPrompt = getModulePrompt(mod.id, B, lang, prevContent);
+        }
+        full = await callGPT(sys, userPrompt);
       } catch(e) { full = 'Error: '+e.message; }
       clearInterval(stepTimer);
 
       const chartData = extractChartData(full);
+      const nicheData = mod.id === 'M1_2' ? extractNicheData(full) : null;
       const cleanedContent = cleanContent(full);
-      const result = { id:mod.id, content:cleanedContent, chartData, at:new Date().toISOString() };
+      const result = { id:mod.id, content:cleanedContent, chartData, ...(nicheData?{nicheData}:{}), at:new Date().toISOString() };
       col.push(result);
       const upd = { ...p, results:col, updatedAt:new Date().toISOString() };
       setProj(upd); sv(upd);
       setExp(ex => ({...ex, [mod.id]:false}));
+
+      // After M1.2 — стоп: человек выбирает нишу
+      if (mod.id === 'M1_2') {
+        setCurMod(null); setCurStep(''); setCurStepIdx(0);
+        const niches = nicheData && Array.isArray(nicheData.niches) ? nicheData.niches : [];
+        setNicheOpts(niches);
+        const rec = niches.findIndex(x => x.recommended);
+        setSelNicheIdx(rec >= 0 ? rec : null);
+        setShowNiches(true);
+        return; // ждём выбора ниши
+      }
 
       // After M1 — show price layer selection
       if (mod.id === 'M1') {
@@ -1710,14 +1866,24 @@ function App() {
     setShowLayers(false);
     // Add selected layer info to brief context
     const layerNames = selectedLayers.map(i => priceLayers[i]?.name).filter(Boolean);
-    if (layerNames.length > 0) {
-      setBrief(b => ({...b, priceLayer: layerNames.join(', ')}));
-    }
+    const newBrief = layerNames.length > 0 ? {...brief, priceLayer: layerNames.join(', ')} : brief;
+    if (layerNames.length > 0) setBrief(newBrief);
     // Run remaining modules
     const doneIds = (proj?.results||[]).map(r=>r.id);
     const remaining = mods.filter(id => !doneIds.includes(id));
-    if (remaining.length > 0) run(remaining);
-  }, [selectedLayers, priceLayers, proj, mods, run]);
+    if (remaining.length > 0) run(remaining, newBrief);
+  }, [selectedLayers, priceLayers, brief, proj, mods, run]);
+
+  const continueAfterNiche = React.useCallback(() => {
+    const n = nicheOpts[selNicheIdx];
+    if (!n) return;
+    setShowNiches(false);
+    const newBrief = {...brief, selectedNiche: n.name};
+    setBrief(newBrief);
+    const doneIds = (proj?.results||[]).map(r=>r.id);
+    const remaining = mods.filter(id => !doneIds.includes(id));
+    if (remaining.length > 0) run(remaining, newBrief);
+  }, [nicheOpts, selNicheIdx, brief, proj, mods, run]);
 
   const genRep = React.useCallback(async () => {
     if (!proj?.results?.length) return;
@@ -1873,6 +2039,26 @@ function App() {
           <Field label={t.fCompetitors}><input value={brief.competitors} onChange={e=>setBrief(p=>({...p,competitors:e.target.value}))} placeholder={t.fCompetitorsPh}/></Field>
           <Field label={t.fExtra}><textarea value={brief.extra} onChange={e=>setBrief(p=>({...p,extra:e.target.value}))} placeholder={t.fExtraPh} rows={2} style={{resize:'vertical'}}/></Field>
         </div>
+
+        {(brief.services||[]).length > 0 && (
+          <React.Fragment>
+            <div style={{borderTop:'1px solid #eee',margin:'1rem 0'}}/>
+            <p style={{fontSize:12,fontWeight:500,color:'#666',marginBottom:4}}>{t.servicesTitle} <span style={{fontSize:11,fontWeight:400,color:'#aaa'}}>— {t.servicesSub}</span></p>
+            <div style={{display:'flex',gap:6,flexWrap:'wrap',marginBottom:4}}>
+              {(brief.services||[]).map((s,i) => {
+                const on = (brief.selectedServices||[]).includes(s);
+                return (
+                  <button key={i} type="button"
+                    onClick={()=>setBrief(p=>({...p, selectedServices: on ? (p.selectedServices||[]).filter(x=>x!==s) : [...(p.selectedServices||[]), s]}))}
+                    style={{padding:'5px 12px',fontSize:12,borderRadius:14,border:'1px solid '+(on?'#378ADD':'#ddd'),background:on?'#E6F1FB':'#fff',color:on?'#0C447C':'#555',fontWeight:on?500:400,cursor:'pointer'}}>
+                    {on ? '✓ ' : ''}{s}
+                  </button>
+                );
+              })}
+            </div>
+            <p style={{fontSize:11,color:'#aaa'}}>{t.servicesHint}</p>
+          </React.Fragment>
+        )}
 
         <div style={{borderTop:'1px solid #eee',margin:'1rem 0'}}/>
         <p style={{fontSize:12,fontWeight:500,color:'#666',marginBottom:8}}>{t.companyDataTitle} <span style={{fontSize:11,fontWeight:400,color:'#aaa'}}>— {t.companyDataSub}</span></p>
@@ -2044,6 +2230,45 @@ function App() {
                 </div>
               )}
             </div>
+            {r.id === 'M1_2' && !isRun && showNiches && nicheOpts.length > 0 && (
+              <div style={{marginBottom:16}}>
+                <div className="card">
+                  <h3 style={{fontSize:16,fontWeight:500,marginBottom:6}}>{t.nichePickTitle}</h3>
+                  <p style={{fontSize:13,color:'#666',marginBottom:14,lineHeight:1.5}}>{t.nichePickSub}</p>
+                  {nicheOpts.map((n, i) => {
+                    const isOn = selNicheIdx === i;
+                    const c = '#4A7C1F', bg = '#EFF6E4', dark = '#2E4F0C';
+                    return (
+                      <div key={i} onClick={()=>setSelNicheIdx(i)}
+                        style={{border:isOn?'2px solid '+c:'1px solid #e5e5e5',borderRadius:12,padding:'1rem 1.25rem',marginBottom:8,cursor:'pointer',background:isOn?bg:'#fff'}}>
+                        <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:8}}>
+                          <div style={{flex:1,display:'flex',alignItems:'center',gap:8,flexWrap:'wrap'}}>
+                            <span style={{fontSize:14,fontWeight:500,color:isOn?dark:'#111'}}>{n.name}</span>
+                            {n.recommended && <span style={{fontSize:10,fontWeight:600,padding:'2px 8px',borderRadius:10,background:isOn?'rgba(255,255,255,0.7)':'#EAF3DE',color:'#27500A'}}>★ {t.nicheRecommended}</span>}
+                            <span style={{fontSize:11,fontWeight:600,padding:'2px 8px',borderRadius:4,background:n.verdict==='Go'?'#EAF3DE':n.verdict==='Maybe'?'#FAEEDA':'#FAECE7',color:n.verdict==='Go'?'#27500A':n.verdict==='Maybe'?'#633806':'#712B13'}}>{n.verdict}</span>
+                          </div>
+                          <div style={{width:18,height:18,borderRadius:'50%',border:isOn?'none':'1.5px solid #ccc',background:isOn?c:'transparent',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
+                            {isOn && <span style={{color:'#fff',fontSize:11}}>✓</span>}
+                          </div>
+                        </div>
+                        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr 1fr',gap:8,marginBottom:n.why?8:0}}>
+                          {[[t.nicheDemand,n.demand],[t.nicheCompetition,n.competition],[t.nicheEconomics,n.economics],[t.nicheScore,n.score]].map(([l,v])=>(
+                            <div key={l} style={{background:isOn?'rgba(255,255,255,0.6)':'#f8f8f8',borderRadius:8,padding:'8px 10px'}}>
+                              <div style={{fontSize:10,color:isOn?dark:'#999',marginBottom:2}}>{l}</div>
+                              <div style={{fontSize:13,fontWeight:500,color:isOn?dark:'#444'}}>{v ?? '—'}</div>
+                            </div>
+                          ))}
+                        </div>
+                        {n.why && <p style={{fontSize:12,color:isOn?dark:'#777',lineHeight:1.5,margin:0}}>{n.why}</p>}
+                      </div>
+                    );
+                  })}
+                  <div style={{display:'flex',gap:10,marginTop:12}}>
+                    <button className="btn-primary" onClick={continueAfterNiche} disabled={selNicheIdx===null||selNicheIdx===undefined}>{t.nicheContinue}</button>
+                  </div>
+                </div>
+              </div>
+            )}
             {r.id === 'M1' && !isRun && showLayers && (
               <div style={{marginBottom:16}}>
                 <div className="card">
