@@ -403,7 +403,8 @@ async function gatherNicheEvidence(brief, lang) {
 }
 
 async function fetchSite(url) {
-  const base = url.replace(/\/$/, '');
+  let base = url.trim().replace(/\/$/, '');
+  if (!/^https?:\/\//i.test(base)) base = 'https://' + base; // пользователь обычно вводит адрес без схемы
   const pages = [];
   const candidates = [base, base+'/hakkimizda', base+'/about', base+'/hizmetler',
     base+'/services', base+'/o-nas', base+'/uslugi', base+'/products', base+'/o-kompanii'];
@@ -412,7 +413,13 @@ async function fetchSite(url) {
       const r = await fetch(PROXY+'?url='+encodeURIComponent(u));
       if (!r.ok) continue;
       const t = await r.text();
-      const clean = t.replace(/<[^>]+>/g,' ').replace(/\s+/g,' ').trim();
+      const clean = t
+        .replace(/<script[\s\S]*?<\/script>/gi,' ')   // выкидываем код и стили,
+        .replace(/<style[\s\S]*?<\/style>/gi,' ')     // иначе в «текст» попадает CSS/JS-каша
+        .replace(/<noscript[\s\S]*?<\/noscript>/gi,' ')
+        .replace(/<!--[\s\S]*?-->/g,' ')
+        .replace(/<[^>]+>/g,' ')
+        .replace(/\s+/g,' ').trim();
       if (clean.length>300) { pages.push({url:u, text:clean.slice(0,2500)}); if(pages.length>=3) break; }
     } catch {}
   }
