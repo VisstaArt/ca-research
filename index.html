@@ -107,6 +107,9 @@ const T = {
     nicheRecommended: 'AI recommends',
     nicheContinue: 'Continue with this niche →',
     nicheDemand: 'Demand', nicheCompetition: 'Competition', nicheEconomics: 'Economics', nicheScore: 'Score',
+    fNicheCandidates: 'Niche candidates for scouting (M1.2)',
+    fNicheCandidatesPh: 'e.g. online stores, online schools, clinics…',
+    fNicheCandidatesInfo: 'Comma-separated. A niche = WHO buys and in what situation (customer vertical), not a product feature. Leave empty — the agent will derive niches itself.',
     modelLabel: 'Model',
     dataPolicy: 'Data policy',
     dataPolicyVal: 'No fabricated data — agent writes "no public data" if unavailable',
@@ -195,6 +198,9 @@ const T = {
     nicheRecommended: 'ИИ рекомендует',
     nicheContinue: 'Продолжить с этой нишей →',
     nicheDemand: 'Спрос', nicheCompetition: 'Конкуренция', nicheEconomics: 'Экономика', nicheScore: 'Балл',
+    fNicheCandidates: 'Кандидаты в ниши для разведки (M1.2)',
+    fNicheCandidatesPh: 'напр.: интернет-магазины, онлайн-школы, клиники…',
+    fNicheCandidatesInfo: 'Через запятую. Ниша = КТО покупает и в какой ситуации (вертикаль клиентов), а не фишка продукта. Оставьте пустым — агент определит ниши сам.',
     modelLabel: 'Модель',
     dataPolicy: 'Данные',
     dataPolicyVal: 'Без выдуманных данных — агент пишет "нет публичных данных" если информация недоступна',
@@ -386,11 +392,15 @@ async function callSearch(query, opts) {
 // Собирает поисковое досье для разведки ниш: по каждой услуге-кандидату — спрос и конкуренция
 async function gatherNicheEvidence(brief, lang) {
   const market = brief.geoMarket || brief.geoCompany || '';
-  const base = (brief.selectedServices && brief.selectedServices.length ? brief.selectedServices : (brief.services||[])).slice(0, 6);
+  const manual = (brief.nicheCandidates||'').split(',').map(s=>s.trim()).filter(Boolean);
+  const base = manual.length ? manual.slice(0, 6)
+    : (brief.selectedServices && brief.selectedServices.length ? brief.selectedServices : (brief.services||[])).slice(0, 6);
   const topics = base.length ? base : [brief.niche || brief.name].filter(Boolean);
+  const product = brief.niche || brief.name || '';
   const queries = [];
   for (const s of topics) {
-    queries.push(s+' '+market+' спрос отзывы форум');
+    // Если тема — вертикаль клиентов, ищем спрос на продукт внутри неё; иначе — спрос на саму услугу
+    queries.push(s+' '+market+' '+(manual.length ? product+' спрос' : 'спрос отзывы форум'));
     queries.push(s+' '+market+' цена конкуренты');
   }
   queries.push((brief.niche||brief.name)+' '+market+' тренды рынка');
@@ -441,6 +451,7 @@ function buildSystem(brief, lang) {
     if(k==='services') return Array.isArray(v)&&v.length ? '- Services offered (from site): '+v.join('; ') : '';
     if(k==='selectedServices') return Array.isArray(v)&&v.length ? '- Services SELECTED for research: '+v.join('; ') : '';
     if(k==='selectedNiche') return '- SELECTED NICHE (chosen at M1.2 stop-point): '+v;
+    if(k==='nicheCandidates') return '- Niche candidates (from specialist): '+v;
     return '- '+k+': '+v;
   }).filter(Boolean).join('\n');
   const nicheFilter = brief.selectedNiche
@@ -466,14 +477,24 @@ function buildSystem(brief, lang) {
 // M1.2 «Разведка ниш» — блоки 04, 04_1, 04_2 методологии. Заземление: реальные выдержки из веб-поиска.
 function buildM12Prompt(brief, lang, prev, evidence) {
   const services = (brief.selectedServices && brief.selectedServices.length ? brief.selectedServices : (brief.services||[]));
-  const svcLine = services.length ? 'CANDIDATE SERVICES (from the client\'s site, research these as niche candidates): '+services.join('; ') : 'No service list provided — derive niche candidates from the brief (niche, audience, format).';
+  const manualNiches = (brief.nicheCandidates||'').split(',').map(s=>s.trim()).filter(Boolean);
+  const nicheDef = `
+WHAT A NICHE IS — CRITICAL:
+A niche = a group of customers with shared demand: a customer vertical, segment or demand scenario (WHO buys and in what situation). A niche is NOT a product feature and NOT a menu item.
+- If the business SELLS DISTINCT SERVICES to end clients (clinic: botox, cleanings; agency: SEO, ads) — services themselves can be niche candidates.
+- If the service list looks like FEATURES of ONE product (a SaaS widget: AI popup, analytics, A/B tests) — do NOT treat features as niches. Instead derive niches as target customer verticals where this product is sold (e.g., for a lead-capture widget: online stores, online schools, medical clinics, real-estate developers).
+Decide which case applies and say so in one sentence before BLOCK 04.`;
+  const svcLine = manualNiches.length
+    ? 'CANDIDATE NICHES (provided by the specialist — prioritize these, you may add 1-2 of your own marked «предложено ИИ»): '+manualNiches.join('; ')
+      + (services.length ? '\nPRODUCT/SERVICES CONTEXT (what the business offers): '+services.join('; ') : '')
+    : (services.length ? 'SERVICES/FEATURES FROM THE SITE (apply the niche definition above to decide: niches themselves, or features → derive customer verticals): '+services.join('; ') : 'No service list provided — derive niche candidates from the brief (niche, audience, format).');
   const evidenceBlock = (evidence && evidence.length)
     ? '\nREAL WEB SEARCH EVIDENCE (collected just now — use ONLY this material for market signals, do NOT supplement from memory):\n'
       + evidence.map((e,i)=>'['+(i+1)+'] '+(e.title||'')+' — '+e.url+(e.date?' ('+e.date+')':'')+'\n'+e.content).join('\n\n')
       + '\n\nEVIDENCE RULES:\n- Every market signal (demand, competition, pricing) must cite evidence numbers [n] or state "нет данных (публично)" with Confidence=1–2.\n- Sources older than 12 months: mark "устаревшее" and weigh lower.\n- Note platform bias: review sites skew negative, forums skew skeptical/technical.\n'
     : '\nNO WEB EVIDENCE AVAILABLE (search unconfigured or empty). Be conservative: mark ALL market size/demand claims with Confidence=1–2 and «нет данных (публично)» where applicable. Do not invent URLs.\n';
   const ctx = prev ? '\nCONTEXT FROM PREVIOUS MODULES:\n'+prev+'\n' : '';
-  return ctx + '\n' + svcLine + '\n' + evidenceBlock + `
+  return ctx + nicheDef + '\n\n' + svcLine + '\n' + evidenceBlock + `
 
 Fill the following research blocks for module M1.2 «Niche Scouting». ALL output in ${lang} (table headers, labels, conclusions — everything; technical abbreviations like JTBD, CAC, AOV, Confidence stay as is).
 
@@ -1644,7 +1665,7 @@ function App() {
   const [projs, setProjs] = React.useState(() => loadAll());
   const [proj, setProj] = React.useState(null);
 
-  const empty = { name:'', niche:'', geoCompany:'', geoMarket:'', format:'', audience:'', result:'', price:'', competitors:'', extra:'', currentRevenue:'', currentClients:'', currentAvgCheck:'', targetSegment:'', priceLayer:'', services:[], selectedServices:[], selectedNiche:'' };
+  const empty = { name:'', niche:'', geoCompany:'', geoMarket:'', format:'', audience:'', result:'', price:'', competitors:'', extra:'', currentRevenue:'', currentClients:'', currentAvgCheck:'', targetSegment:'', priceLayer:'', services:[], selectedServices:[], selectedNiche:'', nicheCandidates:'' };
   const [brief, setBrief] = React.useState(empty);
   const [lang, setLang] = React.useState('Russian');
   const [mods, setMods] = React.useState(['M1_2','M2']);
@@ -2069,6 +2090,10 @@ function App() {
             <p style={{fontSize:11,color:'#aaa'}}>{t.servicesHint}</p>
           </React.Fragment>
         )}
+
+        <Field label={t.fNicheCandidates} optional info={t.fNicheCandidatesInfo}>
+          <input value={brief.nicheCandidates} onChange={e=>setBrief(p=>({...p,nicheCandidates:e.target.value}))} placeholder={t.fNicheCandidatesPh}/>
+        </Field>
 
         <div style={{borderTop:'1px solid #eee',margin:'1rem 0'}}/>
         <p style={{fontSize:12,fontWeight:500,color:'#666',marginBottom:8}}>{t.companyDataTitle} <span style={{fontSize:11,fontWeight:400,color:'#aaa'}}>— {t.companyDataSub}</span></p>
