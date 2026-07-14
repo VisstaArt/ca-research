@@ -1,8 +1,10 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" translate="no">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!-- Автоперевод страницы браузером переписывает DOM и роняет React (insertBefore NotFoundError) -->
+<meta name="google" content="notranslate">
 <title>CA Research</title>
 <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
@@ -1306,6 +1308,7 @@ function Field({ label, optional, info, children }) {
 // ── MODULE CARD
 function ModuleCard({ m, on, onToggle, uiLang }) {
   const t = T[uiLang];
+  const title = uiLang==='ru' ? (m.titleRu||m.title) : m.title;
   const tagline = uiLang==='ru' ? m.taglineRu : m.taglineEn;
   const what = uiLang==='ru' ? m.whatRu : m.whatEn;
   const outputs = uiLang==='ru' ? m.outputsRu : m.outputsEn;
@@ -1314,7 +1317,7 @@ function ModuleCard({ m, on, onToggle, uiLang }) {
       <div style={{display:'flex',alignItems:'center',gap:10,padding:'11px 14px'}}>
         <span style={{fontSize:11,fontWeight:500,padding:'3px 8px',borderRadius:4,background:'#eee',color:'#999',flexShrink:0}}>{m.label||m.id}</span>
         <div style={{flex:1}}>
-          <div style={{fontSize:13,fontWeight:500,color:'#999'}}>{m.title}</div>
+          <div style={{fontSize:13,fontWeight:500,color:'#999'}}>{title}</div>
           <div style={{fontSize:11,color:'#aaa',marginTop:1}}>{t.moduleDisabledNote}</div>
         </div>
         <span style={{fontSize:9,fontWeight:600,letterSpacing:0.5,padding:'3px 8px',borderRadius:4,background:'#f0f0f0',color:'#999',flexShrink:0,textTransform:'uppercase'}}>{t.moduleDisabledBadge}</span>
@@ -1326,7 +1329,7 @@ function ModuleCard({ m, on, onToggle, uiLang }) {
       <div style={{display:'flex',alignItems:'center',gap:10,padding:'11px 14px'}}>
         <span style={{fontSize:11,fontWeight:500,padding:'3px 8px',borderRadius:4,background:m.bg,color:m.dark,flexShrink:0}}>{m.label||m.id}</span>
         <div style={{flex:1}}>
-          <div style={{fontSize:13,fontWeight:500,color:'#111'}}>{m.title}</div>
+          <div style={{fontSize:13,fontWeight:500,color:'#111'}}>{title}</div>
           <div style={{fontSize:11,color:'#888',marginTop:1}}>{tagline}</div>
         </div>
         <span style={{fontSize:10,color:'#aaa',flexShrink:0}}>{m.estimatedMin} min</span>
