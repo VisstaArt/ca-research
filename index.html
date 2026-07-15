@@ -389,7 +389,18 @@ async function callSearch(query, opts) {
   } catch { return []; }
 }
 
-// Собирает поисковое досье для разведки ниш: по каждой услуге-кандидату — спрос и конкуренция
+// Общий сборщик досье: гоняет запросы через реальный поиск, дедуплицирует по URL
+async function gatherEvidence(queries, maxQueries, maxResults) {
+  const all = [];
+  for (const q of queries.slice(0, maxQueries||9)) {
+    const r = await callSearch(q, {max_results: maxResults||4});
+    for (const x of r) all.push({q, title: x.title, url: x.url, content: (x.content||'').slice(0, 400), date: x.published_date});
+  }
+  const seen = new Set();
+  return all.filter(x => !seen.has(x.url) && seen.add(x.url)).slice(0, 24);
+}
+
+// Досье для разведки ниш: по каждой услуге/вертикали-кандидату — спрос и конкуренция
 async function gatherNicheEvidence(brief, lang) {
   const market = brief.geoMarket || brief.geoCompany || '';
   const manual = (brief.nicheCandidates||'').split(',').map(s=>s.trim()).filter(Boolean);
@@ -404,14 +415,31 @@ async function gatherNicheEvidence(brief, lang) {
     queries.push(s+' '+market+' цена конкуренты');
   }
   queries.push((brief.niche||brief.name)+' '+market+' тренды рынка');
-  const all = [];
-  for (const q of queries.slice(0, 9)) {
-    const r = await callSearch(q, {max_results: 4});
-    for (const x of r) all.push({q, title: x.title, url: x.url, content: (x.content||'').slice(0, 400), date: x.published_date});
-  }
-  // Дедупликация по URL
-  const seen = new Set();
-  return all.filter(x => !seen.has(x.url) && seen.add(x.url)).slice(0, 24);
+  return gatherEvidence(queries, 9, 4);
+}
+
+// Досье для M2: конкуренты, аналоги, цены, отзывы — в выбранной нише
+async function gatherCompetitorEvidence(brief) {
+  const market = brief.geoMarket || brief.geoCompany || '';
+  const product = brief.niche || brief.name || '';
+  const niche = brief.selectedNiche || '';
+  const named = (brief.competitors||'').split(/[,;]/).map(s=>s.trim()).filter(Boolean).slice(0, 4);
+  const queries = [
+    product+' '+market+' конкуренты сравнение сервисов',
+    product+' '+market+' аналоги цены тарифы',
+    (niche ? product+' для '+niche+' '+market : product+' '+market)+' отзывы',
+  ];
+  for (const c of named) queries.push(c+' отзывы цены тарифы');
+  return gatherEvidence(queries, 8, 4);
+}
+
+// Единый блок «работай только с этим материалом» для промптов
+function evidenceSection(evidence) {
+  return (evidence && evidence.length)
+    ? '\nREAL WEB SEARCH EVIDENCE (collected just now — use ONLY this material for market facts, competitor data, sources and dates; do NOT supplement from memory):\n'
+      + evidence.map((e,i)=>'['+(i+1)+'] '+(e.title||'')+' — '+e.url+(e.date?' ('+e.date+')':'')+'\n'+e.content).join('\n\n')
+      + '\n\nEVIDENCE RULES:\n- Every fact/source/date must come from evidence [n] or be marked "нет данных (публично)" with Confidence=1–2.\n- Never invent URLs or "Дата проверки" — verification date is TODAY for evidence-backed rows, «не проверялось» otherwise.\n- Sources older than 12 months: mark "устаревшее" and weigh lower.\n- Note platform bias: review sites skew negative, forums skew skeptical/technical.\n'
+    : '\nNO WEB EVIDENCE AVAILABLE (search unconfigured or empty). Be conservative: mark ALL market claims with Confidence=1–2 and «нет данных (публично)» where applicable. Do not invent URLs or dates.\n';
 }
 
 async function fetchSite(url) {
@@ -464,6 +492,7 @@ function buildSystem(brief, lang) {
     '- Use Company Geography ('+(brief.geoCompany||'—')+') only as context about business scale.\n\n'+
     'COMPANY DATA — CRITICAL: If brief contains currentRevenue, currentClients, or currentAvgCheck — you MUST include a dedicated section called \'## Company Market Position\' that calculates: current market share (company revenue / SOM revenue * 100%), growth potential (SOM clients - current clients), and revenue gap (SOM - current revenue). If these fields are empty, write \'No company data provided — fill Current Revenue, Clients and Avg Check in the brief for market position analysis.\' in that section.\n\n'+
     'RULES:\n'+
+    '0. Today\'s date: '+new Date().toISOString().slice(0,10)+'. Never date anything "as of" past years unless the source says so.\n'+
     '1. ALL output in '+lang+' only. No exceptions.\n'+
     '2. No invented data — write "нет публичных данных" + Confidence=1 if unavailable.\n'+
     '3. Every stat needs a real verifiable URL.\n'+
@@ -488,13 +517,8 @@ Decide which case applies and say so in one sentence before BLOCK 04.`;
     ? 'CANDIDATE NICHES (provided by the specialist — prioritize these, you may add 1-2 of your own marked «предложено ИИ»): '+manualNiches.join('; ')
       + (services.length ? '\nPRODUCT/SERVICES CONTEXT (what the business offers): '+services.join('; ') : '')
     : (services.length ? 'SERVICES/FEATURES FROM THE SITE (apply the niche definition above to decide: niches themselves, or features → derive customer verticals): '+services.join('; ') : 'No service list provided — derive niche candidates from the brief (niche, audience, format).');
-  const evidenceBlock = (evidence && evidence.length)
-    ? '\nREAL WEB SEARCH EVIDENCE (collected just now — use ONLY this material for market signals, do NOT supplement from memory):\n'
-      + evidence.map((e,i)=>'['+(i+1)+'] '+(e.title||'')+' — '+e.url+(e.date?' ('+e.date+')':'')+'\n'+e.content).join('\n\n')
-      + '\n\nEVIDENCE RULES:\n- Every market signal (demand, competition, pricing) must cite evidence numbers [n] or state "нет данных (публично)" with Confidence=1–2.\n- Sources older than 12 months: mark "устаревшее" and weigh lower.\n- Note platform bias: review sites skew negative, forums skew skeptical/technical.\n'
-    : '\nNO WEB EVIDENCE AVAILABLE (search unconfigured or empty). Be conservative: mark ALL market size/demand claims with Confidence=1–2 and «нет данных (публично)» where applicable. Do not invent URLs.\n';
   const ctx = prev ? '\nCONTEXT FROM PREVIOUS MODULES:\n'+prev+'\n' : '';
-  return ctx + nicheDef + '\n\n' + svcLine + '\n' + evidenceBlock + `
+  return ctx + nicheDef + '\n\n' + svcLine + '\n' + evidenceSection(evidence) + `
 
 Fill the following research blocks for module M1.2 «Niche Scouting». ALL output in ${lang} (table headers, labels, conclusions — everything; technical abbreviations like JTBD, CAC, AOV, Confidence stay as is).
 
@@ -519,7 +543,8 @@ At the very END output niche data as JSON between exactly these tags (numbers, n
 <<<NICHE_DATA_START>>>
 {"niches":[{"name":"...","demand":4,"competition":3,"economics":4,"fit":5,"score":16,"verdict":"Go","why":"1 short sentence in ${lang}","recommended":true}]}
 <<<NICHE_DATA_END>>>
-Exactly ONE niche must have "recommended":true.`;
+Exactly ONE niche must have "recommended":true.
+CRITICAL VALIDATION of niches[].name: in the FEATURES case, every name MUST be a customer vertical (an industry / business type / audience segment — e.g. «интернет-магазины», «стоматологии», «онлайн-школы»). A product feature («попап», «A/B-тест», «интеграция») as a niche name is a HARD ERROR — re-derive verticals before output.`;
 }
 
 function buildM1Prompt(brief, lang, prev) {
@@ -654,17 +679,17 @@ After all tables, output JSON between <<<CHART_DATA_START>>> and <<<CHART_DATA_E
 }`;
 }
 
-function buildM2Prompt(brief, lang, prev) {
+function buildM2Prompt(brief, lang, prev, evidence) {
   const ctx = prev ? `\nCONTEXT FROM PREVIOUS MODULES:\n${prev.slice(0,1500)}\n` : '';
-  return `${ctx}
+  return `${ctx}${evidenceSection(evidence)}
 Fill the following research blocks for module M2. ALL output in ${lang}. Use only verifiable open sources.
 
 ═══════════════════════════════════════════════
 BLOCK 05 — Open Sources Index (05_OpenSources_Index)
 ═══════════════════════════════════════════════
-Task: Map all open sources for competitor and VoC research. Cover: maps/reviews, forums, social media, statistics, SERP.
+Task: Map open sources for competitor and VoC research. PRIMARY rows — sources from the evidence above (real URLs, verified today). You may ADD well-known platform types (maps, review sites, forums) as recommendations, but mark their «Дата проверки» as «не проверялось» — never invent verification dates.
 
-Format (minimum 20 rows):
+Format (evidence-backed rows first):
 | Источник | URL | Тип (отзывы/форум/соцсеть/карты/статистика/выдача) | Что извлекаем (боли/критерии/лексика/барьеры/метрики) | Где используем (лист/блок LP/этап CJM) | Дата проверки | Примечание |
 
 ═══════════════════════════════════════════════
@@ -694,13 +719,9 @@ Output JSON between <<<CHART_DATA_START>>> and <<<CHART_DATA_END>>>:
 {
   "competitorMatrix": [
     { "name": "competitor name", "price": 1-5, "quality": 1-5, "isUs": false }
-  ],
-  "gapSummary": {
-    "win": number,
-    "parity": number,
-    "lose": number
-  }
-}`;
+  ]
+}
+Include 6-12 key competitors AND our company as one point with "isUs": true (estimate our position honestly from the brief). price: 1=cheapest, 5=most expensive. quality: perceived value/quality 1-5.`;
 }
 
 function buildM3Prompt(brief, lang, prev) {
@@ -1083,6 +1104,43 @@ function ScatterChart({ data, title }) {
   );
 }
 
+// Карта позиционирования конкурентов: где скучено, где свободно, где мы
+function CompetitorMapChart({ data, title }) {
+  const canvasRef = useRef(null);
+  const chartRef = useRef(null);
+  useEffect(() => {
+    if (!canvasRef.current || !data?.length) return;
+    if (chartRef.current) chartRef.current.destroy();
+    chartRef.current = new Chart(canvasRef.current, {
+      type: 'bubble',
+      data: {
+        datasets: data.map(d => ({
+          label: d.name + (d.isUs ? ' (мы)' : ''),
+          data: [{ x: d.price||0, y: d.quality||0, r: d.isUs ? 11 : 7 }],
+          backgroundColor: d.isUs ? '#639922DD' : '#0F6E5666',
+          borderColor: d.isUs ? '#27500A' : 'transparent',
+          borderWidth: d.isUs ? 2 : 0
+        }))
+      },
+      options: {
+        responsive: true,
+        scales: {
+          x: { title: { display: true, text: 'Цена (1 — дешевле, 5 — дороже)' }, min: 0, max: 6 },
+          y: { title: { display: true, text: 'Качество / ценность (1–5)' }, min: 0, max: 6 }
+        }
+      }
+    });
+    return () => { if(chartRef.current) chartRef.current.destroy(); };
+  }, [data]);
+  return (
+    <div style={{background:'#fff',border:'1px solid #eee',borderRadius:10,padding:'1rem',marginBottom:10}}>
+      <p style={{fontSize:13,fontWeight:500,marginBottom:4}}>{title}</p>
+      <p style={{fontSize:11,color:'#888',marginBottom:8}}>Зелёная точка — мы. Пустые зоны на карте — свободное позиционирование.</p>
+      <canvas ref={canvasRef} height={220}/>
+    </div>
+  );
+}
+
 function ModuleCharts({ moduleId, chartData }) {
   if (!chartData) return null;
   try {
@@ -1100,12 +1158,7 @@ function ModuleCharts({ moduleId, chartData }) {
     );
     if (moduleId === 'M2') return (
       <div style={{marginTop:12}}>
-        {d.gapSummary && <BarChart
-          labels={['Win','Parity','Lose']}
-          values={[d.gapSummary.win||0, d.gapSummary.parity||0, d.gapSummary.lose||0]}
-          title="Gap Analysis Summary"
-          color='#0F6E56'
-        />}
+        {d.competitorMatrix?.length > 0 && <CompetitorMapChart data={d.competitorMatrix} title="Карта позиционирования: цена × качество"/>}
       </div>
     );
     if (moduleId === 'M7' && d.semanticClusters?.length > 0) return (
@@ -1855,6 +1908,10 @@ function App() {
           // Разведка ниш: сначала собираем реальные выдержки из веб-поиска
           const evidence = await gatherNicheEvidence(B, lang);
           userPrompt = buildM12Prompt(B, lang, prevContent ? prevContent.slice(0, 2000) : '', evidence);
+        } else if (mod.id === 'M2') {
+          // Конкуренты: реальное досье вместо памяти модели
+          const evidence = await gatherCompetitorEvidence(B);
+          userPrompt = buildM2Prompt(B, lang, prevContent || '', evidence);
         } else {
           userPrompt = getModulePrompt(mod.id, B, lang, prevContent);
         }
