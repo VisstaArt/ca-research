@@ -418,6 +418,21 @@ async function gatherNicheEvidence(brief, lang) {
   return gatherEvidence(queries, 9, 4);
 }
 
+// Досье для M3 (VoC): живой язык аудитории — отзывы, форумы, жалобы, вопросы
+async function gatherVoCEvidence(brief) {
+  const market = brief.geoMarket || brief.geoCompany || '';
+  const product = brief.niche || brief.name || '';
+  const niches = (brief.selectedNiche||'').split(',').map(s=>s.trim()).filter(Boolean).slice(0,3);
+  const topics = niches.length ? niches : [product];
+  const queries = [];
+  for (const n of topics) {
+    queries.push(n+' '+market+' отзывы проблемы');
+    queries.push(n+' '+market+' форум жалобы "не работает" OR "бесит" OR "разочарован"');
+  }
+  queries.push(product+' '+market+' отзывы форум вопросы');
+  return gatherEvidence(queries, 8, 5);
+}
+
 // Досье для M2: конкуренты, аналоги, цены, отзывы — в выбранной нише
 async function gatherCompetitorEvidence(brief) {
   const market = brief.geoMarket || brief.geoCompany || '';
@@ -498,7 +513,10 @@ function buildSystem(brief, lang) {
     '3. Every stat needs a real verifiable URL.\n'+
     '4. Markdown pipe tables only.\n'+
     '5. Explain abbreviations (TAM/SAM/SOM/JTBD/CJM/LPR/VoC) below tables.\n'+
-    '6. End each block with "Итог / Следующие шаги" (3-5 steps).'+
+    '6. End each block with "Итог / Следующие шаги" (3-5 steps).\n'+
+    '7. Confidence scale — use consistently and print this legend ONCE at the top of the module output: 5 = 3+ независимых свежих источника; 4 = 2 источника; 3 = 1 источник; 2 = косвенные данные/эвристика; 1 = нет публичных данных.\n'+
+    '8. Never mix scripts: no Latin or Greek words inside '+lang+' sentences (brand names and accepted abbreviations like TAM, CJM are fine). If a paragraph comes out garbled or mixed-script — rewrite it before finishing.\n'+
+    '9. Numbers in offer formulas and forecasts (e.g. «рост до 15%») must be labeled «гипотеза, не обещание».'+
     nicheFilter;
 }
 
@@ -512,7 +530,14 @@ WHAT A NICHE IS — CRITICAL:
 A niche = a group of customers with shared demand: a customer vertical, segment or demand scenario (WHO buys and in what situation). A niche is NOT a product feature and NOT a menu item.
 - If the business SELLS DISTINCT SERVICES to end clients (clinic: botox, cleanings; agency: SEO, ads) — services themselves can be niche candidates.
 - If the service list looks like FEATURES of ONE product (a SaaS widget: AI popup, analytics, A/B tests) — do NOT treat features as niches. Instead derive niches as target customer verticals where this product is sold (e.g., for a lead-capture widget: online stores, online schools, medical clinics, real-estate developers).
-Decide which case applies and say so in one sentence before BLOCK 04.`;
+Decide which case applies and say so in one sentence before BLOCK 04.
+
+QUALIFICATION FILTER — MANDATORY:
+If the brief (audience / extra / result fields) defines WHO the product can serve (e.g. «только бизнесы, привлекающие клиентов через собственный сайт»), then:
+- every segment in BLOCK 04 gets a column «Квалификация» (проходит? да/нет + доля подходящих в сегменте, %);
+- unqualified segments are marked «вне ЦА» and EXCLUDED from niche scoring in BLOCK 04_2;
+- niche demand estimates count ONLY the qualified share.
+If the brief has no qualification criteria — state «квалификация: не задана в брифе» and proceed.`;
   const svcLine = manualNiches.length
     ? 'CANDIDATE NICHES (provided by the specialist — prioritize these, you may add 1-2 of your own marked «предложено ИИ»): '+manualNiches.join('; ')
       + (services.length ? '\nPRODUCT/SERVICES CONTEXT (what the business offers): '+services.join('; ') : '')
@@ -724,20 +749,30 @@ Output JSON between <<<CHART_DATA_START>>> and <<<CHART_DATA_END>>>:
 Include 6-12 key competitors AND our company as one point with "isUs": true (estimate our position honestly from the brief). price: 1=cheapest, 5=most expensive. quality: perceived value/quality 1-5.`;
 }
 
-function buildM3Prompt(brief, lang, prev) {
+function buildM3Prompt(brief, lang, prev, evidence) {
   const ctx = prev ? `\nCONTEXT:\n${prev.slice(0,1500)}\n` : '';
-  return `${ctx}
+  return `${ctx}${evidenceSection(evidence)}
 Fill module M3 blocks. ALL output in ${lang}. Only open sources, no invented data.
 
 ═══════════════════════════════════════════════
 BLOCK 07 — Voice of Customer (07_VoiceOfCustomer_Public)
 ═══════════════════════════════════════════════
-Task: Collect real client language from open sources (reviews, forums, social media, Q&A). 25–40 rows.
+Task: Collect real client language. QUOTES COME ONLY FROM THE EVIDENCE ABOVE — verbatim fragments with the evidence URL. If evidence yields few quotes, output fewer rows honestly (Confidence=2, note «нужен доп. сбор VoC») — NEVER invent or "smooth" quotes.
 
 Format:
-| Тема боли/мотива | Цитата (кратко, обезличено) | Частотность (упоминаний) | Единица частоты | Источник (площадка) | URL | Дата | Формула ответа (оффер/LP) | Микро-KPI (CTR/CR) | Комментарий |
+| Тема боли/мотива | Цитата (дословно, обезличено) | Частотность (упоминаний) | Единица частоты | Источник (площадка) | URL | Дата | Формула ответа (оффер/LP) | Микро-KPI (CTR/CR) | Комментарий |
 
-Rules: Short anonymised quotes only. Real URLs. No personal data.
+Rules: Verbatim anonymised quotes only, in the ORIGINAL language of the source (do not translate quotes). URLs only from evidence. No personal data.
+
+═══════════════════════════════════════════════
+BLOCK 07A — Как говорит ЦА (raw language bank)
+═══════════════════════════════════════════════
+Task: 20–30 RAW verbatim quotes from evidence — the audience's living language for copywriters: their words, slang, emotions, phrasing. No paraphrase, no polishing. Group by theme.
+
+Format:
+| # | Дословная цитата (как написано, с ошибками/сленгом) | Тема | Эмоция | Площадка | URL |
+
+If evidence contains fewer real quotes — output what exists and state the gap.
 
 ═══════════════════════════════════════════════
 BLOCK 08 — Intent Clusters (08_Intent_Clusters)
@@ -758,10 +793,15 @@ Fill module M4 blocks. ALL output in ${lang}. Only open sources.
 ═══════════════════════════════════════════════
 BLOCK 09 — LPR Personas (09_Образ_LPR)
 ═══════════════════════════════════════════════
-Task: Build 4–8 decision-maker personas based on real VoC and segment data.
+Task: Build 3–4 decision-maker personas PER SELECTED NICHE based on real VoC and segment data.
+
+PERSONA RULES:
+- 3–4 personas per niche, NO role overlap: each persona must have a distinct JTBD set and distinct top pains. If two roles share pains and JTBD (e.g. владелец и ритейл-менеджер) — merge them into one persona.
+- Business-size split INSIDE qualified segments matters: микро-бизнес ≠ средний бизнес (разные боли, бюджет, язык) — reflect size in Компания/ниша.
+- «Цитаты/язык клиента» — only verbatim quotes from M3 VoC (BLOCK 07/07A) with their URLs. A persona without at least 2 real quotes gets Confidence ≤2 and a note «персона-гипотеза, нужен сбор VoC».
 
 Format:
-| Persona_ID | Роль/должность | Компания/ниша | SD-уровень | Контекст/ситуация | JTBD_1 | JTBD_2 | JTBD_3 | Боли (топ-5) | Возражения (топ-5) | Триггеры (топ-5) | Каналы (топ-3) | Форматы коммуникации | Тон/Дизайн | Цитаты/язык клиента | Источники (URL) | Примечание |
+| Persona_ID | Роль/должность | Компания/ниша (+размер бизнеса) | SD-уровень | Контекст/ситуация | JTBD_1 | JTBD_2 | JTBD_3 | Боли (топ-5) | Возражения (топ-5) | Триггеры (топ-5) | Каналы (топ-3) | Форматы коммуникации | Тон/Дизайн | Цитаты/язык клиента (из M3, дословно) | Источники (URL) | Confidence (1-5) | Примечание |
 
 JTBD format: "Когда… я хочу… чтобы…"
 
@@ -776,8 +816,11 @@ Format (8–15 rows):
 ═══════════════════════════════════════════════
 BLOCK 11 — Awareness Levels (11_Уровень_Осведомлённости)
 ═══════════════════════════════════════════════
+CRITICAL: awareness is a DISTRIBUTION, not a single value. Assigning the same level to every segment is an ERROR. The 5 Schwartz/Hunt levels: 1 Unaware (не осознаёт проблему) → 2 Problem Aware (осознаёт проблему) → 3 Solution Aware (ищет решения) → 4 Product Aware (сравнивает продукты) → 5 Most Aware (знает продукт).
+For EACH persona give the estimated distribution in % across all 5 levels (e.g. «L2: 60%, L3: 30%, L4: 10%») with reasoning from VoC/intent data, then one row per DOMINANT level with content guidance.
+
 Format:
-| Сегмент | Уровень (Unaware/Problem/Solution/Product/Most Aware) | Как думает (внутренний монолог) | Примеры запросов | Что важно услышать | Рекомендуемые форматы и каналы |
+| Персона | Распределение по уровням (L1–L5, %) | Доминирующий уровень | Как думает (внутренний монолог) | Примеры запросов | Что важно услышать | Рекомендуемые форматы и каналы |
 
 ═══════════════════════════════════════════════
 BLOCK 12 — Fears & Doubts (12_Страхи)
@@ -1740,7 +1783,7 @@ function App() {
   // Price layer state
   const [showNiches, setShowNiches] = React.useState(false);
   const [nicheOpts, setNicheOpts] = React.useState([]);
-  const [selNicheIdx, setSelNicheIdx] = React.useState(null);
+  const [selNiches, setSelNiches] = React.useState([]);
   const [showLayers, setShowLayers] = React.useState(false);
   const [priceLayers, setPriceLayers] = React.useState([]);
   const [selectedLayers, setSelectedLayers] = React.useState([]);
@@ -1788,7 +1831,7 @@ function App() {
       if (niches.length) {
         setNicheOpts(niches);
         const rec = niches.findIndex(x=>x.recommended);
-        setSelNicheIdx(rec>=0?rec:null);
+        setSelNiches(rec>=0?[rec]:[]);
         setShowNiches(true);
       } else setShowNiches(false);
     } else setShowNiches(false);
@@ -1912,6 +1955,10 @@ function App() {
           // Конкуренты: реальное досье вместо памяти модели
           const evidence = await gatherCompetitorEvidence(B);
           userPrompt = buildM2Prompt(B, lang, prevContent || '', evidence);
+        } else if (mod.id === 'M3') {
+          // VoC: живые цитаты только из реального поиска
+          const evidence = await gatherVoCEvidence(B);
+          userPrompt = buildM3Prompt(B, lang, prevContent || '', evidence);
         } else {
           userPrompt = getModulePrompt(mod.id, B, lang, prevContent);
         }
@@ -1934,9 +1981,9 @@ function App() {
         const niches = nicheData && Array.isArray(nicheData.niches) ? nicheData.niches : [];
         setNicheOpts(niches);
         const rec = niches.findIndex(x => x.recommended);
-        setSelNicheIdx(rec >= 0 ? rec : null);
+        setSelNiches(rec >= 0 ? [rec] : []);
         setShowNiches(true);
-        return; // ждём выбора ниши
+        return; // ждём выбора ниш(и)
       }
 
       // After M1 — show price layer selection
@@ -1963,15 +2010,15 @@ function App() {
   }, [selectedLayers, priceLayers, brief, proj, mods, run]);
 
   const continueAfterNiche = React.useCallback(() => {
-    const n = nicheOpts[selNicheIdx];
-    if (!n) return;
+    const names = selNiches.map(i => nicheOpts[i]?.name).filter(Boolean);
+    if (!names.length) return;
     setShowNiches(false);
-    const newBrief = {...brief, selectedNiche: n.name};
+    const newBrief = {...brief, selectedNiche: names.join(', ')};
     setBrief(newBrief);
     const doneIds = (proj?.results||[]).map(r=>r.id);
     const remaining = mods.filter(id => !doneIds.includes(id));
     if (remaining.length > 0) run(remaining, newBrief);
-  }, [nicheOpts, selNicheIdx, brief, proj, mods, run]);
+  }, [nicheOpts, selNiches, brief, proj, mods, run]);
 
   const genRep = React.useCallback(async () => {
     if (!proj?.results?.length) return;
@@ -2000,7 +2047,7 @@ function App() {
 
   const dlMd = (content, suf='') => {
     const a = document.createElement('a');
-    a.href = URL.createObjectURL(new Blob([content],{type:'text/markdown;charset=utf-8'}));
+    a.href = URL.createObjectURL(new Blob(['\uFEFF'+content],{type:'text/markdown;charset=utf-8'}));
     a.download = 'CA_'+(brief.name||'research').replace(/\s+/g,'_')+suf+'.md';
     a.click();
   };
@@ -2328,10 +2375,10 @@ function App() {
                   <h3 style={{fontSize:16,fontWeight:500,marginBottom:6}}>{t.nichePickTitle}</h3>
                   <p style={{fontSize:13,color:'#666',marginBottom:14,lineHeight:1.5}}>{t.nichePickSub}</p>
                   {nicheOpts.map((n, i) => {
-                    const isOn = selNicheIdx === i;
+                    const isOn = selNiches.includes(i);
                     const c = '#4A7C1F', bg = '#EFF6E4', dark = '#2E4F0C';
                     return (
-                      <div key={i} onClick={()=>setSelNicheIdx(i)}
+                      <div key={i} onClick={()=>setSelNiches(p=>p.includes(i)?p.filter(x=>x!==i):[...p,i])}
                         style={{border:isOn?'2px solid '+c:'1px solid #e5e5e5',borderRadius:12,padding:'1rem 1.25rem',marginBottom:8,cursor:'pointer',background:isOn?bg:'#fff'}}>
                         <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:8}}>
                           <div style={{flex:1,display:'flex',alignItems:'center',gap:8,flexWrap:'wrap'}}>
@@ -2356,7 +2403,7 @@ function App() {
                     );
                   })}
                   <div style={{display:'flex',gap:10,marginTop:12}}>
-                    <button className="btn-primary" onClick={continueAfterNiche} disabled={selNicheIdx===null||selNicheIdx===undefined}>{t.nicheContinue}</button>
+                    <button className="btn-primary" onClick={continueAfterNiche} disabled={selNiches.length===0}>{t.nicheContinue}</button>
                   </div>
                 </div>
               </div>
