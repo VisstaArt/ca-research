@@ -126,7 +126,8 @@ const T = {
     translate: 'Translate ↗',
     translating: 'Translating…',
     generating: 'Generating…',
-    dlReport: '↓ Report (.md)',
+    dlFullMd: '↓ Full report (.md)',
+    dlReport: '↓ Summary (.md)',
     dlTranslation: '↓ Translation (.md)',
     dlData: '↓ Data (.csv)',
     dlAgent: '↓ Agent Pack (.json)',
@@ -217,7 +218,8 @@ const T = {
     translate: 'Перевести ↗',
     translating: 'Перевожу…',
     generating: 'Генерирую…',
-    dlReport: '↓ Отчёт (.md)',
+    dlFullMd: '↓ Полный отчёт (.md)',
+    dlReport: '↓ Резюме (.md)',
     dlTranslation: '↓ Перевод (.md)',
     dlData: '↓ Данные (.csv)',
     dlAgent: '↓ Agent Pack (.json)',
@@ -569,7 +571,10 @@ At the very END output niche data as JSON between exactly these tags (numbers, n
 {"niches":[{"name":"...","demand":4,"competition":3,"economics":4,"fit":5,"score":16,"verdict":"Go","why":"1 short sentence in ${lang}","recommended":true}]}
 <<<NICHE_DATA_END>>>
 Exactly ONE niche must have "recommended":true.
-CRITICAL VALIDATION of niches[].name: in the FEATURES case, every name MUST be a customer vertical (an industry / business type / audience segment — e.g. «интернет-магазины», «стоматологии», «онлайн-школы»). A product feature («попап», «A/B-тест», «интеграция») as a niche name is a HARD ERROR — re-derive verticals before output.`;
+CRITICAL VALIDATION of niches[]:
+- The JSON must contain 4–8 niches — ALL scored candidates from BLOCK 04_2 (Go, Maybe AND No-Go), so the human has real options to compare and choose. A single-niche JSON is an ERROR: if candidates collapsed into one, split it into sub-verticals or adjacent verticals and score them.
+- «Вне ЦА» (unqualified) segments do NOT go into the JSON.
+- In the FEATURES case, every name MUST be a customer vertical (an industry / business type / audience segment — e.g. «интернет-магазины», «стоматологии», «онлайн-школы»). A product feature («попап», «A/B-тест», «интеграция») as a niche name is a HARD ERROR — re-derive verticals before output.`;
 }
 
 function buildM1Prompt(brief, lang, prev) {
@@ -2045,6 +2050,23 @@ function App() {
     setXlating(false);
   }, [rep, xl]);
 
+  // Полный отчёт в Markdown: шапка + резюме (если есть) + ВСЕ модули целиком, без обрезки
+  const buildFullMd = () => {
+    const head = '# '+(brief.name||'CA Research')+'\n\n'
+      + [brief.geoMarket?('Рынок: '+brief.geoMarket):null,
+         'Язык исследования: '+lang,
+         brief.selectedNiche?('Выбранные ниши: '+brief.selectedNiche):null,
+         'Дата: '+new Date().toISOString().slice(0,10)]
+        .filter(Boolean).join(' · ')+'\n\n';
+    const summary = rep ? '## Executive Summary\n\n'+rep+'\n\n---\n\n' : '';
+    const body = (proj?.results||[]).map(r=>{
+      const m = MODULES.find(x=>x.id===r.id);
+      const title = m ? (m.label||m.id)+' — '+(uiLang==='ru'?(m.titleRu||m.title):m.title) : r.id;
+      return '## '+title+'\n\n'+r.content;
+    }).join('\n\n---\n\n');
+    return head + summary + body;
+  };
+
   const dlMd = (content, suf='') => {
     const a = document.createElement('a');
     a.href = URL.createObjectURL(new Blob(['\uFEFF'+content],{type:'text/markdown;charset=utf-8'}));
@@ -2496,7 +2518,8 @@ function App() {
             )}
           </div>
           <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr 1fr',gap:8}}>
-            <button onClick={()=>dlMd(rep||proj.results.map(r=>'## '+r.id+'\n\n'+r.content).join('\n\n---\n\n'))}>{t.dlReport}</button>
+            <button onClick={()=>dlMd(buildFullMd(),'_full')} style={{fontWeight:500,borderColor:'#111'}}>{t.dlFullMd}</button>
+            <button onClick={()=>rep&&dlMd(rep,'_summary')} disabled={!rep} style={{opacity:rep?1:0.4}}>{t.dlReport}</button>
             <button onClick={()=>{const html=generateHTMLReport(brief,proj.results,lang,priceLayers,selectedLayers,null);const w=window.open('','_blank');w.document.write(html);w.document.close();}} style={{background:'#111',color:'#fff',borderColor:'#111',fontWeight:500}}>↗ Полный отчёт</button>
             <button onClick={()=>xled&&dlMd(xled,'_translated')} disabled={!xled} style={{opacity:xled?1:0.4}}>{t.dlTranslation}</button>
             <button onClick={dlCsv}>{t.dlData}</button>
