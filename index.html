@@ -392,14 +392,39 @@ async function callSearch(query, opts) {
 }
 
 // Общий сборщик досье: гоняет запросы через реальный поиск, дедуплицирует по URL
-async function gatherEvidence(queries, maxQueries, maxResults) {
+async function gatherEvidence(queries, maxQueries, maxResults, opts) {
+  const o = opts || {};
+  const contentChars = o.contentChars || 400;   // сколько текста берём с каждой ссылки
+  const perDomain = o.perDomain || 0;            // лимит выдержек с одного домена (0 = без лимита)
+  const maxItems = o.maxItems || 24;
+  const searchOpts = { max_results: maxResults || 4 };
+  if (o.depth) searchOpts.depth = o.depth;                       // 'advanced' — глубже и больше результатов
+  if (o.raw) searchOpts.include_raw_content = true;              // полный текст страницы вместо сниппета
   const all = [];
-  for (const q of queries.slice(0, maxQueries||9)) {
-    const r = await callSearch(q, {max_results: maxResults||4});
-    for (const x of r) all.push({q, title: x.title, url: x.url, content: (x.content||'').slice(0, 400), date: x.published_date});
+  for (const q of queries.slice(0, maxQueries || 9)) {
+    const r = await callSearch(q, searchOpts);
+    for (const x of r) {
+      const body = (o.raw && x.raw_content) ? x.raw_content : (x.content || '');
+      all.push({ q, title: x.title, url: x.url, content: body.slice(0, contentChars), date: x.published_date });
+    }
   }
-  const seen = new Set();
-  return all.filter(x => !seen.has(x.url) && seen.add(x.url)).slice(0, 24);
+  // Дедуп по URL + разнообразие площадок: один отзовик не должен занять весь бюджет выдержек
+  const seenUrl = new Set();
+  const perHost = {};
+  const out = [];
+  for (const x of all) {
+    if (seenUrl.has(x.url)) continue;
+    seenUrl.add(x.url);
+    let host = '';
+    try { host = new URL(x.url).hostname.replace(/^www\./, ''); } catch {}
+    if (perDomain && host) {
+      perHost[host] = (perHost[host] || 0) + 1;
+      if (perHost[host] > perDomain) continue;
+    }
+    out.push(x);
+    if (out.length >= maxItems) break;
+  }
+  return out;
 }
 
 // Досье для разведки ниш: по каждой услуге/вертикали-кандидату — спрос и конкуренция
@@ -420,19 +445,30 @@ async function gatherNicheEvidence(brief, lang) {
   return gatherEvidence(queries, 9, 4);
 }
 
-// Досье для M3 (VoC): живой язык аудитории — отзывы, форумы, жалобы, вопросы
+// Досье для M3 (VoC): живой язык аудитории — отзывы, форумы, жалобы, вопросы.
+// Копаем глубоко (advanced + полный текст страниц) и вширь (сегмент + отзывы о конкурентах),
+// с лимитом на домен — чтобы не «мусолить» одну фразу с одного отзовика.
 async function gatherVoCEvidence(brief) {
   const market = brief.geoMarket || brief.geoCompany || '';
   const product = brief.niche || brief.name || '';
   const niches = (brief.selectedNiche||'').split(',').map(s=>s.trim()).filter(Boolean).slice(0,3);
   const topics = niches.length ? niches : [product];
+  const competitors = (brief.competitors||'').split(/[,;]/).map(s=>s.trim()).filter(Boolean).slice(0,4);
   const queries = [];
+  // 1. Боли квалифицированного сегмента (бизнес, привлекающий клиентов через свой сайт)
   for (const n of topics) {
-    queries.push(n+' '+market+' отзывы проблемы');
-    queries.push(n+' '+market+' форум жалобы "не работает" OR "бесит" OR "разочарован"');
+    queries.push(n+' '+market+' мало заявок с сайта конверсия проблемы');
+    queries.push(n+' '+market+' форум "не работает" OR "бесит" OR "разочарован"');
+    queries.push('как увеличить заявки с сайта '+n+' '+market+' обсуждение');
   }
-  queries.push(product+' '+market+' отзывы форум вопросы');
-  return gatherEvidence(queries, 8, 5);
+  // 2. Отзывы о конкурентах = сразу и боль, и язык, и подсказки по фичам
+  for (const c of competitors) {
+    queries.push(c+' отзывы недостатки жалобы');
+    queries.push(c+' "не рекомендую" OR "разочарован" проблемы поддержка');
+  }
+  // 3. Язык самой категории продукта
+  queries.push(product+' '+market+' отзывы клиентов форум');
+  return gatherEvidence(queries, 14, 6, { depth:'advanced', raw:true, contentChars:1500, perDomain:3, maxItems:40 });
 }
 
 // Досье для M2: конкуренты, аналоги, цены, отзывы — в выбранной нише
@@ -760,14 +796,25 @@ function buildM3Prompt(brief, lang, prev, evidence) {
 Fill module M3 blocks. ALL output in ${lang}. Only open sources, no invented data.
 
 ═══════════════════════════════════════════════
+QUALIFICATION GATE — CRITICAL (применяется ко ВСЕМ цитатам ниже)
+═══════════════════════════════════════════════
+Продукт нужен ТОЛЬКО бизнесам, которые привлекают клиентов через СВОЙ сайт (заявки/лиды через форму на сайте).
+Прежде чем взять цитату, проверь, что она от ЭТОЙ аудитории и про ЭТУ категорию продукта. ОТБРОСЬ цитаты:
+- про другой продукт (напр. жалобы про «отписки», «бот», «рассылку», «подписчиков» — это сервисы рассылок, НЕ наша ЦА);
+- от селлеров маркетплейсов без сайта, офлайн-точек, конечных потребителей;
+- не по выбранной(ым) нише(ам): ${brief.selectedNiche||'—'}.
+Отброшенная цитата НЕ появляется ни в одной таблице. Лучше меньше релевантных цитат, чем много мимо ЦА.
+ОТЗЫВЫ О КОНКУРЕНТАХ (${brief.competitors||'—'} и попап/лид-сервисы) — это ВАЛИДНЫЙ VoC: в них боль, язык и подсказки по фичам. Используй их в приоритете.
+
+═══════════════════════════════════════════════
 BLOCK 07 — Voice of Customer (07_VoiceOfCustomer_Public)
 ═══════════════════════════════════════════════
-Task: Collect real client language. QUOTES COME ONLY FROM THE EVIDENCE ABOVE — verbatim fragments with the evidence URL. If evidence yields few quotes, output fewer rows honestly (Confidence=2, note «нужен доп. сбор VoC») — NEVER invent or "smooth" quotes.
+Task: Collect real client language. QUOTES COME ONLY FROM THE EVIDENCE ABOVE — verbatim fragments with the evidence URL. Apply the QUALIFICATION GATE. If evidence yields few on-target quotes, output fewer rows honestly (Confidence=2, note «нужен доп. сбор VoC») — NEVER invent or "smooth" quotes, and NEVER pad with off-target quotes.
 
 Format:
-| Тема боли/мотива | Цитата (дословно, обезличено) | Частотность (упоминаний) | Единица частоты | Источник (площадка) | URL | Дата | Формула ответа (оффер/LP) | Микро-KPI (CTR/CR) | Комментарий |
+| Тема боли/мотива | Сегмент/ниша | Цитата (дословно, обезличено) | Частотность (упоминаний) | Единица частоты | Источник (площадка) | URL | Дата | Формула ответа (оффер/LP) | Микро-KPI (CTR/CR) | Комментарий |
 
-Rules: Verbatim anonymised quotes only, in the ORIGINAL language of the source (do not translate quotes). URLs only from evidence. No personal data.
+Rules: Verbatim anonymised quotes only, in the ORIGINAL language of the source (do not translate quotes). URLs only from evidence. No personal data. Каждая строка помечена сегментом/нишей, откуда цитата. Отзывы о конкурентах помечай источником «отзыв о конкуренте: <название>».
 
 ═══════════════════════════════════════════════
 BLOCK 07A — Как говорит ЦА (raw language bank)
@@ -804,6 +851,8 @@ PERSONA RULES:
 - 3–4 personas per niche, NO role overlap: each persona must have a distinct JTBD set and distinct top pains. If two roles share pains and JTBD (e.g. владелец и ритейл-менеджер) — merge them into one persona.
 - Business-size split INSIDE qualified segments matters: микро-бизнес ≠ средний бизнес (разные боли, бюджет, язык) — reflect size in Компания/ниша.
 - «Цитаты/язык клиента» — only verbatim quotes from M3 VoC (BLOCK 07/07A) with their URLs. A persona without at least 2 real quotes gets Confidence ≤2 and a note «персона-гипотеза, нужен сбор VoC».
+- ЗАПРЕТ ДУБЛЕЙ ЦИТАТ: у каждой персоны СВОИ цитаты. Одна и та же дословная цитата (или один и тот же URL) НЕ может стоять под двумя персонами. Если своих реальных цитат для персоны нет — в ячейку цитат пиши «нет своих цитат» и ставь Confidence ≤2; НЕ копируй цитату другой персоны.
+- УВЕРЕННОСТЬ ВНИЗ ПО НИШЕ: Confidence персоны не выше покрытия VoC её ниши. Если по нише нет релевантного VoC — помечай всю персону «гипотеза: VoC по нише не собран» и Confidence=1, не оформляй её так же уверенно, как персоны ниш с данными.
 
 Format:
 | Persona_ID | Роль/должность | Компания/ниша (+размер бизнеса) | SD-уровень | Контекст/ситуация | JTBD_1 | JTBD_2 | JTBD_3 | Боли (топ-5) | Возражения (топ-5) | Триггеры (топ-5) | Каналы (топ-3) | Форматы коммуникации | Тон/Дизайн | Цитаты/язык клиента (из M3, дословно) | Источники (URL) | Confidence (1-5) | Примечание |
@@ -1924,13 +1973,17 @@ function App() {
 
   // briefOverride: свежий бриф для запуска сразу после setBrief (стейт обновляется асинхронно,
   // без override модули получили бы старый бриф без выбранной ниши/слоя)
-  const run = React.useCallback(async (modsToRun, briefOverride) => {
+  const run = React.useCallback(async (modsToRun, briefOverride, forceRerun) => {
     const B = briefOverride || brief;
     if (!B.name) return;
     const id = proj?.id || ('p' + Date.now());
-    const existing = proj?.results || [];
-    const doneIds = existing.map(r => r.id);
     const allSelected = modsToRun || mods;
+    // forceRerun (перегенерация): выкидываем старые результаты запрошенных модулей,
+    // иначе run() видит их в proj (возможно устаревшем) и пропускает — «секунда без поиска».
+    const existing = forceRerun
+      ? (proj?.results || []).filter(r => !allSelected.includes(r.id))
+      : (proj?.results || []);
+    const doneIds = existing.map(r => r.id);
     const toRun = MODULES.filter(m => !m.disabled && allSelected.includes(m.id) && !doneIds.includes(m.id));
     if (!toRun.length) { setSc('work'); return; }
 
@@ -2069,7 +2122,9 @@ function App() {
 
   const dlMd = (content, suf='') => {
     const a = document.createElement('a');
-    a.href = URL.createObjectURL(new Blob(['\uFEFF'+content],{type:'text/markdown;charset=utf-8'}));
+    // \u0411\u0435\u0437 BOM: BOM (\uFEFF) \u043F\u0440\u0438 \u0447\u0442\u0435\u043D\u0438\u0438 \u0444\u0430\u0439\u043B\u0430 \u043A\u0430\u043A Latin-1/cp1252 \u0434\u0430\u0451\u0442 \u00AB\u00EF\u00BB\u00BF\u00BB \u0432 \u043D\u0430\u0447\u0430\u043B\u0435 \u0438
+    // \u043B\u043E\u043C\u0430\u0435\u0442 markdown-\u043F\u0430\u0440\u0441\u0435\u0440\u044B. \u0427\u0438\u0441\u0442\u044B\u0439 UTF-8 \u2014 \u043A\u0430\u043A \u043F\u0440\u043E\u0441\u0438\u043B \u043F\u043E\u0442\u0440\u0435\u0431\u0438\u0442\u0435\u043B\u044C (strict UTF-8).
+    a.href = URL.createObjectURL(new Blob([content],{type:'text/markdown;charset=utf-8'}));
     a.download = 'CA_'+(brief.name||'research').replace(/\s+/g,'_')+suf+'.md';
     a.click();
   };
@@ -2368,9 +2423,19 @@ function App() {
                 </div>
                 {!isRun && (
                   <div style={{display:'flex',gap:5,margin:'0 8px',flexShrink:0}}>
-                    <button onClick={e=>{e.stopPropagation();const upd={...proj,results:(proj.results||[]).filter(x=>x.id!==r.id),updatedAt:new Date().toISOString()};setProj(upd);sv(upd);run([r.id]);}}
+                    <button onClick={e=>{
+                        e.stopPropagation();
+                        // Перегенерация: чистим этот модуль и все зависимые ниже по цепочке,
+                        // затем перезапускаем их с реальным поиском (не из старого результата).
+                        const order = MODULES.filter(x=>!x.disabled).map(x=>x.id);
+                        const idx = order.indexOf(r.id);
+                        const chain = idx>=0 ? order.slice(idx) : [r.id];
+                        const upd={...proj,results:(proj.results||[]).filter(x=>!chain.includes(x.id)),updatedAt:new Date().toISOString()};
+                        setProj(upd);sv(upd);
+                        run(chain, undefined, true);
+                      }}
                       style={{padding:'3px 8px',fontSize:10,color:m.dark,borderColor:m.border,background:'rgba(255,255,255,0.7)'}}
-                      title="Re-run this module">
+                      title="Перегенерировать: новый поиск для этого модуля и зависимых ниже">
                       ↺
                     </button>
                     <button onClick={e=>{e.stopPropagation();const html=generateHTMLReport(brief,proj.results,lang,priceLayers,selectedLayers,r.id);const w=window.open('','_blank');w.document.write(html);w.document.close();}}

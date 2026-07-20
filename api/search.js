@@ -18,7 +18,7 @@ export default async function handler(req, res) {
     return res.status(503).json({ error: { message: 'Search is not configured (TAVILY_API_KEY missing)', code: 'search_unconfigured' } });
   }
 
-  const { query, max_results, depth, days, include_domains } = req.body || {};
+  const { query, max_results, depth, days, include_domains, exclude_domains, include_raw_content } = req.body || {};
   if (!query || typeof query !== 'string') {
     return res.status(400).json({ error: { message: 'query is required', code: 'bad_request' } });
   }
@@ -36,8 +36,11 @@ export default async function handler(req, res) {
         max_results: Math.min(Number(max_results) || 8, 20),
         ...(days ? { days: Number(days) } : {}),
         ...(Array.isArray(include_domains) && include_domains.length ? { include_domains } : {}),
+        ...(Array.isArray(exclude_domains) && exclude_domains.length ? { exclude_domains } : {}),
         include_answer: false,
-        include_raw_content: false,
+        // raw_content — полный текст страницы (много цитат), а не короткий сниппет.
+        // Включаем точечно для VoC: без него модель видит 1–2 фразы и «мусолит» их.
+        include_raw_content: include_raw_content === true,
       }),
     });
     const data = await r.json();
@@ -48,6 +51,7 @@ export default async function handler(req, res) {
       title: x.title,
       url: x.url,
       content: x.content,
+      raw_content: x.raw_content || null,
       score: x.score,
       published_date: x.published_date || null,
     }));
