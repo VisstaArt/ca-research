@@ -279,6 +279,8 @@ const MODULES = [
   },
   {
     id: 'M3', color: '#1565A8', bg: '#E3EFFE', border: '#7EB3F0', dark: '#0D3E6E',
+    // VoC ищет жалобы на конкурентов, которых находит M2 — без M2 сбор деградирует
+    requires: ['M2'],
     title: 'Voice of Customer',
     titleRu: 'Голос клиента',
     taglineEn: 'Real words your customers use — pain, desire, doubt',
@@ -292,6 +294,8 @@ const MODULES = [
   },
   {
     id: 'M4', color: '#3C3489', bg: '#EEEDFE', border: '#AFA9EC', dark: '#26215C',
+    // Персоны строятся на дословных цитатах из M3 — без VoC это выдумка
+    requires: ['M3'],
     title: 'Customer Psychology',
     titleRu: 'Психология покупки и путь клиента',
     taglineEn: 'How customers think, decide, and what stops them from buying',
@@ -305,6 +309,8 @@ const MODULES = [
   },
   {
     id: 'M5', color: '#633806', bg: '#FAEEDA', border: '#EF9F27', dark: '#412402',
+    // Офферы и гипотезы опираются на персоны и их боли из M4
+    requires: ['M4'],
     title: 'Offers & Hypotheses',
     titleRu: 'Офферы и гипотезы',
     taglineEn: 'What to sell, how to position it, and which offers to test first',
@@ -318,6 +324,8 @@ const MODULES = [
   },
   {
     id: 'M6', color: '#712B13', bg: '#FAECE7', border: '#F0997B', dark: '#4A1B0C',
+    // Контент-система и креативы строятся на архетипах персон из M4
+    requires: ['M4'],
     title: 'Content & Creatives',
     titleRu: 'Контент-система и лендинг',
     taglineEn: 'Content system, ad creatives, and landing page structure',
@@ -427,7 +435,9 @@ async function gatherEvidence(queries, maxQueries, maxResults, opts) {
   return out;
 }
 
-// Досье для разведки ниш: по каждой услуге/вертикали-кандидату — спрос и конкуренция
+// Досье для разведки ниш: по каждой услуге/вертикали-кандидату — спрос и конкуренция.
+// Копаем так же глубоко, как для VoC: на стоп-точке M1.2 человек выбирает нишу,
+// и цена ошибки здесь — впустую потраченный весь остальной прогон.
 async function gatherNicheEvidence(brief, lang) {
   const market = brief.geoMarket || brief.geoCompany || '';
   const manual = (brief.nicheCandidates||'').split(',').map(s=>s.trim()).filter(Boolean);
@@ -437,23 +447,171 @@ async function gatherNicheEvidence(brief, lang) {
   const product = brief.niche || brief.name || '';
   const queries = [];
   for (const s of topics) {
-    // Если тема — вертикаль клиентов, ищем спрос на продукт внутри неё; иначе — спрос на саму услугу
+    // Спрос: если тема — вертикаль клиентов, ищем спрос на продукт внутри неё; иначе — на саму услугу
     queries.push(s+' '+market+' '+(manual.length ? product+' спрос' : 'спрос отзывы форум'));
-    queries.push(s+' '+market+' цена конкуренты');
+    // Конкуренция и цены
+    queries.push(s+' '+market+' цена конкуренты обзор рынка');
+    // Живые обсуждения — подтверждают, что боль в этой вертикали реальная, а не предполагаемая
+    queries.push(s+' '+market+' форум обсуждение проблемы с заявками и клиентами');
   }
-  queries.push((brief.niche||brief.name)+' '+market+' тренды рынка');
-  return gatherEvidence(queries, 9, 4);
+  queries.push(product+' '+market+' тренды рынка объём');
+  return gatherEvidence(queries, 20, 6, { depth:'advanced', raw:true, contentChars:1200, perDomain:3, maxItems:40 });
 }
 
 // Досье для M3 (VoC): живой язык аудитории — отзывы, форумы, жалобы, вопросы.
 // Копаем глубоко (advanced + полный текст страниц) и вширь (сегмент + отзывы о конкурентах),
 // с лимитом на домен — чтобы не «мусолить» одну фразу с одного отзовика.
-async function gatherVoCEvidence(brief) {
+// ── КОНТРАКТ С КОНТЕНТ-МАШИНОЙ ───────────────────────────────────────────
+// Разбираем markdown-таблицы, которые модули и так генерируют, в структурированный вид.
+// Так контент-машина получает данные объектами, а промпты трогать не нужно —
+// ни лишних токенов, ни риска обрезки вывода.
+function splitMdRow(line) {
+  return line.replace(/^\|/, '').replace(/\|$/, '').split('|').map(c => c.trim());
+}
+function isMdSeparator(s) {
+  return /^[\s|:-]+$/.test(s) && s.includes('-') && s.includes('|');
+}
+function parseMdTables(md) {
+  const lines = String(md || '').split('\n');
+  const out = [];
+  let heading = '';
+  for (let i = 0; i < lines.length; i++) {
+    const t = lines[i].trim();
+    // Заголовком таблицы считаем ближайшую строку-заголовок выше неё
+    if (/^#{1,6}\s+/.test(t)) { heading = t.replace(/^#+\s*/, '').trim(); continue; }
+    if (/^BLOCK\s/i.test(t) || /^SEO-\d/i.test(t)) { heading = t.replace(/\s*[:—-]\s*$/, '').trim(); continue; }
+    if (t.startsWith('|') && i + 1 < lines.length && isMdSeparator(lines[i + 1].trim())) {
+      const headers = splitMdRow(t);
+      const rows = [];
+      let j = i + 2;
+      for (; j < lines.length; j++) {
+        const rt = lines[j].trim();
+        if (!rt.startsWith('|')) break;
+        const cells = splitMdRow(rt);
+        const obj = {};
+        headers.forEach((h, k) => { if (h) obj[h] = cells[k] === undefined ? '' : cells[k]; });
+        rows.push(obj);
+      }
+      if (rows.length) out.push({ heading: heading, rows: rows });
+      i = j - 1;
+    }
+  }
+  return out;
+}
+
+// Пакет для внешнего агента. Данные — на ЯЗЫКЕ ИССЛЕДОВАНИЯ, без перевода:
+// подлинные формулировки аудитории теряются при переводе туда-обратно (ПОЖЕЛАНИЯ п.4).
+function buildAgentPackage(brief, lang, results, report) {
+  const modules = {};
+  for (const r of (results || [])) {
+    const m = MODULES.find(x => x.id === r.id);
+    const tables = {};
+    parseMdTables(r.content).forEach((t, idx) => {
+      let key = t.heading || ('table_' + (idx + 1));
+      if (tables[key]) key = key + ' (' + (idx + 1) + ')';   // одинаковые заголовки не затираем
+      tables[key] = t.rows;
+    });
+    modules[r.id] = {
+      title: m ? (m.titleRu || m.title) : r.id,
+      generated_at: r.at || null,
+      tables: tables,
+      markdown: r.content || '',
+      ...(r.lint && r.lint.length ? { lint_warnings: r.lint } : {}),
+    };
+  }
+  const m12 = (results || []).find(r => r.id === 'M1_2');
+  const pick = (modId, needle) => {
+    const mod = modules[modId];
+    if (!mod) return [];
+    const key = Object.keys(mod.tables).find(k => k.toLowerCase().includes(needle.toLowerCase()));
+    return key ? mod.tables[key] : [];
+  };
+  return {
+    schema_version: 1,
+    generated_at: new Date().toISOString(),
+    research_language: lang,
+    project: brief,
+    niches: (m12 && m12.nicheData && m12.nicheData.niches) || [],
+    // Быстрые ссылки на то, что контент-машина просила в фидбеке: сегменты, боли,
+    // персоны, кластеры, гипотезы — тем же составом, что в таблицах отчёта
+    key_data: {
+      segments: pick('M1_2', 'BLOCK 04'),
+      competitors: pick('M2', 'BLOCK 06'),
+      voc: pick('M3', 'BLOCK 07'),
+      personas: pick('M4', 'BLOCK 09'),
+      jtbd: pick('M4', 'BLOCK 10'),
+      hypotheses: pick('M5', 'BLOCK 16'),
+      seo_clusters: pick('M7', 'SEO-02'),
+    },
+    modules: modules,
+    executive_summary: report || '',
+  };
+}
+
+// Линтер иноязычных вставок: ищет забытый английский внутри русского текста.
+// Ловим СТРОЧНЫЕ латинские слова — бренды (OptinMonster, Jivo) и аббревиатуры (TAM, CJM)
+// пишутся с заглавной и латиницей законно, а вот «vendor lock-in», «time-to-value»,
+// «try free for days» выглядят именно так: строчная латиница посреди кириллицы.
+const LINT_ALLOW = new Set(['seo','utm','api','url','csv','pdf','json','html','http','https','www','vs','ru','com','io','ai','ml','ux','ui','popup','pop-up','online','offline']);
+function findForeignInserts(text) {
+  if (!text) return [];
+  // Убираем ссылки и домены — там латиница законна. Регулярки намеренно простые:
+  // без символов кавычек-скобок внутри, чтобы не ломать проверку баланса по файлу.
+  const cleaned = String(text)
+    .replace(/https?:\/\/\S+/g, ' ')
+    .replace(/[a-z0-9.-]+\.(?:ru|com|io|net|org|digital|online|family|ai)\b/gi, ' ');
+  const hits = [];
+  const re = /\b[a-z][a-z-]{2,}\b/g;
+  let m;
+  while ((m = re.exec(cleaned)) !== null) {
+    if (LINT_ALLOW.has(m[0])) continue;
+    hits.push(m[0]);
+  }
+  const seen = new Set();
+  return hits.filter(w => !seen.has(w) && seen.add(w));
+}
+
+// Конкуренты, которых НАШЁЛ M2 → идут в поиск VoC для M3.
+// Жалобы на конкурентов — самый плотный источник боли, языка и подсказок по фичам,
+// а поле «конкуренты» в брифе обычно пустое, поэтому берём их из результата M2.
+function competitorsFromM2(m2Result, brief) {
+  const out = [];
+  const ourName = (brief.name || '').toLowerCase().trim();
+  const isOurs = n => {
+    const v = String(n).toLowerCase();
+    return ourName && (v.includes(ourName) || ourName.includes(v));
+  };
+  // Путь 1 — машиночитаемая карта конкурентов из CHART DATA, надёжнее разбора таблицы
+  const matrix = m2Result && m2Result.chartData && m2Result.chartData.competitorMatrix;
+  if (Array.isArray(matrix)) {
+    for (const c of matrix) {
+      if (c && c.name && !c.isUs && !isOurs(c.name)) out.push(String(c.name).trim());
+    }
+  }
+  // Путь 2 — запасной: строки таблицы BLOCK 06 вида | C001 | Название | …
+  if (!out.length && m2Result && m2Result.content) {
+    for (const line of m2Result.content.split('\n')) {
+      const m = line.match(/^\s*\|\s*C\d+\s*\|\s*([^|]+)\|/);
+      if (!m) continue;
+      const name = m[1].replace(/\(\*\)|\*\*|\[|\]/g, '').trim();
+      if (name && !isOurs(name)) out.push(name);
+    }
+  }
+  const seen = new Set();
+  return out.filter(n => n && !seen.has(n.toLowerCase()) && seen.add(n.toLowerCase())).slice(0, 5);
+}
+
+async function gatherVoCEvidence(brief, discoveredCompetitors) {
   const market = brief.geoMarket || brief.geoCompany || '';
   const product = brief.niche || brief.name || '';
   const niches = (brief.selectedNiche||'').split(',').map(s=>s.trim()).filter(Boolean).slice(0,3);
   const topics = niches.length ? niches : [product];
-  const competitors = (brief.competitors||'').split(/[,;]/).map(s=>s.trim()).filter(Boolean).slice(0,4);
+  // Конкуренты: из брифа (если заполнен) + найденные модулем M2
+  const fromBrief = (brief.competitors||'').split(/[,;]/).map(s=>s.trim()).filter(Boolean);
+  const seenComp = new Set();
+  const competitors = [...fromBrief, ...(discoveredCompetitors||[])]
+    .filter(c => c && !seenComp.has(c.toLowerCase()) && seenComp.add(c.toLowerCase()))
+    .slice(0, 5);
   const queries = [];
   // 1. Боли квалифицированного сегмента (бизнес, привлекающий клиентов через свой сайт)
   for (const n of topics) {
@@ -468,7 +626,29 @@ async function gatherVoCEvidence(brief) {
   }
   // 3. Язык самой категории продукта
   queries.push(product+' '+market+' отзывы клиентов форум');
-  return gatherEvidence(queries, 14, 6, { depth:'advanced', raw:true, contentChars:1500, perDomain:3, maxItems:40 });
+  return gatherEvidence(queries, 20, 6, { depth:'advanced', raw:true, contentChars:1500, perDomain:3, maxItems:45 });
+}
+
+// Досье для M7 (SEO). Важно понимать границы инструмента: веб-поиск НЕ измеряет Wordstat.
+// Он даёт две реальные вещи: (а) страницы, которые фактически находятся по целевому запросу —
+// это и есть поисковые конкуренты; (б) статьи, где частотности уже опубликованы со ссылкой.
+// Всё остальное модуль обязан помечать как незамеренное, а не выдумывать.
+async function gatherSeoEvidence(brief) {
+  const market = brief.geoMarket || brief.geoCompany || '';
+  const product = brief.niche || brief.name || '';
+  const niches = (brief.selectedNiche||'').split(',').map(s=>s.trim()).filter(Boolean).slice(0,3);
+  const topics = niches.length ? niches : [product];
+  const queries = [];
+  for (const n of topics) {
+    // Поиск по самому целевому запросу = фактическая выдача: кто реально по нему находится
+    queries.push(product+' для '+n);
+    queries.push('как выбрать '+product+' '+n+' '+market);
+  }
+  queries.push(product+' '+market);
+  queries.push(product+' '+market+' частотность запросов вордстат статистика');
+  queries.push(product+' '+market+' seo продвижение семантика запросы');
+  // perDomain=2 — для SEO важна ширина выдачи (разные домены), а не глубина одного сайта
+  return gatherEvidence(queries, 12, 8, { depth:'advanced', raw:true, contentChars:1000, perDomain:2, maxItems:35 });
 }
 
 // Досье для M2: конкуренты, аналоги, цены, отзывы — в выбранной нише
@@ -587,6 +767,14 @@ Fill the following research blocks for module M1.2 «Niche Scouting». ALL outpu
 
 PURPOSE: this is a SCOUTING pass — short tables, just enough to CHOOSE one niche. Deep research happens later, only for the chosen niche. Keep it compact.
 
+BLOCK 04_0 — Источники разведки (ОБЯЗАТЕЛЬНЫЙ, идёт ПЕРВЫМ)
+Table: [n] | Источник (площадка) | URL | Дата | Что из него взяли
+Rules:
+- Одна строка на КАЖДУЮ выдержку evidence, которую ты реально использовал ниже.
+- Нумерация [n] здесь — ТА ЖЕ, что в ссылках в блоках 04_1 и 04_2.
+- Ссылка [n] в любой таблице без соответствующей строки в этом блоке — ОШИБКА. Человек должен по каждой цифре открыть источник и проверить.
+- Если evidence пустой — напиши «поиск не дал источников» и проставь Confidence 1–2 во ВСЕХ таблицах ниже.
+
 BLOCK 04 — Target Audience Segments (methodology block 04)
 Before the table: 2-3 sentences why we map segments.
 Table (6-10 rows max): Segment_ID | Сегмент | Кто это (1 строка) | Ключевая потребность | Платёжеспособность (H/M/L) | Confidence (1-5)
@@ -599,8 +787,16 @@ After: "CONCLUSION (in ${lang}):"
 
 BLOCK 04_2 — Niche Prioritization Matrix (methodology block 04_2)
 Before: 1-2 sentences.
-Table: Ниша | Спрос (1-5) | Конкуренция (1-5, где 5 = низкая) | Экономика (1-5) | Соответствие бизнесу (1-5) | ИТОГО (сумма) | Вердикт (Go / Maybe / No-Go)
-After: "CONCLUSION (in ${lang}):" — which ONE niche you recommend to enter first and why (2-3 sentences, plain language for a business owner).
+Table: Ниша | Спрос (1-5) | Конкуренция (1-5, где 5 = низкая) | Экономика (1-5) | Соответствие бизнесу (1-5) | ИТОГО (сумма) | Источники [n] | Вердикт (Go / Maybe / No-Go)
+
+GROUNDING RULE — вердикт обязан опираться на источники:
+- «Go» разрешён ТОЛЬКО если спрос И конкуренция ниши опираются минимум на 2 источника [n] из блока 04_0.
+- Ниша с одним источником — максимум «Maybe».
+- Ниша без источников — «Maybe» с пометкой «нет данных, нужна проверка» и Confidence ≤2; вердикт «Go» для неё ЗАПРЕЩЁН.
+- Колонка «Источники [n]» заполняется всегда; прочерк в ней при вердикте «Go» — ОШИБКА.
+Не выдавай эвристику и общие рассуждения за сигнал рынка: если данных нет, так и напиши.
+
+After: "CONCLUSION (in ${lang}):" — which ONE niche you recommend to enter first and why (2-3 sentences, plain language for a business owner). Если у рекомендованной ниши меньше 2 источников — прямо предупреди, что выбор предварительный и требует проверки.
 
 At the very END output niche data as JSON between exactly these tags (numbers, not strings; "name" in ${lang}):
 <<<NICHE_DATA_START>>>
@@ -774,7 +970,16 @@ BLOCK 06_1 — Gap Analysis (06_1_Конкуренты_Гэп-анализ)
 Task: Compare our offer vs competitors on key criteria. Assign Win/Parity/Lose.
 
 Format (15–25 rows):
-| Критерий | Наше текущее состояние | Лучшее у конкурентов (Название) | URL примера | Статус (Win/Parity/Lose) | В чём гэп | Действие (что делаем) | Приоритет (1–3) | KPI | Срок | Ответственный | Примечание |
+| Критерий | Наше текущее состояние (источник) | Лучшее у конкурентов (Название) | URL примера | Статус (Win/Parity/Lose) | Основание статуса | В чём гэп | Действие (что делаем) | Приоритет (1–3) | KPI | Срок | Ответственный | Примечание |
+
+СТАТУС ОБЯЗАН БЫТЬ ОБОСНОВАН — критично:
+Ты НЕ знаешь, что реально есть в нашем продукте: у тебя есть только бриф. Поэтому:
+- «Наше текущее состояние» берётся ТОЛЬКО из брифа. В скобках указывай источник: «из брифа» или «не указано в брифе».
+- Если возможности нет в брифе — писать «не указано в брифе», а НЕ додумывать, что она есть.
+- «Win» допустим ТОЛЬКО когда выполнено И то, И другое: (1) наша возможность подтверждена брифом, (2) её отсутствие у конкурентов видно из evidence [n]. В колонке «Основание статуса» указывай и то, и другое.
+- Если хотя бы одно не выполнено — пиши «Win (гипотеза)» и поясни, что именно надо проверить.
+- Технические заявления о нашем продукте («реакция за 0.006 сек», «AI-копирайтинг», «авто-сегментация») без подтверждения в брифе — это НЕ факты и НЕ основание для Win.
+Заказчик несёт эти выводы в маркетинг: выдать непроверенное преимущество за факт — хуже, чем честно написать «гипотеза».
 
 After table: "Top-3 priorities" + "What to defer" + "What data/tests needed".
 
@@ -790,7 +995,8 @@ Output JSON between <<<CHART_DATA_START>>> and <<<CHART_DATA_END>>>:
 Include 6-12 key competitors AND our company as one point with "isUs": true (estimate our position honestly from the brief). price: 1=cheapest, 5=most expensive. quality: perceived value/quality 1-5.`;
 }
 
-function buildM3Prompt(brief, lang, prev, evidence) {
+function buildM3Prompt(brief, lang, prev, evidence, competitors) {
+  const compList = (competitors && competitors.length) ? competitors.join(', ') : (brief.competitors || '—');
   const ctx = prev ? `\nCONTEXT:\n${prev.slice(0,1500)}\n` : '';
   return `${ctx}${evidenceSection(evidence)}
 Fill module M3 blocks. ALL output in ${lang}. Only open sources, no invented data.
@@ -804,7 +1010,7 @@ QUALIFICATION GATE — CRITICAL (применяется ко ВСЕМ цитат
 - от селлеров маркетплейсов без сайта, офлайн-точек, конечных потребителей;
 - не по выбранной(ым) нише(ам): ${brief.selectedNiche||'—'}.
 Отброшенная цитата НЕ появляется ни в одной таблице. Лучше меньше релевантных цитат, чем много мимо ЦА.
-ОТЗЫВЫ О КОНКУРЕНТАХ (${brief.competitors||'—'} и попап/лид-сервисы) — это ВАЛИДНЫЙ VoC: в них боль, язык и подсказки по фичам. Используй их в приоритете.
+ОТЗЫВЫ О КОНКУРЕНТАХ (${compList} — список найден модулем M2) — это ВАЛИДНЫЙ VoC: в них боль, язык и подсказки по фичам. Используй их В ПРИОРИТЕТЕ: жалоба на конкурента показывает, чего не хватает рынку.
 
 ═══════════════════════════════════════════════
 BLOCK 07 — Voice of Customer (07_VoiceOfCustomer_Public)
@@ -838,7 +1044,9 @@ Schwartz stages: Unaware / Problem Aware / Solution Aware / Product Aware / Most
 }
 
 function buildM4Prompt(brief, lang, prev) {
-  const ctx = prev ? `\nCONTEXT:\n${prev.slice(0,1500)}\n` : '';
+  // Полный M3: персоны обязаны брать ДОСЛОВНЫЕ цитаты и URL из VoC.
+  // При обрезке до 1500 символов модуль видел только легенду Confidence и выдумывал цитаты.
+  const ctx = prev ? `\nCONTEXT — РЕЗУЛЬТАТ M3 (VoC), ИСТОЧНИК ЦИТАТ ДЛЯ ПЕРСОН:\n${prev.slice(0,16000)}\n` : '';
   return `${ctx}
 Fill module M4 blocks. ALL output in ${lang}. Only open sources.
 
@@ -851,6 +1059,7 @@ PERSONA RULES:
 - 3–4 personas per niche, NO role overlap: each persona must have a distinct JTBD set and distinct top pains. If two roles share pains and JTBD (e.g. владелец и ритейл-менеджер) — merge them into one persona.
 - Business-size split INSIDE qualified segments matters: микро-бизнес ≠ средний бизнес (разные боли, бюджет, язык) — reflect size in Компания/ниша.
 - «Цитаты/язык клиента» — only verbatim quotes from M3 VoC (BLOCK 07/07A) with their URLs. A persona without at least 2 real quotes gets Confidence ≤2 and a note «персона-гипотеза, нужен сбор VoC».
+- ИСТОЧНИКИ ТОЛЬКО ИЗ M3: и сама цитата, и её URL обязаны дословно присутствовать в блоках 07/07A результата M3, приведённого выше. Придумать URL или подставить «похожий» из памяти — ГРУБАЯ ОШИБКА: заказчик открывает ссылки и проверяет. Если подходящей цитаты в M3 нет — пиши «нет своих цитат», НЕ подбирай правдоподобную.
 - ЗАПРЕТ ДУБЛЕЙ ЦИТАТ: у каждой персоны СВОИ цитаты. Одна и та же дословная цитата (или один и тот же URL) НЕ может стоять под двумя персонами. Если своих реальных цитат для персоны нет — в ячейку цитат пиши «нет своих цитат» и ставь Confidence ≤2; НЕ копируй цитату другой персоны.
 - УВЕРЕННОСТЬ ВНИЗ ПО НИШЕ: Confidence персоны не выше покрытия VoC её ниши. Если по нише нет релевантного VoC — помечай всю персону «гипотеза: VoC по нише не собран» и Confidence=1, не оформляй её так же уверенно, как персоны ниш с данными.
 
@@ -915,7 +1124,8 @@ Output JSON between <<<CHART_DATA_START>>> and <<<CHART_DATA_END>>>:
 }
 
 function buildM5Prompt(brief, lang, prev) {
-  const ctx = prev ? `\nCONTEXT:\n${prev.slice(0,1500)}\n` : '';
+  // Полный M4: офферы и гипотезы строятся на персонах, их болях и возражениях
+  const ctx = prev ? `\nCONTEXT — РЕЗУЛЬТАТ M4 (ПЕРСОНЫ И ИХ БОЛИ):\n${prev.slice(0,16000)}\n` : '';
   return `${ctx}
 Fill module M5 blocks. ALL output in ${lang}.
 
@@ -945,7 +1155,8 @@ Format (2–3 final offers):
 }
 
 function buildM6Prompt(brief, lang, prev) {
-  const ctx = prev ? `\nCONTEXT:\n${prev.slice(0,1500)}\n` : '';
+  // Полный M4: архетипы и креативы опираются на персон, их язык и триггеры
+  const ctx = prev ? `\nCONTEXT — РЕЗУЛЬТАТ M4 (ПЕРСОНЫ, ЯЗЫК, ТРИГГЕРЫ):\n${prev.slice(0,16000)}\n` : '';
   return `${ctx}
 Fill module M6 blocks. ALL output in ${lang}.
 
@@ -987,28 +1198,42 @@ Part 3 — Draft Copy (for each screen):
 H1, subheadline, bullet points, CTA text`;
 }
 
-function buildM7Prompt(brief, lang, prev) {
+function buildM7Prompt(brief, lang, prev, evidence) {
   const ctx = prev ? `\nCONTEXT:\n${prev.slice(0,1500)}\n` : '';
-  return `${ctx}
-Fill module M7 SEO blocks. ALL output in ${lang}. Open sources only (Wordstat, Google Trends, SERPs, visible site structures).
+  return `${ctx}${evidenceSection(evidence)}
+Fill module M7 SEO blocks. ALL output in ${lang}.
 
-SEO-01 — Search Competitors:
-| URL | Позиция (топ-10) | Тип страницы | Ключевые запросы | Структура URL | Title | Особенности |
+SEO-00 — Источники (ОБЯЗАТЕЛЬНЫЙ, идёт ПЕРВЫМ)
+| [n] | Источник (площадка) | URL | Дата | Что из него взяли |
+Одна строка на каждую выдержку evidence, которую ты реально использовал. Ссылка [n] ниже без строки здесь — ОШИБКА.
+
+ЧАСТОТНОСТИ — КРИТИЧНО (главное правило этого модуля):
+Переданный веб-поиск НЕ измеряет Wordstat и НЕ даёт позиции в выдаче. Поэтому:
+- Число частотности допустимо ТОЛЬКО если оно взято из конкретной выдержки evidence — и тогда рядом ОБЯЗАТЕЛЬНА ссылка [n] на источник этого числа.
+- Если числа в evidence нет — пиши «не замерено». НЕ придумывай ни точное число, ни диапазон.
+- Выдуманная частотность вида «2 000–3 500 /мес» или «900–1200» без ссылки [n] — ГРУБАЯ ОШИБКА и главный дефект этого модуля. Лучше честное «не замерено» по всем кластерам, чем правдоподобные выдуманные цифры: заказчик планирует по ним контент и бюджет.
+- Ссылка на wordstat.yandex.ru как «источник» без конкретного числа ИЗ evidence не считается подтверждением.
+
+SEO-01 — Search Competitors (страницы, которые РЕАЛЬНО находятся по целевым запросам):
+| URL | Найдено по запросу | Тип страницы | О чём страница | Title | Чем сильна | [n] |
+Rules: URL берутся ТОЛЬКО из evidence. Позиции в топ-10 НЕ указывай — поиск их не возвращает; вместо позиции указывай запрос, по которому страница нашлась.
 
 SEO-02 — Semantic Core:
-| Кластер | Тип (инфо/коммерч/навигац) | Примеры запросов | Частотность (Вордстат/Trends) | Сезонность | Конкуренция | Приоритет | Тип страницы |
+| Кластер | Тип (инфо/коммерч/навигац) | Примеры запросов | Частотность (число + [n] ИЛИ «не замерено») | Сезонность (или «не замерено») | Конкуренция (оценка + обоснование) | Приоритет | Тип страницы |
+После таблицы обязательной строкой: «Замерить вручную в Wordstat: <перечисли кластеры, где стоит „не замерено“>» — это рабочее задание специалисту, а не отговорка.
 
-SEO-03 — Content Audit:
-| Конкурент | Тип контента | Темы | Частота публикаций | Что работает | Как сделать лучше |
+SEO-03 — Content Audit (только по сайтам, попавшим в evidence):
+| Конкурент | Тип контента | Темы | Частота публикаций (или «не проверено») | Что работает | Как сделать лучше | [n] |
 
-SEO-04 — Site Structure:
+SEO-04 — Site Structure (наша будущая структура — это проектирование, источники не нужны):
 | Раздел | URL-шаблон | Тип страницы | Кластер запросов | Приоритет | Комментарий |
 
 SEO-05 — Link Profile:
-| Конкурент | Типы доноров | Площадки | Контекст упоминаний | Возможности для нас |
+| Конкурент | Типы доноров | Площадки | Контекст упоминаний | Возможности для нас | Статус данных |
+CRITICAL: ссылочные данные (доноры, беклинки) через переданный поиск НЕ проверяются — сервисы вроде ahrefs/semrush сюда не подключены. Поэтому в колонке «Статус данных» пиши «гипотеза, не проверено» везде, где нет прямой выдержки [n]. НЕ ссылайся на ahrefs/semrush как на источник, если их данных нет в evidence — это выдача предположения за факт.
 
 SEO-07 — SEO Content Plan:
-| Приоритет | Тип страницы | H1 | Кластер запросов | Объём (знаки) | Этап воронки | Ожидаемый трафик |
+| Приоритет | Тип страницы | H1 | Кластер запросов | Объём (знаки) | Этап воронки | Ожидаемый трафик (пометь «прогноз, не замер») |
 
 ═══════════════════════════════════════════════
 CHART DATA
@@ -1018,14 +1243,17 @@ Output JSON between <<<CHART_DATA_START>>> and <<<CHART_DATA_END>>>:
   "semanticClusters": [
     { "cluster": "cluster name", "volume": number, "type": "info/commercial/nav", "priority": 1-3 }
   ]
-}`;
+}
+В график попадают ТОЛЬКО кластеры с частотностью, подтверждённой источником [n]. Кластеры со статусом «не замерено» в JSON НЕ включай — иначе график покажет выдуманный спрос как факт. Если подтверждённых нет ни одного, верни "semanticClusters": [].`;
 }
 
 function buildReportPrompt(brief, results, lang) {
   const completedIds = results.map(r=>r.id);
   const sections = results.map(r => {
     const m = MODULES.find(x=>x.id===r.id);
-    return '=== '+r.id+': '+(m?m.title:r.id)+' ===\n'+r.content.slice(0,4000);
+    // 12000, а не 4000: таблицы идут в конце модулей (матрица ниш в M1.2, персоны в M4),
+    // при короткой обрезке отчёт их просто не видел и пересказывал вступление
+    return '=== '+r.id+': '+(m?m.title:r.id)+' ===\n'+r.content.slice(0,12000);
   }).join('\n\n---\n\n');
 
   const hasCompany = brief.currentRevenue || brief.currentClients || brief.currentAvgCheck;
@@ -1047,6 +1275,12 @@ function buildReportPrompt(brief, results, lang) {
     '# Decision Brief\n'+
     '## Цель исследования\n'+
     '## Ключевые инсайты (5-7 пунктов — конкретные цифры, не общие слова)\n'+
+    (completedIds.includes('M1_2')
+      ? '## Сравнение ниш\n[ОДНА сводная таблица по ВСЕМ оценённым нишам из блока 04_2 модуля M1.2: '
+        + 'Ниша | Спрос | Платёжеспособность | Конкуренция | Экономика | ИТОГО | Источники [n] | Вердикт. '
+        + 'Строки — все ниши (Go, Maybe и No-Go), отсортированные по ИТОГО. Ничего не придумывай: '
+        + 'переноси оценки как есть. Под таблицей одной строкой — какая ниша выбрана для этого исследования и почему.]\n'
+      : '')+
     (hasCompany ? '## Позиция компании на рынке (текущая доля, потенциал роста в цифрах)\n' : '')+
     '## Фокус прямо сейчас (3 конкретных действия из реальных данных)\n\n'+
     completedIds.map(id => {
@@ -1822,6 +2056,7 @@ function App() {
   const [siteUrl, setSiteUrl] = React.useState('');
   const [parsing, setParsing] = React.useState(false);
   const [pMsg, setPMsg] = React.useState('');
+  const [blockMsg, setBlockMsg] = React.useState(''); // «модуль не стартует без предыдущих стадий»
 
   const [curMod, setCurMod] = React.useState(null);
   const [curStep, setCurStep] = React.useState('');
@@ -1958,7 +2193,9 @@ function App() {
   }, []);
 
   const getModulePrompt = (modId, brief, lang, prevContent) => {
-    const p = prevContent ? prevContent.slice(0, 2000) : '';
+    // Не режем здесь: каждый промпт сам решает, сколько контекста ему нужно.
+    // Прежняя обрезка до 2000 символов накладывалась на обрезку внутри промпта.
+    const p = prevContent || '';
     switch(modId) {
       case 'M1': return buildM1Prompt(brief, lang, p);
       case 'M2': return buildM2Prompt(brief, lang, p);
@@ -1987,13 +2224,33 @@ function App() {
     const toRun = MODULES.filter(m => !m.disabled && allSelected.includes(m.id) && !doneIds.includes(m.id));
     if (!toRun.length) { setSc('work'); return; }
 
+    // Зависимости стадий: модуль не стартует, если данных, на которых он строится, нет
+    // и они не запланированы в этом же прогоне. Иначе он молча выдаёт выдумку.
+    const plannedIds = toRun.map(m => m.id);
+    const ready = new Set(doneIds);
+    const runnable = [];
+    const blockedMods = [];
+    for (const m of toRun) {
+      const missing = (m.requires || []).filter(dep => !ready.has(dep) && !plannedIds.includes(dep));
+      if (missing.length) { blockedMods.push((m.label || m.id) + ' — нужен ' + missing.join(', ')); continue; }
+      runnable.push(m);
+      ready.add(m.id);
+    }
+    // Блокируем весь прогон, а не часть: иначе исправная часть запустится, экран
+    // переключится на рабочий, и предупреждение о пропущенном модуле останется незамеченным.
+    if (blockedMods.length) {
+      setBlockMsg('Прогон не начат. ' + blockedMods.join('; ') + '. Эти модули строятся на данных предыдущих стадий: отметьте недостающие модули в списке или перегенерируйте цепочку кнопкой ↺ на более раннем модуле.');
+      return;
+    }
+    setBlockMsg('');
+
     const p = { id, createdAt: proj?.createdAt||new Date().toISOString(), updatedAt: new Date().toISOString(), brief: B, lang, mods:allSelected, results:existing, report:proj?.report||'', priceLayers, selectedLayers };
     setProj(p); setRep(p.report); sv(p); setSc('work');
 
     const sys = buildSystem(B, lang);
     const col = [...existing];
 
-    for (const mod of toRun) {
+    for (const mod of runnable) {
       setCurMod(mod.id); setCurStep(mod.steps[0]); setCurStepIdx(0);
       let stepI = 0;
       const stepTimer = setInterval(() => {
@@ -2014,11 +2271,21 @@ function App() {
           const evidence = await gatherCompetitorEvidence(B);
           userPrompt = buildM2Prompt(B, lang, prevContent || '', evidence);
         } else if (mod.id === 'M3') {
-          // VoC: живые цитаты только из реального поиска
-          const evidence = await gatherVoCEvidence(B);
-          userPrompt = buildM3Prompt(B, lang, prevContent || '', evidence);
+          // VoC: живые цитаты только из реального поиска.
+          // Конкурентов берём из уже готового M2 — по ним ищем жалобы (боль + язык + фичи).
+          const comps = competitorsFromM2(col.find(r => r.id === 'M2'), B);
+          const evidence = await gatherVoCEvidence(B, comps);
+          userPrompt = buildM3Prompt(B, lang, prevContent || '', evidence, comps);
+        } else if (mod.id === 'M7') {
+          // SEO: реальная выдача по целевым запросам вместо частотностей «из памяти»
+          const evidence = await gatherSeoEvidence(B);
+          userPrompt = buildM7Prompt(B, lang, prevContent || '', evidence);
         } else {
-          userPrompt = getModulePrompt(mod.id, B, lang, prevContent);
+          // Контекст берём от стадии, на которой модуль СТРОИТСЯ (requires), а не «последней по списку»,
+          // и целиком: без полного M3 модуль M4 не видит цитат VoC и вынужден их выдумывать.
+          const depId = (mod.requires || [])[0];
+          const depRes = depId ? col.find(r => r.id === depId) : null;
+          userPrompt = getModulePrompt(mod.id, B, lang, depRes ? depRes.content : prevContent);
         }
         full = await callGPT(sys, userPrompt);
       } catch(e) { full = 'Error: '+e.message; }
@@ -2027,7 +2294,10 @@ function App() {
       const chartData = extractChartData(full);
       const nicheData = mod.id === 'M1_2' ? extractNicheData(full) : null;
       const cleanedContent = cleanContent(full);
-      const result = { id:mod.id, content:cleanedContent, chartData, ...(nicheData?{nicheData}:{}), at:new Date().toISOString() };
+      // Порог 4: одно-два слова вроде «pop-up» — норма, а вот россыпь строчной латиницы
+      // означает, что модуль недоперевёл куски и это надо показать человеку
+      const lint = findForeignInserts(cleanedContent);
+      const result = { id:mod.id, content:cleanedContent, chartData, ...(nicheData?{nicheData}:{}), ...(lint.length>=4?{lint}:{}), at:new Date().toISOString() };
       col.push(result);
       const upd = { ...p, results:col, updatedAt:new Date().toISOString() };
       setProj(upd); sv(upd);
@@ -2138,14 +2408,10 @@ function App() {
   };
   const dlJson = () => {
     if (!proj?.results) return;
-    const pkg = { project:brief, lang, priceLayers, selectedLayers,
-      segments: proj.results.find(r=>r.id==='M1')?.content?.slice(0,3000)||'',
-      voc: proj.results.find(r=>r.id==='M3')?.content?.slice(0,3000)||'',
-      offers: proj.results.find(r=>r.id==='M5')?.content?.slice(0,3000)||'',
-      seo: proj.results.find(r=>r.id==='M7')?.content?.slice(0,3000)||'',
-      landingTZ: proj.results.find(r=>r.id==='M6')?.content?.slice(0,3000)||'',
-      report: rep?.slice(0,5000)||'',
-    };
+    // Было: сырой markdown, обрезанный по 3000 символов, поле segments читало
+    // отключённый M1 (всегда пусто), персон в выгрузке не было вообще.
+    const pkg = buildAgentPackage(brief, lang, proj.results, rep);
+    pkg.price_layers = { available: priceLayers || [], selected: selectedLayers || [] };
     const a = document.createElement('a');
     a.href = URL.createObjectURL(new Blob([JSON.stringify(pkg,null,2)],{type:'application/json;charset=utf-8'}));
     a.download = 'CA_'+(brief.name||'research').replace(/\s+/g,'_')+'_agent_package.json';
@@ -2331,10 +2597,15 @@ function App() {
           Save & back to project →
         </button>
       ) : (
-        <button className="btn-primary" onClick={()=>run()} disabled={!brief.name||!mods.length}
-          style={{width:'100%',padding:'13px',fontSize:14,opacity:brief.name&&mods.length?1:0.4}}>
-          {t.startBtn} {lang} → {mods.length} module{mods.length!==1?'s':''} · {MODEL}
-        </button>
+        <React.Fragment>
+          {blockMsg && (
+            <p style={{fontSize:12,color:'#c00',marginBottom:8,lineHeight:1.5}}>⚠ {blockMsg}</p>
+          )}
+          <button className="btn-primary" onClick={()=>run()} disabled={!brief.name||!mods.length}
+            style={{width:'100%',padding:'13px',fontSize:14,opacity:brief.name&&mods.length?1:0.4}}>
+            {t.startBtn} {lang} → {mods.length} module{mods.length!==1?'s':''} · {MODEL}
+          </button>
+        </React.Fragment>
       )}
     </div>
   );
@@ -2446,6 +2717,11 @@ function App() {
                   </div>
                 )}
               </div>
+              {r.lint && r.lint.length > 0 && (
+                <div style={{padding:'7px 14px',background:'#FFF8E1',borderTop:'1px solid '+m.border,fontSize:11,color:'#7a5c00',lineHeight:1.5}}>
+                  ⚠ Похоже на непереведённые вставки ({r.lint.length}): {r.lint.slice(0,10).join(', ')}{r.lint.length>10?'…':''} — проверьте текст и при необходимости перегенерируйте модуль кнопкой ↺
+                </div>
+              )}
               {open && (
                 <div style={{padding:'14px 16px',background:'#fff',borderTop:'1px solid '+m.border}}>
                   <ModuleCharts moduleId={r.id} chartData={r.chartData}/>
