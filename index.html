@@ -2137,29 +2137,26 @@ function App() {
   };
 
   // Extract chart data — flexible parser (handles markdown code blocks too)
-  const extractChartData = content => {
-    // Try direct tags first
-    let m = content.match(/<<<CHART_DATA_START>>>([\s\S]*?)<<<CHART_DATA_END>>>/);
-    if (m) { try { return JSON.parse(m[1].trim()); } catch {} }
-    // Try inside markdown code block
-    m = content.match(/<<<CHART_DATA_START>>>\s*```(?:json)?\s*([\s\S]*?)```\s*<<<CHART_DATA_END>>>/);
-    if (m) { try { return JSON.parse(m[1].trim()); } catch {} }
-    // Try finding JSON after the tag even without closing tag
-    m = content.match(/<<<CHART_DATA_START>>>\s*(?:```(?:json)?)?\s*(\{[\s\S]*?\})\s*(?:```)?\s*(?:<<<CHART_DATA_END>>>)?/);
-    if (m) { try { return JSON.parse(m[1].trim()); } catch {} }
-    return null;
+  // Модель выдаёт маркеры по-разному: <<<CHART_DATA_START>>> ИЛИ ### CHART_DATA_START.
+  // Принимаем оба; JSON достаём по первой { и последней } — так не мешают обёртки в тройных кавычках.
+  const extractJsonBlock = (content, kind) => {
+    const startRe = new RegExp(kind+'_START(?:>>>)?([\\s\\S]*?)(?:#{1,6}\\s*|<<<)?'+kind+'_END');
+    const m = content.match(startRe);
+    const raw = m ? m[1] : (content.match(new RegExp(kind+'_START([\\s\\S]*)'))||[])[1];
+    if (!raw) return null;
+    const a = raw.indexOf('{'), b = raw.lastIndexOf('}');
+    if (a < 0 || b <= a) return null;
+    try { return JSON.parse(raw.slice(a, b+1)); } catch { return null; }
   };
+  const extractChartData = content => extractJsonBlock(content, 'CHART_DATA');
+  const extractNicheData = content => extractJsonBlock(content, 'NICHE_DATA');
 
-  const cleanContent = content => content.replace(/<<<CHART_DATA_START>>>[\s\S]*?<<<CHART_DATA_END>>>/g,'').replace(/<<<CHART_DATA_START>>>[\s\S]*/g,'').replace(/<<<NICHE_DATA_START>>>[\s\S]*?<<<NICHE_DATA_END>>>/g,'').replace(/<<<NICHE_DATA_START>>>[\s\S]*/g,'').trim();
-
-  // Ниши из результата M1.2 — тот же гибкий парсер, что и для графиков
-  const extractNicheData = content => {
-    let m = content.match(/<<<NICHE_DATA_START>>>([\s\S]*?)<<<NICHE_DATA_END>>>/);
-    if (m) { try { return JSON.parse(m[1].replace(/```json|```/g,'').trim()); } catch {} }
-    m = content.match(/<<<NICHE_DATA_START>>>\s*(?:```(?:json)?)?\s*(\{[\s\S]*?\})\s*(?:```)?\s*(?:<<<NICHE_DATA_END>>>)?/);
-    if (m) { try { return JSON.parse(m[1].trim()); } catch {} }
-    return null;
-  };
+  const cleanContent = content => content
+    .replace(/(?:#{1,6}\s*|<<<)?CHART_DATA_START[\s\S]*?CHART_DATA_END(?:>>>)?/g,'')
+    .replace(/(?:#{1,6}\s*|<<<)?CHART_DATA_START[\s\S]*/g,'')
+    .replace(/(?:#{1,6}\s*|<<<)?NICHE_DATA_START[\s\S]*?NICHE_DATA_END(?:>>>)?/g,'')
+    .replace(/(?:#{1,6}\s*|<<<)?NICHE_DATA_START[\s\S]*/g,'')
+    .trim();
 
   // Generate price layers after M1
   const generatePriceLayers = React.useCallback(async (m1Content) => {
