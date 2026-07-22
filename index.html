@@ -374,7 +374,11 @@ async function pingProxy(key) {
   return res.ok;
 }
 
+// usage последнего вызова OpenAI — боковой канал, чтобы не менять сигнатуру callGPT
+// (её зовут в 5 местах). Цикл прогона читает это сразу после вызова.
+let lastGptUsage = null;
 async function callGPT(system, user) {
+  lastGptUsage = null;
   const res = await fetch('/api/proxy', {
     method: 'POST', headers: {'Content-Type':'application/json','X-App-Key':getAppKey()},
     body: JSON.stringify({model:MODEL, max_tokens:8000, stream:false,
@@ -383,6 +387,7 @@ async function callGPT(system, user) {
   if (!res.ok) throw new Error('API ' + res.status);
   const d = await res.json();
   if (d.error) throw new Error(d.error.message||'API error');
+  if (d.usage) lastGptUsage = { prompt: d.usage.prompt_tokens||0, completion: d.usage.completion_tokens||0, total: d.usage.total_tokens||0 };
   return d.choices?.[0]?.message?.content||'';
 }
 
@@ -2279,10 +2284,11 @@ function App() {
       } catch(e) { full = 'Error: '+e.message; }
       clearInterval(stepTimer);
 
+      const usage = lastGptUsage;
       const chartData = extractChartData(full);
       const nicheData = mod.id === 'M1_2' ? extractNicheData(full) : null;
       const cleanedContent = cleanContent(full);
-      const result = { id:mod.id, content:cleanedContent, chartData, ...(nicheData?{nicheData}:{}), at:new Date().toISOString() };
+      const result = { id:mod.id, content:cleanedContent, chartData, ...(nicheData?{nicheData}:{}), ...(usage?{usage}:{}), at:new Date().toISOString() };
       col.push(result);
       const upd = { ...p, results:col, updatedAt:new Date().toISOString() };
       setProj(upd); sv(upd);
@@ -2674,6 +2680,7 @@ function App() {
                 <div onClick={()=>setExp(e=>({...e,[r.id]:!e[r.id]}))} style={{display:'flex',alignItems:'center',gap:9,padding:'11px 14px',cursor:'pointer',flex:1}}>
                   <span className="tag" style={{background:m.color,color:'#fff',borderColor:m.color}}>{m.id}</span>
                   <span style={{flex:1,fontSize:13,fontWeight:500,color:m.dark}}>{m.title}</span>
+                  {r.usage && <span style={{fontSize:10,color:'#aaa',marginRight:8}} title={'запрос '+r.usage.prompt.toLocaleString('ru-RU')+' + ответ '+r.usage.completion.toLocaleString('ru-RU')+' токенов'}>≈{(r.usage.total/1000).toFixed(1)}k т.</span>}
                   <span style={{fontSize:10,color:'#888',marginRight:4}}>{r.at?new Date(r.at).toLocaleDateString():''}</span>
                   <span style={{fontSize:12,color:m.color}}>{open?'▲':'▼'}</span>
                 </div>
@@ -2847,6 +2854,7 @@ function App() {
             <button onClick={dlJson} style={{borderColor:'#EF9F27',color:'#633806'}}>{t.dlAgent}</button>
           </div>
           <p style={{fontSize:11,color:'#888',textAlign:'center',marginTop:8}}>{t.autoSaved}</p>
+          {(()=>{const tot=(proj.results||[]).reduce((s,r)=>s+(r.usage?r.usage.total:0),0);return tot>0?(<p style={{fontSize:11,color:'#888',textAlign:'center',marginTop:2}}>Токенов OpenAI за прогон: ≈{(tot/1000).toFixed(1)}k <span style={{color:'#bbb'}}>(сумма по модулям с замером; поиск Tavily считается отдельно)</span></p>):null;})()}
         </div>
       )}
     </div>
