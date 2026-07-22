@@ -1671,6 +1671,57 @@ function generateHTMLReport(brief, results, lang, priceLayers, selectedLayers, s
     }
   }
 
+  // Графики остальных модулей в HTML-отчёте: карта ниш (M1.2), карта конкурентов (M2),
+  // осознанность (M4), семантика (M7). Раньше отчёт рисовал только M1 (который отключён).
+  const moduleChartDivs = {};
+  let extraScripts = '';
+  function pushReportChart(modId, canvasId, title, subtitle, height) {
+    moduleChartDivs[modId] = (moduleChartDivs[modId]||'')
+      + '<div style="background:#f8f8f8;border-radius:10px;padding:14px;border:1px solid #eee;margin:8px 0 16px">'
+      + '<p style="font-size:11px;font-weight:600;color:#666;margin-bottom:'+(subtitle?'4':'8')+'px;text-transform:uppercase;letter-spacing:0.04em">'+esc(title)+'</p>'
+      + (subtitle?'<p style="font-size:11px;color:#888;margin-bottom:8px">'+esc(subtitle)+'</p>':'')
+      + '<canvas id="'+canvasId+'" height="'+(height||220)+'"></canvas></div>';
+  }
+  const safeJson = o => JSON.stringify(o).replace(/<\/script>/gi,'<\\/script>');
+
+  const m12rep = targetResults.find(r=>r.id==='M1_2');
+  const niches12 = m12rep && m12rep.nicheData && Array.isArray(m12rep.nicheData.niches) ? m12rep.nicheData.niches : null;
+  if (niches12 && niches12.length) {
+    pushReportChart('M1_2','rpt_niches','Ниши по эффективности (баллу)','Зелёные — Go, оранжевые — Maybe, красные — No-Go', Math.max(180, niches12.length*24));
+    extraScripts += 'if(document.getElementById("rpt_niches")){var nn='+safeJson(niches12)+'.slice().sort(function(a,b){return (b.score||0)-(a.score||0)});'
+      +'var coln=function(v){return v==="Go"?"#4A7C1F":v==="Maybe"?"#D98A2B":"#C0503A";};'
+      +'new Chart(document.getElementById("rpt_niches"),{type:"bar",data:{labels:nn.map(function(n){return n.name}),datasets:[{data:nn.map(function(n){return n.score||0}),backgroundColor:nn.map(function(n){return coln(n.verdict)})}]},options:{indexAxis:"y",responsive:true,plugins:{legend:{display:false}},scales:{x:{beginAtZero:true}}}});}';
+  }
+
+  const m2rep = targetResults.find(r=>r.id==='M2');
+  const compMx = m2rep && m2rep.chartData && m2rep.chartData.competitorMatrix;
+  if (compMx && compMx.length) {
+    pushReportChart('M2','rpt_comp','Карта позиционирования: цена и качество','Зелёная точка — мы. Пустые зоны — свободное позиционирование.',240);
+    extraScripts += 'if(document.getElementById("rpt_comp")){var cc='+safeJson(compMx)+';'
+      +'new Chart(document.getElementById("rpt_comp"),{type:"bubble",data:{datasets:cc.map(function(d){return{label:d.name+(d.isUs?" (мы)":""),data:[{x:d.price||0,y:d.quality||0,r:d.isUs?11:7}],backgroundColor:d.isUs?"#639922DD":"#0F6E5666",borderColor:d.isUs?"#27500A":"transparent",borderWidth:d.isUs?2:0};})},options:{responsive:true,scales:{x:{title:{display:true,text:"Цена: 1 дешевле, 5 дороже"},min:0,max:6},y:{title:{display:true,text:"Качество и ценность (1-5)"},min:0,max:6}}}});}';
+  }
+
+  const m4rep = targetResults.find(r=>r.id==='M4');
+  const awLv = m4rep && m4rep.chartData && m4rep.chartData.awarenessLevels;
+  if (awLv && awLv.length) {
+    pushReportChart('M4','rpt_aware','Уровни осознанности по сегментам, %','',Math.max(180, awLv.length*40+40));
+    extraScripts += 'if(document.getElementById("rpt_aware")){var aa='+safeJson(awLv)+';'
+      +'var lv=[["Не осознаёт","unaware","#C0503A"],["Проблема","problem","#D98A2B"],["Решения","solution","#E3B23C"],["Продукты","product","#7FB04F"],["Всё знает","most","#4A7C1F"]];'
+      +'new Chart(document.getElementById("rpt_aware"),{type:"bar",data:{labels:aa.map(function(d){return d.segment||""}),datasets:lv.map(function(x){return{label:x[0],data:aa.map(function(d){return d[x[1]]||0}),backgroundColor:x[2]};})},options:{indexAxis:"y",responsive:true,scales:{x:{stacked:true},y:{stacked:true}},plugins:{legend:{position:"bottom",labels:{boxWidth:12,font:{size:10}}}}}});}';
+  }
+
+  const m7rep = targetResults.find(r=>r.id==='M7');
+  const semCl = m7rep && m7rep.chartData && m7rep.chartData.semanticClusters;
+  if (semCl && semCl.length) {
+    pushReportChart('M7','rpt_sem','Семантические кластеры по объёму','',220);
+    extraScripts += 'if(document.getElementById("rpt_sem")){var ss='+safeJson(semCl)+';'
+      +'new Chart(document.getElementById("rpt_sem"),{type:"bar",data:{labels:ss.map(function(c){return c.cluster}),datasets:[{data:ss.map(function(c){return c.volume||0}),backgroundColor:"#72243E"}]},options:{responsive:true,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true}}}});}';
+  }
+
+  if (extraScripts) {
+    chartScripts += '<script>window.addEventListener("load",function(){try{'+extraScripts+'}catch(e){console.warn("Report chart error",e);}});<'+'/script>';
+  }
+
   // Cover page
   const companyMetrics = hasCompany ? '<div style="background:#E8F4FD;border-radius:10px;padding:16px;margin:16px 0"><p style="font-size:11px;font-weight:700;color:#185FA5;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:12px">Данные компании</p><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px">'
     +(brief.currentRevenue?'<div style="background:#fff;border-radius:8px;padding:12px;border:1px solid #C5E0F7"><div style="font-size:10px;color:#185FA5;margin-bottom:3px;font-weight:500">Текущая выручка</div><div style="font-size:20px;font-weight:700;color:#0C447C">'+esc(brief.currentRevenue)+'</div></div>':'')
@@ -1717,7 +1768,7 @@ function generateHTMLReport(brief, results, lang, priceLayers, selectedLayers, s
     const col = moduleColors[r.id]||'#639922';
     const bg = moduleBgs[r.id]||'#EAF3DE';
     const dark = moduleDarks[r.id]||'#27500A';
-    const charts = r.id==='M1' ? chartDivs : '';
+    const charts = r.id==='M1' ? chartDivs : (moduleChartDivs[r.id]||'');
     const dlBtn = '<button onclick="(function(){var h=document.documentElement.outerHTML;var b=new Blob([h],{type:\'text/html\'});var a=document.createElement(\'a\');a.href=URL.createObjectURL(b);a.download=\''+esc(brief.name||'report')+'_'+r.id+'.html\';a.click();})()" style="padding:5px 12px;background:'+col+';color:#fff;border:none;border-radius:6px;font-size:11px;cursor:pointer;font-family:inherit">↓ '+r.id+'</button>';
     return '<div style="background:#fff;border-radius:14px;padding:1.75rem;margin-bottom:1.25rem;border:1px solid #e5e5e5">'
       +'<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:1.25rem;padding-bottom:10px;border-bottom:2px solid '+col+'">'
