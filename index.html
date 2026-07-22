@@ -1712,8 +1712,10 @@ function generateHTMLReport(brief, results, lang, priceLayers, selectedLayers, s
   // осознанность (M4), семантика (M7). Раньше отчёт рисовал только M1 (который отключён).
   const moduleChartDivs = {};
   let extraScripts = '';
-  function pushReportChart(modId, canvasId, title, subtitle, height) {
-    moduleChartDivs[modId] = (moduleChartDivs[modId]||'')
+  function pushReportChart(chartKey, canvasId, title, subtitle, height) {
+    // chartKey = resKey() формата: 'M1_2' (глобальный) или 'M2@@Ниша' (по-нишевой) —
+    // так у каждой (модуль,ниша) пары свой набор графиков, а не общий на весь отчёт.
+    moduleChartDivs[chartKey] = (moduleChartDivs[chartKey]||'')
       + '<div style="background:#f8f8f8;border-radius:10px;padding:14px;border:1px solid #eee;margin:8px 0 16px">'
       + '<p style="font-size:11px;font-weight:600;color:#666;margin-bottom:'+(subtitle?'4':'8')+'px;text-transform:uppercase;letter-spacing:0.04em">'+esc(title)+'</p>'
       + (subtitle?'<p style="font-size:11px;color:#888;margin-bottom:8px">'+esc(subtitle)+'</p>':'')
@@ -1731,30 +1733,42 @@ function generateHTMLReport(brief, results, lang, priceLayers, selectedLayers, s
       +'new Chart(document.getElementById("rpt_niches"),{type:"bar",data:{labels:nn.map(function(n){return n.name}),datasets:[{data:nn.map(function(n){return n.score||0}),backgroundColor:nn.map(function(n){return coln(n.verdict)})}]},options:{indexAxis:"y",responsive:true,plugins:{legend:{display:false}},scales:{x:{beginAtZero:true}}}});}';
   }
 
-  const m2rep = targetResults.find(r=>r.id==='M2');
-  const compMx = m2rep && m2rep.chartData && m2rep.chartData.competitorMatrix;
-  if (compMx && compMx.length) {
-    pushReportChart('M2','rpt_comp','Карта позиционирования: цена и качество','Зелёная точка — мы. Пустые зоны — свободное позиционирование.',240);
-    extraScripts += 'if(document.getElementById("rpt_comp")){var cc='+safeJson(compMx)+';'
-      +'new Chart(document.getElementById("rpt_comp"),{type:"bubble",data:{datasets:cc.map(function(d){return{label:d.name+(d.isUs?" (мы)":""),data:[{x:d.price||0,y:d.quality||0,r:d.isUs?11:7}],backgroundColor:d.isUs?"#639922DD":"#0F6E5666",borderColor:d.isUs?"#27500A":"transparent",borderWidth:d.isUs?2:0};})},options:{responsive:true,scales:{x:{title:{display:true,text:"Цена: 1 дешевле, 5 дороже"},min:0,max:6},y:{title:{display:true,text:"Качество и ценность (1-5)"},min:0,max:6}}}});}';
-  }
+  // M2/M4/M7 графики — ОДИН НАБОР НА НИШУ, не один на весь отчёт (при нескольких нишах
+  // .find() брал только первую попавшуюся; секции модулей в отчёте уже идут по одной
+  // на (модуль,ниша) — графики должны совпадать с этим 1:1). Ключ — resKey(rep), тот же,
+  // что используют секции ('M2' для глобального, 'M2@@Ниша' для по-нишевого); canvas id
+  // разбавлен индексом — id должен быть уникален во всём документе, а имя ниши как id
+  // небезопасно (кириллица/пробелы).
+  targetResults.filter(r=>r.id==='M2').forEach((rep, i) => {
+    const compMx = rep.chartData && rep.chartData.competitorMatrix;
+    if (!compMx || !compMx.length) return;
+    const canvasId = 'rpt_comp_'+i;
+    const subtitle = (rep.niche ? 'Ниша: '+rep.niche+' · ' : '') + 'Зелёная точка — мы. Пустые зоны — свободное позиционирование.';
+    pushReportChart(resKey(rep), canvasId, 'Карта позиционирования: цена и качество', subtitle, 240);
+    extraScripts += 'if(document.getElementById("'+canvasId+'")){var cc='+safeJson(compMx)+';'
+      +'new Chart(document.getElementById("'+canvasId+'"),{type:"bubble",data:{datasets:cc.map(function(d){return{label:d.name+(d.isUs?" (мы)":""),data:[{x:d.price||0,y:d.quality||0,r:d.isUs?11:7}],backgroundColor:d.isUs?"#639922DD":"#0F6E5666",borderColor:d.isUs?"#27500A":"transparent",borderWidth:d.isUs?2:0};})},options:{responsive:true,scales:{x:{title:{display:true,text:"Цена: 1 дешевле, 5 дороже"},min:0,max:6},y:{title:{display:true,text:"Качество и ценность (1-5)"},min:0,max:6}}}});}';
+  });
 
-  const m4rep = targetResults.find(r=>r.id==='M4');
-  const awLv = m4rep && m4rep.chartData && m4rep.chartData.awarenessLevels;
-  if (awLv && awLv.length) {
-    pushReportChart('M4','rpt_aware','Уровни осознанности по сегментам, %','',Math.max(180, awLv.length*40+40));
-    extraScripts += 'if(document.getElementById("rpt_aware")){var aa='+safeJson(awLv)+';'
+  targetResults.filter(r=>r.id==='M4').forEach((rep, i) => {
+    const awLv = rep.chartData && rep.chartData.awarenessLevels;
+    if (!awLv || !awLv.length) return;
+    const canvasId = 'rpt_aware_'+i;
+    const subtitle = rep.niche ? 'Ниша: '+rep.niche : '';
+    pushReportChart(resKey(rep), canvasId, 'Уровни осознанности по сегментам, %', subtitle, Math.max(180, awLv.length*40+40));
+    extraScripts += 'if(document.getElementById("'+canvasId+'")){var aa='+safeJson(awLv)+';'
       +'var lv=[["Не осознаёт","unaware","#C0503A"],["Проблема","problem","#D98A2B"],["Решения","solution","#E3B23C"],["Продукты","product","#7FB04F"],["Всё знает","most","#4A7C1F"]];'
-      +'new Chart(document.getElementById("rpt_aware"),{type:"bar",data:{labels:aa.map(function(d){return d.segment||""}),datasets:lv.map(function(x){return{label:x[0],data:aa.map(function(d){return d[x[1]]||0}),backgroundColor:x[2]};})},options:{indexAxis:"y",responsive:true,scales:{x:{stacked:true},y:{stacked:true}},plugins:{legend:{position:"bottom",labels:{boxWidth:12,font:{size:10}}}}}});}';
-  }
+      +'new Chart(document.getElementById("'+canvasId+'"),{type:"bar",data:{labels:aa.map(function(d){return d.segment||""}),datasets:lv.map(function(x){return{label:x[0],data:aa.map(function(d){return d[x[1]]||0}),backgroundColor:x[2]};})},options:{indexAxis:"y",responsive:true,scales:{x:{stacked:true},y:{stacked:true}},plugins:{legend:{position:"bottom",labels:{boxWidth:12,font:{size:10}}}}}});}';
+  });
 
-  const m7rep = targetResults.find(r=>r.id==='M7');
-  const semCl = m7rep && m7rep.chartData && m7rep.chartData.semanticClusters;
-  if (semCl && semCl.length) {
-    pushReportChart('M7','rpt_sem','Семантические кластеры по объёму','',220);
-    extraScripts += 'if(document.getElementById("rpt_sem")){var ss='+safeJson(semCl)+';'
-      +'new Chart(document.getElementById("rpt_sem"),{type:"bar",data:{labels:ss.map(function(c){return c.cluster}),datasets:[{data:ss.map(function(c){return c.volume||0}),backgroundColor:"#72243E"}]},options:{responsive:true,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true}}}});}';
-  }
+  targetResults.filter(r=>r.id==='M7').forEach((rep, i) => {
+    const semCl = rep.chartData && rep.chartData.semanticClusters;
+    if (!semCl || !semCl.length) return;
+    const canvasId = 'rpt_sem_'+i;
+    const subtitle = rep.niche ? 'Ниша: '+rep.niche : '';
+    pushReportChart(resKey(rep), canvasId, 'Семантические кластеры по объёму', subtitle, 220);
+    extraScripts += 'if(document.getElementById("'+canvasId+'")){var ss='+safeJson(semCl)+';'
+      +'new Chart(document.getElementById("'+canvasId+'"),{type:"bar",data:{labels:ss.map(function(c){return c.cluster}),datasets:[{data:ss.map(function(c){return c.volume||0}),backgroundColor:"#72243E"}]},options:{responsive:true,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true}}}});}';
+  });
 
   if (extraScripts) {
     chartScripts += '<script>window.addEventListener("load",function(){try{'+extraScripts+'}catch(e){console.warn("Report chart error",e);}});<'+'/script>';
@@ -1825,7 +1839,7 @@ function generateHTMLReport(brief, results, lang, priceLayers, selectedLayers, s
     const col = moduleColors[r.id]||'#639922';
     const bg = moduleBgs[r.id]||'#EAF3DE';
     const dark = moduleDarks[r.id]||'#27500A';
-    const charts = r.id==='M1' ? chartDivs : (moduleChartDivs[r.id]||'');
+    const charts = r.id==='M1' ? chartDivs : (moduleChartDivs[resKey(r)]||'');
     const dlBtn = '<button onclick="(function(){var h=document.documentElement.outerHTML;var b=new Blob([h],{type:\'text/html\'});var a=document.createElement(\'a\');a.href=URL.createObjectURL(b);a.download=\''+esc(brief.name||'report')+'_'+r.id+(r.niche?'_'+r.niche:'')+'.html\';a.click();})()" style="padding:5px 12px;background:'+col+';color:#fff;border:none;border-radius:6px;font-size:11px;cursor:pointer;font-family:inherit">↓ '+r.id+'</button>';
     sections += '<div style="background:#fff;border-radius:14px;padding:1.75rem;margin-bottom:1.25rem;border:1px solid #e5e5e5">'
       +'<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:1.25rem;padding-bottom:10px;border-bottom:2px solid '+col+'">'
