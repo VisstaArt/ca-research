@@ -520,50 +520,75 @@ function parseMdTables(md) {
   return out;
 }
 
+// Разбирает один результат модуля в {title, generated_at, tables, markdown}.
+function buildModuleEntry(r) {
+  const m = MODULES.find(x => x.id === r.id);
+  const tables = {};
+  parseMdTables(r.content).forEach((t, idx) => {
+    let key = t.heading || ('table_' + (idx + 1));
+    if (tables[key]) key = key + ' (' + (idx + 1) + ')';   // одинаковые заголовки не затираем
+    tables[key] = t.rows;
+  });
+  return {
+    title: m ? (m.titleRu || m.title) : r.id,
+    generated_at: r.at || null,
+    tables: tables,
+    markdown: r.content || '',
+  };
+}
+const pickTable = (modulesObj, modId, needle) => {
+  const mod = modulesObj[modId];
+  if (!mod) return [];
+  const key = Object.keys(mod.tables).find(k => k.toLowerCase().includes(needle.toLowerCase()));
+  return key ? mod.tables[key] : [];
+};
+
 // Пакет для внешнего агента. Данные — на ЯЗЫКЕ ИССЛЕДОВАНИЯ, без перевода:
 // подлинные формулировки аудитории теряются при переводе туда-обратно (ПОЖЕЛАНИЯ п.4).
+// schema_version 2: по-нишевые модули (M2–M7) вложены под своей нишей в research_by_niche.
+// БЫЛО (v1): modules[r.id] = {...} — один и тот же id ('M2','M3'...) у каждой выбранной
+// ниши, объект-словарь держит только ПОСЛЕДНЮЮ записанную нишу, остальные молча терялись
+// (обнаружено на реальном прогоне с 2 нишами: JSON содержал только одну из двух).
 function buildAgentPackage(brief, lang, results, report) {
-  const modules = {};
-  for (const r of (results || [])) {
-    const m = MODULES.find(x => x.id === r.id);
-    const tables = {};
-    parseMdTables(r.content).forEach((t, idx) => {
-      let key = t.heading || ('table_' + (idx + 1));
-      if (tables[key]) key = key + ' (' + (idx + 1) + ')';   // одинаковые заголовки не затираем
-      tables[key] = t.rows;
-    });
-    modules[r.id] = {
-      title: m ? (m.titleRu || m.title) : r.id,
-      generated_at: r.at || null,
-      tables: tables,
-      markdown: r.content || '',
+  const all = results || [];
+  const globalModules = {};       // M1_2 и другие модули без ниши — один результат на проект
+  const byNiche = {};              // niche name -> { modId -> result }
+  for (const r of all) {
+    if (isPerNiche(r.id) && r.niche) {
+      (byNiche[r.niche] || (byNiche[r.niche] = {}))[r.id] = r;
+    } else {
+      globalModules[r.id] = buildModuleEntry(r);
+    }
+  }
+  const m12 = all.find(r => r.id === 'M1_2');
+  const research_by_niche = {};
+  for (const nicheName of Object.keys(byNiche)) {
+    const modulesForNiche = {};
+    for (const r of Object.values(byNiche[nicheName])) modulesForNiche[r.id] = buildModuleEntry(r);
+    research_by_niche[nicheName] = {
+      // Быстрые ссылки на то, что контент-машина просила в фидбеке: боли, персоны,
+      // цитаты, гипотезы, кластеры — тем же составом, что в таблицах отчёта, СВОЕЙ ниши.
+      key_data: {
+        competitors: pickTable(modulesForNiche, 'M2', 'BLOCK 06'),
+        voc: pickTable(modulesForNiche, 'M3', 'BLOCK 07'),
+        personas: pickTable(modulesForNiche, 'M4', 'BLOCK 09'),
+        jtbd: pickTable(modulesForNiche, 'M4', 'BLOCK 10'),
+        hypotheses: pickTable(modulesForNiche, 'M5', 'BLOCK 16'),
+        seo_clusters: pickTable(modulesForNiche, 'M7', 'SEO-02'),
+      },
+      modules: modulesForNiche,
     };
   }
-  const m12 = (results || []).find(r => r.id === 'M1_2');
-  const pick = (modId, needle) => {
-    const mod = modules[modId];
-    if (!mod) return [];
-    const key = Object.keys(mod.tables).find(k => k.toLowerCase().includes(needle.toLowerCase()));
-    return key ? mod.tables[key] : [];
-  };
   return {
-    schema_version: 1,
+    schema_version: 2,
     generated_at: new Date().toISOString(),
     research_language: lang,
     project: brief,
-    niches: (m12 && m12.nicheData && m12.nicheData.niches) || [],
-    // Быстрые ссылки на то, что контент-машина просила в фидбеке: сегменты, боли,
-    // персоны, кластеры, гипотезы — тем же составом, что в таблицах отчёта
-    key_data: {
-      segments: pick('M1_2', 'BLOCK 04'),
-      competitors: pick('M2', 'BLOCK 06'),
-      voc: pick('M3', 'BLOCK 07'),
-      personas: pick('M4', 'BLOCK 09'),
-      jtbd: pick('M4', 'BLOCK 10'),
-      hypotheses: pick('M5', 'BLOCK 16'),
-      seo_clusters: pick('M7', 'SEO-02'),
-    },
-    modules: modules,
+    niches: (m12 && m12.nicheData && m12.nicheData.niches) || [],   // полная карта разведки (M1.2)
+    selected_niches: nichesOf(brief),                                // какие из них реально исследованы в этом прогоне
+    key_data: { segments: pickTable(globalModules, 'M1_2', 'BLOCK 04') },  // проектный уровень, не по нише
+    global_modules: globalModules,
+    research_by_niche: research_by_niche,
     executive_summary: report || '',
   };
 }
@@ -1772,15 +1797,34 @@ function generateHTMLReport(brief, results, lang, priceLayers, selectedLayers, s
       +'</div>').join('')
     +'</div>' : '';
 
-  // Module sections
-  const sections = targetResults.map(r => {
+  // Module sections. Отсортировано так же, как строит run(): глобальные сначала, затем
+  // ниша за нишей — иначе при перегенерации одной ниши (↺) её секции падают в конец списка
+  // и отчёт с несколькими нишами читается вперемешку.
+  const modOrderIdx = MODULES.map(m => m.id);
+  const orderedResults = targetResults.slice().sort((a, b) => {
+    const ga = !a.niche, gb = !b.niche;
+    if (ga !== gb) return ga ? -1 : 1;
+    if ((a.niche||'') !== (b.niche||'')) return (a.niche||'') < (b.niche||'') ? -1 : 1;
+    return modOrderIdx.indexOf(a.id) - modOrderIdx.indexOf(b.id);
+  });
+  let sections = '';
+  let lastNiche; // undefined до первого модуля — гарантированно отличается от '' и от любой ниши
+  for (const r of orderedResults) {
+    // Разделитель «Ниша: …» перед первым модулем каждой новой ниши — при 1 нише не показываем,
+    // чтобы не плодить шум в самом частом случае.
+    if (r.niche && r.niche !== lastNiche && nichesOf(brief).length > 1) {
+      sections += '<div style="margin:28px 0 10px;padding:12px 18px;background:#1a1a2e;border-radius:10px">'
+        + '<span style="font-size:10px;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:0.08em">Ниша</span> '
+        + '<span style="font-size:15px;font-weight:700;color:#fff;margin-left:8px">'+esc(r.niche)+'</span></div>';
+    }
+    lastNiche = r.niche;
     const m = MODULES.find(x=>x.id===r.id);
     const col = moduleColors[r.id]||'#639922';
     const bg = moduleBgs[r.id]||'#EAF3DE';
     const dark = moduleDarks[r.id]||'#27500A';
     const charts = r.id==='M1' ? chartDivs : (moduleChartDivs[r.id]||'');
-    const dlBtn = '<button onclick="(function(){var h=document.documentElement.outerHTML;var b=new Blob([h],{type:\'text/html\'});var a=document.createElement(\'a\');a.href=URL.createObjectURL(b);a.download=\''+esc(brief.name||'report')+'_'+r.id+'.html\';a.click();})()" style="padding:5px 12px;background:'+col+';color:#fff;border:none;border-radius:6px;font-size:11px;cursor:pointer;font-family:inherit">↓ '+r.id+'</button>';
-    return '<div style="background:#fff;border-radius:14px;padding:1.75rem;margin-bottom:1.25rem;border:1px solid #e5e5e5">'
+    const dlBtn = '<button onclick="(function(){var h=document.documentElement.outerHTML;var b=new Blob([h],{type:\'text/html\'});var a=document.createElement(\'a\');a.href=URL.createObjectURL(b);a.download=\''+esc(brief.name||'report')+'_'+r.id+(r.niche?'_'+r.niche:'')+'.html\';a.click();})()" style="padding:5px 12px;background:'+col+';color:#fff;border:none;border-radius:6px;font-size:11px;cursor:pointer;font-family:inherit">↓ '+r.id+'</button>';
+    sections += '<div style="background:#fff;border-radius:14px;padding:1.75rem;margin-bottom:1.25rem;border:1px solid #e5e5e5">'
       +'<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:1.25rem;padding-bottom:10px;border-bottom:2px solid '+col+'">'
       +'<div style="display:flex;align-items:center;gap:10px">'
       +'<span style="font-size:12px;font-weight:700;padding:4px 10px;border-radius:5px;background:'+bg+';color:'+dark+'">'+r.id+'</span>'
@@ -1788,7 +1832,7 @@ function generateHTMLReport(brief, results, lang, priceLayers, selectedLayers, s
       +dlBtn+'</div>'
       +charts
       +mdToHtml(r.content)+'</div>';
-  }).join('');
+  }
 
   const html = '<!DOCTYPE html>\n<html lang="ru">\n<head>\n<meta charset="UTF-8">\n<meta name="viewport" content="width=device-width,initial-scale=1">\n<title>CA Research — '+esc(brief.name||'Report')+(singleModId?' · '+singleModId:'')+'</title>\n'
     +'<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"><\/script>\n'
