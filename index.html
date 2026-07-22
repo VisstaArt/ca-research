@@ -352,6 +352,15 @@ const MODULES = [
   },
 ];
 
+// ── Модель «по нишам»
+// Глобальные модули — один результат на проект (M1.1 ёмкость, M1.2 карта ниш).
+// Остальные (M2–M7) — свой отдельный сфокусированный проход на КАЖДУЮ выбранную нишу.
+const GLOBAL_MODS = ['M1', 'M1_1', 'M1_2'];
+const isPerNiche = id => !GLOBAL_MODS.includes(id);
+const nichesOf = b => ((b && b.selectedNiche) || '').split(',').map(s => s.trim()).filter(Boolean);
+// Идентичность результата теперь = модуль + ниша (у глобальных ниша пустая).
+const resKey = r => r.id + (r && r.niche ? '@@' + r.niche : '');
+
 const LANGS = ['Russian','Turkish','English','Arabic','Kazakh','Ukrainian','Uzbek','German','Spanish','French'];
 
 // ── STORAGE
@@ -2172,6 +2181,7 @@ function App() {
   const [blockMsg, setBlockMsg] = React.useState(''); // «модуль не стартует без предыдущих стадий»
 
   const [curMod, setCurMod] = React.useState(null);
+  const [curNiche, setCurNiche] = React.useState('');
   const [curStep, setCurStep] = React.useState('');
   const [curStepIdx, setCurStepIdx] = React.useState(0);
   const [exp, setExp] = React.useState({});
@@ -2324,34 +2334,59 @@ function App() {
 
   // briefOverride: свежий бриф для запуска сразу после setBrief (стейт обновляется асинхронно,
   // без override модули получили бы старый бриф без выбранной ниши/слоя)
-  const run = React.useCallback(async (modsToRun, briefOverride, forceRerun) => {
+  const run = React.useCallback(async (modsToRun, briefOverride, forceRerun, rerunNiche) => {
     const B = briefOverride || brief;
     if (!B.name) return;
     const id = proj?.id || ('p' + Date.now());
     const allSelected = modsToRun || mods;
-    // forceRerun (перегенерация): выкидываем старые результаты запрошенных модулей,
-    // иначе run() видит их в proj (возможно устаревшем) и пропускает — «секунда без поиска».
-    const existing = forceRerun
-      ? (proj?.results || []).filter(r => !allSelected.includes(r.id))
-      : (proj?.results || []);
-    const doneIds = existing.map(r => r.id);
-    const toRun = MODULES.filter(m => !m.disabled && allSelected.includes(m.id) && !doneIds.includes(m.id));
-    if (!toRun.length) { setSc('work'); return; }
+    const niches = nichesOf(B);
 
-    // Зависимости стадий: модуль не стартует, если данных, на которых он строится, нет
-    // и они не запланированы в этом же прогоне. Иначе он молча выдаёт выдумку.
-    const plannedIds = toRun.map(m => m.id);
-    const ready = new Set(doneIds);
+    // Единицы работы = модуль × ниша. Глобальные модули — один раз (ниша ''),
+    // по-нишевые — по разу на каждую выбранную нишу. rerunNiche ограничивает
+    // перегенерацию одной нишей (кнопка ↺ на её модуле).
+    const expand = m => {
+      if (!isPerNiche(m.id)) return [{ mod: m, niche: '' }];
+      const list = rerunNiche ? [rerunNiche] : niches;
+      return list.map(n => ({ mod: m, niche: n }));
+    };
+    const wkey = w => w.mod.id + '@@' + w.niche;
+    const selMods = MODULES.filter(m => !m.disabled && allSelected.includes(m.id));
+
+    // forceRerun (перегенерация): выкидываем старые результаты именно запрошенных единиц,
+    // иначе run() видит их и пропускает — «секунда без поиска».
+    const wantKeys = new Set(selMods.flatMap(expand).map(wkey));
+    const existing = forceRerun
+      ? (proj?.results || []).filter(r => !wantKeys.has(r.id + '@@' + (r.niche || '')))
+      : (proj?.results || []);
+    const doneKeys = new Set(existing.map(r => r.id + '@@' + (r.niche || '')));
+
+    let work = selMods.flatMap(expand).filter(w => !doneKeys.has(wkey(w)));
+    if (!work.length) { setSc('work'); return; }
+
+    // Порядок: глобальные сначала, затем ниша за нишей (внутри — порядок модулей).
+    // Так цепочка зависимостей внутри ниши связная, и результаты сразу сгруппированы.
+    const modOrder = MODULES.map(m => m.id);
+    work.sort((a, b) => {
+      const ga = a.niche === '', gb = b.niche === '';
+      if (ga !== gb) return ga ? -1 : 1;
+      if (a.niche !== b.niche) return a.niche < b.niche ? -1 : 1;
+      return modOrder.indexOf(a.mod.id) - modOrder.indexOf(b.mod.id);
+    });
+
+    // Зависимости per (модуль, ниша): у по-нишевого модуля данные берутся из его же ниши.
+    const ready = new Set(doneKeys);
+    const plannedKeys = new Set(work.map(wkey));
     const runnable = [];
     const blockedMods = [];
-    for (const m of toRun) {
-      const missing = (m.requires || []).filter(dep => !ready.has(dep) && !plannedIds.includes(dep));
-      if (missing.length) { blockedMods.push((m.label || m.id) + ' — нужен ' + missing.join(', ')); continue; }
-      runnable.push(m);
-      ready.add(m.id);
+    for (const w of work) {
+      const missing = (w.mod.requires || []).filter(dep => {
+        const dk = dep + '@@' + (isPerNiche(dep) ? w.niche : '');
+        return !ready.has(dk) && !plannedKeys.has(dk);
+      });
+      if (missing.length) { blockedMods.push((w.mod.label || w.mod.id) + (w.niche ? ' ['+w.niche+']' : '') + ' — нужен ' + missing.join(', ')); continue; }
+      runnable.push(w);
+      ready.add(wkey(w));
     }
-    // Блокируем весь прогон, а не часть: иначе исправная часть запустится, экран
-    // переключится на рабочий, и предупреждение о пропущенном модуле останется незамеченным.
     if (blockedMods.length) {
       setBlockMsg('Прогон не начат. ' + blockedMods.join('; ') + '. Эти модули строятся на данных предыдущих стадий: отметьте недостающие модули в списке или перегенерируйте цепочку кнопкой ↺ на более раннем модуле.');
       return;
@@ -2361,45 +2396,52 @@ function App() {
     const p = { id, createdAt: proj?.createdAt||new Date().toISOString(), updatedAt: new Date().toISOString(), brief: B, lang, mods:allSelected, results:existing, report:proj?.report||'', priceLayers, selectedLayers };
     setProj(p); setRep(p.report); sv(p); setSc('work');
 
-    const sys = buildSystem(B, lang);
     const col = [...existing];
 
-    for (const mod of runnable) {
-      setCurMod(mod.id); setCurStep(mod.steps[0]); setCurStepIdx(0);
+    for (const w of runnable) {
+      const mod = w.mod, wn = w.niche;
+      // Бриф, сфокусированный на одной нише: фильтр ниш и запросы поиска сужаются до неё.
+      const Bn = wn ? { ...B, selectedNiche: wn } : B;
+      const sys = buildSystem(Bn, lang);
+      setCurMod(mod.id); setCurNiche(wn); setCurStep(mod.steps[0]); setCurStepIdx(0);
       let stepI = 0;
       const stepTimer = setInterval(() => {
         stepI = Math.min(stepI+1, mod.steps.length-1);
         setCurStep(mod.steps[stepI]); setCurStepIdx(stepI);
       }, Math.floor((mod.estimatedMin*60*1000)/mod.steps.length));
 
+      // Контекст берём из результатов ТОЙ ЖЕ ниши (для по-нишевых зависимостей).
+      const findDep = depId => col.find(r => r.id === depId && (isPerNiche(depId) ? (r.niche||'') === wn : true));
+
       let full = '';
       try {
-        const prevContent = col.length ? col[col.length-1].content : '';
+        const sameNiche = col.filter(r => (r.niche||'') === wn);
+        const prevContent = sameNiche.length ? sameNiche[sameNiche.length-1].content : '';
         let userPrompt;
         if (mod.id === 'M1_2') {
           // Разведка ниш: сначала собираем реальные выдержки из веб-поиска
-          const evidence = await gatherNicheEvidence(B, lang);
-          userPrompt = buildM12Prompt(B, lang, prevContent ? prevContent.slice(0, 2000) : '', evidence);
+          const evidence = await gatherNicheEvidence(Bn, lang);
+          userPrompt = buildM12Prompt(Bn, lang, prevContent ? prevContent.slice(0, 2000) : '', evidence);
         } else if (mod.id === 'M2') {
           // Конкуренты: реальное досье вместо памяти модели
-          const evidence = await gatherCompetitorEvidence(B);
-          userPrompt = buildM2Prompt(B, lang, prevContent || '', evidence);
+          const evidence = await gatherCompetitorEvidence(Bn);
+          userPrompt = buildM2Prompt(Bn, lang, prevContent || '', evidence);
         } else if (mod.id === 'M3') {
           // VoC: живые цитаты только из реального поиска.
-          // Конкурентов берём из уже готового M2 — по ним ищем жалобы (боль + язык + фичи).
-          const comps = competitorsFromM2(col.find(r => r.id === 'M2'), B);
-          const evidence = await gatherVoCEvidence(B, comps);
-          userPrompt = buildM3Prompt(B, lang, prevContent || '', evidence, comps);
+          // Конкурентов берём из уже готового M2 ТОЙ ЖЕ ниши — по ним ищем жалобы.
+          const comps = competitorsFromM2(findDep('M2'), Bn);
+          const evidence = await gatherVoCEvidence(Bn, comps);
+          userPrompt = buildM3Prompt(Bn, lang, prevContent || '', evidence, comps);
         } else if (mod.id === 'M7') {
           // SEO: реальная выдача по целевым запросам вместо частотностей «из памяти»
-          const evidence = await gatherSeoEvidence(B);
-          userPrompt = buildM7Prompt(B, lang, prevContent || '', evidence);
+          const evidence = await gatherSeoEvidence(Bn);
+          userPrompt = buildM7Prompt(Bn, lang, prevContent || '', evidence);
         } else {
-          // Контекст берём от стадии, на которой модуль СТРОИТСЯ (requires), а не «последней по списку»,
+          // Контекст берём от стадии, на которой модуль СТРОИТСЯ (requires), в рамках своей ниши,
           // и целиком: без полного M3 модуль M4 не видит цитат VoC и вынужден их выдумывать.
           const depId = (mod.requires || [])[0];
-          const depRes = depId ? col.find(r => r.id === depId) : null;
-          userPrompt = getModulePrompt(mod.id, B, lang, depRes ? depRes.content : prevContent);
+          const depRes = depId ? findDep(depId) : null;
+          userPrompt = getModulePrompt(mod.id, Bn, lang, depRes ? depRes.content : prevContent);
         }
         // M1.2 (разведка ниш) — низкая температура: нужна полнота и повторяемость,
         // а не разные ниши каждый прогон. Остальные модули — дефолт модели.
@@ -2412,18 +2454,18 @@ function App() {
       const chartData = extractChartData(full);
       const nicheData = mod.id === 'M1_2' ? extractNicheData(full) : null;
       const cleanedContent = cleanContent(full);
-      const result = { id:mod.id, content:cleanedContent, chartData, ...(nicheData?{nicheData}:{}), ...(usage?{usage}:{}), at:new Date().toISOString() };
+      const result = { id:mod.id, niche:wn, content:cleanedContent, chartData, ...(nicheData?{nicheData}:{}), ...(usage?{usage}:{}), at:new Date().toISOString() };
       col.push(result);
       const upd = { ...p, results:col, updatedAt:new Date().toISOString() };
       setProj(upd); sv(upd);
-      setExp(ex => ({...ex, [mod.id]:false}));
+      setExp(ex => ({...ex, [resKey(result)]:false}));
 
-      // After M1.2 — стоп: человек выбирает нишу
-      if (mod.id === 'M1_2') {
-        setCurMod(null); setCurStep(''); setCurStepIdx(0);
-        const niches = (nicheData && Array.isArray(nicheData.niches) ? nicheData.niches : []).slice().sort((a,b)=>(b.score||0)-(a.score||0));
-        setNicheOpts(niches);
-        const rec = niches.findIndex(x => x.recommended);
+      // After M1.2 — стоп: человек выбирает нишу (только при первичной разведке, не при перегенерации ниши)
+      if (mod.id === 'M1_2' && !rerunNiche) {
+        setCurMod(null); setCurNiche(''); setCurStep(''); setCurStepIdx(0);
+        const nn = (nicheData && Array.isArray(nicheData.niches) ? nicheData.niches : []).slice().sort((a,b)=>(b.score||0)-(a.score||0));
+        setNicheOpts(nn);
+        const rec = nn.findIndex(x => x.recommended);
         setSelNiches(rec >= 0 ? [rec] : []);
         setShowNiches(true);
         return; // ждём выбора ниш(и)
@@ -2431,13 +2473,13 @@ function App() {
 
       // After M1 — show price layer selection
       if (mod.id === 'M1') {
-        setCurMod(null); setCurStep(''); setCurStepIdx(0);
+        setCurMod(null); setCurNiche(''); setCurStep(''); setCurStepIdx(0);
         setShowLayers(true);
         await generatePriceLayers(cleanedContent);
         return; // stop — wait for user layer selection
       }
     }
-    setCurMod(null); setCurStep(''); setCurStepIdx(0);
+    setCurMod(null); setCurNiche(''); setCurStep(''); setCurStepIdx(0);
   }, [brief, lang, mods, proj, sv, priceLayers, selectedLayers, generatePriceLayers]);
 
   const continueAfterLayers = React.useCallback(() => {
@@ -2458,10 +2500,22 @@ function App() {
     setShowNiches(false);
     const newBrief = {...brief, selectedNiche: names.join(', ')};
     setBrief(newBrief);
-    const doneIds = (proj?.results||[]).map(r=>r.id);
-    const remaining = mods.filter(id => !doneIds.includes(id));
-    if (remaining.length > 0) run(remaining, newBrief);
-  }, [nicheOpts, selNiches, brief, proj, mods, run]);
+    // Прогоняем все выбранные модули: run() сам пропустит уже готовые пары (модуль, ниша)
+    // и досчитает только недостающие — так «добавить нишу позже» не пересчитывает старое.
+    run(mods, newBrief);
+  }, [nicheOpts, selNiches, brief, mods, run]);
+
+  // Повторно открыть выбор ниш (кнопка «Добавить ниши»): восстанавливаем список ниш
+  // из результата M1.2 и отмечаем уже исследованные.
+  const openNichePicker = React.useCallback(() => {
+    const m12 = (proj?.results||[]).find(r=>r.id==='M1_2');
+    const nn = (m12 && m12.nicheData && Array.isArray(m12.nicheData.niches) ? m12.nicheData.niches : []).slice().sort((a,b)=>(b.score||0)-(a.score||0));
+    if (!nn.length) return;
+    setNicheOpts(nn);
+    const cur = nichesOf(brief);
+    setSelNiches(nn.map((n,i)=> cur.includes(n.name) ? i : -1).filter(i=>i>=0));
+    setShowNiches(true);
+  }, [proj, brief]);
 
   const genRep = React.useCallback(async () => {
     if (!proj?.results?.length) return;
@@ -2727,10 +2781,27 @@ function App() {
 
   // ── WORK
   const allMods = MODULES.filter(m => mods.includes(m.id));
-  const doneIds = (proj?.results||[]).map(r=>r.id);
-  const pending = allMods.filter(m => !doneIds.includes(m.id) && m.id !== curMod);
+  const workNiches = nichesOf(brief);
+  // Модуль «полностью готов»: глобальный — если есть его результат; по-нишевой — если сделан у ВСЕХ выбранных ниш.
+  const modDone = id => {
+    const rs = (proj?.results||[]);
+    if (isPerNiche(id)) return workNiches.length>0 && workNiches.every(n => rs.some(r=>r.id===id && (r.niche||'')===n));
+    return rs.some(r=>r.id===id);
+  };
+  const doneCount = allMods.filter(m => modDone(m.id)).length;
+  const pending = allMods.filter(m => !modDone(m.id) && m.id !== curMod);
   const isRun = !!curMod;
   const curModData = MODULES.find(m=>m.id===curMod);
+  // Порядок вывода: глобальные модули сверху, затем ниша за нишей (внутри — по порядку модулей).
+  const orderedResults = [...(proj?.results||[])].sort((a,b)=>{
+    const ga=!(a.niche), gb=!(b.niche);
+    if (ga!==gb) return ga?-1:1;
+    if ((a.niche||'')!==(b.niche||'')) {
+      const ia=workNiches.indexOf(a.niche||''), ib=workNiches.indexOf(b.niche||'');
+      return (ia<0?99:ia)-(ib<0?99:ib);
+    }
+    return MODULES.findIndex(x=>x.id===a.id)-MODULES.findIndex(x=>x.id===b.id);
+  });
 
   return (
     <div>
@@ -2753,9 +2824,15 @@ function App() {
               ▶ Run: {pending.map(m=>m.id).join(', ')} ↗
             </button>
           )}
-          {!isRun && pending.length === 0 && doneIds.length > 0 && (
+          {!isRun && pending.length === 0 && doneCount > 0 && (
             <button className="btn-primary" onClick={()=>setSc('form')} style={{background:'#378ADD',borderColor:'#378ADD'}}>
               + Add modules ↗
+            </button>
+          )}
+          {!isRun && modDone('M1_2') && (
+            <button onClick={openNichePicker} style={{fontSize:12,padding:'7px 12px',color:'#2E4F0C',borderColor:'#A8CE6E',background:'#EFF6E4',fontWeight:500}}
+              title="Добавить ещё ниши к исследованию — прогонятся только новые, готовые не тронутся">
+              ＋ Добавить ниши
             </button>
           )}
           <button onClick={()=>setSc('form')} style={{fontSize:12,padding:'7px 12px',color:'#666',borderColor:'#ddd'}}>
@@ -2767,12 +2844,12 @@ function App() {
       <div style={{marginBottom:'1.25rem'}}>
         <div style={{display:'flex',gap:3,marginBottom:5}}>
           {allMods.map(m => {
-            const d=doneIds.includes(m.id), a=curMod===m.id;
+            const d=modDone(m.id), a=curMod===m.id;
             return <div key={m.id} title={m.title} style={{flex:1,height:4,borderRadius:2,background:d?m.color:a?m.color+'99':'#e0e0e0'}}/>;
           })}
         </div>
         <p style={{fontSize:11,color:'#888'}}>
-          {isRun ? (doneIds.length+1)+'/'+allMods.length+' — '+(curModData ? curModData.title : '') : doneIds.length+'/'+allMods.length+' modules done'+(pending.length?' · '+pending.length+' '+t.pending:'')}
+          {isRun ? (curModData ? curModData.title : '')+(curNiche?' · ниша: '+curNiche:'') : doneCount+'/'+allMods.length+' modules done'+(pending.length?' · '+pending.length+' '+t.pending:'')+(workNiches.length?' · '+workNiches.length+' ниш(и)':'')}
         </p>
       </div>
 
@@ -2780,7 +2857,7 @@ function App() {
         <div className="status-bar">
           <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',gap:16}}>
             <div style={{flex:1}}>
-              <p style={{fontSize:12,color:'#aaa',marginBottom:4}}>{curModData.id} · {curModData.title}</p>
+              <p style={{fontSize:12,color:'#aaa',marginBottom:4}}>{curModData.id} · {curModData.title}{curNiche?' · ниша: '+curNiche:''}</p>
               <p style={{fontSize:14,fontWeight:500,marginBottom:10}}>{curStep}</p>
               <div style={{display:'flex',gap:4}}>
                 {curModData.steps.map((_,i)=>(
@@ -2794,14 +2871,21 @@ function App() {
         </div>
       )}
 
-      {(proj?.results||[]).map(r => {
+      {orderedResults.map((r,i,arr) => {
         const m = MODULES.find(x=>x.id===r.id); if (!m) return null;
-        const open = exp[r.id];
+        const open = exp[resKey(r)];
+        const showNicheHeader = r.niche && (i===0 || (arr[i-1].niche||'') !== r.niche);
         return (
-          <React.Fragment key={r.id}>
+          <React.Fragment key={resKey(r)}>
+            {showNicheHeader && (
+              <div style={{display:'flex',alignItems:'center',gap:8,margin:'18px 0 8px'}}>
+                <span style={{fontSize:11,fontWeight:700,color:'#2E4F0C',textTransform:'uppercase',letterSpacing:'0.05em',background:'#EFF6E4',border:'1px solid #A8CE6E',borderRadius:6,padding:'3px 10px'}}>Ниша: {r.niche}</span>
+                <div style={{flex:1,height:1,background:'#e5e5e5'}}/>
+              </div>
+            )}
             <div style={{marginBottom:8,border:'1px solid '+m.border,borderRadius:12,overflow:'hidden'}}>
               <div style={{display:'flex',alignItems:'center',background:m.bg}}>
-                <div onClick={()=>setExp(e=>({...e,[r.id]:!e[r.id]}))} style={{display:'flex',alignItems:'center',gap:9,padding:'11px 14px',cursor:'pointer',flex:1}}>
+                <div onClick={()=>setExp(e=>({...e,[resKey(r)]:!e[resKey(r)]}))} style={{display:'flex',alignItems:'center',gap:9,padding:'11px 14px',cursor:'pointer',flex:1}}>
                   <span className="tag" style={{background:m.color,color:'#fff',borderColor:m.color}}>{m.id}</span>
                   <span style={{flex:1,fontSize:13,fontWeight:500,color:m.dark}}>{m.title}</span>
                   {r.usage && <span style={{fontSize:10,color:'#aaa',marginRight:8}} title={'запрос '+r.usage.prompt.toLocaleString('ru-RU')+' + ответ '+r.usage.completion.toLocaleString('ru-RU')+' токенов'}>≈{(r.usage.total/1000).toFixed(1)}k т.</span>}
@@ -2817,9 +2901,11 @@ function App() {
                         const order = MODULES.filter(x=>!x.disabled).map(x=>x.id);
                         const idx = order.indexOf(r.id);
                         const chain = idx>=0 ? order.slice(idx) : [r.id];
-                        const upd={...proj,results:(proj.results||[]).filter(x=>!chain.includes(x.id)),updatedAt:new Date().toISOString()};
+                        const rn = r.niche||'';
+                        // чистим цепочку только для ЭТОЙ ниши (у по-нишевых), глобальные — как есть
+                        const upd={...proj,results:(proj.results||[]).filter(x=> !(chain.includes(x.id) && (isPerNiche(x.id) ? (x.niche||'')===rn : true))),updatedAt:new Date().toISOString()};
                         setProj(upd);sv(upd);
-                        run(chain, undefined, true);
+                        run(chain, undefined, true, rn||undefined);
                       }}
                       style={{padding:'3px 8px',fontSize:10,color:m.dark,borderColor:m.border,background:'rgba(255,255,255,0.7)'}}
                       title="Перегенерировать: новый поиск для этого модуля и зависимых ниже">
