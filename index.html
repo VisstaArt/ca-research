@@ -516,7 +516,6 @@ function buildAgentPackage(brief, lang, results, report) {
       generated_at: r.at || null,
       tables: tables,
       markdown: r.content || '',
-      ...(r.lint && r.lint.length ? { lint_warnings: r.lint } : {}),
     };
   }
   const m12 = (results || []).find(r => r.id === 'M1_2');
@@ -548,28 +547,6 @@ function buildAgentPackage(brief, lang, results, report) {
   };
 }
 
-// Линтер иноязычных вставок: ищет забытый английский внутри русского текста.
-// Ловим СТРОЧНЫЕ латинские слова — бренды (OptinMonster, Jivo) и аббревиатуры (TAM, CJM)
-// пишутся с заглавной и латиницей законно, а вот «vendor lock-in», «time-to-value»,
-// «try free for days» выглядят именно так: строчная латиница посреди кириллицы.
-const LINT_ALLOW = new Set(['seo','utm','api','url','csv','pdf','json','html','http','https','www','vs','ru','com','io','ai','ml','ux','ui','popup','pop-up','online','offline']);
-function findForeignInserts(text) {
-  if (!text) return [];
-  // Убираем ссылки и домены — там латиница законна. Регулярки намеренно простые:
-  // без символов кавычек-скобок внутри, чтобы не ломать проверку баланса по файлу.
-  const cleaned = String(text)
-    .replace(/https?:\/\/\S+/g, ' ')
-    .replace(/[a-z0-9.-]+\.(?:ru|com|io|net|org|digital|online|family|ai)\b/gi, ' ');
-  const hits = [];
-  const re = /\b[a-z][a-z-]{2,}\b/g;
-  let m;
-  while ((m = re.exec(cleaned)) !== null) {
-    if (LINT_ALLOW.has(m[0])) continue;
-    hits.push(m[0]);
-  }
-  const seen = new Set();
-  return hits.filter(w => !seen.has(w) && seen.add(w));
-}
 
 // Конкуренты, которых НАШЁЛ M2 → идут в поиск VoC для M3.
 // Жалобы на конкурентов — самый плотный источник боли, языка и подсказок по фичам,
@@ -2294,10 +2271,7 @@ function App() {
       const chartData = extractChartData(full);
       const nicheData = mod.id === 'M1_2' ? extractNicheData(full) : null;
       const cleanedContent = cleanContent(full);
-      // Порог 4: одно-два слова вроде «pop-up» — норма, а вот россыпь строчной латиницы
-      // означает, что модуль недоперевёл куски и это надо показать человеку
-      const lint = findForeignInserts(cleanedContent);
-      const result = { id:mod.id, content:cleanedContent, chartData, ...(nicheData?{nicheData}:{}), ...(lint.length>=4?{lint}:{}), at:new Date().toISOString() };
+      const result = { id:mod.id, content:cleanedContent, chartData, ...(nicheData?{nicheData}:{}), at:new Date().toISOString() };
       col.push(result);
       const upd = { ...p, results:col, updatedAt:new Date().toISOString() };
       setProj(upd); sv(upd);
@@ -2717,11 +2691,6 @@ function App() {
                   </div>
                 )}
               </div>
-              {r.lint && r.lint.length > 0 && (
-                <div style={{padding:'7px 14px',background:'#FFF8E1',borderTop:'1px solid '+m.border,fontSize:11,color:'#7a5c00',lineHeight:1.5}}>
-                  ⚠ Похоже на непереведённые вставки ({r.lint.length}): {r.lint.slice(0,10).join(', ')}{r.lint.length>10?'…':''} — проверьте текст и при необходимости перегенерируйте модуль кнопкой ↺
-                </div>
-              )}
               {open && (
                 <div style={{padding:'14px 16px',background:'#fff',borderTop:'1px solid '+m.border}}>
                   <ModuleCharts moduleId={r.id} chartData={r.chartData}/>
