@@ -1687,7 +1687,8 @@ function generateHTMLReport(brief, results, lang, priceLayers, selectedLayers, s
   const m12rep = targetResults.find(r=>r.id==='M1_2');
   const niches12 = m12rep && m12rep.nicheData && Array.isArray(m12rep.nicheData.niches) ? m12rep.nicheData.niches : null;
   if (niches12 && niches12.length) {
-    pushReportChart('M1_2','rpt_niches','Ниши по эффективности (баллу)','Зелёные — Go, оранжевые — Maybe, красные — No-Go', Math.max(180, niches12.length*24));
+    pushReportChart('M1_2','rpt_niches','Полная карта ниш по эффективности (баллу)','Зелёные — Go, оранжевые — Maybe, красные — No-Go', Math.max(180, niches12.length*24));
+    if (brief.selectedNiche) moduleChartDivs['M1_2'] += '<div style="background:#EFF6E4;border:1px solid #cfe3b4;border-radius:8px;padding:10px 14px;margin:-8px 0 16px"><span style="font-size:11px;font-weight:700;color:#27500A;text-transform:uppercase;letter-spacing:0.04em">Для исследования выбраны:</span> <span style="font-size:13px;font-weight:600;color:#111">'+esc(brief.selectedNiche)+'</span></div>';
     extraScripts += 'if(document.getElementById("rpt_niches")){var nn='+safeJson(niches12)+'.slice().sort(function(a,b){return (b.score||0)-(a.score||0)});'
       +'var coln=function(v){return v==="Go"?"#4A7C1F":v==="Maybe"?"#D98A2B":"#C0503A";};'
       +'new Chart(document.getElementById("rpt_niches"),{type:"bar",data:{labels:nn.map(function(n){return n.name}),datasets:[{data:nn.map(function(n){return n.score||0}),backgroundColor:nn.map(function(n){return coln(n.verdict)})}]},options:{indexAxis:"y",responsive:true,plugins:{legend:{display:false}},scales:{x:{beginAtZero:true}}}});}';
