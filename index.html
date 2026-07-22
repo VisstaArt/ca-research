@@ -386,11 +386,11 @@ async function pingProxy(key) {
 // usage последнего вызова OpenAI — боковой канал, чтобы не менять сигнатуру callGPT
 // (её зовут в 5 местах). Цикл прогона читает это сразу после вызова.
 let lastGptUsage = null;
-async function callGPT(system, user, temperature) {
+async function callGPT(system, user, temperature, maxTokens) {
   lastGptUsage = null;
   const res = await fetch('/api/proxy', {
     method: 'POST', headers: {'Content-Type':'application/json','X-App-Key':getAppKey()},
-    body: JSON.stringify({model:MODEL, max_tokens:8000, stream:false,
+    body: JSON.stringify({model:MODEL, max_tokens: maxTokens || 8000, stream:false,
       ...(temperature != null ? { temperature } : {}),
       messages:[{role:'system',content:system},{role:'user',content:user}]}),
   });
@@ -788,7 +788,7 @@ If the brief has no qualification criteria — state «квалификация:
 
 Fill the following research blocks for module M1.2 «Niche Scouting». ALL output in ${lang} (table headers, labels, conclusions — everything; technical abbreviations like JTBD, CAC, AOV, Confidence stay as is).
 
-PURPOSE: this is a SCOUTING pass — short tables, just enough to CHOOSE one niche. Deep research happens later, only for the chosen niche. Keep it compact.
+PURPOSE: this is a SCOUTING pass — a MARKET MAP to choose a niche from, not a deep-dive on one niche (deep research happens later, only for the chosen niche). "Scouting" means each row is short and factual (a professional market-research map, not an essay) — it does NOT mean fewer rows. Row COUNT must stay wide (see the niche-count rule below in BLOCK 04_2); only row LENGTH is compact.
 
 BLOCK 04_0 — Источники разведки (ОБЯЗАТЕЛЬНЫЙ, идёт ПЕРВЫМ)
 Table: [n] | Источник (площадка) | URL | Дата | Что из него взяли
@@ -828,7 +828,9 @@ At the very END output niche data as JSON between exactly these tags (numbers, n
 <<<NICHE_DATA_END>>>
 The niches array must contain EVERY niche from BLOCK 04_2 (all verticals, Go/Maybe/No-Go), sorted by "score" DESCENDING (max effectiveness first). Exactly ONE niche must have "recommended":true.
 CRITICAL VALIDATION of niches[]:
-- Include ALL viable niches you found — one entry per distinct customer vertical. Aim for BREADTH like a professional market-research firm maps every possible application: typically 12–30 verticals if the market supports it, not a short list. NO upper cap. Do NOT collapse concrete industries into broad buckets: «стоматологии», «косметология/бьюти», «автосервисы», «онлайн-школы», «юридические фирмы», «фитнес-клубы», «доставка еды», «клиники», «турагентства», «строительство/ремонт», «B2B-услуги» must each be a SEPARATE niche, not merged into «услуги» or «интернет-магазины». Rank honestly — many will be Maybe/No-Go, that is fine, it is the market map. A short (≤5) or single-niche JSON is an ERROR: brainstorm adjacent verticals and score them.
+- Include ALL viable niches you found — one entry per distinct customer vertical. Aim for BREADTH like a professional market-research firm maps every possible application. Do NOT collapse concrete industries into broad buckets: «стоматологии», «косметология/бьюти», «автосервисы», «онлайн-школы», «юридические фирмы», «фитнес-клубы», «доставка еды», «клиники», «турагентства», «строительство/ремонт», «B2B-услуги» must each be a SEPARATE niche, not merged into «услуги» or «интернет-магазины». Rank honestly — many will be Maybe/No-Go, that is fine, it is the market map.
+- HARD MINIMUM (mandatory, not aspirational): 10 niches. TARGET: 10–20 for a business type with a moderate number of applicable verticals, up to 30 for a broadly-applicable product (e.g. a generic SaaS tool sellable into many industries). NO upper cap. Fewer than 10 niches in the JSON is an ERROR — before finalizing, COUNT your niches[] array; if it has fewer than 10 entries, go back and brainstorm more adjacent verticals (adjacent industries, different business sizes within the same industry, different use-cases of the same product) until you reach at least 10. The ONLY exception is a business genuinely so narrow that fewer than 10 verticals objectively exist — if so, say this explicitly in the CONCLUSION with your reasoning; do not silently under-deliver.
+- Row length stays short (per the market-map purpose above) specifically so that 10–20+ rows fit — do not pad individual rows with prose to compensate for having fewer rows.
 - «Вне ЦА» (unqualified) segments do NOT go into the JSON.
 - In the FEATURES case, every name MUST be a customer vertical (an industry / business type / audience segment — e.g. «интернет-магазины», «стоматологии», «онлайн-школы»). A product feature («попап», «A/B-тест», «интеграция») as a niche name is a HARD ERROR — re-derive verticals before output.`;
 }
@@ -2490,7 +2492,11 @@ function App() {
         // M1.2 (разведка ниш) — низкая температура: нужна полнота и повторяемость,
         // а не разные ниши каждый прогон. Остальные модули — дефолт модели.
         const temp = mod.id === 'M1_2' ? 0.3 : undefined;
-        full = await callGPT(sys, userPrompt, temp);
+        // M1.2 просят 10-20+ вертикалей, каждая — строка в BLOCK 04_1 И в 04_2 плюс
+        // запись в JSON, плюс до 50 строк источников в 04_0 — общий потолок 8000 токенов
+        // не вмещает это целиком, и модель тихо сжимается до "безопасных" ~8 ниш.
+        const maxTok = mod.id === 'M1_2' ? 16000 : undefined;
+        full = await callGPT(sys, userPrompt, temp, maxTok);
       } catch(e) { full = 'Error: '+e.message; }
       clearInterval(stepTimer);
 
@@ -2942,9 +2948,14 @@ function App() {
                         e.stopPropagation();
                         // Перегенерация: чистим этот модуль и все зависимые ниже по цепочке,
                         // затем перезапускаем их с реальным поиском (не из старого результата).
+                        // ГЛОБАЛЬНЫЙ модуль (M1.1/M1.2) — цепочка ТОЛЬКО из него самого: у него
+                        // нет своей ниши, и раньше order.slice(idx) от него включал M2–M7, а
+                        // run() внутри (rerunNiche falsy → работает по ВСЕМ выбранным нишам сразу)
+                        // тихо стирал и пересчитывал уже готовые M2–M7 всех выбранных ниш —
+                        // ↺ на карте ниш неожиданно жёг лимит на весь пройденный прогон.
                         const order = MODULES.filter(x=>!x.disabled).map(x=>x.id);
                         const idx = order.indexOf(r.id);
-                        const chain = idx>=0 ? order.slice(idx) : [r.id];
+                        const chain = isPerNiche(r.id) ? (idx>=0 ? order.slice(idx) : [r.id]) : [r.id];
                         const rn = r.niche||'';
                         // чистим цепочку только для ЭТОЙ ниши (у по-нишевых), глобальные — как есть
                         const upd={...proj,results:(proj.results||[]).filter(x=> !(chain.includes(x.id) && (isPerNiche(x.id) ? (x.niche||'')===rn : true))),updatedAt:new Date().toISOString()};
