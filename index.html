@@ -377,11 +377,12 @@ async function pingProxy(key) {
 // usage последнего вызова OpenAI — боковой канал, чтобы не менять сигнатуру callGPT
 // (её зовут в 5 местах). Цикл прогона читает это сразу после вызова.
 let lastGptUsage = null;
-async function callGPT(system, user) {
+async function callGPT(system, user, temperature) {
   lastGptUsage = null;
   const res = await fetch('/api/proxy', {
     method: 'POST', headers: {'Content-Type':'application/json','X-App-Key':getAppKey()},
     body: JSON.stringify({model:MODEL, max_tokens:8000, stream:false,
+      ...(temperature != null ? { temperature } : {}),
       messages:[{role:'system',content:system},{role:'user',content:user}]}),
   });
   if (!res.ok) throw new Error('API ' + res.status);
@@ -460,7 +461,13 @@ async function gatherNicheEvidence(brief, lang) {
     queries.push(s+' '+market+' форум обсуждение проблемы с заявками и клиентами');
   }
   queries.push(product+' '+market+' тренды рынка объём');
-  return gatherEvidence(queries, 20, 6, { depth:'advanced', raw:true, contentChars:1200, perDomain:3, maxItems:40 });
+  // Широкий прочёс отраслей — чтобы находить конкретные вертикали (стоматологии,
+  // косметология, автосервисы…), а не только услуги из брифа. Даёт объёмную карту ниш.
+  queries.push(product+' '+market+' для каких сфер бизнеса и отраслей применяется');
+  queries.push(product+' '+market+' какие отрасли и ниши теряют заявки и лиды на сайте');
+  queries.push(product+' '+market+' примеры применения по отраслям кейсы');
+  queries.push((brief.niche||product)+' '+market+' в каких нишах и отраслях используют');
+  return gatherEvidence(queries, 26, 6, { depth:'advanced', raw:true, contentChars:1200, perDomain:3, maxItems:50 });
 }
 
 // Досье для M3 (VoC): живой язык аудитории — отзывы, форумы, жалобы, вопросы.
@@ -764,13 +771,13 @@ Table (6-10 rows max): Segment_ID | Сегмент | Кто это (1 строк
 After: "CONCLUSION (in ${lang}):" — which segments look strongest for THIS business.
 
 BLOCK 04_1 — Service Effectiveness per Niche (methodology block 04_1)
-Before: 1-2 sentences why.
-Table (one row per candidate service/niche): Ниша/Услуга | Спрос (сигналы из evidence, [n]) | Конкуренция (сигналы, [n]) | Примерная экономика (чек × частота, эвристика) | Риски | Confidence (1-5)
+Before: 1-2 sentences why. FIRST brainstorm broadly: across which customer INDUSTRIES/VERTICALS could this product plausibly work (use the evidence about who loses leads / needs this)? List every plausible vertical — don't limit yourself to the seller's own service list. Aim wide.
+Table (ONE ROW PER VERTICAL — aim for MANY, dozens if warranted): Ниша/Услуга | Спрос (сигналы из evidence, [n]) | Конкуренция (сигналы, [n]) | Примерная экономика (чек × частота, эвристика) | Риски | Confidence (1-5)
 After: "CONCLUSION (in ${lang}):"
 
 BLOCK 04_2 — Niche Prioritization Matrix (methodology block 04_2)
 Before: 1-2 sentences.
-Table: Ниша | Спрос (1-5) | Конкуренция (1-5, где 5 = низкая) | Экономика (1-5) | Соответствие бизнесу (1-5) | ИТОГО (сумма) | Источники [n] | Вердикт (Go / Maybe / No-Go)
+Table (ONE ROW PER VERTICAL from 04_1 — list ALL, sorted by ИТОГО descending so max→min effectiveness is visible): Ниша | Спрос (1-5) | Конкуренция (1-5, где 5 = низкая) | Экономика (1-5) | Соответствие бизнесу (1-5) | ИТОГО (сумма) | Источники [n] | Вердикт (Go / Maybe / No-Go)
 
 GROUNDING RULE — вердикт обязан опираться на источники:
 - «Go» разрешён ТОЛЬКО если спрос И конкуренция ниши опираются минимум на 2 источника [n] из блока 04_0.
@@ -785,9 +792,9 @@ At the very END output niche data as JSON between exactly these tags (numbers, n
 <<<NICHE_DATA_START>>>
 {"niches":[{"name":"...","demand":4,"competition":3,"economics":4,"fit":5,"score":16,"verdict":"Go","why":"1 short sentence in ${lang}","recommended":true}]}
 <<<NICHE_DATA_END>>>
-Exactly ONE niche must have "recommended":true.
+The niches array must contain EVERY niche from BLOCK 04_2 (all verticals, Go/Maybe/No-Go), sorted by "score" DESCENDING (max effectiveness first). Exactly ONE niche must have "recommended":true.
 CRITICAL VALIDATION of niches[]:
-- The JSON must contain 4–8 niches — ALL scored candidates from BLOCK 04_2 (Go, Maybe AND No-Go), so the human has real options to compare and choose. A single-niche JSON is an ERROR: if candidates collapsed into one, split it into sub-verticals or adjacent verticals and score them.
+- Include ALL viable niches you found — one entry per distinct customer vertical. Aim for BREADTH like a professional market-research firm maps every possible application: typically 12–30 verticals if the market supports it, not a short list. NO upper cap. Do NOT collapse concrete industries into broad buckets: «стоматологии», «косметология/бьюти», «автосервисы», «онлайн-школы», «юридические фирмы», «фитнес-клубы», «доставка еды», «клиники», «турагентства», «строительство/ремонт», «B2B-услуги» must each be a SEPARATE niche, not merged into «услуги» or «интернет-магазины». Rank honestly — many will be Maybe/No-Go, that is fine, it is the market map. A short (≤5) or single-niche JSON is an ERROR: brainstorm adjacent verticals and score them.
 - «Вне ЦА» (unqualified) segments do NOT go into the JSON.
 - In the FEATURES case, every name MUST be a customer vertical (an industry / business type / audience segment — e.g. «интернет-магазины», «стоматологии», «онлайн-школы»). A product feature («попап», «A/B-тест», «интеграция») as a niche name is a HARD ERROR — re-derive verticals before output.`;
 }
@@ -1389,6 +1396,32 @@ function BarChart({ labels, values, title, color='#639922' }) {
     <div style={{background:'#fff',border:'1px solid #eee',borderRadius:10,padding:'1rem',marginBottom:10}}>
       <p style={{fontSize:13,fontWeight:500,marginBottom:8}}>{title}</p>
       <canvas ref={canvasRef} height={200}/>
+    </div>
+  );
+}
+
+// Диаграмма ниш по эффективности: горизонтальные столбики, отсортированы max→min,
+// цвет по вердикту. Даёт «карту рынка» — видно сильные и слабые ниши разом.
+function NicheScoreChart({ niches }) {
+  const canvasRef = useRef(null);
+  const chartRef = useRef(null);
+  useEffect(() => {
+    if (!canvasRef.current || !niches?.length) return;
+    if (chartRef.current) chartRef.current.destroy();
+    const sorted = [...niches].sort((a,b)=>(b.score||0)-(a.score||0));
+    const col = v => v==='Go' ? '#4A7C1F' : v==='Maybe' ? '#D98A2B' : '#C0503A';
+    chartRef.current = new Chart(canvasRef.current, {
+      type: 'bar',
+      data: { labels: sorted.map(n=>n.name), datasets: [{ data: sorted.map(n=>n.score||0), backgroundColor: sorted.map(n=>col(n.verdict)) }] },
+      options: { indexAxis:'y', maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{ x:{ beginAtZero:true } } }
+    });
+    return () => { if(chartRef.current) chartRef.current.destroy(); };
+  }, [niches]);
+  const h = Math.max(160, (niches?.length||0) * 24);
+  return (
+    <div style={{background:'#fff',border:'1px solid #eee',borderRadius:10,padding:'1rem',marginBottom:14}}>
+      <p style={{fontSize:13,fontWeight:500,marginBottom:8}}>Ниши по эффективности (баллу): <span style={{color:'#4A7C1F'}}>Go</span> · <span style={{color:'#D98A2B'}}>Maybe</span> · <span style={{color:'#C0503A'}}>No-Go</span></p>
+      <div style={{position:'relative',height:h}}><canvas ref={canvasRef}/></div>
     </div>
   );
 }
@@ -2109,7 +2142,7 @@ function App() {
     const m12 = (p.results||[]).find(r=>r.id==='M1_2');
     if (m12 && !b.selectedNiche) {
       const nd = m12.nicheData || extractNicheData(m12.content||'');
-      const niches = nd && Array.isArray(nd.niches) ? nd.niches : [];
+      const niches = (nd && Array.isArray(nd.niches) ? nd.niches : []).slice().sort((a,b)=>(b.score||0)-(a.score||0));
       if (niches.length) {
         setNicheOpts(niches);
         const rec = niches.findIndex(x=>x.recommended);
@@ -2277,7 +2310,10 @@ function App() {
           const depRes = depId ? col.find(r => r.id === depId) : null;
           userPrompt = getModulePrompt(mod.id, B, lang, depRes ? depRes.content : prevContent);
         }
-        full = await callGPT(sys, userPrompt);
+        // M1.2 (разведка ниш) — низкая температура: нужна полнота и повторяемость,
+        // а не разные ниши каждый прогон. Остальные модули — дефолт модели.
+        const temp = mod.id === 'M1_2' ? 0.3 : undefined;
+        full = await callGPT(sys, userPrompt, temp);
       } catch(e) { full = 'Error: '+e.message; }
       clearInterval(stepTimer);
 
@@ -2294,7 +2330,7 @@ function App() {
       // After M1.2 — стоп: человек выбирает нишу
       if (mod.id === 'M1_2') {
         setCurMod(null); setCurStep(''); setCurStepIdx(0);
-        const niches = nicheData && Array.isArray(nicheData.niches) ? nicheData.niches : [];
+        const niches = (nicheData && Array.isArray(nicheData.niches) ? nicheData.niches : []).slice().sort((a,b)=>(b.score||0)-(a.score||0));
         setNicheOpts(niches);
         const rec = niches.findIndex(x => x.recommended);
         setSelNiches(rec >= 0 ? [rec] : []);
@@ -2721,6 +2757,8 @@ function App() {
                 <div className="card">
                   <h3 style={{fontSize:16,fontWeight:500,marginBottom:6}}>{t.nichePickTitle}</h3>
                   <p style={{fontSize:13,color:'#666',marginBottom:14,lineHeight:1.5}}>{t.nichePickSub}</p>
+                  <NicheScoreChart niches={nicheOpts}/>
+                  <div style={{maxHeight:nicheOpts.length>10?520:'none',overflowY:nicheOpts.length>10?'auto':'visible',paddingRight:nicheOpts.length>10?4:0}}>
                   {nicheOpts.map((n, i) => {
                     const isOn = selNiches.includes(i);
                     const c = '#4A7C1F', bg = '#EFF6E4', dark = '#2E4F0C';
@@ -2749,6 +2787,7 @@ function App() {
                       </div>
                     );
                   })}
+                  </div>
                   <div style={{display:'flex',gap:10,marginTop:12}}>
                     <button className="btn-primary" onClick={continueAfterNiche} disabled={selNiches.length===0}>{t.nicheContinue}</button>
                   </div>
