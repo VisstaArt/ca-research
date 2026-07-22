@@ -1498,6 +1498,36 @@ function CompetitorMapChart({ data, title }) {
   );
 }
 
+// График M4: уровни осознанности по сегментам — стопка (5 уровней Шварца) в %.
+function AwarenessChart({ data }) {
+  const canvasRef = useRef(null);
+  const chartRef = useRef(null);
+  useEffect(() => {
+    if (!canvasRef.current || !data?.length) return;
+    if (chartRef.current) chartRef.current.destroy();
+    const lv = [
+      ['Не осознаёт','unaware','#C0503A'],
+      ['Проблема','problem','#D98A2B'],
+      ['Решения','solution','#E3B23C'],
+      ['Продукты','product','#7FB04F'],
+      ['Всё знает','most','#4A7C1F'],
+    ];
+    chartRef.current = new Chart(canvasRef.current, {
+      type:'bar',
+      data:{ labels: data.map(d=>d.segment||''), datasets: lv.map(([label,key,color])=>({ label, data: data.map(d=>d[key]||0), backgroundColor: color })) },
+      options:{ indexAxis:'y', maintainAspectRatio:false, scales:{ x:{stacked:true}, y:{stacked:true} }, plugins:{ legend:{ position:'bottom', labels:{ boxWidth:12, font:{size:10} } } } }
+    });
+    return () => { if(chartRef.current) chartRef.current.destroy(); };
+  }, [data]);
+  const h = Math.max(160, (data?.length||0) * 40 + 50);
+  return (
+    <div style={{background:'#fff',border:'1px solid #eee',borderRadius:10,padding:'1rem',marginBottom:10}}>
+      <p style={{fontSize:13,fontWeight:500,marginBottom:8}}>Уровни осознанности по сегментам (%)</p>
+      <div style={{position:'relative',height:h}}><canvas ref={canvasRef}/></div>
+    </div>
+  );
+}
+
 function ModuleCharts({ moduleId, chartData }) {
   if (!chartData) return null;
   try {
@@ -1516,6 +1546,11 @@ function ModuleCharts({ moduleId, chartData }) {
     if (moduleId === 'M2') return (
       <div style={{marginTop:12}}>
         {d.competitorMatrix?.length > 0 && <CompetitorMapChart data={d.competitorMatrix} title="Карта позиционирования: цена × качество"/>}
+      </div>
+    );
+    if (moduleId === 'M4' && d.awarenessLevels?.length > 0) return (
+      <div style={{marginTop:12}}>
+        <AwarenessChart data={d.awarenessLevels}/>
       </div>
     );
     if (moduleId === 'M7' && d.semanticClusters?.length > 0) return (
@@ -2189,6 +2224,10 @@ function App() {
     .replace(/(?:#{1,6}\s*|<<<)?CHART_DATA_START[\s\S]*/g,'')
     .replace(/(?:#{1,6}\s*|<<<)?NICHE_DATA_START[\s\S]*?NICHE_DATA_END(?:>>>)?/g,'')
     .replace(/(?:#{1,6}\s*|<<<)?NICHE_DATA_START[\s\S]*/g,'')
+    // Голый заголовок «CHART DATA» / «NICHE DATA» и декоративные линии ═ — модель их печатает
+    // как заголовок секции перед блоком данных; сам блок уже вырезан выше, заголовок остаётся пустым.
+    .replace(/^[ \t]*#{0,6}[ \t]*(?:CHART|NICHE)[ _]?DATA[ \t]*$/gim,'')
+    .replace(/^[ \t]*═+[ \t]*$/gm,'')
     .trim();
 
   // Generate price layers after M1
