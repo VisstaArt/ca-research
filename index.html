@@ -405,6 +405,32 @@ const hydrateFromDb = async () => {
   } catch { return null; }
 };
 
+// M10 — трекер публикаций. Данные живут ТОЛЬКО в Supabase (в отличие от M1–M7
+// без localStorage-подстраховки): если БД не настроена, экран трекера прямо
+// покажет «БД не настроена», а не тихо потеряет введённую публикацию/метрику.
+const loadPublications = async (projectId) => {
+  try {
+    const r = await fetch('/api/publications?project_id='+encodeURIComponent(projectId), { headers: dbHeaders() });
+    if (!r.ok) return null;
+    const d = await r.json();
+    return Array.isArray(d.publications) ? d.publications : null;
+  } catch { return null; }
+};
+const addPublication = async (pub) => {
+  try {
+    const r = await fetch('/api/publications', { method:'POST', headers: dbHeaders(), body: JSON.stringify({kind:'publication', ...pub}) });
+    if (!r.ok) return null;
+    const d = await r.json();
+    return d.publication || null;
+  } catch { return null; }
+};
+const addMetricsSnapshot = async (snap) => {
+  try {
+    const r = await fetch('/api/publications', { method:'POST', headers: dbHeaders(), body: JSON.stringify({kind:'metrics', ...snap}) });
+    return r.ok;
+  } catch { return false; }
+};
+
 async function pingProxy(key) {
   const res = await fetch('/api/proxy', {
     method: 'POST', headers: {'Content-Type':'application/json','X-App-Key':key},
@@ -2306,6 +2332,16 @@ function App() {
   // Re-run с замечанием: панель у ↺ вместо мгновенной слепой перегенерации
   const [regenKey, setRegenKey] = React.useState(null);
   const [regenNote, setRegenNote] = React.useState('');
+  // M10 — трекер публикаций (по проекту)
+  const [publications, setPublications] = React.useState(null); // null = загрузка/БД недоступна, [] = пусто
+  const [pubForm, setPubForm] = React.useState({date:new Date().toISOString().slice(0,10),platform:'',format:'',character:'none',topic:'',hypothesis_id:'',hook_type:'',url:'',utm:''});
+  const [addingPub, setAddingPub] = React.useState(false);
+  const [metricsFormFor, setMetricsFormFor] = React.useState(null);
+  const [metricsForm, setMetricsForm] = React.useState({});
+  const [addingMetrics, setAddingMetrics] = React.useState(false);
+  React.useEffect(() => {
+    if (sc === 'tracker' && proj?.id) loadPublications(proj.id).then(setPublications);
+  }, [sc, proj?.id]);
   const [rep, setRep] = React.useState('');
   const [repping, setRepping] = React.useState(false);
   const [repOpen, setRepOpen] = React.useState(false);
@@ -2922,6 +2958,141 @@ function App() {
     </div>
   );
 
+  // ── M10 TRACKER (по проекту)
+  if (sc === 'tracker') return (
+    <div>
+      <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:'1.5rem'}}>
+        <button onClick={()=>setSc('work')}>← Back to project</button>
+        <h2 style={{fontSize:20,fontWeight:500}}>Трекер публикаций: {brief.name}</h2>
+      </div>
+
+      {publications === null ? (
+        <div className="card"><p style={{fontSize:13,color:'#c00'}}>БД не настроена или недоступна — трекер работает только через Supabase, локальной подстраховки здесь нет.</p></div>
+      ) : (
+        <React.Fragment>
+          <div className="card">
+            <p style={{fontSize:13,fontWeight:500,marginBottom:10}}>+ Добавить публикацию</p>
+            <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:8}}>
+              <Field label="Дата"><input type="date" value={pubForm.date} onChange={e=>setPubForm(p=>({...p,date:e.target.value}))}/></Field>
+              <Field label="Площадка">
+                <select value={pubForm.platform} onChange={e=>setPubForm(p=>({...p,platform:e.target.value}))}>
+                  <option value="">—</option>
+                  {['youtube_shorts','vk_clips','telegram','instagram_reels','instagram_carousel','dzen','rutube','max','pinterest','tiktok'].map(v=><option key={v} value={v}>{v}</option>)}
+                </select>
+              </Field>
+              <Field label="Формат">
+                <select value={pubForm.format} onChange={e=>setPubForm(p=>({...p,format:e.target.value}))}>
+                  <option value="">—</option>
+                  {['short_video','long_video','carousel','text_post'].map(v=><option key={v} value={v}>{v}</option>)}
+                </select>
+              </Field>
+              <Field label="Персонаж">
+                <select value={pubForm.character} onChange={e=>setPubForm(p=>({...p,character:e.target.value}))}>
+                  {['rabbit','owner','none'].map(v=><option key={v} value={v}>{v}</option>)}
+                </select>
+              </Field>
+              <Field label="Тема"><input value={pubForm.topic} onChange={e=>setPubForm(p=>({...p,topic:e.target.value}))} placeholder="3 ошибки в попапах"/></Field>
+              <Field label="Гипотеза" optional><input value={pubForm.hypothesis_id} onChange={e=>setPubForm(p=>({...p,hypothesis_id:e.target.value}))} placeholder="H-03"/></Field>
+              <Field label="Тип хука" optional><input value={pubForm.hook_type} onChange={e=>setPubForm(p=>({...p,hook_type:e.target.value}))} placeholder="вопрос / шок-факт"/></Field>
+              <Field label="URL" optional><input value={pubForm.url} onChange={e=>setPubForm(p=>({...p,url:e.target.value}))} placeholder="https://..."/></Field>
+              <Field label="UTM" optional><input value={pubForm.utm} onChange={e=>setPubForm(p=>({...p,utm:e.target.value}))} placeholder="utm_campaign=..."/></Field>
+            </div>
+            <button className="btn-primary" disabled={addingPub || !pubForm.topic.trim()}
+              onClick={async ()=>{
+                setAddingPub(true);
+                const created = await addPublication({project_id:proj.id, ...pubForm});
+                if (created) setPublications(p=>[{...created, metrics_snapshots:[]}, ...(p||[])]);
+                setPubForm({date:new Date().toISOString().slice(0,10),platform:'',format:'',character:'none',topic:'',hypothesis_id:'',hook_type:'',url:'',utm:''});
+                setAddingPub(false);
+              }}
+              style={{marginTop:4}}>
+              {addingPub ? 'Добавляю…' : '+ Добавить публикацию'}
+            </button>
+          </div>
+
+          <div className="card">
+            <p style={{fontSize:13,fontWeight:500,marginBottom:10}}>Публикации ({publications.length})</p>
+            {publications.length === 0 && <p style={{fontSize:12,color:'#888'}}>Пока пусто — добавьте первую публикацию выше.</p>}
+            {publications.map(pub => (
+              <div key={pub.id} style={{border:'1px solid #e5e5e5',borderRadius:10,padding:'10px 14px',marginBottom:8}}>
+                <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',gap:10}}>
+                  <div>
+                    <p style={{fontSize:13,fontWeight:500}}>{pub.topic || '(без темы)'}</p>
+                    <p style={{fontSize:11,color:'#888'}}>
+                      {pub.date} · {pub.platform||'—'} · {pub.format||'—'}{pub.character&&pub.character!=='none'?' · '+pub.character:''}
+                      {pub.url && <> · <a href={pub.url} target="_blank" rel="noreferrer">ссылка</a></>}
+                    </p>
+                  </div>
+                  <button onClick={()=>{setMetricsFormFor(metricsFormFor===pub.id?null:pub.id); setMetricsForm({snapshot_date:new Date().toISOString().slice(0,10)});}}
+                    style={{fontSize:11,padding:'4px 10px',flexShrink:0}}>
+                    + Метрики
+                  </button>
+                </div>
+                {(pub.metrics_snapshots||[]).length > 0 && (
+                  <div style={{marginTop:8,overflowX:'auto'}}>
+                    <table style={{fontSize:11,width:'100%',borderCollapse:'collapse'}}>
+                      <thead><tr style={{color:'#888'}}>
+                        <th style={{textAlign:'left',padding:'2px 6px'}}>Дата</th>
+                        <th style={{padding:'2px 6px'}}>Просмотры</th><th style={{padding:'2px 6px'}}>Лайки</th>
+                        <th style={{padding:'2px 6px'}}>Комменты</th><th style={{padding:'2px 6px'}}>Репосты</th>
+                        <th style={{padding:'2px 6px'}}>Досмотр %</th><th style={{padding:'2px 6px'}}>+Подписки</th>
+                        <th style={{padding:'2px 6px'}}>Клики</th><th style={{padding:'2px 6px'}}>Регистрации</th>
+                      </tr></thead>
+                      <tbody>
+                        {pub.metrics_snapshots.map((s,i)=>(
+                          <tr key={i}>
+                            <td style={{padding:'2px 6px'}}>{s.snapshot_date}</td>
+                            <td style={{padding:'2px 6px',textAlign:'center'}}>{s.views??'—'}</td>
+                            <td style={{padding:'2px 6px',textAlign:'center'}}>{s.likes??'—'}</td>
+                            <td style={{padding:'2px 6px',textAlign:'center'}}>{s.comments??'—'}</td>
+                            <td style={{padding:'2px 6px',textAlign:'center'}}>{s.shares??'—'}</td>
+                            <td style={{padding:'2px 6px',textAlign:'center'}}>{s.watch_pct??'—'}</td>
+                            <td style={{padding:'2px 6px',textAlign:'center'}}>{s.subs_gained??'—'}</td>
+                            <td style={{padding:'2px 6px',textAlign:'center'}}>{s.clicks??'—'}</td>
+                            <td style={{padding:'2px 6px',textAlign:'center'}}>{s.registrations??'—'}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+                {metricsFormFor === pub.id && (
+                  <div style={{marginTop:10,padding:10,background:'#fafafa',borderRadius:8}}>
+                    <div style={{display:'grid',gridTemplateColumns:'repeat(5,1fr)',gap:6,marginBottom:8}}>
+                      <Field label="Дата"><input type="date" value={metricsForm.snapshot_date||''} onChange={e=>setMetricsForm(f=>({...f,snapshot_date:e.target.value}))}/></Field>
+                      <Field label="Просмотры" optional><input type="number" value={metricsForm.views||''} onChange={e=>setMetricsForm(f=>({...f,views:e.target.value}))}/></Field>
+                      <Field label="Лайки" optional><input type="number" value={metricsForm.likes||''} onChange={e=>setMetricsForm(f=>({...f,likes:e.target.value}))}/></Field>
+                      <Field label="Комменты" optional><input type="number" value={metricsForm.comments||''} onChange={e=>setMetricsForm(f=>({...f,comments:e.target.value}))}/></Field>
+                      <Field label="Репосты" optional><input type="number" value={metricsForm.shares||''} onChange={e=>setMetricsForm(f=>({...f,shares:e.target.value}))}/></Field>
+                      <Field label="Досмотр %" optional><input type="number" value={metricsForm.watch_pct||''} onChange={e=>setMetricsForm(f=>({...f,watch_pct:e.target.value}))}/></Field>
+                      <Field label="+Подписки" optional><input type="number" value={metricsForm.subs_gained||''} onChange={e=>setMetricsForm(f=>({...f,subs_gained:e.target.value}))}/></Field>
+                      <Field label="Клики" optional><input type="number" value={metricsForm.clicks||''} onChange={e=>setMetricsForm(f=>({...f,clicks:e.target.value}))}/></Field>
+                      <Field label="Регистрации" optional><input type="number" value={metricsForm.registrations||''} onChange={e=>setMetricsForm(f=>({...f,registrations:e.target.value}))}/></Field>
+                    </div>
+                    <button className="btn-primary" disabled={addingMetrics}
+                      onClick={async ()=>{
+                        setAddingMetrics(true);
+                        const ok = await addMetricsSnapshot({publication_id:pub.id, ...metricsForm});
+                        if (ok) {
+                          const fresh = await loadPublications(proj.id);
+                          if (fresh) setPublications(fresh);
+                          setMetricsFormFor(null);
+                        }
+                        setAddingMetrics(false);
+                      }}
+                      style={{fontSize:12,padding:'6px 14px'}}>
+                      {addingMetrics ? 'Сохраняю…' : 'Сохранить метрики'}
+                    </button>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </React.Fragment>
+      )}
+    </div>
+  );
+
   // ── WORK
   const allMods = MODULES.filter(m => mods.includes(m.id));
   const workNiches = nichesOf(brief);
@@ -2976,6 +3147,12 @@ function App() {
             <button onClick={openNichePicker} style={{fontSize:12,padding:'7px 12px',color:'#2E4F0C',borderColor:'#A8CE6E',background:'#EFF6E4',fontWeight:500}}
               title="Добавить ещё ниши к исследованию — прогонятся только новые, готовые не тронутся">
               ＋ Добавить ниши
+            </button>
+          )}
+          {!isRun && (
+            <button onClick={()=>setSc('tracker')} style={{fontSize:12,padding:'7px 12px',color:'#185FA5',borderColor:'#85B7EB',background:'#E6F1FB',fontWeight:500}}
+              title="M10: публикации и метрики по этому проекту">
+              📊 Трекер
             </button>
           )}
           <button onClick={()=>setSc('form')} style={{fontSize:12,padding:'7px 12px',color:'#666',borderColor:'#ddd'}}>
