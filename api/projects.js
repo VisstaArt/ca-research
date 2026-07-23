@@ -23,7 +23,10 @@ export default async function handler(req, res) {
     // Клиент трактует 503 как «БД недоступна» и молча остаётся на localStorage.
     return res.status(503).json({ error: { message: 'DB is not configured', code: 'db_unconfigured' } });
   }
-  const base = SB_URL.replace(/\/$/, '') + '/rest/v1/projects';
+  // Supabase Data API в панели показывает URL уже с /rest/v1/ на конце — терпим
+  // и такой вариант, и голый базовый адрес, чтобы не зависеть от того, что именно
+  // скопировали в переменную окружения.
+  const base = SB_URL.replace(/\/rest\/v1\/?$/, '').replace(/\/$/, '') + '/rest/v1/projects';
   const headers = {
     'Content-Type': 'application/json',
     'apikey': SB_KEY,
