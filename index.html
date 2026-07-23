@@ -357,6 +357,11 @@ const MODULES = [
 // Остальные (M2–M7) — свой отдельный сфокусированный проход на КАЖДУЮ выбранную нишу.
 const GLOBAL_MODS = ['M1', 'M1_1', 'M1_2'];
 const isPerNiche = id => !GLOBAL_MODS.includes(id);
+// Результаты M2–M7 без ниши — «сироты» с прогонов ДО введения модели «по нишам»
+// (M2–M7 раньше были глобальными). Без этого фильтра они молча попадают в «глобальные»
+// в каждом месте, где читаются results (карточки, HTML/MD отчёты, JSON-пакет для агента) —
+// показываются как отдельный набор без подписи «Ниша: …», перед реальными по-нишевыми.
+const dropOrphans = rs => (rs || []).filter(r => !isPerNiche(r.id) || r.niche);
 const nichesOf = b => ((b && b.selectedNiche) || '').split(',').map(s => s.trim()).filter(Boolean);
 // Идентичность результата теперь = модуль + ниша (у глобальных ниша пустая).
 const resKey = r => r.id + (r && r.niche ? '@@' + r.niche : '');
@@ -550,11 +555,11 @@ const pickTable = (modulesObj, modId, needle) => {
 // ниши, объект-словарь держит только ПОСЛЕДНЮЮ записанную нишу, остальные молча терялись
 // (обнаружено на реальном прогоне с 2 нишами: JSON содержал только одну из двух).
 function buildAgentPackage(brief, lang, results, report) {
-  const all = results || [];
+  const all = dropOrphans(results);
   const globalModules = {};       // M1_2 и другие модули без ниши — один результат на проект
   const byNiche = {};              // niche name -> { modId -> result }
   for (const r of all) {
-    if (isPerNiche(r.id) && r.niche) {
+    if (isPerNiche(r.id)) {
       (byNiche[r.niche] || (byNiche[r.niche] = {}))[r.id] = r;
     } else {
       globalModules[r.id] = buildModuleEntry(r);
@@ -1608,7 +1613,7 @@ function ModuleCharts({ moduleId, chartData }) {
 
 // ── HTML REPORT GENERATOR
 function generateHTMLReport(brief, results, lang, priceLayers, selectedLayers, singleModId) {
-  const targetResults = singleModId ? results.filter(r=>r.id===singleModId) : results;
+  const targetResults = dropOrphans(singleModId ? results.filter(r=>r.id===singleModId) : results);
   const completedMods = MODULES.filter(m => targetResults.find(r=>r.id===m.id));
   const date = new Date().toLocaleDateString('ru-RU');
   const hasCompany = brief.currentRevenue || brief.currentClients || brief.currentAvgCheck;
@@ -2616,11 +2621,25 @@ function App() {
          'Дата: '+new Date().toISOString().slice(0,10)]
         .filter(Boolean).join(' · ')+'\n\n';
     const summary = rep ? '## Executive Summary\n\n'+rep+'\n\n---\n\n' : '';
-    const body = (proj?.results||[]).map(r=>{
+    // Тот же порядок и разделитель «Ниша: …», что в generateHTMLReport (иначе секции
+    // по нескольким нишам идут вперемешку в порядке computed, без подписи чья секция).
+    const modOrderIdx = MODULES.map(m => m.id);
+    const ordered = dropOrphans(proj?.results||[]).sort((a, b) => {
+      const ga = !a.niche, gb = !b.niche;
+      if (ga !== gb) return ga ? -1 : 1;
+      if ((a.niche||'') !== (b.niche||'')) return (a.niche||'') < (b.niche||'') ? -1 : 1;
+      return modOrderIdx.indexOf(a.id) - modOrderIdx.indexOf(b.id);
+    });
+    let lastNiche;
+    const parts = ordered.map(r=>{
       const m = MODULES.find(x=>x.id===r.id);
       const title = m ? (m.label||m.id)+' — '+(uiLang==='ru'?(m.titleRu||m.title):m.title) : r.id;
-      return '## '+title+'\n\n'+r.content;
-    }).join('\n\n---\n\n');
+      let prefix = '';
+      if (r.niche && r.niche !== lastNiche && nichesOf(brief).length > 1) prefix = '# Ниша: '+r.niche+'\n\n';
+      lastNiche = r.niche;
+      return prefix+'## '+title+'\n\n'+r.content;
+    });
+    const body = parts.join('\n\n---\n\n');
     return head + summary + body;
   };
 
@@ -2858,7 +2877,7 @@ function App() {
   const isRun = !!curMod;
   const curModData = MODULES.find(m=>m.id===curMod);
   // Порядок вывода: глобальные модули сверху, затем ниша за нишей (внутри — по порядку модулей).
-  const orderedResults = [...(proj?.results||[])].sort((a,b)=>{
+  const orderedResults = dropOrphans(proj?.results||[]).sort((a,b)=>{
     const ga=!(a.niche), gb=!(b.niche);
     if (ga!==gb) return ga?-1:1;
     if ((a.niche||'')!==(b.niche||'')) {
