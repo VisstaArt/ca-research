@@ -371,7 +371,7 @@ const LANGS = ['Russian','Turkish','English','Arabic','Kazakh','Ukrainian','Uzbe
 // ── STORAGE
 const loadAll = () => { try { return JSON.parse(localStorage.getItem(SK)||'[]'); } catch { return []; } };
 const saveAll = l => { try { localStorage.setItem(SK, JSON.stringify(l)); } catch {} };
-const upsert = p => { const a=loadAll(); const i=a.findIndex(x=>x.id===p.id); if(i>=0)a[i]=p; else a.unshift(p); saveAll(a); };
+const upsert = p => { const a=loadAll(); const i=a.findIndex(x=>x.id===p.id); if(i>=0)a[i]=p; else a.unshift(p); saveAll(a); syncToDb(p); };
 const loadUiLang = () => { try { return localStorage.getItem('ca_uilang')||'en'; } catch { return 'en'; } };
 const saveUiLang = l => { try { localStorage.setItem('ca_uilang', l); } catch {} };
 
@@ -379,6 +379,31 @@ const saveUiLang = l => { try { localStorage.setItem('ca_uilang', l); } catch {}
 const AK = 'ca_appkey'; // localStorage: пароль доступа к прокси
 const getAppKey = () => { try { return localStorage.getItem(AK)||''; } catch { return ''; } };
 const setAppKey = v => { try { localStorage.setItem(AK, v); } catch {} };
+
+// ── DB SYNC (Supabase, через api/projects.js) ────────────────────────────────
+// localStorage остаётся источником истины для мгновенного чтения/записи (без сети,
+// без риска потерять шаг дорогого прогона): каждый sv()/upsert() шлёт ПОЛНЫЙ объект
+// проекта, поэтому фоновая копия в БД at-least-once — сбой одного шага сам
+// «дошлёт» накопленное на следующем шаге, отдельная очередь ретраев не нужна.
+const dbHeaders = () => ({ 'Content-Type':'application/json', 'X-App-Key': getAppKey() });
+const syncToDb = p => { fetch('/api/projects', { method:'POST', headers: dbHeaders(), body: JSON.stringify(p) }).catch(()=>{}); };
+const deleteFromDb = id => { fetch('/api/projects?id='+encodeURIComponent(id), { method:'DELETE', headers: dbHeaders() }).catch(()=>{}); };
+const hydrateFromDb = async () => {
+  try {
+    const r = await fetch('/api/projects', { headers: dbHeaders() });
+    if (!r.ok) return null;
+    const d = await r.json();
+    if (!Array.isArray(d.projects)) return null;
+    const list = d.projects.map(row => ({
+      id: row.id, createdAt: row.created_at, updatedAt: row.updated_at,
+      brief: row.brief||{}, lang: row.lang||'Russian', mods: row.mods||[],
+      results: row.results||[], report: row.report||'',
+      priceLayers: row.price_layers||[], selectedLayers: row.selected_layers||[],
+    }));
+    saveAll(list);
+    return list;
+  } catch { return null; }
+};
 
 async function pingProxy(key) {
   const res = await fetch('/api/proxy', {
@@ -2246,6 +2271,13 @@ function App() {
 
   const [sc, setSc] = React.useState('list');
   const [projs, setProjs] = React.useState(() => loadAll());
+
+  // Подтягиваем список проектов из БД при открытии (переживает чистку браузера,
+  // доступно с другого устройства). Если Supabase недоступен — молча остаёмся
+  // на том, что уже отрисовано из localStorage (см. useState выше).
+  React.useEffect(() => {
+    if (unlocked) hydrateFromDb().then(list => { if (list) setProjs(list); });
+  }, [unlocked]);
   const [proj, setProj] = React.useState(null);
 
   const empty = { name:'', niche:'', geoCompany:'', geoMarket:'', format:'', audience:'', result:'', price:'', competitors:'', extra:'', currentRevenue:'', currentClients:'', currentAvgCheck:'', targetSegment:'', priceLayer:'', services:[], selectedServices:[], selectedNiche:'', nicheCandidates:'' };
@@ -2732,7 +2764,7 @@ function App() {
               <div style={{textAlign:'right',flexShrink:0}}>
                 <p style={{fontSize:11,color:'#888',marginBottom:2}}>{done.length}/{(p.mods||[]).length} modules</p>
                 <p style={{fontSize:10,color:'#aaa',marginBottom:8}}>{new Date(p.updatedAt||p.createdAt).toLocaleDateString()}</p>
-                <button onClick={e=>{e.stopPropagation();saveAll(loadAll().filter(x=>x.id!==p.id));ref();}} style={{padding:'2px 8px',fontSize:10,color:'#e44',borderColor:'#e44'}}>delete</button>
+                <button onClick={e=>{e.stopPropagation();saveAll(loadAll().filter(x=>x.id!==p.id));deleteFromDb(p.id);ref();}} style={{padding:'2px 8px',fontSize:10,color:'#e44',borderColor:'#e44'}}>delete</button>
               </div>
             </div>
           </div>
