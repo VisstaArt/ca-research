@@ -766,10 +766,16 @@ function buildSystem(brief, lang) {
     if(k==='selectedServices') return Array.isArray(v)&&v.length ? '- Services SELECTED for research: '+v.join('; ') : '';
     if(k==='selectedNiche') return '- SELECTED NICHE (chosen at M1.2 stop-point): '+v;
     if(k==='nicheCandidates') return '- Niche candidates (from specialist): '+v;
+    if(k==='regenNote') return ''; // не обычное поле брифа — отдельный CRITICAL-блок ниже (editorNote)
     return '- '+k+': '+v;
   }).filter(Boolean).join('\n');
   const nicheFilter = brief.selectedNiche
     ? '\n\nNICHE FILTER — MANDATORY:\nWork ONLY within the selected niche: "'+brief.selectedNiche+'". Ignore all other niches/segments. If a source or insight belongs to another niche — skip it and mark "вне фильтра". This rule applies to ALL modules, tables and conclusions.\n'
+    : '';
+  // Re-run с замечанием (human-in-the-loop): владелица указала, что конкретно
+  // исправить в этом модуле, вместо слепой повторной генерации с нуля.
+  const editorNote = brief.regenNote
+    ? '\n\nOWNER CORRECTION — CRITICAL, HIGHEST PRIORITY:\nThe business owner reviewed the PREVIOUS version of this exact module and asked for this specific fix:\n"'+brief.regenNote+'"\nApply this correction precisely while regenerating. Keep everything else that was already correct — do not make unrelated changes.\n'
     : '';
   return 'You are a senior market research analyst producing a professional-grade target audience research report.\n\n'+
     'PROJECT BRIEF (00_Project_Brief):\n'+lines+'\n\n'+
@@ -788,7 +794,7 @@ function buildSystem(brief, lang) {
     '7. Confidence scale — use consistently and print this legend ONCE at the top of the module output: 5 = 3+ независимых свежих источника; 4 = 2 источника; 3 = 1 источник; 2 = косвенные данные/эвристика; 1 = нет публичных данных.\n'+
     '8. Never mix scripts: no Latin or Greek words inside '+lang+' sentences (brand names and accepted abbreviations like TAM, CJM are fine). If a paragraph comes out garbled or mixed-script — rewrite it before finishing.\n'+
     '9. ANY specific metric not measured from evidence — «+18 клиентов», «на 120%», «в 2-3 раза», «CR 4%→12%», forecasts — must EITHER be omitted OR labeled «(гипотеза, не обещание)» right next to it. This applies EVERYWHERE: offer formulas, forecasts, SEO H1/titles, ad hooks, creative copy, case-study headlines. NEVER present a fabricated number as an achieved result or real client case (no «кейс: конверсия выросла на 120%» unless that number is in evidence with a [n]).'+
-    nicheFilter;
+    nicheFilter+editorNote;
 }
 
 
@@ -2294,6 +2300,12 @@ function App() {
   const [curStep, setCurStep] = React.useState('');
   const [curStepIdx, setCurStepIdx] = React.useState(0);
   const [exp, setExp] = React.useState({});
+  // Human-in-the-loop: ручное редактирование результата модуля (бесплатно, без вызова модели)
+  const [editKey, setEditKey] = React.useState(null);
+  const [editDraft, setEditDraft] = React.useState('');
+  // Re-run с замечанием: панель у ↺ вместо мгновенной слепой перегенерации
+  const [regenKey, setRegenKey] = React.useState(null);
+  const [regenNote, setRegenNote] = React.useState('');
   const [rep, setRep] = React.useState('');
   const [repping, setRepping] = React.useState(false);
   const [repOpen, setRepOpen] = React.useState(false);
@@ -2443,7 +2455,7 @@ function App() {
 
   // briefOverride: свежий бриф для запуска сразу после setBrief (стейт обновляется асинхронно,
   // без override модули получили бы старый бриф без выбранной ниши/слоя)
-  const run = React.useCallback(async (modsToRun, briefOverride, forceRerun, rerunNiche) => {
+  const run = React.useCallback(async (modsToRun, briefOverride, forceRerun, rerunNiche, regenNote) => {
     const B = briefOverride || brief;
     if (!B.name) return;
     const id = proj?.id || ('p' + Date.now());
@@ -2510,7 +2522,11 @@ function App() {
     for (const w of runnable) {
       const mod = w.mod, wn = w.niche;
       // Бриф, сфокусированный на одной нише: фильтр ниш и запросы поиска сужаются до неё.
-      const Bn = wn ? { ...B, selectedNiche: wn } : B;
+      const Bn = wn ? { ...B, selectedNiche: wn } : { ...B };
+      // Re-run с замечанием: только ПЕРВЫЙ модуль запрошенной цепочки получает правку —
+      // зависимые ниже перегенерируются штатно и видят уже исправленный контент через
+      // prevContent/findDep, повторно замечание им не нужно.
+      if (regenNote && mod.id === allSelected[0]) Bn.regenNote = regenNote;
       const sys = buildSystem(Bn, lang);
       setCurMod(mod.id); setCurNiche(wn); setCurStep(mod.steps[0]); setCurStepIdx(0);
       let stepI = 0;
@@ -3023,6 +3039,40 @@ function App() {
                   <div style={{display:'flex',gap:5,margin:'0 8px',flexShrink:0}}>
                     <button onClick={e=>{
                         e.stopPropagation();
+                        // Re-run с замечанием (human-in-the-loop): вместо мгновенной слепой
+                        // перегенерации открываем панель — можно указать, что именно исправить,
+                        // или оставить пустым для обычного поведения (как раньше).
+                        setRegenKey(resKey(r)); setRegenNote('');
+                      }}
+                      style={{padding:'3px 8px',fontSize:10,color:m.dark,borderColor:m.border,background:'rgba(255,255,255,0.7)'}}
+                      title="Перегенерировать: новый поиск для этого модуля и зависимых ниже">
+                      ↺
+                    </button>
+                    <button onClick={e=>{
+                        e.stopPropagation();
+                        // Ручное редактирование результата: бесплатно, без вызова модели.
+                        setEditKey(resKey(r)); setEditDraft(r.content); setExp(ex=>({...ex,[resKey(r)]:true}));
+                      }}
+                      style={{padding:'3px 8px',fontSize:10,color:m.dark,borderColor:m.border,background:'rgba(255,255,255,0.7)'}}
+                      title="Редактировать результат вручную">
+                      ✎
+                    </button>
+                    <button onClick={e=>{e.stopPropagation();const html=generateHTMLReport(brief,proj.results,lang,priceLayers,selectedLayers,r.id);const w=window.open('','_blank');w.document.write(html);w.document.close();}}
+                      style={{padding:'3px 8px',fontSize:10,color:m.dark,borderColor:m.border,background:'rgba(255,255,255,0.7)'}}
+                      title="Download this module report">
+                      ↓ PDF
+                    </button>
+                  </div>
+                )}
+              </div>
+              {regenKey === resKey(r) && (
+                <div onClick={e=>e.stopPropagation()} style={{padding:'12px 16px',background:'#fafafa',borderTop:'1px solid '+m.border}}>
+                  <p style={{fontSize:11,color:'#666',marginBottom:6}}>Что поправить? (необязательно — пусто = обычная перегенерация, как раньше)</p>
+                  <textarea value={regenNote} onChange={e=>setRegenNote(e.target.value)} rows={3}
+                    placeholder="Например: цены конкурентов выглядят неправдоподобно, перепроверь"
+                    style={{width:'100%',fontSize:12,padding:6,fontFamily:'inherit',boxSizing:'border-box'}}/>
+                  <div style={{display:'flex',gap:8,marginTop:8}}>
+                    <button onClick={()=>{
                         // Перегенерация: чистим этот модуль и все зависимые ниже по цепочке,
                         // затем перезапускаем их с реальным поиском (не из старого результата).
                         // ГЛОБАЛЬНЫЙ модуль (M1.1/M1.2) — цепочка ТОЛЬКО из него самого: у него
@@ -3037,27 +3087,45 @@ function App() {
                         // чистим цепочку только для ЭТОЙ ниши (у по-нишевых), глобальные — как есть
                         const upd={...proj,results:(proj.results||[]).filter(x=> !(chain.includes(x.id) && (isPerNiche(x.id) ? (x.niche||'')===rn : true))),updatedAt:new Date().toISOString()};
                         setProj(upd);sv(upd);
-                        run(chain, undefined, true, rn||undefined);
+                        run(chain, undefined, true, rn||undefined, regenNote.trim()||undefined);
+                        setRegenKey(null);
                       }}
-                      style={{padding:'3px 8px',fontSize:10,color:m.dark,borderColor:m.border,background:'rgba(255,255,255,0.7)'}}
-                      title="Перегенерировать: новый поиск для этого модуля и зависимых ниже">
-                      ↺
+                      style={{padding:'5px 12px',fontSize:11,background:m.color,color:'#fff',border:'none',borderRadius:6,cursor:'pointer'}}>
+                      Перегенерировать
                     </button>
-                    <button onClick={e=>{e.stopPropagation();const html=generateHTMLReport(brief,proj.results,lang,priceLayers,selectedLayers,r.id);const w=window.open('','_blank');w.document.write(html);w.document.close();}}
-                      style={{padding:'3px 8px',fontSize:10,color:m.dark,borderColor:m.border,background:'rgba(255,255,255,0.7)'}}
-                      title="Download this module report">
-                      ↓ PDF
+                    <button onClick={()=>setRegenKey(null)} style={{padding:'5px 12px',fontSize:11,color:'#666',border:'1px solid #ddd',borderRadius:6,background:'#fff',cursor:'pointer'}}>
+                      Отмена
                     </button>
                   </div>
-                )}
-              </div>
+                </div>
+              )}
               {open && (
                 <div style={{padding:'14px 16px',background:'#fff',borderTop:'1px solid '+m.border}}>
-                  <ModuleCharts moduleId={r.id} chartData={r.chartData}/>
-                  {r.id === 'M1' && r.chartData && (
-                    <MarketPositionBlock chartData={r.chartData} brief={brief} lang={lang}/>
-                  )}
-                  <MD text={r.content}/>
+                  {editKey === resKey(r) ? (
+                    <div>
+                      <p style={{fontSize:11,color:'#666',marginBottom:6}}>Правка вручную — сохраняется сразу, без вызова модели. График/диаграмма (если есть) построены по исходной генерации и ручной правкой текста не пересчитываются.</p>
+                      <textarea value={editDraft} onChange={e=>setEditDraft(e.target.value)} rows={20}
+                        style={{width:'100%',fontFamily:'monospace',fontSize:12,padding:8,boxSizing:'border-box'}}/>
+                      <div style={{display:'flex',gap:8,marginTop:8}}>
+                        <button onClick={()=>{
+                            const upd={...proj, results: (proj.results||[]).map(x=>resKey(x)===editKey?{...x,content:editDraft,editedAt:new Date().toISOString()}:x), updatedAt:new Date().toISOString()};
+                            setProj(upd); sv(upd); setEditKey(null);
+                          }}
+                          style={{padding:'5px 12px',fontSize:11,background:m.color,color:'#fff',border:'none',borderRadius:6,cursor:'pointer'}}>
+                          Сохранить правки
+                        </button>
+                        <button onClick={()=>setEditKey(null)} style={{padding:'5px 12px',fontSize:11,color:'#666',border:'1px solid #ddd',borderRadius:6,background:'#fff',cursor:'pointer'}}>
+                          Отмена
+                        </button>
+                      </div>
+                    </div>
+                  ) : (<>
+                    <ModuleCharts moduleId={r.id} chartData={r.chartData}/>
+                    {r.id === 'M1' && r.chartData && (
+                      <MarketPositionBlock chartData={r.chartData} brief={brief} lang={lang}/>
+                    )}
+                    <MD text={r.content}/>
+                  </>)}
                 </div>
               )}
             </div>
