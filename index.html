@@ -1283,10 +1283,10 @@ CHART DATA
 Output JSON between <<<CHART_DATA_START>>> and <<<CHART_DATA_END>>>:
 {
   "semanticClusters": [
-    { "cluster": "cluster name", "volume": number, "type": "info/commercial/nav", "priority": 1-3 }
+    { "cluster": "cluster name", "volume": number or null, "type": "info/commercial/nav", "priority": 1-3 }
   ]
 }
-В график попадают ТОЛЬКО кластеры с частотностью, подтверждённой источником [n]. Кластеры со статусом «не замерено» в JSON НЕ включай — иначе график покажет выдуманный спрос как факт. Если подтверждённых нет ни одного, верни "semanticClusters": [].`;
+Включи ВСЕ кластеры из таблицы SEO-02 — type и priority брать из таблицы можно всегда, это не требует замера. Поле "volume": число ТОЛЬКО если частотность подтверждена источником [n] в таблице; если в таблице «не замерено» — ставь null, а не выдуманное число. Не подменяй null нулём или приблизительной оценкой.`;
 }
 
 function buildReportPrompt(brief, results, lang) {
@@ -1769,10 +1769,21 @@ function generateHTMLReport(brief, results, lang, priceLayers, selectedLayers, s
     const semCl = rep.chartData && rep.chartData.semanticClusters;
     if (!semCl || !semCl.length) return;
     const canvasId = 'rpt_sem_'+i;
-    const subtitle = rep.niche ? 'Ниша: '+rep.niche : '';
-    pushReportChart(resKey(rep), canvasId, 'Семантические кластеры по объёму', subtitle, 220);
-    extraScripts += 'if(document.getElementById("'+canvasId+'")){var ss='+safeJson(semCl)+';'
-      +'new Chart(document.getElementById("'+canvasId+'"),{type:"bar",data:{labels:ss.map(function(c){return c.cluster}),datasets:[{data:ss.map(function(c){return c.volume||0}),backgroundColor:"#72243E"}]},options:{responsive:true,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true}}}});}';
+    const nicheSub = rep.niche ? 'Ниша: '+rep.niche+' · ' : '';
+    const withVolume = semCl.filter(c => c.volume != null && c.volume > 0);
+    if (withVolume.length) {
+      pushReportChart(resKey(rep), canvasId, 'Семантические кластеры по объёму', nicheSub+'Только кластеры с частотностью, подтверждённой источником.', 220);
+      extraScripts += 'if(document.getElementById("'+canvasId+'")){var ss='+safeJson(withVolume)+';'
+        +'new Chart(document.getElementById("'+canvasId+'"),{type:"bar",data:{labels:ss.map(function(c){return c.cluster}),datasets:[{data:ss.map(function(c){return c.volume}),backgroundColor:"#72243E"}]},options:{responsive:true,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true}}}});}';
+    } else {
+      // Частотность нигде не подтверждена источником — рисовать объём было бы её выдумкой.
+      // Вместо этого честный график: сколько кластеров на каждый приоритет (1-3) — это
+      // пересказ таблицы SEO-02, не оценка спроса, поэтому не требует подтверждения [n].
+      pushReportChart(resKey(rep), canvasId, 'Семантические кластеры по приоритету', nicheSub+'Частотность источниками не подтверждена (нужен ручной замер в Wordstat) — вместо объёма показано число кластеров по приоритету.', 200);
+      extraScripts += 'if(document.getElementById("'+canvasId+'")){var ss='+safeJson(semCl)+';'
+        +'var byP={1:0,2:0,3:0};ss.forEach(function(c){var p=c.priority;if(byP[p]!=null)byP[p]++;});'
+        +'new Chart(document.getElementById("'+canvasId+'"),{type:"bar",data:{labels:["Приоритет 1","Приоритет 2","Приоритет 3"],datasets:[{data:[byP[1],byP[2],byP[3]],backgroundColor:["#72243E","#A8506E","#D896AC"]}]},options:{indexAxis:"y",responsive:true,plugins:{legend:{display:false}},scales:{x:{beginAtZero:true,ticks:{precision:0}}}}});}';
+    }
   });
 
   if (extraScripts) {
