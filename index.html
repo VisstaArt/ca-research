@@ -431,6 +431,24 @@ const addMetricsSnapshot = async (snap) => {
   } catch { return false; }
 };
 
+// M8 — тренд-монитор: история снапшотов по (проекту, нише), только в Supabase (как M10).
+const loadTrendSnapshots = async (projectId, niche) => {
+  try {
+    const r = await fetch('/api/trends?project_id='+encodeURIComponent(projectId)+'&niche='+encodeURIComponent(niche||''), { headers: dbHeaders() });
+    if (!r.ok) return null;
+    const d = await r.json();
+    return Array.isArray(d.snapshots) ? d.snapshots : null;
+  } catch { return null; }
+};
+const addTrendSnapshot = async (snap) => {
+  try {
+    const r = await fetch('/api/trends', { method:'POST', headers: dbHeaders(), body: JSON.stringify(snap) });
+    if (!r.ok) return null;
+    const d = await r.json();
+    return d.snapshot || null;
+  } catch { return null; }
+};
+
 async function pingProxy(key) {
   const res = await fetch('/api/proxy', {
     method: 'POST', headers: {'Content-Type':'application/json','X-App-Key':key},
@@ -479,6 +497,7 @@ async function gatherEvidence(queries, maxQueries, maxResults, opts) {
   const searchOpts = { max_results: maxResults || 4 };
   if (o.depth) searchOpts.depth = o.depth;                       // 'advanced' — глубже и больше результатов
   if (o.raw) searchOpts.include_raw_content = true;              // полный текст страницы вместо сниппета
+  if (o.days) searchOpts.days = o.days;                          // ограничить свежестью (M8: недельный скан трендов)
   const all = [];
   for (const q of queries.slice(0, maxQueries || 9)) {
     const r = await callSearch(q, searchOpts);
@@ -743,6 +762,23 @@ async function gatherCompetitorEvidence(brief) {
   ];
   for (const c of named) queries.push(c+' отзывы цены тарифы');
   return gatherEvidence(queries, 8, 4);
+}
+
+// M8 (тренд-монитор): в отличие от остальных gather-функций явно ограничена
+// свежестью (days) — модуль отвечает на вопрос «что изменилось НЕДАВНО», а не
+// общий срез рынка.
+async function gatherTrendEvidence(brief) {
+  const market = brief.geoMarket || brief.geoCompany || '';
+  const product = brief.niche || brief.name || '';
+  const niche = brief.selectedNiche || '';
+  const topic = niche || product;
+  const queries = [
+    topic+' '+market+' новости тренды',
+    topic+' '+market+' новые игроки продукты запуск',
+    topic+' '+market+' форум обсуждение свежие жалобы проблемы',
+    topic+' '+market+' инфоповод событие',
+  ];
+  return gatherEvidence(queries, 8, 5, { days: 30 });
 }
 
 // Единый блок «работай только с этим материалом» для промптов
@@ -1082,6 +1118,41 @@ Output JSON between <<<CHART_DATA_START>>> and <<<CHART_DATA_END>>>:
   ]
 }
 Include 6-12 key competitors AND our company as one point with "isUs": true (estimate our position honestly from the brief). price: 1=cheapest, 5=most expensive. quality: perceived value/quality 1-5.`;
+}
+
+// M8 — Тренд-монитор. В отличие от M1-M7 это ПЕРИОДИЧЕСКИЙ снапшот (не единственный
+// результат на нишу) — модель явно видит предыдущий снапшот (если есть) и обязана
+// сравнить, а не пересказать рынок с нуля. m2Context — best-effort: если для этой
+// ниши есть готовый M2, добавляется как справка о конкурентах; если нет — не блокирует.
+function buildM8Prompt(brief, lang, prevSnapshotText, m2Context, evidence) {
+  const prevBlock = prevSnapshotText
+    ? `\nPREVIOUS SNAPSHOT (compare against this — do NOT just restate the market from scratch):\n${prevSnapshotText.slice(0,2000)}\n`
+    : '\nNO PREVIOUS SNAPSHOT — this is the first scan for this niche, "delta" should say so honestly (нет базы для сравнения).\n';
+  const m2Block = m2Context ? `\nCOMPETITOR CONTEXT FROM M2 (for spotting changes among competitors):\n${m2Context.slice(0,1500)}\n` : '';
+  return `${prevBlock}${m2Block}${evidenceSection(evidence)}
+Fill module M8 «Trend Monitor» for this niche. ALL output in ${lang}. Answer: what changed in this niche RECENTLY (last ~30 days)?
+
+BLOCK T1 — Тренды (Trends)
+| Тема | Динамика (новая/растёт/затухает) | Что именно изменилось | Источники [n] | Рекомендация для контента |
+Rules: только темы, реально подтверждённые evidence выше. Динамику "растёт"/"затухает" можно присвоить ТОЛЬКО если есть предыдущий снапшот для сравнения — иначе везде "новая" с пометкой "первый скан".
+
+BLOCK T2 — Инфоповоды (Newsworthy)
+| Инфоповод | Дата | Актуально до | Источник [n] | Как использовать в контенте |
+Rules: «Актуально до» — честная оценка, когда инфоповод перестанет быть свежим (не выдумывай точные даты, если evidence не даёт — пиши «неделя-две» и т.п.).
+
+BLOCK T3 — Дельта к прошлому снапшоту
+Текстом (3-5 пунктов): что появилось нового с прошлого раза, что исчезло/затихло, что осталось стабильным. Если предыдущего снапшота нет — так и напиши.
+
+═══════════════════════════════════════════════
+CHART DATA
+═══════════════════════════════════════════════
+Output JSON between <<<CHART_DATA_START>>> and <<<CHART_DATA_END>>>:
+{
+  "trends": [ { "topic": "тема", "status": "new/growing/fading", "recommendation": "..." } ],
+  "newsworthy": [ { "item": "инфоповод", "validUntil": "срок актуальности", "howToUse": "..." } ],
+  "delta": { "summary": "3-5 пунктов дельты одной строкой через ; " }
+}
+Только пункты, подтверждённые evidence выше — не выдумывай темы, которых нет в источниках.`;
 }
 
 function buildM3Prompt(brief, lang, prev, evidence, competitors) {
@@ -2342,6 +2413,13 @@ function App() {
   React.useEffect(() => {
     if (sc === 'tracker' && proj?.id) loadPublications(proj.id).then(setPublications);
   }, [sc, proj?.id]);
+  // M8 — тренд-монитор (по проекту и нише)
+  const [trendNiche, setTrendNiche] = React.useState('');
+  const [trendSnapshots, setTrendSnapshots] = React.useState(null); // null = загрузка/БД недоступна
+  const [generatingTrend, setGeneratingTrend] = React.useState(false);
+  React.useEffect(() => {
+    if (sc === 'trends' && proj?.id) loadTrendSnapshots(proj.id, trendNiche).then(setTrendSnapshots);
+  }, [sc, proj?.id, trendNiche]);
   const [rep, setRep] = React.useState('');
   const [repping, setRepping] = React.useState(false);
   const [repOpen, setRepOpen] = React.useState(false);
@@ -3093,6 +3171,74 @@ function App() {
     </div>
   );
 
+  // ── M8 TRENDS (по проекту и нише)
+  if (sc === 'trends') return (
+    <div>
+      <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:'1.5rem'}}>
+        <button onClick={()=>setSc('work')}>← Back to project</button>
+        <h2 style={{fontSize:20,fontWeight:500}}>Тренды: {brief.name}</h2>
+      </div>
+
+      {nichesOf(brief).length > 1 && (
+        <div style={{display:'flex',gap:6,flexWrap:'wrap',marginBottom:16}}>
+          {nichesOf(brief).map(n => (
+            <button key={n} onClick={()=>setTrendNiche(n)}
+              style={{fontSize:12,padding:'5px 12px',borderColor:n===trendNiche?'#378ADD':'#ddd',background:n===trendNiche?'#E6F1FB':'#fff',color:n===trendNiche?'#0C447C':'#111',fontWeight:n===trendNiche?500:400}}>
+              {n}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {trendSnapshots === null ? (
+        <div className="card"><p style={{fontSize:13,color:'#c00'}}>БД не настроена или недоступна — история трендов хранится только в Supabase, локальной подстраховки здесь нет.</p></div>
+      ) : (
+        <React.Fragment>
+          <button className="btn-primary" disabled={generatingTrend}
+            onClick={async ()=>{
+              setGeneratingTrend(true);
+              try {
+                const Bn = trendNiche ? {...brief, selectedNiche: trendNiche} : brief;
+                const evidence = await gatherTrendEvidence(Bn);
+                const prev = (trendSnapshots||[])[0];
+                const prevText = prev ? ('Дата: '+prev.snapshot_date+'\n'+JSON.stringify({trends:prev.trends, newsworthy:prev.newsworthy})) : '';
+                const m2 = (proj.results||[]).find(r=>r.id==='M2' && (r.niche||'')===trendNiche);
+                const userPrompt = buildM8Prompt(Bn, lang, prevText, m2?m2.content:'', evidence);
+                const sys = buildSystem(Bn, lang);
+                const full = await callGPT(sys, userPrompt);
+                const chartData = extractChartData(full) || {};
+                const cleaned = cleanContent(full);
+                const created = await addTrendSnapshot({
+                  project_id: proj.id, niche: trendNiche,
+                  snapshot_date: new Date().toISOString().slice(0,10),
+                  trends: chartData.trends||[], newsworthy: chartData.newsworthy||[], delta: chartData.delta||{},
+                  content: cleaned,
+                });
+                if (created) setTrendSnapshots(s=>[created, ...(s||[])]);
+              } catch(e) {}
+              setGeneratingTrend(false);
+            }}
+            style={{marginBottom:16}}>
+            {generatingTrend ? 'Собираю…' : '🔭 Обновить сейчас'}
+          </button>
+
+          {(trendSnapshots||[]).length === 0 && <p style={{fontSize:12,color:'#888'}}>Пока нет снапшотов — нажмите «Обновить сейчас» (платный вызов Tavily+OpenAI).</p>}
+          {(trendSnapshots||[]).map(snap => (
+            <div key={snap.id} className="card">
+              <p style={{fontSize:13,fontWeight:500,marginBottom:8}}>{snap.snapshot_date}</p>
+              {snap.delta && snap.delta.summary && (
+                <div style={{background:'#EFF6E4',border:'1px solid #cfe3b4',borderRadius:8,padding:'8px 12px',marginBottom:10}}>
+                  <span style={{fontSize:11,fontWeight:700,color:'#2E4F0C',textTransform:'uppercase'}}>Дельта:</span> <span style={{fontSize:13,color:'#111'}}>{snap.delta.summary}</span>
+                </div>
+              )}
+              <MD text={snap.content}/>
+            </div>
+          ))}
+        </React.Fragment>
+      )}
+    </div>
+  );
+
   // ── WORK
   const allMods = MODULES.filter(m => mods.includes(m.id));
   const workNiches = nichesOf(brief);
@@ -3153,6 +3299,12 @@ function App() {
             <button onClick={()=>setSc('tracker')} style={{fontSize:12,padding:'7px 12px',color:'#185FA5',borderColor:'#85B7EB',background:'#E6F1FB',fontWeight:500}}
               title="M10: публикации и метрики по этому проекту">
               📊 Трекер
+            </button>
+          )}
+          {!isRun && modDone('M2') && (
+            <button onClick={()=>{setTrendNiche(workNiches[0]||''); setSc('trends');}} style={{fontSize:12,padding:'7px 12px',color:'#0C447C',borderColor:'#85B7EB',background:'#E6F1FB',fontWeight:500}}
+              title="M8: что изменилось в нише за период">
+              🔭 Тренды
             </button>
           )}
           <button onClick={()=>setSc('form')} style={{fontSize:12,padding:'7px 12px',color:'#666',borderColor:'#ddd'}}>
