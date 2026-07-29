@@ -488,6 +488,19 @@ async function callSearch(query, opts) {
   } catch { return []; }
 }
 
+// Реальная частотность (M7): Yandex Wordstat. null при недоступности/не настроенном
+// API — вызывающий код (gatherWordstatData) трактует это как «данных нет», не падает.
+async function callWordstat(phrase, opts) {
+  try {
+    const res = await fetch('/api/wordstat', {
+      method: 'POST', headers: {'Content-Type':'application/json','X-App-Key':getAppKey()},
+      body: JSON.stringify({phrase, ...(opts||{})}),
+    });
+    if (!res.ok) return null;
+    return await res.json();
+  } catch { return null; }
+}
+
 // Общий сборщик досье: гоняет запросы через реальный поиск, дедуплицирует по URL
 async function gatherEvidence(queries, maxQueries, maxResults, opts) {
   const o = opts || {};
@@ -747,6 +760,29 @@ async function gatherSeoEvidence(brief) {
   queries.push(product+' '+market+' seo продвижение семантика запросы');
   // perDomain=2 — для SEO важна ширина выдачи (разные домены), а не глубина одного сайта
   return gatherEvidence(queries, 12, 8, { depth:'advanced', raw:true, contentChars:1000, perDomain:2, maxItems:35 });
+}
+
+// Реальная частотность для M7 (Yandex Wordstat) — 2-3 «якорных» фразы дают уже
+// несколько десятков похожих ИЗМЕРЕННЫХ фраз каждая (results+associations),
+// поэтому не нужно заранее знать все кластеры SEO-02 — Wordstat сам их предлагает.
+async function gatherWordstatData(brief) {
+  const market = brief.geoMarket || brief.geoCompany || '';
+  const product = brief.niche || brief.name || '';
+  const niches = (brief.selectedNiche||'').split(',').map(s=>s.trim()).filter(Boolean).slice(0,2);
+  const seeds = (niches.length ? niches.map(n=>product+' '+n) : [product]).slice(0,3);
+  if (seeds.length < 2) seeds.push(product+' '+market);
+  const out = [];
+  const seen = new Set();
+  for (const phrase of seeds) {
+    const d = await callWordstat(phrase, { numPhrases: 30 });
+    if (!d) continue;
+    for (const r of [...(d.results||[]), ...(d.associations||[])]) {
+      if (!r.phrase || r.count == null || seen.has(r.phrase)) continue;
+      seen.add(r.phrase);
+      out.push({ phrase: r.phrase, count: r.count });
+    }
+  }
+  return out;
 }
 
 // Досье для M2: конкуренты, аналоги, цены, отзывы — в выбранной нише
@@ -1367,9 +1403,16 @@ H1, subheadline, bullet points, CTA text
 - Вместо выдуманной цифры используй качественную формулировку: «рост числа заявок», «больше лидов без роста бюджета».`;
 }
 
-function buildM7Prompt(brief, lang, prev, evidence) {
+function buildM7Prompt(brief, lang, prev, evidence, wordstatData) {
   const ctx = prev ? `\nCONTEXT:\n${prev.slice(0,1500)}\n` : '';
-  return `${ctx}${evidenceSection(evidence)}
+  // Реальная частотность (Yandex Wordstat, измерено только что) — если API не настроен
+  // или ничего не нашёл, wordstatData пуст и модуль ведёт себя как раньше («не замерено»).
+  const wordstatBlock = (wordstatData && wordstatData.length)
+    ? '\n═══════════════════════════════════════════════\nREAL WORDSTAT FREQUENCY DATA (Yandex, measured just now)\n═══════════════════════════════════════════════\n'
+      + wordstatData.map(w=>w.phrase+': '+w.count+'/мес').join('\n')
+      + '\n\nЭто РЕАЛЬНО измеренные числа (не из evidence, не выдумка) — используй их как приоритетный источник частотности для SEO-02.\n'
+    : '';
+  return `${ctx}${evidenceSection(evidence)}${wordstatBlock}
 Fill module M7 SEO blocks. ALL output in ${lang}.
 
 SEO-00 — Источники (ОБЯЗАТЕЛЬНЫЙ, идёт ПЕРВЫМ)
@@ -1377,19 +1420,20 @@ SEO-00 — Источники (ОБЯЗАТЕЛЬНЫЙ, идёт ПЕРВЫМ)
 Одна строка на каждую выдержку evidence, которую ты реально использовал. Ссылка [n] ниже без строки здесь — ОШИБКА.
 
 ЧАСТОТНОСТИ — КРИТИЧНО (главное правило этого модуля):
-Переданный веб-поиск НЕ измеряет Wordstat и НЕ даёт позиции в выдаче. Поэтому:
-- Число частотности допустимо ТОЛЬКО если оно взято из конкретной выдержки evidence — и тогда рядом ОБЯЗАТЕЛЬНА ссылка [n] на источник этого числа.
-- Если числа в evidence нет — пиши «не замерено». НЕ придумывай ни точное число, ни диапазон.
-- Выдуманная частотность вида «2 000–3 500 /мес» или «900–1200» без ссылки [n] — ГРУБАЯ ОШИБКА и главный дефект этого модуля. Лучше честное «не замерено» по всем кластерам, чем правдоподобные выдуманные цифры: заказчик планирует по ним контент и бюджет.
-- Ссылка на wordstat.yandex.ru как «источник» без конкретного числа ИЗ evidence не считается подтверждением.
+Допустимы ДВА источника числа частотности:
+1. Блок REAL WORDSTAT FREQUENCY DATA выше (если есть) — бери число оттуда напрямую, в источнике пиши «Wordstat» вместо [n].
+2. Конкретная выдержка evidence — и тогда рядом ОБЯЗАТЕЛЬНА ссылка [n].
+Если кластера нет ни там, ни там — пиши «не замерено». НЕ придумывай ни точное число, ни диапазон.
+- Выдуманная частотность вида «2 000–3 500 /мес» или «900–1200» без Wordstat и без [n] — ГРУБАЯ ОШИБКА и главный дефект этого модуля. Лучше честное «не замерено», чем правдоподобные выдуманные цифры: заказчик планирует по ним контент и бюджет.
+- Ссылка на wordstat.yandex.ru как «источник» без конкретного числа ИЗ блока Wordstat выше или ИЗ evidence не считается подтверждением.
 
 SEO-01 — Search Competitors (страницы, которые РЕАЛЬНО находятся по целевым запросам):
 | URL | Найдено по запросу | Тип страницы | О чём страница | Title | Чем сильна | [n] |
 Rules: URL берутся ТОЛЬКО из evidence. Позиции в топ-10 НЕ указывай — поиск их не возвращает; вместо позиции указывай запрос, по которому страница нашлась.
 
 SEO-02 — Semantic Core:
-| Кластер | Тип (инфо/коммерч/навигац) | Примеры запросов | Частотность (число + [n] ИЛИ «не замерено») | Сезонность (или «не замерено») | Конкуренция (оценка + обоснование) | Приоритет | Тип страницы |
-После таблицы обязательной строкой: «Замерить вручную в Wordstat: <перечисли кластеры, где стоит „не замерено“>» — это рабочее задание специалисту, а не отговорка.
+| Кластер | Тип (инфо/коммерч/навигац) | Примеры запросов | Частотность (число из Wordstat, ИЛИ число + [n], ИЛИ «не замерено») | Сезонность (или «не замерено») | Конкуренция (оценка + обоснование) | Приоритет | Тип страницы |
+Кластеры, для которых в блоке Wordstat выше есть точное или близкое совпадение фразы — используй эти реальные числа в первую очередь, не ограничивайся только кластерами из evidence. После таблицы обязательной строкой: «Замерить вручную в Wordstat: <перечисли кластеры, где стоит „не замерено“>» — это рабочее задание специалисту, а не отговорка.
 
 SEO-03 — Content Audit (только по сайтам, попавшим в evidence):
 | Конкурент | Тип контента | Темы | Частота публикаций (или «не проверено») | Что работает | Как сделать лучше | [n] |
@@ -1414,7 +1458,7 @@ Output JSON between <<<CHART_DATA_START>>> and <<<CHART_DATA_END>>>:
     { "cluster": "cluster name", "volume": number or null, "type": "info/commercial/nav", "priority": 1-3 }
   ]
 }
-Включи ВСЕ кластеры из таблицы SEO-02 — type и priority брать из таблицы можно всегда, это не требует замера. Поле "volume": число ТОЛЬКО если частотность подтверждена источником [n] в таблице; если в таблице «не замерено» — ставь null, а не выдуманное число. Не подменяй null нулём или приблизительной оценкой.`;
+Включи ВСЕ кластеры из таблицы SEO-02 — type и priority брать из таблицы можно всегда, это не требует замера. Поле "volume": число ТОЛЬКО если частотность подтверждена блоком Wordstat выше ИЛИ источником [n] в таблице; если в таблице «не замерено» — ставь null, а не выдуманное число. Не подменяй null нулём или приблизительной оценкой.`;
 }
 
 function buildReportPrompt(brief, results, lang) {
@@ -2673,8 +2717,11 @@ function App() {
           userPrompt = buildM3Prompt(Bn, lang, prevContent || '', evidence, comps);
         } else if (mod.id === 'M7') {
           // SEO: реальная выдача по целевым запросам вместо частотностей «из памяти»
+          // + реальная частотность из Yandex Wordstat (если ключи настроены, иначе пусто —
+          // модуль ведёт себя как раньше, честное «не замерено»).
           const evidence = await gatherSeoEvidence(Bn);
-          userPrompt = buildM7Prompt(Bn, lang, prevContent || '', evidence);
+          const wordstatData = await gatherWordstatData(Bn);
+          userPrompt = buildM7Prompt(Bn, lang, prevContent || '', evidence, wordstatData);
         } else {
           // Контекст берём от стадии, на которой модуль СТРОИТСЯ (requires), в рамках своей ниши,
           // и целиком: без полного M3 модуль M4 не видит цитат VoC и вынужден их выдумывать.
