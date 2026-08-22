@@ -22,18 +22,43 @@ export default async function handler(req, res) {
     return res.status(503).json({ error: { message: 'Wordstat is not configured', code: 'wordstat_unconfigured' } });
   }
 
-  const { phrase, numPhrases, regions } = req.body || {};
+  const { phrase, numPhrases, regions, mode, period, fromDate, toDate } = req.body || {};
   if (!phrase || typeof phrase !== 'string') {
     return res.status(400).json({ error: { message: 'phrase is required' } });
   }
 
+  // count приходит строкой (протобуф int64) — приводим к числу один раз здесь,
+  // дальше по коду частотность везде ожидается числом.
+  const toNum = v => { const n = Number(v); return Number.isFinite(n) ? n : null; };
+  const headers = { 'Content-Type': 'application/json', 'Authorization': 'Api-Key ' + YA_KEY };
+
   try {
+    if (mode === 'dynamics') {
+      // Сезонность: частотность по месяцам за период — отдельный метод, не topRequests.
+      if (!fromDate || !toDate) {
+        return res.status(400).json({ error: { message: 'fromDate/toDate are required for mode=dynamics' } });
+      }
+      const r = await fetch('https://searchapi.api.cloud.yandex.net/v2/wordstat/dynamics', {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({
+          phrase: phrase.slice(0, 400),
+          period: period || 'PERIOD_MONTHLY',
+          fromDate, toDate,
+          folderId: YA_FOLDER,
+          ...(Array.isArray(regions) && regions.length ? { regions } : {}),
+        }),
+      });
+      const data = await r.json();
+      if (!r.ok) return res.status(r.status).json({ error: { message: data?.message || 'Wordstat error' } });
+      return res.status(200).json({
+        results: (data.results || []).map(x => ({ date: x.date, count: toNum(x.count) })),
+      });
+    }
+
     const r = await fetch('https://searchapi.api.cloud.yandex.net/v2/wordstat/topRequests', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Api-Key ' + YA_KEY,
-      },
+      headers,
       body: JSON.stringify({
         phrase: phrase.slice(0, 400),
         numPhrases: Math.min(Number(numPhrases) || 20, 2000),
@@ -44,9 +69,6 @@ export default async function handler(req, res) {
     const data = await r.json();
     if (!r.ok) return res.status(r.status).json({ error: { message: data?.message || 'Wordstat error' } });
 
-    // count приходит строкой (протобуф int64) — приводим к числу один раз здесь,
-    // дальше по коду частотность везде ожидается числом.
-    const toNum = v => { const n = Number(v); return Number.isFinite(n) ? n : null; };
     res.status(200).json({
       totalCount: toNum(data.totalCount),
       results: (data.results || []).map(x => ({ phrase: x.phrase, count: toNum(x.count) })),
