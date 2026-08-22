@@ -622,6 +622,7 @@ function buildModuleEntry(r) {
     generated_at: r.at || null,
     tables: tables,
     markdown: r.content || '',
+    chartData: r.chartData || null,
   };
 }
 const pickTable = (modulesObj, modId, needle) => {
@@ -630,6 +631,11 @@ const pickTable = (modulesObj, modId, needle) => {
   const key = Object.keys(mod.tables).find(k => k.toLowerCase().includes(needle.toLowerCase()));
   return key ? mod.tables[key] : [];
 };
+// Стабильный id для строк без него в исходной таблице (контент-машина в
+// client-pipeline-template дедуплицирует использованные боли/возражения по id
+// между прогонами — см. ТЗ-ИССЛЕДОВАНИЕ-ПОД-КОНТЕНТ.md п.4.2-4.3). Не трогаем
+// остальные колонки — те, что уже написала модель, передаём как есть.
+const withStableIds = (rows, prefix) => rows.map((row, i) => ({ [prefix + '_id']: prefix + '-' + (i + 1), ...row }));
 
 // Пакет для внешнего агента. Данные — на ЯЗЫКЕ ИССЛЕДОВАНИЯ, без перевода:
 // подлинные формулировки аудитории теряются при переводе туда-обратно (ПОЖЕЛАНИЯ п.4).
@@ -663,6 +669,11 @@ function buildAgentPackage(brief, lang, results, report) {
         jtbd: pickTable(modulesForNiche, 'M4', 'BLOCK 10'),
         hypotheses: pickTable(modulesForNiche, 'M5', 'BLOCK 16'),
         seo_clusters: pickTable(modulesForNiche, 'M7', 'SEO-02'),
+        // AWARENESS_MIX/OBJECTIONS: контракт ТЗ-ИССЛЕДОВАНИЕ-ПОД-КОНТЕНТ.md п.4.2-4.3 —
+        // раньше эти данные уже считались модулем M4, но никуда не экспортировались.
+        awareness_mix: (modulesForNiche.M4 && modulesForNiche.M4.chartData && modulesForNiche.M4.chartData.awarenessLevels) || [],
+        objections: withStableIds(pickTable(modulesForNiche, 'M4', 'BLOCK 12'), 'objection'),
+        hook_bank: (modulesForNiche.M3 && modulesForNiche.M3.chartData && modulesForNiche.M3.chartData.hookBank) || [],
       },
       modules: modulesForNiche,
     };
@@ -1236,7 +1247,28 @@ Task: Map search intent clusters by Eugene Schwartz awareness stages. 20–30 cl
 Format:
 | Кластер намерений | Примеры запросов | Стадия осознанности (Schwartz) | Роль в воронке (ads/lead-magnet/LP/FAQ) | Формула заголовка/оффера | Доказательство/артефакт | Мера спроса (Trends/подсказки/частота) | Примечание |
 
-Schwartz stages: Unaware / Problem Aware / Solution Aware / Product Aware / Most Aware.`;
+Schwartz stages: Unaware / Problem Aware / Solution Aware / Product Aware / Most Aware.
+
+═══════════════════════════════════════════════
+BLOCK 07B — Hook Bank (07B_Hook_Bank)
+═══════════════════════════════════════════════
+Task: From the verbatim quotes you already collected in BLOCK 07/07A above, SELECT (do not invent) 5-10 that work well as the FIRST LINE of a short-form post or carousel cover — short, emotional, first-person, phrased the way the audience itself would recognise as "my own words". Light trimming of a long quote down to its punchy core is fine; writing new phrasing is not — every hook must trace back to an exact quote already present in BLOCK 07 or 07A of THIS output.
+
+Format:
+| # | Цитата-хук | Тема/боль | Источник (площадка) | URL |
+
+If fewer than 5 quotes in BLOCK 07/07A actually qualify as strong hooks — output fewer, honestly. Do not pad with weak or off-target quotes just to reach 5.
+
+═══════════════════════════════════════════════
+CHART DATA
+═══════════════════════════════════════════════
+Output JSON between <<<CHART_DATA_START>>> and <<<CHART_DATA_END>>>:
+{
+  "hookBank": [
+    { "quote": "exact quote text as written above", "theme": "тема/боль", "url": "..." }
+  ]
+}
+Only quotes ALSO present verbatim in BLOCK 07/07A above — this is curation of existing quotes, not new content. If BLOCK 07B is empty, return "hookBank": [].`;
 }
 
 function buildM4Prompt(brief, lang, prev) {
