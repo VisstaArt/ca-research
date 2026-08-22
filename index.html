@@ -631,6 +631,13 @@ const pickTable = (modulesObj, modId, needle) => {
   const key = Object.keys(mod.tables).find(k => k.toLowerCase().includes(needle.toLowerCase()));
   return key ? mod.tables[key] : [];
 };
+// Одна колонка из строк таблицы (например SEO_KEYWORDS — просто список фраз,
+// не целые строки SEO-02) — ищет заголовок колонки тем же приёмом, что pickTable
+// ищет заголовок блока: по вхождению подстроки, без учёта регистра.
+const pickColumn = (rows, needle) => rows.map(row => {
+  const k = Object.keys(row).find(k => k.toLowerCase().includes(needle.toLowerCase()));
+  return k ? row[k] : '';
+}).filter(Boolean);
 // Стабильный id для строк без него в исходной таблице (контент-машина в
 // client-pipeline-template дедуплицирует использованные боли/возражения по id
 // между прогонами — см. ТЗ-ИССЛЕДОВАНИЕ-ПОД-КОНТЕНТ.md п.4.2-4.3). Не трогаем
@@ -655,37 +662,50 @@ function buildAgentPackage(brief, lang, results, report) {
     }
   }
   const m12 = all.find(r => r.id === 'M1_2');
+  // AUDIENCE_SEGMENTS — проектный уровень (одна карта сегментов на весь проект,
+  // M1.2 не по-нишевой), но нужна КАЖДОЙ нише в её собственном key_data — иначе
+  // потребителю (import_research.py) пришлось бы знать про две разные секции
+  // пакета вместо одной. Дублируем ссылку на один и тот же массив, не копируем
+  // данные — дешёво по памяти, дёшево для чтения потребителем.
+  const audienceSegments = pickTable(globalModules, 'M1_2', 'BLOCK 04');
   const research_by_niche = {};
   for (const nicheName of Object.keys(byNiche)) {
     const modulesForNiche = {};
     for (const r of Object.values(byNiche[nicheName])) modulesForNiche[r.id] = buildModuleEntry(r);
+    const m4 = modulesForNiche.M4, m3 = modulesForNiche.M3;
     research_by_niche[nicheName] = {
-      // Быстрые ссылки на то, что контент-машина просила в фидбеке: боли, персоны,
-      // цитаты, гипотезы, кластеры — тем же составом, что в таблицах отчёта, СВОЕЙ ниши.
+      // Поля названы ТОЧНО как в контракте с контент-машиной
+      // (ТЗ-ИССЛЕДОВАНИЕ-ПОД-КОНТЕНТ.md разд.3) — так import_research.py
+      // на стороне client-pipeline-template подставляет их в ONBOARDING-INTAKE.md
+      // без переименования один в один, без риска рассинхрона имён полей.
       key_data: {
+        NICHE_DESCRIPTION: (brief.niche || brief.name || '') + (nicheName ? ' — ' + nicheName : ''),
+        CHANNEL_FRAME: brief.extra || '',
+        AUDIENCE_PERSONAS: pickTable(modulesForNiche, 'M4', 'BLOCK 09'),
+        AUDIENCE_SEGMENTS: audienceSegments,
+        VOICE_OF_CUSTOMER: pickTable(modulesForNiche, 'M3', 'BLOCK 07'),
+        GUARDRAILS: (m4 && m4.chartData && m4.chartData.guardrails) || [],
+        TOPIC_FOCUS: brief.result || '',
+        PAIN_BANK: withStableIds(pickTable(modulesForNiche, 'M3', 'BLOCK 07'), 'pain'),
+        SEO_KEYWORDS: pickColumn(pickTable(modulesForNiche, 'M7', 'SEO-02'), 'кластер'),
+        AWARENESS_MIX: (m4 && m4.chartData && m4.chartData.awarenessLevels) || [],
+        OBJECTIONS: withStableIds(pickTable(modulesForNiche, 'M4', 'BLOCK 12'), 'objection'),
+        HOOK_BANK: (m3 && m3.chartData && m3.chartData.hookBank) || [],
+        // Не входит в контракт генерации, но полезно потребителю как справка:
         competitors: pickTable(modulesForNiche, 'M2', 'BLOCK 06'),
-        voc: pickTable(modulesForNiche, 'M3', 'BLOCK 07'),
-        personas: pickTable(modulesForNiche, 'M4', 'BLOCK 09'),
-        jtbd: pickTable(modulesForNiche, 'M4', 'BLOCK 10'),
         hypotheses: pickTable(modulesForNiche, 'M5', 'BLOCK 16'),
-        seo_clusters: pickTable(modulesForNiche, 'M7', 'SEO-02'),
-        // AWARENESS_MIX/OBJECTIONS: контракт ТЗ-ИССЛЕДОВАНИЕ-ПОД-КОНТЕНТ.md п.4.2-4.3 —
-        // раньше эти данные уже считались модулем M4, но никуда не экспортировались.
-        awareness_mix: (modulesForNiche.M4 && modulesForNiche.M4.chartData && modulesForNiche.M4.chartData.awarenessLevels) || [],
-        objections: withStableIds(pickTable(modulesForNiche, 'M4', 'BLOCK 12'), 'objection'),
-        hook_bank: (modulesForNiche.M3 && modulesForNiche.M3.chartData && modulesForNiche.M3.chartData.hookBank) || [],
       },
       modules: modulesForNiche,
     };
   }
   return {
-    schema_version: 2,
+    schema_version: 3,
     generated_at: new Date().toISOString(),
     research_language: lang,
     project: brief,
     niches: (m12 && m12.nicheData && m12.nicheData.niches) || [],   // полная карта разведки (M1.2)
     selected_niches: nichesOf(brief),                                // какие из них реально исследованы в этом прогоне
-    key_data: { segments: pickTable(globalModules, 'M1_2', 'BLOCK 04') },  // проектный уровень, не по нише
+    key_data: { AUDIENCE_SEGMENTS: audienceSegments },  // проектный уровень, не по нише — та же ссылка, что и в каждой нише выше
     global_modules: globalModules,
     research_by_niche: research_by_niche,
     executive_summary: report || '',
@@ -1320,6 +1340,16 @@ Format (15–25 rows):
 | Персона | Страх/сомнение | Глубинная причина | Артефакт для снятия страха | Паттерн копирайта | Где размещаем (LP/ADS/FAQ/скрипт) | URL источника |
 
 ═══════════════════════════════════════════════
+BLOCK 12B — Guardrails (12B_Гвардрейлы)
+═══════════════════════════════════════════════
+Task: From the fears/doubts in BLOCK 12 above (and any barrier patterns already visible in this research), synthesize 2-4 HARD RULES for content generation — things THIS audience will not forgive (bare promises without proof, invented statistics, guaranteed results, etc). Every rule must trace back to a specific fear/doubt already found above — not generic marketing advice invented from nothing.
+
+Format (2-4 rows):
+| # | Правило (что нельзя делать в контенте) | На основе какого страха/барьера (ссылка на строку BLOCK 12) |
+
+Style example (not the content — your niche's rules will differ): «Никогда не пиши "гарантированно даст рост в разы/проценты" — только "может дать", "в теории"» — на основе страха «обещания без доказательств».
+
+═══════════════════════════════════════════════
 BLOCK 13 — Decision Criteria (13_Критерии_Выбора)
 ═══════════════════════════════════════════════
 Format (15–25 rows):
@@ -1347,7 +1377,8 @@ Output JSON between <<<CHART_DATA_START>>> and <<<CHART_DATA_END>>>:
   ],
   "cjmStages": [
     { "stage": "stage name", "touchpoints": number, "dropRisk": "low/medium/high" }
-  ]
+  ],
+  "guardrails": [ "hard rule text, from BLOCK 12B above" ]
 }`;
 }
 
