@@ -5,33 +5,24 @@ export const config = { api: { bodyParser: true } };
 // доступно с другого устройства и внешним агентам). Тот же стиль, что
 // proxy.js/search.js: голый fetch к REST API Supabase (PostgREST), без SDK и
 // без package.json — их в проекте нет, не добавляем зависимость ради одного файла.
-// SUPABASE_SERVICE_ROLE_KEY живёт только здесь, клиенту никогда не отдаётся.
+//
+// Б1+Б2+Б3 (24.08.2026): раньше здесь был SUPABASE_SERVICE_ROLE_KEY — ключ,
+// который обходит RLS, поэтому GET без фильтра по владельцу отдавал ВСЕ
+// исследования всем. Теперь запрос идёт от имени пользователя (его JWT) —
+// PostgREST + RLS-политика `owner_id = auth.uid()` сами не отдадут чужие
+// строки, фильтрация — свойство базы, не код этой функции.
+import { requireUser } from './_auth.js';
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, DELETE, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, X-App-Key');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   if (req.method === 'OPTIONS') return res.status(200).end();
 
-  const appPassword = process.env.APP_PASSWORD;
-  if (appPassword && req.headers['x-app-key'] !== appPassword) {
-    return res.status(401).json({ error: { message: 'Unauthorized', code: 'bad_app_key' } });
-  }
+  const auth = await requireUser(req, res);
+  if (!auth) return; // requireUser уже отправил 401/503
 
-  const SB_URL = process.env.SUPABASE_URL;
-  const SB_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!SB_URL || !SB_KEY) {
-    // Клиент трактует 503 как «БД недоступна» и молча остаётся на localStorage.
-    return res.status(503).json({ error: { message: 'DB is not configured', code: 'db_unconfigured' } });
-  }
-  // Supabase Data API в панели показывает URL уже с /rest/v1/ на конце — терпим
-  // и такой вариант, и голый базовый адрес, чтобы не зависеть от того, что именно
-  // скопировали в переменную окружения.
-  const base = SB_URL.replace(/\/rest\/v1\/?$/, '').replace(/\/$/, '') + '/rest/v1/projects';
-  const headers = {
-    'Content-Type': 'application/json',
-    'apikey': SB_KEY,
-    'Authorization': 'Bearer ' + SB_KEY,
-  };
+  const base = auth.pgBase + 'projects';
+  const headers = auth.pgHeaders;
 
   try {
     if (req.method === 'GET') {

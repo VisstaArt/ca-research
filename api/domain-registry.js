@@ -4,28 +4,24 @@ export const config = { api: { bodyParser: true } };
 // заполняется поиском (discoverNicheDomains) + доменами конкурентов из уже готового
 // M2 (competitorDomainsFromM2), без ручного ввода — владелица делает исследование
 // целиком автоматически, руками ничего не вводит. Тот же стиль, что publications.js.
+//
+// Б1+Б2+Б3 (24.08.2026): реестр ОБЩИЙ на всех клиентов (не приватные данные —
+// публичный список форумов/отзовиков по нише), но доступ только вошедшим
+// пользователям (requireUser) — RLS-политика на таблице разрешает любому
+// authenticated, а не owner_id (см. план). service_role здесь тоже убран —
+// единообразие с остальными api/*.js важнее, чем разница в семантике таблицы.
+import { requireUser } from './_auth.js';
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, DELETE, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, X-App-Key');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   if (req.method === 'OPTIONS') return res.status(200).end();
 
-  const appPassword = process.env.APP_PASSWORD;
-  if (appPassword && req.headers['x-app-key'] !== appPassword) {
-    return res.status(401).json({ error: { message: 'Unauthorized', code: 'bad_app_key' } });
-  }
+  const auth = await requireUser(req, res);
+  if (!auth) return;
 
-  const SB_URL = process.env.SUPABASE_URL;
-  const SB_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!SB_URL || !SB_KEY) {
-    return res.status(503).json({ error: { message: 'DB is not configured', code: 'db_unconfigured' } });
-  }
-  const base = SB_URL.replace(/\/rest\/v1\/?$/, '').replace(/\/$/, '') + '/rest/v1/';
-  const headers = {
-    'Content-Type': 'application/json',
-    'apikey': SB_KEY,
-    'Authorization': 'Bearer ' + SB_KEY,
-  };
+  const base = auth.pgBase;
+  const headers = auth.pgHeaders;
 
   try {
     if (req.method === 'GET') {
@@ -45,9 +41,12 @@ export default async function handler(req, res) {
       if (!niche || !Array.isArray(domains) || !domains.length) {
         return res.status(400).json({ error: { message: 'niche and domains[] are required' } });
       }
+      // refreshed_at — свежесть реестра (владелица, 24.08: без срока годности
+      // общий реестр зачерствеет). Пишем при каждом апсерте, включая повтор
+      // уже существующих доменов — merge-duplicates обновит именно эту колонку.
       const rows = domains
         .filter(d => d && d.domain)
-        .map(d => ({ niche, domain: d.domain, category: d.category || null, source: d.source || 'auto' }));
+        .map(d => ({ niche, domain: d.domain, category: d.category || null, source: d.source || 'auto', refreshed_at: new Date().toISOString() }));
       if (!rows.length) return res.status(200).json({ ok: true, inserted: 0 });
       const r = await fetch(base + 'domain_registry', {
         method: 'POST',

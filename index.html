@@ -375,22 +375,72 @@ const upsert = p => { const a=loadAll(); const i=a.findIndex(x=>x.id===p.id); if
 const loadUiLang = () => { try { return localStorage.getItem('ca_uilang')||'en'; } catch { return 'en'; } };
 const saveUiLang = l => { try { localStorage.setItem('ca_uilang', l); } catch {} };
 
-// ── API
-const AK = 'ca_appkey'; // localStorage: пароль доступа к прокси
-const getAppKey = () => { try { return localStorage.getItem(AK)||''; } catch { return ''; } };
-const setAppKey = v => { try { localStorage.setItem(AK, v); } catch {} };
+// ── API / AUTH (Supabase Auth — Б1+Б2+Б3, 24.08.2026)
+// Заменяет общий APP_PASSWORD: аккаунты вместо одного пароля на всех, RLS на
+// стороне базы вместо фильтрации в коде (см. api/_auth.js). anon key ПУБЛИЧНЫЙ
+// по определению (в отличие от service_role) — не секрет, нормально видеть
+// его в клиентском коде, как и PROXY воркера ниже.
+const SUPABASE_URL = 'https://YOUR-PROJECT.supabase.co'; // TODO(владелица): подставить URL проекта (Settings → API)
+const SUPABASE_ANON_KEY = 'YOUR-ANON-KEY'; // TODO(владелица): подставить anon/public key (НЕ service_role)
+
+const AT_KEY = 'ca_access_token', RT_KEY = 'ca_refresh_token';
+const getAccessToken = () => { try { return localStorage.getItem(AT_KEY)||''; } catch { return ''; } };
+const getRefreshToken = () => { try { return localStorage.getItem(RT_KEY)||''; } catch { return ''; } };
+const setTokens = (access, refresh) => { try { localStorage.setItem(AT_KEY, access||''); localStorage.setItem(RT_KEY, refresh||''); } catch {} };
+const clearTokens = () => { try { localStorage.removeItem(AT_KEY); localStorage.removeItem(RT_KEY); } catch {} };
+
+async function signIn(email, password) {
+  try {
+    const res = await fetch(SUPABASE_URL + '/auth/v1/token?grant_type=password', {
+      method: 'POST', headers: { 'Content-Type':'application/json', apikey: SUPABASE_ANON_KEY },
+      body: JSON.stringify({ email, password }),
+    });
+    if (!res.ok) return false;
+    const d = await res.json();
+    if (!d.access_token) return false;
+    setTokens(d.access_token, d.refresh_token);
+    return true;
+  } catch { return false; }
+}
+async function refreshTokens() {
+  const rt = getRefreshToken();
+  if (!rt) return false;
+  try {
+    const res = await fetch(SUPABASE_URL + '/auth/v1/token?grant_type=refresh_token', {
+      method: 'POST', headers: { 'Content-Type':'application/json', apikey: SUPABASE_ANON_KEY },
+      body: JSON.stringify({ refresh_token: rt }),
+    });
+    if (!res.ok) return false;
+    const d = await res.json();
+    if (!d.access_token) return false;
+    setTokens(d.access_token, d.refresh_token);
+    return true;
+  } catch { return false; }
+}
+// Обёртка над fetch для всех вызовов api/*.js: добавляет Authorization, при 401
+// один раз пробует освежить токен и повторить запрос — access_token у Supabase
+// живёт ~час, без этого пользователя выкидывало бы на логин каждый час.
+async function authFetch(url, opts) {
+  const o = opts || {};
+  const withAuth = h => ({ ...(h||{}), Authorization: 'Bearer ' + getAccessToken() });
+  let res = await fetch(url, { ...o, headers: withAuth(o.headers) });
+  if (res.status === 401) {
+    if (await refreshTokens()) res = await fetch(url, { ...o, headers: withAuth(o.headers) });
+  }
+  return res;
+}
 
 // ── DB SYNC (Supabase, через api/projects.js) ────────────────────────────────
 // localStorage остаётся источником истины для мгновенного чтения/записи (без сети,
 // без риска потерять шаг дорогого прогона): каждый sv()/upsert() шлёт ПОЛНЫЙ объект
 // проекта, поэтому фоновая копия в БД at-least-once — сбой одного шага сам
 // «дошлёт» накопленное на следующем шаге, отдельная очередь ретраев не нужна.
-const dbHeaders = () => ({ 'Content-Type':'application/json', 'X-App-Key': getAppKey() });
-const syncToDb = p => { fetch('/api/projects', { method:'POST', headers: dbHeaders(), body: JSON.stringify(p) }).catch(()=>{}); };
-const deleteFromDb = id => { fetch('/api/projects?id='+encodeURIComponent(id), { method:'DELETE', headers: dbHeaders() }).catch(()=>{}); };
+const dbHeaders = () => ({ 'Content-Type':'application/json' });
+const syncToDb = p => { authFetch('/api/projects', { method:'POST', headers: dbHeaders(), body: JSON.stringify(p) }).catch(()=>{}); };
+const deleteFromDb = id => { authFetch('/api/projects?id='+encodeURIComponent(id), { method:'DELETE', headers: dbHeaders() }).catch(()=>{}); };
 const hydrateFromDb = async () => {
   try {
-    const r = await fetch('/api/projects', { headers: dbHeaders() });
+    const r = await authFetch('/api/projects', { headers: dbHeaders() });
     if (!r.ok) return null;
     const d = await r.json();
     if (!Array.isArray(d.projects)) return null;
@@ -410,7 +460,7 @@ const hydrateFromDb = async () => {
 // покажет «БД не настроена», а не тихо потеряет введённую публикацию/метрику.
 const loadPublications = async (projectId) => {
   try {
-    const r = await fetch('/api/publications?project_id='+encodeURIComponent(projectId), { headers: dbHeaders() });
+    const r = await authFetch('/api/publications?project_id='+encodeURIComponent(projectId), { headers: dbHeaders() });
     if (!r.ok) return null;
     const d = await r.json();
     return Array.isArray(d.publications) ? d.publications : null;
@@ -418,7 +468,7 @@ const loadPublications = async (projectId) => {
 };
 const addPublication = async (pub) => {
   try {
-    const r = await fetch('/api/publications', { method:'POST', headers: dbHeaders(), body: JSON.stringify({kind:'publication', ...pub}) });
+    const r = await authFetch('/api/publications', { method:'POST', headers: dbHeaders(), body: JSON.stringify({kind:'publication', ...pub}) });
     if (!r.ok) return null;
     const d = await r.json();
     return d.publication || null;
@@ -426,7 +476,7 @@ const addPublication = async (pub) => {
 };
 const addMetricsSnapshot = async (snap) => {
   try {
-    const r = await fetch('/api/publications', { method:'POST', headers: dbHeaders(), body: JSON.stringify({kind:'metrics', ...snap}) });
+    const r = await authFetch('/api/publications', { method:'POST', headers: dbHeaders(), body: JSON.stringify({kind:'metrics', ...snap}) });
     return r.ok;
   } catch { return false; }
 };
@@ -434,7 +484,7 @@ const addMetricsSnapshot = async (snap) => {
 // M8 — тренд-монитор: история снапшотов по (проекту, нише), только в Supabase (как M10).
 const loadTrendSnapshots = async (projectId, niche) => {
   try {
-    const r = await fetch('/api/trends?project_id='+encodeURIComponent(projectId)+'&niche='+encodeURIComponent(niche||''), { headers: dbHeaders() });
+    const r = await authFetch('/api/trends?project_id='+encodeURIComponent(projectId)+'&niche='+encodeURIComponent(niche||''), { headers: dbHeaders() });
     if (!r.ok) return null;
     const d = await r.json();
     return Array.isArray(d.snapshots) ? d.snapshots : null;
@@ -442,28 +492,20 @@ const loadTrendSnapshots = async (projectId, niche) => {
 };
 const addTrendSnapshot = async (snap) => {
   try {
-    const r = await fetch('/api/trends', { method:'POST', headers: dbHeaders(), body: JSON.stringify(snap) });
+    const r = await authFetch('/api/trends', { method:'POST', headers: dbHeaders(), body: JSON.stringify(snap) });
     if (!r.ok) return null;
     const d = await r.json();
     return d.snapshot || null;
   } catch { return null; }
 };
 
-async function pingProxy(key) {
-  const res = await fetch('/api/proxy', {
-    method: 'POST', headers: {'Content-Type':'application/json','X-App-Key':key},
-    body: JSON.stringify({ping:true}),
-  });
-  return res.ok;
-}
-
 // usage последнего вызова OpenAI — боковой канал, чтобы не менять сигнатуру callGPT
 // (её зовут в 5 местах). Цикл прогона читает это сразу после вызова.
 let lastGptUsage = null;
 async function callGPT(system, user, temperature, maxTokens) {
   lastGptUsage = null;
-  const res = await fetch('/api/proxy', {
-    method: 'POST', headers: {'Content-Type':'application/json','X-App-Key':getAppKey()},
+  const res = await authFetch('/api/proxy', {
+    method: 'POST', headers: {'Content-Type':'application/json'},
     body: JSON.stringify({model:MODEL, max_tokens: maxTokens || 8000, stream:false,
       ...(temperature != null ? { temperature } : {}),
       messages:[{role:'system',content:system},{role:'user',content:user}]}),
@@ -478,8 +520,8 @@ async function callGPT(system, user, temperature, maxTokens) {
 // Реальный веб-поиск (Tavily). Возвращает выдержки с URL; [] при недоступности поиска.
 async function callSearch(query, opts) {
   try {
-    const res = await fetch('/api/search', {
-      method: 'POST', headers: {'Content-Type':'application/json','X-App-Key':getAppKey()},
+    const res = await authFetch('/api/search', {
+      method: 'POST', headers: {'Content-Type':'application/json'},
       body: JSON.stringify({query, ...(opts||{})}),
     });
     if (!res.ok) return [];
@@ -492,8 +534,8 @@ async function callSearch(query, opts) {
 // API — вызывающий код (gatherWordstatData) трактует это как «данных нет», не падает.
 async function callWordstat(phrase, opts) {
   try {
-    const res = await fetch('/api/wordstat', {
-      method: 'POST', headers: {'Content-Type':'application/json','X-App-Key':getAppKey()},
+    const res = await authFetch('/api/wordstat', {
+      method: 'POST', headers: {'Content-Type':'application/json'},
       body: JSON.stringify({phrase, ...(opts||{})}),
     });
     if (!res.ok) return null;
@@ -506,8 +548,8 @@ async function callWordstat(phrase, opts) {
 // внутри results, см. api/verify-quotes.js) — processM3Voc различает эти два случая.
 async function callVerifyQuotes(items) {
   try {
-    const res = await fetch('/api/verify-quotes', {
-      method: 'POST', headers: {'Content-Type':'application/json','X-App-Key':getAppKey()},
+    const res = await authFetch('/api/verify-quotes', {
+      method: 'POST', headers: {'Content-Type':'application/json'},
       body: JSON.stringify({items}),
     });
     if (!res.ok) return null;
@@ -521,15 +563,13 @@ async function callVerifyQuotes(items) {
 async function callDomainRegistry(method, params) {
   try {
     if (method === 'GET') {
-      const res = await fetch('/api/domain-registry?niche=' + encodeURIComponent(params.niche), {
-        headers: {'X-App-Key':getAppKey()},
-      });
+      const res = await authFetch('/api/domain-registry?niche=' + encodeURIComponent(params.niche));
       if (!res.ok) return null;
       const d = await res.json();
       return d.domains || null;
     }
-    const res = await fetch('/api/domain-registry', {
-      method: 'POST', headers: {'Content-Type':'application/json','X-App-Key':getAppKey()},
+    const res = await authFetch('/api/domain-registry', {
+      method: 'POST', headers: {'Content-Type':'application/json'},
       body: JSON.stringify(params),
     });
     return res.ok;
@@ -2907,18 +2947,21 @@ function MarketPositionBlock({ chartData, brief, lang }) {
 }
 
 // ── MAIN APP
-// ── LOCK SCREEN (защита доступа)
+// ── LOCK SCREEN (вход — Б1, Supabase Auth вместо общего пароля, 24.08.2026)
+// Регистрация пока ручная (владелица заводит аккаунты в Supabase Dashboard) —
+// самообслуживаемая форма регистрации это Б9, отдельный заход позже.
 function LockScreen({ t, onUnlock }) {
+  const [email, setEmail] = React.useState('');
   const [pw, setPw] = React.useState('');
   const [err, setErr] = React.useState(false);
   const [busy, setBusy] = React.useState(false);
   const submit = async e => {
     e.preventDefault();
-    if (!pw.trim() || busy) return;
+    if (!email.trim() || !pw.trim() || busy) return;
     setBusy(true); setErr(false);
-    const ok = await pingProxy(pw.trim()).catch(()=>false);
+    const ok = await signIn(email.trim(), pw.trim()).catch(()=>false);
     setBusy(false);
-    if (ok) { setAppKey(pw.trim()); onUnlock(); } else setErr(true);
+    if (ok) onUnlock(); else setErr(true);
   };
   return (
     <div style={{minHeight:'100vh',display:'flex',alignItems:'center',justifyContent:'center',background:'#f7f7f5'}}>
@@ -2926,10 +2969,12 @@ function LockScreen({ t, onUnlock }) {
         <div style={{fontSize:26,marginBottom:6}}>🔒</div>
         <div style={{fontSize:17,fontWeight:600,color:'#111',marginBottom:4}}>{t.lockTitle}</div>
         <div style={{fontSize:12,color:'#888',marginBottom:18,lineHeight:1.5}}>{t.lockSub}</div>
-        <input type="password" value={pw} onChange={e=>setPw(e.target.value)} placeholder={t.lockPlaceholder} autoFocus
+        <input type="email" value={email} onChange={e=>setEmail(e.target.value)} placeholder="Email" autoFocus autoComplete="username"
+          style={{width:'100%',boxSizing:'border-box',padding:'10px 12px',fontSize:14,border:'1px solid '+(err?'#d33':'#ddd'),borderRadius:8,outline:'none',marginBottom:10}} />
+        <input type="password" value={pw} onChange={e=>setPw(e.target.value)} placeholder={t.lockPlaceholder} autoComplete="current-password"
           style={{width:'100%',boxSizing:'border-box',padding:'10px 12px',fontSize:14,border:'1px solid '+(err?'#d33':'#ddd'),borderRadius:8,outline:'none',marginBottom:10}} />
         {err && <div style={{fontSize:11,color:'#d33',marginBottom:10}}>{t.lockError}</div>}
-        <button type="submit" disabled={busy||!pw.trim()}
+        <button type="submit" disabled={busy||!email.trim()||!pw.trim()}
           style={{width:'100%',padding:'10px 0',fontSize:14,fontWeight:500,color:'#fff',background:busy?'#999':'#111',border:'none',borderRadius:8,cursor:'pointer'}}>
           {busy ? '…' : t.lockButton}
         </button>
@@ -2942,10 +2987,13 @@ function App() {
   const [uiLang, setUiLang] = React.useState(loadUiLang);
   const t = T[uiLang];
 
-  // Защита доступа: null = проверяем, true = открыто, false = нужен пароль
+  // Защита доступа: null = проверяем, true = вошли, false = нужен вход.
+  // Освежаем токен на загрузке страницы — заодно и проверка валидности:
+  // рефреш успешен только если сохранённый refresh_token ещё действителен.
   const [unlocked, setUnlocked] = React.useState(null);
   React.useEffect(() => {
-    pingProxy(getAppKey()).then(ok => setUnlocked(ok)).catch(() => setUnlocked(false));
+    if (!getRefreshToken()) { setUnlocked(false); return; }
+    refreshTokens().then(ok => setUnlocked(ok)).catch(() => setUnlocked(false));
   }, []);
 
   const [sc, setSc] = React.useState('list');

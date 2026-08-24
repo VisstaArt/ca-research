@@ -4,18 +4,18 @@ export const config = { api: { bodyParser: true }, maxDuration: 60 };
 // «верификация подстроки»). Грузим страницу по URL и проверяем, что точная
 // строка цитаты в ней реально есть — это код, не просьба к модели, поэтому
 // фабрикация цитат становится структурно невозможной, а не «нежелательной».
-// Тот же стиль/CORS/X-App-Key, что api/search.js. Без Supabase, без OpenAI —
-// голый fetch на чужую страницу, поэтому бесплатно и не зависит от бюджета.
+// Тот же стиль/CORS, что api/search.js. Без Supabase, без OpenAI — голый fetch
+// на чужую страницу, поэтому бесплатно и не зависит от бюджета.
+// Б1+Б2+Б3 (24.08.2026): общий APP_PASSWORD заменён на проверку JWT пользователя.
+import { requireUser } from './_auth.js';
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, X-App-Key');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   if (req.method === 'OPTIONS') return res.status(200).end();
 
-  const appPassword = process.env.APP_PASSWORD;
-  if (appPassword && req.headers['x-app-key'] !== appPassword) {
-    return res.status(401).json({ error: { message: 'Unauthorized', code: 'bad_app_key' } });
-  }
+  const auth = await requireUser(req, res);
+  if (!auth) return;
 
   const { items } = req.body || {};
   if (!Array.isArray(items) || !items.length) {

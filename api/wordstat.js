@@ -4,16 +4,16 @@ export const config = { api: { bodyParser: true } };
 // Search API / AI Studio). Раньше M7 честно писал «не замерено» почти везде,
 // т.к. Tavily не измеряет Wordstat; теперь есть реальный источник чисел.
 // Тот же стиль, что proxy.js/search.js: голый fetch, без SDK.
+// Б1+Б2+Б3 (24.08.2026): общий APP_PASSWORD заменён на проверку JWT пользователя.
+import { requireUser } from './_auth.js';
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, X-App-Key');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   if (req.method === 'OPTIONS') return res.status(200).end();
 
-  const appPassword = process.env.APP_PASSWORD;
-  if (appPassword && req.headers['x-app-key'] !== appPassword) {
-    return res.status(401).json({ error: { message: 'Unauthorized', code: 'bad_app_key' } });
-  }
+  const auth = await requireUser(req, res);
+  if (!auth) return;
 
   const YA_KEY = process.env.YANDEX_API_KEY;
   const YA_FOLDER = process.env.YANDEX_FOLDER_ID;

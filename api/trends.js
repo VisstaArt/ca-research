@@ -5,28 +5,21 @@ export const config = { api: { bodyParser: true } };
 // таблица с историей (как publications/metrics_snapshots у M10), не proj.results.
 // Тот же стиль, что proxy.js/search.js/projects.js/publications.js: голый fetch
 // к REST Supabase (PostgREST), без SDK/package.json.
+//
+// Б1+Б2+Б3 (24.08.2026): изоляция по владельцу через RLS (project_id ->
+// projects.owner_id), запрос от имени пользователя, не service_role.
+import { requireUser } from './_auth.js';
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, X-App-Key');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   if (req.method === 'OPTIONS') return res.status(200).end();
 
-  const appPassword = process.env.APP_PASSWORD;
-  if (appPassword && req.headers['x-app-key'] !== appPassword) {
-    return res.status(401).json({ error: { message: 'Unauthorized', code: 'bad_app_key' } });
-  }
+  const auth = await requireUser(req, res);
+  if (!auth) return;
 
-  const SB_URL = process.env.SUPABASE_URL;
-  const SB_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!SB_URL || !SB_KEY) {
-    return res.status(503).json({ error: { message: 'DB is not configured', code: 'db_unconfigured' } });
-  }
-  const base = SB_URL.replace(/\/rest\/v1\/?$/, '').replace(/\/$/, '') + '/rest/v1/';
-  const headers = {
-    'Content-Type': 'application/json',
-    'apikey': SB_KEY,
-    'Authorization': 'Bearer ' + SB_KEY,
-  };
+  const base = auth.pgBase;
+  const headers = auth.pgHeaders;
 
   try {
     if (req.method === 'GET') {

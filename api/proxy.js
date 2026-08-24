@@ -1,25 +1,18 @@
 export const config = { api: { bodyParser: true } };
 
+// Б1+Б2+Б3 (24.08.2026): общий APP_PASSWORD заменён на вход через Supabase
+// Auth — вход/проверку пароля с экрана логина теперь делает index.html
+// напрямую через Auth REST API (см. index.html: signIn), эта функция больше
+// не участвует в проверке пароля (старый ping-путь убран как мёртвый код).
+import { requireUser } from './_auth.js';
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, X-App-Key');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   if (req.method === 'OPTIONS') return res.status(200).end();
 
-  // Защита доступа: если на Vercel задан APP_PASSWORD, запросы без него отклоняются.
-  // Пока переменная не задана — работаем в открытом режиме (как раньше).
-  const appPassword = process.env.APP_PASSWORD;
-  if (appPassword) {
-    const key = req.headers['x-app-key'];
-    if (key !== appPassword) {
-      return res.status(401).json({ error: { message: 'Unauthorized', code: 'bad_app_key' } });
-    }
-  }
-
-  // Лёгкая проверка пароля с экрана входа — без обращения к OpenAI
-  if (req.body && req.body.ping) {
-    return res.status(200).json({ ok: true, locked: Boolean(appPassword) });
-  }
+  const auth = await requireUser(req, res);
+  if (!auth) return;
 
   try {
     const body = { ...req.body, stream: false };

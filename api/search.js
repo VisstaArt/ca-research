@@ -3,16 +3,17 @@ export const config = { api: { bodyParser: true } };
 // Реальный веб-поиск через Tavily.
 // Возвращает сырые выдержки с URL — их кладём в промпт модуля,
 // модель работает ТОЛЬКО с переданным материалом (антигаллюцинационный пайплайн).
+// Б1+Б2+Б3 (24.08.2026): общий APP_PASSWORD заменён на проверку JWT пользователя
+// (Supabase Auth) — без него платный Tavily-поиск был бы доступен всем.
+import { requireUser } from './_auth.js';
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, X-App-Key');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   if (req.method === 'OPTIONS') return res.status(200).end();
 
-  const appPassword = process.env.APP_PASSWORD;
-  if (appPassword && req.headers['x-app-key'] !== appPassword) {
-    return res.status(401).json({ error: { message: 'Unauthorized', code: 'bad_app_key' } });
-  }
+  const auth = await requireUser(req, res);
+  if (!auth) return;
 
   if (!process.env.TAVILY_API_KEY) {
     return res.status(503).json({ error: { message: 'Search is not configured (TAVILY_API_KEY missing)', code: 'search_unconfigured' } });
