@@ -501,6 +501,21 @@ async function callWordstat(phrase, opts) {
   } catch { return null; }
 }
 
+// M3 VoC — программная верификация цитат (ТЗ-M3-VOC.md, п.1). null при полном
+// отказе эндпоинта (не путать с «страница не открылась» — это per-item verified:false
+// внутри results, см. api/verify-quotes.js) — processM3Voc различает эти два случая.
+async function callVerifyQuotes(items) {
+  try {
+    const res = await fetch('/api/verify-quotes', {
+      method: 'POST', headers: {'Content-Type':'application/json','X-App-Key':getAppKey()},
+      body: JSON.stringify({items}),
+    });
+    if (!res.ok) return null;
+    const d = await res.json();
+    return d.results || null;
+  } catch { return null; }
+}
+
 // Общий сборщик досье: гоняет запросы через реальный поиск, дедуплицирует по URL
 async function gatherEvidence(queries, maxQueries, maxResults, opts) {
   const o = opts || {};
@@ -570,6 +585,100 @@ async function gatherNicheEvidence(brief, lang) {
 // Досье для M3 (VoC): живой язык аудитории — отзывы, форумы, жалобы, вопросы.
 // Копаем глубоко (advanced + полный текст страниц) и вширь (сегмент + отзывы о конкурентах),
 // с лимитом на домен — чтобы не «мусолить» одну фразу с одного отзовика.
+// ── ЛИНТЕР ИНОЯЗЫЧНЫХ ВСТАВОК (финальная проверка перед выгрузкой) ──────────
+// Правило 8 системного промпта уже запрещает смешивать алфавиты, но модель нарушает
+// его молча — на прогоне 20 июля в русском отчёте остались «Guardrails», «TOFU/BOFU»,
+// «Case-study», «Try free for 7 days». Здесь проверяется ФАКТ выдачи, а не намерение.
+// Ничего не исправляем автоматически: слепая замена сломала бы легитимную латиницу —
+// названия конкурентов, дословные цитаты их CTA (M2 просит формулировку как есть), URL.
+// Человек смотрит список и решает сам.
+const LATIN_SCRIPT_LANGS = ['english','turkish','german','spanish','french','italian','portuguese','polish','dutch'];
+
+// Аббревиатуры и метки статусов, которые промпты САМИ требуют оставлять латиницей
+// (правило 5 системного промпта, вердикты M1.2, статусы гэп-анализа M2).
+const LINT_ALLOWED = new Set(['tam','sam','som','jtbd','cjm','lpr','voc','cac','aov','ltv','arpu','roi','roas','seo','sem','smm','cta','ctr','cpc','cpm','cpa','cpl','kpi','usp','crm','erp','saas','paas','b2b','b2c','d2c','p2p','ui','ux','api','url','uri','id','pdf','csv','xls','html','css','json','ai','ml','go','maybe','no','win','parity','lose','confidence','high','medium','low','pro','lite','basic','premium','free','trial','vs','ok','rss','sms','faq','qr','utm','ab','crm']);
+
+// Английские термины, у которых есть обиходный русский эквивалент. Это «жёсткие»
+// находки: их появление в русском тексте — почти всегда небрежность модели.
+const LINT_DICT = {
+  guardrails:'ограничения / рамки', guardrail:'ограничение',
+  tofu:'верх воронки', mofu:'середина воронки', bofu:'низ воронки',
+  awareness:'осведомлённость', insight:'вывод', insights:'выводы',
+  headline:'заголовок', copywriting:'копирайтинг', copy:'текст',
+  landing:'лендинг', funnel:'воронка', pipeline:'воронка / конвейер',
+  touchpoint:'точка касания', touchpoints:'точки касания',
+  onboarding:'онбординг', retention:'удержание', churn:'отток',
+  engagement:'вовлечённость', reach:'охват', storytelling:'сторителлинг',
+  framework:'схема / модель', benchmark:'ориентир', roadmap:'дорожная карта',
+  milestone:'веха', deadline:'срок', feedback:'обратная связь',
+  research:'исследование', timeline:'сроки', trigger:'триггер',
+  lead:'лид', leads:'лиды', offer:'оффер', bundle:'пакет',
+  upsell:'допродажа', crossell:'кросс-продажа', downsell:'удешевлённое предложение',
+  discovery:'выявление потребности', objection:'возражение', objections:'возражения',
+  scarcity:'дефицит', urgency:'срочность', bottleneck:'узкое место',
+  'case-study':'кейс', casestudy:'кейс', 'follow-up':'повторное касание',
+  followup:'повторное касание', 'pain':'боль', 'pains':'боли',
+  'value':'ценность', 'proposition':'предложение', 'journey':'путь клиента',
+  'persona':'персона', 'segment':'сегмент', 'budget':'бюджет',
+};
+
+// Домены и бренды документа — латиница в них законна, из находок исключаем.
+function collectBrandTokens(text) {
+  const brands = new Set();
+  const urlRe = /https?:\/\/([^\s)\/]+)/gi;
+  let m;
+  while ((m = urlRe.exec(text))) {
+    const host = m[1].replace(/^www\./i, '');
+    for (const part of host.split('.')) {
+      if (part.length > 2 && !/^(ru|com|net|org|io|kz|by|ua|tr|de|uk|me|app|dev|info|biz)$/i.test(part)) brands.add(part.toLowerCase());
+    }
+  }
+  const bareRe = /\b([a-z0-9][a-z0-9-]{1,})\.(?:ru|com|net|org|io|kz|by|ua|tr|de|uk|me|app|dev|cloud|online|store|site|info|biz)\b/gi;
+  while ((m = bareRe.exec(text))) brands.add(m[1].toLowerCase());
+  return brands;
+}
+
+// Возвращает { hard:[…], soft:[…] } — термины с русским эквивалентом и прочая латиница.
+// Каждая находка: { term, count, sample } — sample нужен человеку, чтобы увидеть контекст.
+function lintForeignInsertions(text, lang) {
+  const target = String(lang || '').toLowerCase();
+  if (!text || LATIN_SCRIPT_LANGS.some(l => target.includes(l))) return { hard: [], soft: [], skipped: true };
+
+  const brands = collectBrandTokens(text);
+  // Вычищаем то, где латиница законна по определению: ссылки, код, markdown-таблицу источников.
+  const cleaned = String(text)
+    .replace(/```[\s\S]*?```/g, ' ')
+    .replace(/`[^`\n]*`/g, ' ')
+    .replace(/<<<[\s\S]*?>>>/g, ' ')
+    .replace(/https?:\/\/\S+/gi, ' ')
+    .replace(/\[[^\]]*\]\([^)]*\)/g, ' ')
+    .replace(/\b[a-z0-9-]+\.(?:ru|com|net|org|io|kz|by|ua|tr|de|uk|me|app|dev|cloud|online|store|site|info|biz)\b/gi, ' ');
+
+  const hard = new Map();
+  const soft = new Map();
+  const wordRe = /[A-Za-z][A-Za-z'’-]*/g;
+  let m;
+  while ((m = wordRe.exec(cleaned))) {
+    const raw = m[0];
+    const key = raw.toLowerCase().replace(/^[-'’]+|[-'’]+$/g, '');
+    if (key.length < 2) continue;
+    if (LINT_ALLOWED.has(key)) continue;
+    if (brands.has(key)) continue;
+    // Аббревиатура заглавными (JTBD, CJM, TAM) — разрешена правилом 5, даже если не в списке.
+    // Но словарь сильнее: TOFU/BOFU тоже заглавные, и это именно те вставки, из-за
+    // которых линтер и понадобился — их глушить нельзя.
+    if (!LINT_DICT[key] && raw.length <= 6 && raw === raw.toUpperCase()) continue;
+    const bucket = LINT_DICT[key] ? hard : soft;
+    const prev = bucket.get(key);
+    if (prev) { prev.count++; continue; }
+    const at = m.index;
+    const sample = cleaned.slice(Math.max(0, at - 45), at + raw.length + 45).replace(/\s+/g, ' ').trim();
+    bucket.set(key, { term: raw, count: 1, sample, suggest: LINT_DICT[key] || '' });
+  }
+  const byCount = (a, b) => b.count - a.count;
+  return { hard: [...hard.values()].sort(byCount), soft: [...soft.values()].sort(byCount), skipped: false };
+}
+
 // ── КОНТРАКТ С КОНТЕНТ-МАШИНОЙ ───────────────────────────────────────────
 // Разбираем markdown-таблицы, которые модули и так генерируют, в структурированный вид.
 // Так контент-машина получает данные объектами, а промпты трогать не нужно —
@@ -643,6 +752,90 @@ const pickColumn = (rows, needle) => rows.map(row => {
 // между прогонами — см. ТЗ-ИССЛЕДОВАНИЕ-ПОД-КОНТЕНТ.md п.4.2-4.3). Не трогаем
 // остальные колонки — те, что уже написала модель, передаём как есть.
 const withStableIds = (rows, prefix) => rows.map((row, i) => ({ [prefix + '_id']: prefix + '-' + (i + 1), ...row }));
+
+// ── M3 VoC ГИГИЕНА (ТЗ-M3-VOC.md, п.1-4) ────────────────────────────────────
+// Извлекает таблицу по заголовку (та же логика распознавания, что parseMdTables),
+// но возвращает диапазон СТРОК ДАННЫХ, а не готовые объекты — нужно для точечной
+// перезаписи (отфильтровали цитаты → вставили обратно ровно туда же), не трогая
+// остальной markdown (шапку/разделитель таблицы, соседние блоки).
+function extractMdTableByHeading(fullText, headingRe) {
+  const lines = String(fullText || '').split('\n');
+  let heading = '';
+  for (let i = 0; i < lines.length; i++) {
+    const t = lines[i].trim();
+    if (/^#{1,6}\s+/.test(t)) { heading = t.replace(/^#+\s*/, '').trim(); continue; }
+    if (/^BLOCK\s/i.test(t) || /^SEO-\d/i.test(t)) { heading = t.replace(/\s*[:—-]\s*$/, '').trim(); continue; }
+    if (t.startsWith('|') && i + 1 < lines.length && isMdSeparator(lines[i + 1].trim())) {
+      const headers = splitMdRow(t);
+      const rows = [];
+      let j = i + 2;
+      for (; j < lines.length; j++) {
+        const rt = lines[j].trim();
+        if (!rt.startsWith('|')) break;
+        const cells = splitMdRow(rt);
+        const obj = {};
+        headers.forEach((h, k) => { if (h) obj[h] = cells[k] === undefined ? '' : cells[k]; });
+        rows.push(obj);
+      }
+      if (headingRe.test(heading)) return { headers, rows, dataStart: i + 2, dataEnd: j };
+      i = j - 1;
+    }
+  }
+  return null;
+}
+// Пересобирает ТОЛЬКО строки данных (шапка/разделитель не трогаются) — используется
+// после фильтрации/дедупа, чтобы вернуть отфильтрованную таблицу обратно в full.
+function spliceMdTableRows(fullText, tableInfo, newRows) {
+  const lines = String(fullText || '').split('\n');
+  const newLines = newRows.map(row => '| ' + tableInfo.headers.map(h => String(row[h] ?? '').replace(/\|/g, '/')).join(' | ') + ' |');
+  return [...lines.slice(0, tableInfo.dataStart), ...newLines, ...lines.slice(tableInfo.dataEnd)].join('\n');
+}
+// Секция (не таблица) по заголовку — тем же приёмом, но границы «от заголовка до
+// следующего заголовка/конца текста». Нужно для VoC Coverage: он не таблица M3,
+// а отдельный итоговый блок, и должен доехать до M4 целиком, а не быть обрезанным
+// вместе с остальным контентом (см. buildM4Prompt — режет prev.slice(0,16000)).
+function extractSection(fullText, headingRe) {
+  const lines = String(fullText || '').split('\n');
+  let start = -1;
+  for (let i = 0; i < lines.length; i++) {
+    if (headingRe.test(lines[i].trim())) { start = i; break; }
+  }
+  if (start < 0) return '';
+  let end = lines.length;
+  for (let i = start + 1; i < lines.length; i++) {
+    if (/^#{1,6}\s+/.test(lines[i].trim())) { end = i; break; }
+  }
+  return lines.slice(start, end).join('\n').trim();
+}
+const normalizeQuote = s => String(s || '').replace(/\s+/g, ' ').trim();
+// Отбрасывает строки, чья нормализованная-в-нижний-регистр цитата уже встречалась
+// раньше в массиве — «одна цитата → одна персона» (ТЗ, Дефект 4, хеш-половина).
+function hashDedupe(rows, quoteField) {
+  const seen = new Set();
+  return rows.filter(row => {
+    const key = normalizeQuote(row[quoteField]).toLowerCase();
+    if (!key || seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+// Итоговый блок покрытия VoC по сегментам — приклеивается КОДОМ после ответа модели
+// (тот же приём, что wordstatFullListBlock для M7): модель его не пишет и не видит,
+// поэтому гейт нельзя обойти формулировкой в промпте.
+function vocCoverageBlock(block07Rows, segmentField, threshold, note) {
+  const bySegment = new Map();
+  for (const row of block07Rows) {
+    const seg = (row[segmentField] || '—').trim() || '—';
+    bySegment.set(seg, (bySegment.get(seg) || 0) + 1);
+  }
+  const rows = [...bySegment.entries()].map(([seg, n]) =>
+    '| ' + seg + ' | ' + n + ' | ' + (n >= threshold ? 'достаточно' : 'insufficient (' + n + '/' + threshold + ')') + ' |'
+  ).join('\n');
+  const noteLine = note ? '\n\n_' + note + '_' : '';
+  return '\n\n#### VoC Coverage (проверено кодом)\n'
+    + '| Сегмент | Верифицированных цитат | Статус |\n|---|---|---|\n'
+    + (rows || '| — | 0 | insufficient (0/' + threshold + ') |') + noteLine + '\n';
+}
 
 // Пакет для внешнего агента. Данные — на ЯЗЫКЕ ИССЛЕДОВАНИЯ, без перевода:
 // подлинные формулировки аудитории теряются при переводе туда-обратно (ПОЖЕЛАНИЯ п.4).
@@ -769,6 +962,81 @@ async function gatherVoCEvidence(brief, discoveredCompetitors) {
   // 3. Язык самой категории продукта
   queries.push(product+' '+market+' отзывы клиентов форум');
   return gatherEvidence(queries, 20, 6, { depth:'advanced', raw:true, contentChars:1500, perDomain:3, maxItems:45 });
+}
+
+// M3 VoC гигиена (ТЗ-M3-VOC.md, п.1-4) — вызывается ПОСЛЕ ответа модели, на готовом
+// markdown. Верифицирует цитаты BLOCK 07/07A программно (fetch страницы + проверка
+// точной подстроки), дедуплицирует, считает покрытие по сегментам. Модель ничего
+// из этого не видит и не пишет — тот же приём, что wordstatFullListBlock для M7.
+async function processM3Voc(full, niche) {
+  const t07 = extractMdTableByHeading(full, /^BLOCK\s*07(?!A|B)\b/i);
+  const t07a = extractMdTableByHeading(full, /^BLOCK\s*07A\b/i);
+  const t07b = extractMdTableByHeading(full, /^BLOCK\s*07B\b/i);
+  if (!t07 && !t07a) return full; // нечего верифицировать — не трогаем full
+
+  const findHeader = (headers, needle) => headers.find(h => h.toLowerCase().includes(needle.toLowerCase())) || null;
+  const qKey07 = t07 && findHeader(t07.headers, 'цитата');
+  const uKey07 = t07 && findHeader(t07.headers, 'url');
+  const segKey07 = t07 && findHeader(t07.headers, 'сегмент');
+  const qKey07a = t07a && findHeader(t07a.headers, 'цитата');
+  const uKey07a = t07a && findHeader(t07a.headers, 'url');
+  const qKey07b = t07b && findHeader(t07b.headers, 'цитата');
+  const uKey07b = t07b && findHeader(t07b.headers, 'url');
+
+  const items = [];
+  if (t07 && qKey07 && uKey07) for (const r of t07.rows) if (r[qKey07] && r[uKey07]) items.push({ url: r[uKey07], quote: r[qKey07] });
+  if (t07a && qKey07a && uKey07a) for (const r of t07a.rows) if (r[qKey07a] && r[uKey07a]) items.push({ url: r[uKey07a], quote: r[qKey07a] });
+
+  const verifyResults = items.length ? await callVerifyQuotes(items) : [];
+  // null = эндпоинт целиком не ответил (инфраструктурный сбой) — это НЕ то же самое,
+  // что «страница не открылась» (per-item verified:false внутри results). В этом
+  // случае НЕ вычищаем цитаты (модель могла быть права), а честно помечаем в блоке
+  // покрытия, что верификация в этом прогоне не сработала.
+  let verifiedSet = null, coverageNote = null;
+  if (verifyResults) {
+    verifiedSet = new Set(verifyResults.filter(x => x.verified).map(x => x.url + '|||' + normalizeQuote(x.quote).toLowerCase()));
+  } else if (items.length) {
+    coverageNote = 'Верификация недоступна в этом прогоне (сбой эндпоинта) — цитаты НЕ проверены программно, ниже приведены как есть.';
+  }
+  const passes = (url, quote) => !verifiedSet || verifiedSet.has(String(url) + '|||' + normalizeQuote(quote).toLowerCase());
+
+  let rows07 = t07 ? t07.rows.filter(r => passes(r[uKey07], r[qKey07])) : [];
+  if (t07 && qKey07) rows07 = hashDedupe(rows07, qKey07);
+  const rows07a = t07a ? t07a.rows.filter(r => passes(r[uKey07a], r[qKey07a])) : [];
+
+  // Ключи выживших цитат (07+07A) — хук в 07B держится, только если его цитата
+  // пережила верификацию+дедуп там, откуда её якобы отобрала модель.
+  const survivedKeys = new Set([...rows07, ...rows07a].map(r =>
+    String(r[uKey07] || r[uKey07a]) + '|||' + normalizeQuote(r[qKey07] || r[qKey07a]).toLowerCase()
+  ));
+  const rows07b = t07b && qKey07b && uKey07b
+    ? t07b.rows.filter(r => survivedKeys.has(String(r[uKey07b]) + '|||' + normalizeQuote(r[qKey07b]).toLowerCase()))
+    : (t07b ? t07b.rows : []);
+
+  // hookBank (CHART DATA) — та же логика, что 07B. Пересобираем ВЕСЬ CHART_DATA
+  // блок целиком (проще и надёжнее, чем редактировать JSON-подстроку на месте).
+  const chartData = extractChartData(full) || {};
+  if (Array.isArray(chartData.hookBank)) {
+    chartData.hookBank = chartData.hookBank.filter(h =>
+      h && h.url && h.quote && survivedKeys.has(String(h.url) + '|||' + normalizeQuote(h.quote).toLowerCase())
+    );
+  }
+
+  // ВАЖНО: сплайсим таблицы строго СНИЗУ ДОКУМЕНТА ВВЕРХ (CHART_DATA → 07B → 07A → 07).
+  // dataStart/dataEnd у всех трёх таблиц посчитаны один раз от ИСХОДНОГО full — если
+  // вставить/удалить строки в таблице, которая в тексте ВЫШЕ другой, все индексы ниже
+  // неё съедут. Правка снизу вверх не мешает более ранним диапазонам.
+  let result = full.replace(
+    /(?:#{1,6}\s*|<<<)?CHART_DATA_START[\s\S]*?CHART_DATA_END(?:>>>)?/,
+    '<<<CHART_DATA_START>>>\n' + JSON.stringify(chartData) + '\n<<<CHART_DATA_END>>>'
+  );
+  if (t07b) result = spliceMdTableRows(result, t07b, rows07b);
+  if (t07a) result = spliceMdTableRows(result, t07a, rows07a);
+  if (t07) result = spliceMdTableRows(result, t07, rows07);
+
+  const threshold = 3;
+  result += vocCoverageBlock(rows07, segKey07 || 'Сегмент/ниша', threshold, coverageNote);
+  return result;
 }
 
 // Досье для M7 (SEO). Важно понимать границы инструмента: веб-поиск НЕ измеряет Wordstat.
@@ -1207,6 +1475,7 @@ Format:
 | Comp_ID | Название | Сайт/URL | Ниша/продукт | Оффер (обещание/пакеты) | Модель ценообразования | Позиционирование (ключевая идея) | Сильные стороны | Слабые стороны | CTA (формулировка/расположение) | Доказательства (кейсы/рейтинги) | Барьеры клиента (по отзывам) | Ответ конкурента на барьеры | Триггеры дефицита/якоря | URL блока/скрина | Gap/Возможность для нас | Заметки |
 
 Rules: C001, C002… IDs. If price not public — "по запросу". No invented URLs.
+Колонка «Gap/Возможность для нас» подчиняется тому же правилу, что статусы в блоке 06_1: это возможность ТОЛЬКО если слабость конкурента видна из evidence [n]. Без ссылки — формулируй как гипотезу («вероятно…, нужно проверить»), а не как установленный факт. Не приписывай нашему продукту возможностей, которых нет в брифе.
 
 ═══════════════════════════════════════════════
 BLOCK 06_1 — Gap Analysis (06_1_Конкуренты_Гэп-анализ)
@@ -1236,7 +1505,7 @@ Output JSON between <<<CHART_DATA_START>>> and <<<CHART_DATA_END>>>:
     { "name": "competitor name", "price": 1-5, "quality": 1-5, "isUs": false }
   ]
 }
-Include 6-12 key competitors AND our company as one point with "isUs": true (estimate our position honestly from the brief). price: 1=cheapest, 5=most expensive. quality: perceived value/quality 1-5.`;
+Include 6-12 key competitors AND our company as one point with "isUs": true. Позиция конкурентов берётся из evidence; наша — ТОЛЬКО из брифа. Если в брифе нет цены или данных о качестве — не выдумывай выгодную позицию: ставь нас в середину (3) и прямо отметь это в тексте блока 06_1 фразой «позиция на графике — оценка по брифу, не замер». price: 1=cheapest, 5=most expensive. quality: perceived value/quality 1-5.`;
 }
 
 // M8 — Тренд-монитор. В отличие от M1-M7 это ПЕРИОДИЧЕСКИЙ снапшот (не единственный
@@ -2993,6 +3262,16 @@ function App() {
     return head + summary + body;
   };
 
+  // Финальная проверка языка перед выгрузкой (латиница в русском тексте).
+  // Считается по ВСЕМУ материалу — модули + резюме, — но только когда он изменился:
+  // buildFullMd() склеивает сотни килобайт, гонять по ним регулярки на каждую
+  // перерисовку незачем. Хук на верхнем уровне, а не в JSX: порядок хуков должен
+  // быть постоянным, а панель живёт внутри условной ветки.
+  const lint = React.useMemo(
+    () => (proj?.results?.length ? lintForeignInsertions(buildFullMd(), lang) : { hard: [], soft: [], skipped: true }),
+    [proj, rep, lang]
+  );
+
   const dlMd = (content, suf='') => {
     const a = document.createElement('a');
     // \u0411\u0435\u0437 BOM: BOM (\uFEFF) \u043F\u0440\u0438 \u0447\u0442\u0435\u043D\u0438\u0438 \u0444\u0430\u0439\u043B\u0430 \u043A\u0430\u043A Latin-1/cp1252 \u0434\u0430\u0451\u0442 \u00AB\u00EF\u00BB\u00BF\u00BB \u0432 \u043D\u0430\u0447\u0430\u043B\u0435 \u0438
@@ -3764,6 +4043,41 @@ function App() {
               </>
             )}
           </div>
+          {(()=>{
+            if (lint.skipped || (!lint.hard.length && !lint.soft.length)) return null;
+            const row = (f,i)=>(
+              <span key={i} style={{display:'inline-block',background:'#fff',border:'1px solid #e6d5a8',borderRadius:5,padding:'2px 7px',margin:'0 5px 5px 0',fontSize:11}}
+                    title={f.sample}>
+                <b>{f.term}</b>{f.count>1?<span style={{color:'#999'}}> ×{f.count}</span>:null}
+                {f.suggest?<span style={{color:'#7a5c00'}}> → {f.suggest}</span>:null}
+              </span>
+            );
+            return (
+              <div style={{background:'#FFF9E8',border:'1px solid #EDD9A3',borderRadius:8,padding:'10px 14px',marginBottom:10}}>
+                <p style={{fontSize:12,fontWeight:600,color:'#7a5c00',marginBottom:6}}>
+                  Проверка языка: найдена латиница в русском тексте
+                  {' '}({lint.hard.length+lint.soft.length} {lint.hard.length+lint.soft.length===1?'термин':'терминов'})
+                </p>
+                {lint.hard.length>0 && (
+                  <div style={{marginBottom:6}}>
+                    <p style={{fontSize:11,color:'#8a6d1f',marginBottom:4}}>Есть русский эквивалент — стоит заменить:</p>
+                    <div>{lint.hard.map(row)}</div>
+                  </div>
+                )}
+                {lint.soft.length>0 && (
+                  <div>
+                    <p style={{fontSize:11,color:'#8a6d1f',marginBottom:4}}>Прочая латиница — проверьте, законна ли она здесь (название конкурента и дословная цитата — законны):</p>
+                    <div>{lint.soft.slice(0,40).map(row)}</div>
+                    {lint.soft.length>40 && <span style={{fontSize:11,color:'#999'}}>…и ещё {lint.soft.length-40}</span>}
+                  </div>
+                )}
+                <p style={{fontSize:10,color:'#a08a52',marginTop:6}}>
+                  Наведите на термин — покажет, в каком месте текста он встретился. Ничего не заменяется автоматически:
+                  решение за вами. Чтобы исправить — ↺ на нужном модуле с замечанием.
+                </p>
+              </div>
+            );
+          })()}
           <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr 1fr',gap:8}}>
             <button onClick={()=>dlMd(buildFullMd(),'_full')} style={{fontWeight:500,borderColor:'#111'}}>{t.dlFullMd}</button>
             <button onClick={()=>rep&&dlMd(rep,'_summary')} disabled={!rep} style={{opacity:rep?1:0.4}}>{t.dlReport}</button>
