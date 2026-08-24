@@ -831,10 +831,13 @@ async function gatherWordstatData(brief) {
   const frequencies = [];
   const seen = new Set();
   for (const phrase of uniqueSeeds) {
-    const d = await callWordstat(phrase, { numPhrases: 30 });
+    // numPhrases 50 — владелица делает это вручную в Wordstat и хочет ПОЛНЫЙ список
+    // похожих/ассоциативных фраз по теме, не только по одной введённой фразе;
+    // 0-показов исключаем сразу здесь — Wordstat их возвращает, но это шум, не спрос.
+    const d = await callWordstat(phrase, { numPhrases: 50 });
     if (!d) continue;
     for (const r of [...(d.results||[]), ...(d.associations||[])]) {
-      if (!r.phrase || r.count == null || seen.has(r.phrase)) continue;
+      if (!r.phrase || !r.count || seen.has(r.phrase)) continue;
       seen.add(r.phrase);
       frequencies.push({ phrase: r.phrase, count: r.count });
     }
@@ -850,6 +853,19 @@ async function gatherWordstatData(brief) {
   }
 
   return { frequencies, seasonality };
+}
+
+// Полный список фраз+частотностей из Wordstat как ОТДЕЛЬНЫЙ блок markdown,
+// собранный кодом, а не моделью — владелица делает это вручную в самой Wordstat
+// (заходит и смотрит весь список похожих запросов) и хочет ровно то же самое
+// автоматически: НИКАКОГО отбора/додумывания моделью, просто то, что вернула
+// система, отсортировано по частотности, без нулей (уже отфильтровано выше).
+function wordstatFullListBlock(frequencies) {
+  if (!frequencies || !frequencies.length) return '';
+  const sorted = [...frequencies].sort((a,b)=>b.count-a.count);
+  const rows = sorted.map(w => '| '+w.phrase+' | '+w.count+' |').join('\n');
+  return '\n\n#### Полный список запросов по Wordstat (как есть, без отбора моделью)\n'
+    + '| Фраза | Частотность (показов/мес) |\n|---|---|\n' + rows + '\n';
 }
 
 // Досье для M2: конкуренты, аналоги, цены, отзывы — в выбранной нише
@@ -2806,6 +2822,7 @@ function App() {
       const findDep = depId => col.find(r => r.id === depId && (isPerNiche(depId) ? (r.niche||'') === wn : true));
 
       let full = '';
+      let wordstatData = null;   // hoisted: нужен после callGPT, чтобы приклеить сырой список (см. ниже)
       try {
         const sameNiche = col.filter(r => (r.niche||'') === wn);
         const prevContent = sameNiche.length ? sameNiche[sameNiche.length-1].content : '';
@@ -2829,7 +2846,7 @@ function App() {
           // + реальная частотность из Yandex Wordstat (если ключи настроены, иначе пусто —
           // модуль ведёт себя как раньше, честное «не замерено»).
           const evidence = await gatherSeoEvidence(Bn);
-          const wordstatData = await gatherWordstatData(Bn);
+          wordstatData = await gatherWordstatData(Bn);
           userPrompt = buildM7Prompt(Bn, lang, prevContent || '', evidence, wordstatData);
         } else {
           // Контекст берём от стадии, на которой модуль СТРОИТСЯ (requires), в рамках своей ниши,
@@ -2846,6 +2863,10 @@ function App() {
         // не вмещает это целиком, и модель тихо сжимается до "безопасных" ~8 ниш.
         const maxTok = mod.id === 'M1_2' ? 16000 : undefined;
         full = await callGPT(sys, userPrompt, temp, maxTok);
+        // Приклеен кодом ПОСЛЕ ответа модели — не проходит через LLM, значит не может
+        // быть урезан/отфильтрован по вкусу модели (владелица просила ровно полный
+        // список системы, как при ручной проверке в самой Wordstat).
+        if (mod.id === 'M7' && wordstatData) full += wordstatFullListBlock(wordstatData.frequencies);
       } catch(e) { full = 'Error: '+e.message; }
       clearInterval(stepTimer);
 
