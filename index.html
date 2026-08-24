@@ -970,6 +970,12 @@ function buildAgentPackage(brief, lang, results, report) {
         TOPIC_FOCUS: brief.result || '',
         PAIN_BANK: withStableIds(pickTable(modulesForNiche, 'M3', 'BLOCK 07'), 'pain'),
         SEO_KEYWORDS: pickColumn(pickTable(modulesForNiche, 'M7', 'SEO-02'), 'кластер'),
+        // Запрос от контент-машины (24.08, через владелицу): чем контент клиента
+        // может отличаться от конкурентов — это уже посчитано в M2 BLOCK 06_1
+        // (гэп-анализ: «В чём гэп» + «Действие» на каждый критерий), отдельного
+        // замера не требует. Needle 'BLOCK 06_1' не путается с 'BLOCK 06' —
+        // подстрока 'BLOCK 06_1' не встречается в заголовке BLOCK 06.
+        SEO_COMPETITIVE_ANGLE: pickTable(modulesForNiche, 'M2', 'BLOCK 06_1'),
         AWARENESS_MIX: (m4 && m4.chartData && m4.chartData.awarenessLevels) || [],
         OBJECTIONS: withStableIds(pickTable(modulesForNiche, 'M4', 'BLOCK 12'), 'objection'),
         HOOK_BANK: (m3 && m3.chartData && m3.chartData.hookBank) || [],
