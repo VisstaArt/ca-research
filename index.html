@@ -689,6 +689,34 @@ function splitMdRow(line) {
 function isMdSeparator(s) {
   return /^[\s|:-]+$/.test(s) && s.includes('-') && s.includes('|');
 }
+
+// Extract chart data — flexible parser (handles markdown code blocks too)
+// Модель выдаёт маркеры по-разному: <<<CHART_DATA_START>>> ИЛИ ### CHART_DATA_START.
+// Принимаем оба; JSON достаём по первой { и последней } — так не мешают обёртки в тройных кавычках.
+// Уровень модуля (не внутри компонента) — нужен и run()'у, и processM3Voc (M3 VoC гигиена).
+const extractJsonBlock = (content, kind) => {
+  const startRe = new RegExp(kind+'_START(?:>>>)?([\\s\\S]*?)(?:#{1,6}\\s*|<<<)?'+kind+'_END');
+  const m = content.match(startRe);
+  const raw = m ? m[1] : (content.match(new RegExp(kind+'_START([\\s\\S]*)'))||[])[1];
+  if (!raw) return null;
+  const a = raw.indexOf('{'), b = raw.lastIndexOf('}');
+  if (a < 0 || b <= a) return null;
+  try { return JSON.parse(raw.slice(a, b+1)); } catch { return null; }
+};
+const extractChartData = content => extractJsonBlock(content, 'CHART_DATA');
+const extractNicheData = content => extractJsonBlock(content, 'NICHE_DATA');
+
+const cleanContent = content => content
+  .replace(/(?:#{1,6}\s*|<<<)?CHART_DATA_START[\s\S]*?CHART_DATA_END(?:>>>)?/g,'')
+  .replace(/(?:#{1,6}\s*|<<<)?CHART_DATA_START[\s\S]*/g,'')
+  .replace(/(?:#{1,6}\s*|<<<)?NICHE_DATA_START[\s\S]*?NICHE_DATA_END(?:>>>)?/g,'')
+  .replace(/(?:#{1,6}\s*|<<<)?NICHE_DATA_START[\s\S]*/g,'')
+  // Голый заголовок «CHART DATA» / «NICHE DATA» и декоративные линии ═ — модель их печатает
+  // как заголовок секции перед блоком данных; сам блок уже вырезан выше, заголовок остаётся пустым.
+  .replace(/^[ \t]*#{0,6}[ \t]*(?:CHART|NICHE)[ _]?DATA[ \t]*$/gim,'')
+  .replace(/^[ \t]*═+[ \t]*$/gm,'')
+  .trim();
+
 function parseMdTables(md) {
   const lines = String(md || '').split('\n');
   const out = [];
@@ -1612,11 +1640,15 @@ Output JSON between <<<CHART_DATA_START>>> and <<<CHART_DATA_END>>>:
 Only quotes ALSO present verbatim in BLOCK 07/07A above — this is curation of existing quotes, not new content. If BLOCK 07B is empty, return "hookBank": [].`;
 }
 
-function buildM4Prompt(brief, lang, prev) {
+function buildM4Prompt(brief, lang, prev, coverage) {
   // Полный M3: персоны обязаны брать ДОСЛОВНЫЕ цитаты и URL из VoC.
   // При обрезке до 1500 символов модуль видел только легенду Confidence и выдумывал цитаты.
   const ctx = prev ? `\nCONTEXT — РЕЗУЛЬТАТ M3 (VoC), ИСТОЧНИК ЦИТАТ ДЛЯ ПЕРСОН:\n${prev.slice(0,16000)}\n` : '';
-  return `${ctx}
+  // Гейт покрытия VoC (ТЗ-M3-VOC.md п.4) — считан кодом из M3, передан ОТДЕЛЬНО от
+  // ctx (не внутри slice(0,16000)!), потому что блок приклеен в САМЫЙ КОНЕЦ M3 и при
+  // длинном VoC не попадёт в первые 16000 символов среза выше — гейт молча пропадёт.
+  const coverageBlock = coverage ? `\n${coverage}\n` : '';
+  return `${ctx}${coverageBlock}
 Fill module M4 blocks. ALL output in ${lang}. Only open sources.
 
 ═══════════════════════════════════════════════
@@ -1631,6 +1663,7 @@ PERSONA RULES:
 - ИСТОЧНИКИ ТОЛЬКО ИЗ M3: и сама цитата, и её URL обязаны дословно присутствовать в блоках 07/07A результата M3, приведённого выше. Придумать URL или подставить «похожий» из памяти — ГРУБАЯ ОШИБКА: заказчик открывает ссылки и проверяет. Если подходящей цитаты в M3 нет — пиши «нет своих цитат», НЕ подбирай правдоподобную.
 - ЗАПРЕТ ДУБЛЕЙ ЦИТАТ: у каждой персоны СВОИ цитаты. Одна и та же дословная цитата (или один и тот же URL) НЕ может стоять под двумя персонами. Если своих реальных цитат для персоны нет — в ячейку цитат пиши «нет своих цитат» и ставь Confidence ≤2; НЕ копируй цитату другой персоны.
 - УВЕРЕННОСТЬ ВНИЗ ПО НИШЕ: Confidence персоны не выше покрытия VoC её ниши. Если по нише нет релевантного VoC — помечай всю персону «гипотеза: VoC по нише не собран» и Confidence=1, не оформляй её так же уверенно, как персоны ниш с данными.
+- ГЕЙТ ПО БЛОКУ «VoC Coverage» ВЫШЕ (посчитан кодом, не моделью): для сегментов, помеченных там «insufficient» — Confidence персоны этого сегмента ≤2 и примечание «предварительно: VoC не собран», НЕЗАВИСИМО от твоей собственной оценки качества цитат. Число из этого блока — факт, не рекомендация к пересмотру.
 
 Format:
 | Persona_ID | Роль/должность | Компания/ниша (+размер бизнеса) | SD-уровень | Контекст/ситуация | JTBD_1 | JTBD_2 | JTBD_3 | Боли (топ-5) | Возражения (топ-5) | Триггеры (топ-5) | Каналы (топ-3) | Форматы коммуникации | Тон/Дизайн | Цитаты/язык клиента (из M3, дословно) | Источники (URL) | Confidence (1-5) | Примечание |
@@ -1715,6 +1748,7 @@ BLOCK 16 — Hypotheses (16_Гипотезы)
 Format (10–15 rows):
 | Hypo_ID | Ниша | Persona_ID | Уровень осведомлённости | Источник инсайта | Формулировка гипотезы | Что тестируем | Для кого/где в CJM | Ожидаемый эффект | Метрика | MDE | Дизайн теста | Артефакты | Риски | Статус | Confidence (1-5) |
 ВАЖНО: Persona_ID — это ID персоны из M4 (P1, P2, P3…), а НЕ номер сегмента. Бери ровно те ID, что стоят в блоке 09 (LPR Personas) переданного M4. Не выдумывай новые.
+Если персона в M4 помечена «гипотеза: VoC не собран»/Confidence≤2 — Confidence гипотезы для неё не выше Confidence самой персоны, плюс то же примечание «предварительно: VoC не собран».
 
 ═══════════════════════════════════════════════
 BLOCK 17A — Offer Input (17A_Оффер_Input)
@@ -1747,6 +1781,7 @@ BLOCK 18 — Persona Archetypes (18_Persona_Archetypes)
 ═══════════════════════════════════════════════
 Format:
 | Persona_ID | Роль | Сегмент | Архетип/ценностный уровень | Уровень осведомлённости | Эмоциональные драйверы | Триггеры покупки | Барьеры | Тон и визуальный стиль | Фразы-якоря | Каналы/форматы | Ключевой оффер | Источники |
+Если персона в M4 помечена «гипотеза: VoC не собран» — добавь то же примечание к её архетипу здесь, не оформляй увереннее, чем сама персона.
 
 BLOCK 19 — Visual Strategy:
 | Segment_ID | Осведомлённость | Ключевое сообщение | Визуальные элементы | Доказательства | Тактики | Каналы | Целевая метрика | Референсы |
@@ -2939,31 +2974,8 @@ function App() {
     setSc('form');
   };
 
-  // Extract chart data — flexible parser (handles markdown code blocks too)
-  // Модель выдаёт маркеры по-разному: <<<CHART_DATA_START>>> ИЛИ ### CHART_DATA_START.
-  // Принимаем оба; JSON достаём по первой { и последней } — так не мешают обёртки в тройных кавычках.
-  const extractJsonBlock = (content, kind) => {
-    const startRe = new RegExp(kind+'_START(?:>>>)?([\\s\\S]*?)(?:#{1,6}\\s*|<<<)?'+kind+'_END');
-    const m = content.match(startRe);
-    const raw = m ? m[1] : (content.match(new RegExp(kind+'_START([\\s\\S]*)'))||[])[1];
-    if (!raw) return null;
-    const a = raw.indexOf('{'), b = raw.lastIndexOf('}');
-    if (a < 0 || b <= a) return null;
-    try { return JSON.parse(raw.slice(a, b+1)); } catch { return null; }
-  };
-  const extractChartData = content => extractJsonBlock(content, 'CHART_DATA');
-  const extractNicheData = content => extractJsonBlock(content, 'NICHE_DATA');
-
-  const cleanContent = content => content
-    .replace(/(?:#{1,6}\s*|<<<)?CHART_DATA_START[\s\S]*?CHART_DATA_END(?:>>>)?/g,'')
-    .replace(/(?:#{1,6}\s*|<<<)?CHART_DATA_START[\s\S]*/g,'')
-    .replace(/(?:#{1,6}\s*|<<<)?NICHE_DATA_START[\s\S]*?NICHE_DATA_END(?:>>>)?/g,'')
-    .replace(/(?:#{1,6}\s*|<<<)?NICHE_DATA_START[\s\S]*/g,'')
-    // Голый заголовок «CHART DATA» / «NICHE DATA» и декоративные линии ═ — модель их печатает
-    // как заголовок секции перед блоком данных; сам блок уже вырезан выше, заголовок остаётся пустым.
-    .replace(/^[ \t]*#{0,6}[ \t]*(?:CHART|NICHE)[ _]?DATA[ \t]*$/gim,'')
-    .replace(/^[ \t]*═+[ \t]*$/gm,'')
-    .trim();
+  // extractChartData/extractNicheData/cleanContent — теперь на уровне модуля
+  // (см. рядом с parseMdTables), processM3Voc тоже их использует.
 
   // Generate price layers after M1
   const generatePriceLayers = React.useCallback(async (m1Content) => {
@@ -2997,7 +3009,7 @@ function App() {
       case 'M1': return buildM1Prompt(brief, lang, p);
       case 'M2': return buildM2Prompt(brief, lang, p);
       case 'M3': return buildM3Prompt(brief, lang, p);
-      case 'M4': return buildM4Prompt(brief, lang, p);
+      case 'M4': return buildM4Prompt(brief, lang, p, extractSection(p, /^#### VoC Coverage/i));
       case 'M5': return buildM5Prompt(brief, lang, p);
       case 'M6': return buildM6Prompt(brief, lang, p);
       case 'M7': return buildM7Prompt(brief, lang, p);
@@ -3136,6 +3148,9 @@ function App() {
         // быть урезан/отфильтрован по вкусу модели (владелица просила ровно полный
         // список системы, как при ручной проверке в самой Wordstat).
         if (mod.id === 'M7' && wordstatData) full += wordstatFullListBlock(wordstatData.frequencies);
+        // M3 VoC гигиена (ТЗ-M3-VOC.md п.1-4): верификация цитат+дедуп+гейт по коду,
+        // тем же приёмом — модель уже ответила, дальше правит только код.
+        if (mod.id === 'M3') full = await processM3Voc(full, wn);
       } catch(e) { full = 'Error: '+e.message; }
       clearInterval(stepTimer);
 
