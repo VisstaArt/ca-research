@@ -50,7 +50,10 @@ export default async function handler(req, res) {
         }),
       });
       const data = await r.json();
-      if (!r.ok) return res.status(r.status).json({ error: { message: data?.message || 'Wordstat error' } });
+      if (!r.ok) {
+        console.error('[wordstat/dynamics]', r.status, phrase, JSON.stringify(data));
+        return res.status(r.status).json({ error: { message: data?.message || 'Wordstat error' } });
+      }
       return res.status(200).json({
         results: (data.results || []).map(x => ({ date: x.date, count: toNum(x.count) })),
       });
@@ -67,7 +70,10 @@ export default async function handler(req, res) {
       }),
     });
     const data = await r.json();
-    if (!r.ok) return res.status(r.status).json({ error: { message: data?.message || 'Wordstat error' } });
+    if (!r.ok) {
+      console.error('[wordstat/topRequests]', r.status, phrase, JSON.stringify(data));
+      return res.status(r.status).json({ error: { message: data?.message || 'Wordstat error' } });
+    }
 
     res.status(200).json({
       totalCount: toNum(data.totalCount),
