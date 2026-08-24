@@ -945,3 +945,103 @@ SEO-листиклы («Топ-10 лучших X»), которые по жан�
 `competitorDomainsFromM2`/`pickTable` не задеты.
 
 **НЕ ПРОВЕРЕНО живьём** — ждёт бюджета вместе с остальным M2/M3.
+
+## Б1+Б2+Б3: аккаунты вместо общего пароля, RLS, убран service_role (24 августа, `983d9c7`)
+
+**Контекст.** Владелица строит подписной сервис на ~1000 клиентов (решения
+Р1–Р6 от 24.08, план в `~/Projects/leadyup-content-machine-LOCAL-BACKUP/
+движок/ПЛАН-МОДУЛЕЙ-ПЛАТФОРМЫ.md`). Осмотр кода в тот же день нашёл три
+блокера самообслуживания CA Research, которые владелица решила чинить одним
+заходом:
+- Б1 — аккаунтов не было, один `APP_PASSWORD` знали все.
+- Б2 — `api/projects.js` GET отдавал ВСЕ исследования без фильтра по
+  владельцу (безвредно с одним аккаунтом, опасно со вторым).
+- Б3 — все `api/*.js` ходили в Supabase ключом `service_role`, который
+  **обходит RLS по определению** — колонка владельца сама по себе ничего не
+  гарантирует, пока запрос идёт этим ключом.
+
+**Архитектура.** Вместо фильтрации в коде функции (Б3 прямо предупреждает:
+забытый `.eq('owner_id',...)` — это Б2 снова) — изоляция как свойство самой
+базы. Клиент входит через Supabase Auth → получает JWT → шлёт его в каждом
+запросе → `api/_auth.js` форвардит ЕГО токен (не `service_role`) в
+PostgREST → RLS-политика `owner_id = auth.uid()` сама не отдаёт чужие
+строки, что бы ни было в коде эндпоинта.
+
+**Сделано в коде** (детали — в коммите `983d9c7`, план — обсуждён и утверждён
+в этой же сессии):
+- `api/_auth.js` (новый) — общий хелпер, `requireUser()` проверяет JWT через
+  GoTrue, отдаёт заголовки для PostgREST от имени пользователя.
+- `projects.js`/`publications.js`/`trends.js`/`domain-registry.js` —
+  `service_role` убран полностью, `owner_id` берётся из
+  `default auth.uid()`, не проставляется в коде.
+- `search.js`/`proxy.js`/`wordstat.js`/`verify-quotes.js` — тоже требуют
+  валидный JWT (иначе платные Tavily/OpenAI/Wordstat остались бы без
+  всякой защиты). `proxy.js`: старый ping-путь проверки пароля убран.
+- `index.html` — `LockScreen` теперь email+пароль (вход через Supabase Auth
+  REST API, без SDK — проект принципиально без сборки), `authFetch()` с
+  автообновлением токена на 401. `ensureDomainRegistry` (реестр площадок из
+  прошлого захода по M3) получил срок годности 90 дней — владелица верно
+  заметила, что общий реестр без него зачерствеет.
+
+**НУЖНО ОТ ВЛАДЕЛИЦЫ ДО ТОГО, КАК ЭТО ЗАРАБОТАЕТ** (без этого вход в
+приложение сломан — LockScreen ждёт Supabase Auth, которого пока нет):
+
+1. Supabase Dashboard → Authentication → включить Email/Password провайдер.
+2. Settings → API → скопировать **`anon` (public) key** (НЕ `service_role`!)
+   → добавить в Vercel как новую переменную окружения `SUPABASE_ANON_KEY`.
+3. В `index.html` подставить вместо плейсхолдеров реальные значения (строки
+   с `SUPABASE_URL`/`SUPABASE_ANON_KEY` рядом с началом файла, помечены
+   `TODO(владелица)`) — эти значения ПУБЛИЧНЫЕ (anon key не секрет, в
+   отличие от service_role), нормально лежать прямо в клиентском коде.
+4. SQL ниже — накатить в Supabase SQL Editor.
+5. Authentication → Users → Add user — завести свой аккаунт (email+пароль).
+   Скопировать его `id` (UUID) — подставить в последний UPDATE ниже.
+
+```sql
+-- Колонка владельца + RLS на projects
+alter table projects add column if not exists owner_id uuid not null default auth.uid() references auth.users(id);
+alter table projects enable row level security;
+create policy "own projects" on projects
+  for all using (owner_id = auth.uid()) with check (owner_id = auth.uid());
+
+-- publications/metrics_snapshots — изоляция через project_id -> projects.owner_id
+alter table publications enable row level security;
+create policy "own publications" on publications
+  for all using (project_id in (select id from projects where owner_id = auth.uid()))
+  with check (project_id in (select id from projects where owner_id = auth.uid()));
+
+alter table metrics_snapshots enable row level security;
+create policy "own metrics" on metrics_snapshots
+  for all using (publication_id in (
+    select p.id from publications p join projects pr on pr.id = p.project_id
+    where pr.owner_id = auth.uid()))
+  with check (publication_id in (
+    select p.id from publications p join projects pr on pr.id = p.project_id
+    where pr.owner_id = auth.uid()));
+
+-- trend_snapshots — та же связь через project_id
+alter table trend_snapshots enable row level security;
+create policy "own trends" on trend_snapshots
+  for all using (project_id in (select id from projects where owner_id = auth.uid()))
+  with check (project_id in (select id from projects where owner_id = auth.uid()));
+
+-- domain_registry — ОБЩИЙ реестр (не приватные данные), доступ любому вошедшему
+alter table domain_registry add column if not exists refreshed_at timestamptz not null default now();
+alter table domain_registry enable row level security;
+create policy "any authenticated user" on domain_registry
+  for all using (auth.role() = 'authenticated') with check (auth.role() = 'authenticated');
+
+-- Миграция существующих строк на первый (её) аккаунт — подставить реальный UUID
+update projects set owner_id = '<ЕЁ_USER_ID>' where owner_id is null;
+```
+
+**Явно не сделано в этом заходе** (следующие пункты той же очереди из
+плана платформы): Б4 (CORS-ограничение по домену), Б5 (лимит попыток
+входа), Б6 (учёт расхода/квоты на клиента), Б9 (публичная форма
+регистрации — сейчас только вручную через Dashboard), Б7/Б8 (сборка кода,
+Vercel Pro — перед открытием доступа чужим людям).
+
+**НЕ ПРОВЕРЕНО живьём** — ждёт: (1) ручной настройки Supabase Auth +
+переменных + SQL от владелицы, (2) после этого — живого входа под двумя
+аккаунтами (проверка, что второй аккаунт не видит проекты первого — это и
+есть проверка Б2, раньше увидел бы всё).
