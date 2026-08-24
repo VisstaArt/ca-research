@@ -807,6 +807,13 @@ function last12MonthsRange() {
 // Реальная частотность для M7 (Yandex Wordstat) — 2-3 «якорных» фразы дают уже
 // несколько десятков похожих ИЗМЕРЕННЫХ фраз каждая (results+associations),
 // поэтому не нужно заранее знать все кластеры SEO-02 — Wordstat сам их предлагает.
+// ВАЖНО: Wordstat матчит по точной строке, не по смыслу (в отличие от Tavily-
+// поиска в gatherSeoEvidence, где длинная фраза — нормально). Живой тест
+// подтвердил: «попап для сайта» → totalCount 157, 10 associations; «попап для
+// интернет-магазина» → totalCount 2, пусто — хотя обе фразы из 3 слов. Длинная
+// склейка product+niche+market почти всегда даёт 0 реальных запросов. Поэтому
+// главный якорь — короткое ядро продукта (до « для »/« for »), а не вся фраза
+// целиком; нишу/рынок добавляем ВТОРЫМ, более широким якорем, не единственным.
 // Сезонность (дополнительно) — отдельный метод (dynamics), по фразе, а не по
 // «якорю»: считаем её только для топ-N САМЫХ частотных найденных фраз, иначе
 // пришлось бы гонять dynamics на все 30+ фраз из topRequests — медленно и не нужно,
@@ -814,12 +821,16 @@ function last12MonthsRange() {
 async function gatherWordstatData(brief) {
   const market = brief.geoMarket || brief.geoCompany || '';
   const product = brief.niche || brief.name || '';
+  const core = (product.split(/\s+(?:для|for)\s+/i)[0] || product).trim();
   const niches = (brief.selectedNiche||'').split(',').map(s=>s.trim()).filter(Boolean).slice(0,2);
-  const seeds = (niches.length ? niches.map(n=>product+' '+n) : [product]).slice(0,3);
-  if (seeds.length < 2) seeds.push(product+' '+market);
+  const seeds = [core];
+  if (core !== product) seeds.push(product);
+  if (niches.length) seeds.push(core+' '+niches[0]);
+  else if (market) seeds.push(core+' '+market);
+  const uniqueSeeds = [...new Set(seeds.filter(Boolean))].slice(0,3);
   const frequencies = [];
   const seen = new Set();
-  for (const phrase of seeds) {
+  for (const phrase of uniqueSeeds) {
     const d = await callWordstat(phrase, { numPhrases: 30 });
     if (!d) continue;
     for (const r of [...(d.results||[]), ...(d.associations||[])]) {
