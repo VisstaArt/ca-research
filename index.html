@@ -516,6 +516,26 @@ async function callVerifyQuotes(items) {
   } catch { return null; }
 }
 
+// M3 VoC — реестр площадок по нише (ТЗ-M3-VOC.md, п.2). Тот же паттерн, что
+// остальные вызовы к api/*.js. GET — существующие домены ниши; POST — массовый upsert.
+async function callDomainRegistry(method, params) {
+  try {
+    if (method === 'GET') {
+      const res = await fetch('/api/domain-registry?niche=' + encodeURIComponent(params.niche), {
+        headers: {'X-App-Key':getAppKey()},
+      });
+      if (!res.ok) return null;
+      const d = await res.json();
+      return d.domains || null;
+    }
+    const res = await fetch('/api/domain-registry', {
+      method: 'POST', headers: {'Content-Type':'application/json','X-App-Key':getAppKey()},
+      body: JSON.stringify(params),
+    });
+    return res.ok;
+  } catch { return null; }
+}
+
 // Общий сборщик досье: гоняет запросы через реальный поиск, дедуплицирует по URL
 async function gatherEvidence(queries, maxQueries, maxResults, opts) {
   const o = opts || {};
@@ -526,6 +546,7 @@ async function gatherEvidence(queries, maxQueries, maxResults, opts) {
   if (o.depth) searchOpts.depth = o.depth;                       // 'advanced' — глубже и больше результатов
   if (o.raw) searchOpts.include_raw_content = true;              // полный текст страницы вместо сниппета
   if (o.days) searchOpts.days = o.days;                          // ограничить свежестью (M8: недельный скан трендов)
+  if (o.include_domains && o.include_domains.length) searchOpts.include_domains = o.include_domains; // реестр площадок (M3)
   const all = [];
   for (const q of queries.slice(0, maxQueries || 9)) {
     const r = await callSearch(q, searchOpts);
@@ -964,7 +985,67 @@ function competitorsFromM2(m2Result, brief) {
   return out.filter(n => n && !seen.has(n.toLowerCase()) && seen.add(n.toLowerCase())).slice(0, 5);
 }
 
-async function gatherVoCEvidence(brief, discoveredCompetitors) {
+// Домены конкурентов из BLOCK 06 M2 (колонка «Сайт/URL») — бесплатный источник для
+// реестра площадок (ТЗ-M3-VOC.md, п.2): данные уже есть, отдельный поиск не нужен.
+function competitorDomainsFromM2(m2Result) {
+  if (!m2Result || !m2Result.content) return [];
+  const tables = parseMdTables(m2Result.content);
+  const t06 = tables.find(t => /BLOCK\s*06(?!_1)\b/i.test(t.heading || ''));
+  if (!t06 || !t06.rows.length) return [];
+  const urlKey = Object.keys(t06.rows[0]).find(k => k.toLowerCase().includes('сайт'));
+  if (!urlKey) return [];
+  const domains = new Set();
+  for (const row of t06.rows) {
+    const raw = (row[urlKey] || '').trim();
+    if (!raw || raw === '—' || /по запросу/i.test(raw)) continue;
+    try {
+      const withScheme = /^https?:\/\//i.test(raw) ? raw : 'https://' + raw;
+      domains.add(new URL(withScheme).hostname.replace(/^www\./, ''));
+    } catch {}
+  }
+  return [...domains];
+}
+
+// Разведка доменов по нише (ТЗ-M3-VOC.md, п.2) — ПОЛНОСТЬЮ автоматическая: несколько
+// лёгких поисковых запросов находят, ГДЕ вообще обсуждают эту нишу (форумы/Q&A/
+// отзовики), нужны только домены найденных страниц, не содержимое. Владелица прямо
+// просила без ручного ввода — весь реестр наполняется поиском, а не списком от неё.
+async function discoverNicheDomains(brief) {
+  const market = brief.geoMarket || brief.geoCompany || '';
+  const product = brief.niche || brief.name || '';
+  const niches = (brief.selectedNiche||'').split(',').map(s=>s.trim()).filter(Boolean);
+  const topic = niches.length ? niches[0] : product;
+  const queries = [
+    topic+' '+market+' форум обсуждение',
+    topic+' '+market+' отзывы площадка',
+    topic+' '+market+' вопрос ответ',
+  ];
+  const evidence = await gatherEvidence(queries, 3, 5, { maxItems: 20 });
+  const domains = new Set();
+  for (const e of evidence) {
+    try { domains.add(new URL(e.url).hostname.replace(/^www\./, '')); } catch {}
+  }
+  return [...domains];
+}
+
+// Реестр площадок для ниши — GET существующего (переиспользуем, ТЗ: «строится один
+// раз») ИЛИ собираем автоматически (конкуренты M2 + разведка поиском) и сохраняем.
+async function ensureDomainRegistry(niche, m2Result, brief) {
+  if (!niche) return [];
+  const existing = await callDomainRegistry('GET', { niche });
+  if (existing && existing.length) return existing.map(r => r.domain);
+
+  const fromCompetitors = competitorDomainsFromM2(m2Result).map(d => ({ domain: d, category: 'competitor_site', source: 'auto' }));
+  const discovered = (await discoverNicheDomains(brief)).map(d => ({ domain: d, category: 'discovered', source: 'auto' }));
+  const seen = new Set();
+  const union = [...fromCompetitors, ...discovered].filter(d => !seen.has(d.domain) && seen.add(d.domain));
+  if (!union.length) return []; // новая ниша без конкурентов и без находок — поиск идёт открытым, как раньше
+
+  await callDomainRegistry('POST', { niche, domains: union });
+  return union.map(d => d.domain);
+}
+
+async function gatherVoCEvidence(brief, discoveredCompetitors, m2Result) {
   const market = brief.geoMarket || brief.geoCompany || '';
   const product = brief.niche || brief.name || '';
   const niches = (brief.selectedNiche||'').split(',').map(s=>s.trim()).filter(Boolean).slice(0,3);
@@ -989,7 +1070,12 @@ async function gatherVoCEvidence(brief, discoveredCompetitors) {
   }
   // 3. Язык самой категории продукта
   queries.push(product+' '+market+' отзывы клиентов форум');
-  return gatherEvidence(queries, 20, 6, { depth:'advanced', raw:true, contentChars:1500, perDomain:3, maxItems:45 });
+
+  // Реестр площадок (ТЗ-M3-VOC.md, п.2) — сузить поиск до доменов, где реально
+  // обсуждают нишу, вместо открытого веба (который тащит мусор с любых отзовиков).
+  // Пустой список — открытый веб как раньше (новая ниша без конкурентов и находок).
+  const domains = await ensureDomainRegistry(brief.selectedNiche || '', m2Result, brief);
+  return gatherEvidence(queries, 20, 6, { depth:'advanced', raw:true, contentChars:1500, perDomain:3, maxItems:45, include_domains: domains });
 }
 
 // M3 VoC гигиена (ТЗ-M3-VOC.md, п.1-4) — вызывается ПОСЛЕ ответа модели, на готовом
@@ -3118,9 +3204,11 @@ function App() {
           userPrompt = buildM2Prompt(Bn, lang, prevContent || '', evidence);
         } else if (mod.id === 'M3') {
           // VoC: живые цитаты только из реального поиска.
-          // Конкурентов берём из уже готового M2 ТОЙ ЖЕ ниши — по ним ищем жалобы.
-          const comps = competitorsFromM2(findDep('M2'), Bn);
-          const evidence = await gatherVoCEvidence(Bn, comps);
+          // Конкурентов берём из уже готового M2 ТОЙ ЖЕ ниши — по ним ищем жалобы;
+          // тот же M2-результат идёт в реестр площадок (домены конкурентов, п.2 ТЗ).
+          const m2Result = findDep('M2');
+          const comps = competitorsFromM2(m2Result, Bn);
+          const evidence = await gatherVoCEvidence(Bn, comps, m2Result);
           userPrompt = buildM3Prompt(Bn, lang, prevContent || '', evidence, comps);
         } else if (mod.id === 'M7') {
           // SEO: реальная выдача по целевым запросам вместо частотностей «из памяти»
