@@ -8,11 +8,9 @@ export const config = { api: { bodyParser: true } };
 // Б1+Б2+Б3 (24.08.2026): изоляция по владельцу теперь через RLS на самой
 // таблице (project_id -> projects.owner_id), запрос идёт от имени пользователя
 // (его JWT), не service_role — см. api/_auth.js.
-import { requireUser } from './_auth.js';
+import { requireUser, setCorsHeaders } from './_auth.js';
 export default async function handler(req, res) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, DELETE, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  setCorsHeaders(res, 'GET, POST, DELETE, OPTIONS');
   if (req.method === 'OPTIONS') return res.status(200).end();
 
   const auth = await requireUser(req, res);

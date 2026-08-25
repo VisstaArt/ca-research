@@ -8,11 +8,9 @@ export const config = { api: { bodyParser: true } };
 //
 // Б1+Б2+Б3 (24.08.2026): изоляция по владельцу через RLS (project_id ->
 // projects.owner_id), запрос от имени пользователя, не service_role.
-import { requireUser } from './_auth.js';
+import { requireUser, setCorsHeaders } from './_auth.js';
 export default async function handler(req, res) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  setCorsHeaders(res, 'GET, POST, OPTIONS');
   if (req.method === 'OPTIONS') return res.status(200).end();
 
   const auth = await requireUser(req, res);

@@ -10,11 +10,9 @@ export const config = { api: { bodyParser: true } };
 // пользователям (requireUser) — RLS-политика на таблице разрешает любому
 // authenticated, а не owner_id (см. план). service_role здесь тоже убран —
 // единообразие с остальными api/*.js важнее, чем разница в семантике таблицы.
-import { requireUser } from './_auth.js';
+import { requireUser, setCorsHeaders } from './_auth.js';
 export default async function handler(req, res) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, DELETE, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  setCorsHeaders(res, 'GET, POST, DELETE, OPTIONS');
   if (req.method === 'OPTIONS') return res.status(200).end();
 
   const auth = await requireUser(req, res);

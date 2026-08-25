@@ -2,6 +2,20 @@
 // Имя начинается с "_" — Vercel не публикует такие файлы как отдельный route,
 // стандартный приём делиться кодом между serverless-функциями без
 // package.json/сборки (тот же ноль-зависимостей стиль, что у всего проекта).
+
+// Б4 (25.08.2026): раньше 'Access-Control-Allow-Origin: *' на всех эндпоинтах —
+// любой сторонний сайт мог дёргать API. CORS — это только браузерное
+// ограничение (curl/серверные вызовы им не подчиняются), но именно оно не
+// даёт чужому сайту от лица зашедшего пользователя тихо дёргать наш API из
+// его же браузера. Один известный источник — сама владелица заходит по
+// постоянному адресу (STATE.md: «заходить ВСЕГДА по ...vercel.app», не по
+// одноразовым URL превью-деплоев).
+export const ALLOWED_ORIGIN = 'https://ca-research-git-main-art-vissta-s-projects.vercel.app';
+export function setCorsHeaders(res, methods) {
+  res.setHeader('Access-Control-Allow-Origin', ALLOWED_ORIGIN);
+  res.setHeader('Access-Control-Allow-Methods', methods);
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+}
 //
 // Раньше: общий APP_PASSWORD + SUPABASE_SERVICE_ROLE_KEY (ключ, который
 // ОБХОДИТ RLS по определению — фильтрация "чья это строка" была только на

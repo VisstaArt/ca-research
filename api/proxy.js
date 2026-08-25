@@ -4,11 +4,9 @@ export const config = { api: { bodyParser: true } };
 // Auth — вход/проверку пароля с экрана логина теперь делает index.html
 // напрямую через Auth REST API (см. index.html: signIn), эта функция больше
 // не участвует в проверке пароля (старый ping-путь убран как мёртвый код).
-import { requireUser } from './_auth.js';
+import { requireUser, setCorsHeaders } from './_auth.js';
 export default async function handler(req, res) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  setCorsHeaders(res, 'POST, OPTIONS');
   if (req.method === 'OPTIONS') return res.status(200).end();
 
   const auth = await requireUser(req, res);

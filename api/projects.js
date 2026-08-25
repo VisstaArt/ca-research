@@ -11,11 +11,9 @@ export const config = { api: { bodyParser: true } };
 // исследования всем. Теперь запрос идёт от имени пользователя (его JWT) —
 // PostgREST + RLS-политика `owner_id = auth.uid()` сами не отдадут чужие
 // строки, фильтрация — свойство базы, не код этой функции.
-import { requireUser } from './_auth.js';
+import { requireUser, setCorsHeaders } from './_auth.js';
 export default async function handler(req, res) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, DELETE, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  setCorsHeaders(res, 'GET, POST, DELETE, OPTIONS');
   if (req.method === 'OPTIONS') return res.status(200).end();
 
   const auth = await requireUser(req, res);
