@@ -999,7 +999,19 @@ PostgREST → RLS-политика `owner_id = auth.uid()` сама не отд�
 
 ```sql
 -- Колонка владельца + RLS на projects
-alter table projects add column if not exists owner_id uuid not null default auth.uid() references auth.users(id);
+-- ВАЖНО: сначала БЕЗ not null — иначе ALTER падает на существующих строках
+-- ("column owner_id contains null values"), потому что auth.uid() в default
+-- работает только в контексте запроса от приложения, а не в SQL Editor'е
+-- (там во время самого ALTER это значение пустое). Сначала добавляем колонку,
+-- затем backfill вручную (см. миграцию ниже), и ТОЛЬКО ПОТОМ включаем not null.
+alter table projects add column if not exists owner_id uuid default auth.uid() references auth.users(id);
+
+-- Миграция существующих строк на первый (её) аккаунт — ДО not null
+update projects set owner_id = '<ЕЁ_USER_ID>' where owner_id is null;
+
+-- Теперь можно требовать not null — пустых строк уже нет
+alter table projects alter column owner_id set not null;
+
 alter table projects enable row level security;
 create policy "own projects" on projects
   for all using (owner_id = auth.uid()) with check (owner_id = auth.uid());
@@ -1030,9 +1042,6 @@ alter table domain_registry add column if not exists refreshed_at timestamptz no
 alter table domain_registry enable row level security;
 create policy "any authenticated user" on domain_registry
   for all using (auth.role() = 'authenticated') with check (auth.role() = 'authenticated');
-
--- Миграция существующих строк на первый (её) аккаунт — подставить реальный UUID
-update projects set owner_id = '<ЕЁ_USER_ID>' where owner_id is null;
 ```
 
 **Явно не сделано в этом заходе** (следующие пункты той же очереди из
