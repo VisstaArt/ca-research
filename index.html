@@ -95,10 +95,11 @@ const T = {
     moduleDisabledBadge: 'Coming soon',
     moduleDisabledNote: 'Module in development: waiting for real statistics data integration',
     lockTitle: 'Access',
-    lockSub: 'Enter the access password to use the service',
+    lockSub: 'Sign in with your account email and password',
     lockPlaceholder: 'Password',
     lockButton: 'Sign in',
-    lockError: 'Wrong password. Try again.',
+    lockError: 'Wrong email or password. Try again.',
+    signOut: 'Sign out',
     servicesTitle: 'Services found on the site',
     servicesSub: 'select what to research',
     servicesHint: 'Selected services become niche candidates in M1.2 Niche Scouting. Select none — the agent will scout across all of them.',
@@ -187,10 +188,11 @@ const T = {
     moduleDisabledBadge: 'Скоро',
     moduleDisabledNote: 'Модуль в доработке: ждёт подключения реальных данных статистики',
     lockTitle: 'Доступ',
-    lockSub: 'Введите пароль доступа, чтобы пользоваться сервисом',
+    lockSub: 'Войдите под email и паролем своего аккаунта',
     lockPlaceholder: 'Пароль',
     lockButton: 'Войти',
-    lockError: 'Неверный пароль. Попробуйте ещё раз.',
+    lockError: 'Неверный email или пароль. Попробуйте ещё раз.',
+    signOut: 'Выйти',
     servicesTitle: 'Услуги, найденные на сайте',
     servicesSub: 'отметьте, что исследовать',
     servicesHint: 'Отмеченные услуги станут кандидатами в ниши в модуле M1.2 «Разведка ниш». Ничего не отметите — агент разведает все.',
@@ -3475,13 +3477,21 @@ function App() {
   };
 
   // ── HEADER
+  // signOut — очищает токены и возвращает на экран входа. Нужна была для
+  // переключения между аккаунтами при тестировании Б1-Б3 (25.08): без неё
+  // приходилось открывать второй браузер, чтобы проверить, что второй
+  // аккаунт не видит чужие проекты.
+  const signOut = () => { clearTokens(); setUnlocked(false); };
   const Header = () => (
     <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'1.5rem'}}>
       <div>
         <h2 style={{fontSize:22,fontWeight:500}}>{t.appTitle}</h2>
         <p style={{fontSize:13,color:'#666',marginTop:3}}>{t.appSub} · {MODEL}</p>
       </div>
-      <button onClick={switchUiLang} style={{padding:'5px 12px',fontSize:12,fontWeight:500}}>{uiLang==='en'?'RU':'EN'}</button>
+      <div style={{display:'flex',gap:8,alignItems:'center'}}>
+        <button onClick={switchUiLang} style={{padding:'5px 12px',fontSize:12,fontWeight:500}}>{uiLang==='en'?'RU':'EN'}</button>
+        <button onClick={signOut} style={{padding:'5px 12px',fontSize:12,fontWeight:500}}>{t.signOut}</button>
+      </div>
     </div>
   );
 
