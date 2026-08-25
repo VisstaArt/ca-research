@@ -1278,6 +1278,68 @@ function keywordSourceForMarket(market) {
   return 'google'; // всё остальное, включая KZ/BY и пустой рынок
 }
 
+// РЕГРЕССИЯ 25.08.2026, найдена владелицей на живом прогоне: старая эвристика
+// «обрезать до первого „для“» ломается, когда «для» — естественная часть
+// самого niche, не хвост-уточнение. Пример из реального брифа: niche =
+// «инструмент для захвата лидов/умные попапы с ИИ» → обрезка дала «инструмент»
+// (обычное слово «инструмент», ничего общего с продуктом) — Wordstat честно
+// вернул реальную частотность магазина инструментов (vseinstrumenti.ru),
+// модель корректно отказалась приписать эти числа своим кластерам про попапы
+// («не замерено» — это сработавшая защита, не баг самого M7), но толку ноль:
+// считать было нечего. Регулярка не может надёжно отличить «попап ДЛЯ сайта»
+// (для = хвост-уточнение, можно резать) от «инструмент ДЛЯ захвата лидов»
+// (для = часть смысла) на свободном тексте — доверяем модели, не regex.
+//
+// Дешёвый отдельный вызов вместо парсинга: 2-3 короткие ФРАЗЫ, которые
+// человек реально вбил бы в поиск, ища ИМЕННО ТИП продукта — не выгоду,
+// не боль, не описание. При сбое (сеть/парсинг) — старая эвристика как
+// запасной вариант, лучше несовершенный якорь, чем совсем без частотности.
+async function extractWordstatSeeds(brief) {
+  const product = brief.niche || brief.name || '';
+  const fallback = () => {
+    const core = (product.split(/\s+(?:для|for)\s+/i)[0] || product).trim();
+    return [core].filter(Boolean).slice(0, 1);
+  };
+  if (!product) return [];
+  try {
+    const sys = 'Ты подбираешь короткие поисковые фразы для проверки реальной частотности в Yandex Wordstat / Google Keyword Planner. Отвечай ТОЛЬКО JSON-массивом строк, без пояснений и markdown-обёртки.';
+    const user = 'Продукт:\n'
+      + 'Название: ' + (brief.name || '—') + '\n'
+      + 'Ниша/описание: ' + product + '\n'
+      + 'Формат: ' + (brief.format || '—') + '\n'
+      + 'Услуги: ' + ((brief.services||[]).join(', ') || '—') + '\n\n'
+      + 'Выбери 2-3 КОРОТКИЕ (1-3 слова) фразы — ровно то, что реальный человек вбил бы в поиск, ища ЭТОТ ТИП продукта/инструмента. НЕ выгоду, НЕ боль, НЕ описание пользы целиком (плохо: «инструмент для захвата лидов» — это описание, не поисковый запрос; хорошо: «попап», «виджет для сайта»). Верни JSON-массив: ["фраза1","фраза2"]';
+    const raw = await callGPT(sys, user, 0.2, 200);
+    const m = raw.match(/\[[\s\S]*\]/);
+    const arr = m ? JSON.parse(m[0]) : null;
+    const seeds = Array.isArray(arr) ? arr.map(s=>String(s||'').trim()).filter(Boolean) : [];
+    return seeds.length ? seeds.slice(0, 3) : fallback();
+  } catch { return fallback(); }
+}
+
+// Защита от нерелевантных ассоциаций даже при хорошем якоре (владелица,
+// 25.08): Wordstat/Google Ads возвращают ПОХОЖИЕ по форме, но не всегда
+// релевантные по смыслу фразы. Держим только те, что делят хотя бы одно
+// значимое слово со словарём темы (сиды + niche + format + services) —
+// дёшево (без доп. вызова модели) и отсекает явный дрейф в сторону, не
+// требуя полного семантического понимания.
+// Сравниваем по началу слова (первые 5 букв), не по точному совпадению —
+// иначе «попап» из словаря темы не совпадёт с «попапы»/«попапов» из
+// реального ответа Wordstat (русские окончания). Грубый, но дешёвый стемминг.
+function wordStem(w) { return w.length > 5 ? w.slice(0, 5) : w; }
+function relevantKeywordFilter(frequencies, seeds, brief) {
+  const vocab = new Set();
+  const addWords = s => String(s||'').toLowerCase().split(/[^a-zа-яё0-9]+/i).forEach(w => { if (w.length >= 4) vocab.add(wordStem(w)); });
+  seeds.forEach(addWords);
+  addWords(brief.niche); addWords(brief.format);
+  (brief.services||[]).forEach(addWords);
+  if (!vocab.size) return frequencies; // нечего сверить — доверяем как есть
+  return frequencies.filter(f => {
+    const words = String(f.phrase).toLowerCase().split(/[^a-zа-яё0-9]+/i);
+    return words.some(w => w.length >= 4 && vocab.has(wordStem(w)));
+  });
+}
+
 // Реальная частотность для M7 — 2-3 «якорных» фразы дают уже несколько
 // десятков похожих ИЗМЕРЕННЫХ фраз каждая, поэтому не нужно заранее знать все
 // кластеры SEO-02 — источник сам их предлагает (см. keywordSourceForMarket).
@@ -1285,23 +1347,15 @@ function keywordSourceForMarket(market) {
 // поиска в gatherSeoEvidence, где длинная фраза — нормально). Живой тест
 // подтвердил: «попап для сайта» → totalCount 157, 10 associations; «попап для
 // интернет-магазина» → totalCount 2, пусто — хотя обе фразы из 3 слов. Длинная
-// склейка product+niche+market почти всегда даёт 0 реальных запросов. Поэтому
-// главный якорь — короткое ядро продукта (до « для »/« for »), а не вся фраза
-// целиком; нишу/рынок добавляем ВТОРЫМ, более широким якорем, не единственным.
+// склейка product+niche+market почти всегда даёт 0 реальных запросов — якоря
+// теперь короткие (см. extractWordstatSeeds), не вся фраза целиком.
 // Сезонность — ТОЛЬКО для Yandex в этой версии (Google Ads даёт помесячную
 // историю через отдельный, ещё не подключённый endpoint) — для Google-рынков
 // seasonality всегда [], M7 честно пишет «не замерено» по сезонности.
 async function gatherKeywordFrequencyData(brief) {
   const market = brief.geoMarket || brief.geoCompany || '';
   const source = keywordSourceForMarket(market);
-  const product = brief.niche || brief.name || '';
-  const core = (product.split(/\s+(?:для|for)\s+/i)[0] || product).trim();
-  const niches = (brief.selectedNiche||'').split(',').map(s=>s.trim()).filter(Boolean).slice(0,2);
-  const seeds = [core];
-  if (core !== product) seeds.push(product);
-  if (niches.length) seeds.push(core+' '+niches[0]);
-  else if (market) seeds.push(core+' '+market);
-  const uniqueSeeds = [...new Set(seeds.filter(Boolean))].slice(0,3);
+  const uniqueSeeds = [...new Set(await extractWordstatSeeds(brief))].slice(0, 3);
   const frequencies = [];
   const seen = new Set();
   for (const phrase of uniqueSeeds) {
@@ -1318,11 +1372,12 @@ async function gatherKeywordFrequencyData(brief) {
       frequencies.push({ phrase: r.phrase, count: r.count });
     }
   }
+  const filtered = relevantKeywordFilter(frequencies, uniqueSeeds, brief);
 
   const seasonality = [];
   if (source === 'yandex') {
     const { fromDate, toDate } = last12MonthsRange();
-    const topByCount = [...frequencies].sort((a,b)=>b.count-a.count).slice(0, 8);
+    const topByCount = [...filtered].sort((a,b)=>b.count-a.count).slice(0, 8);
     for (const { phrase } of topByCount) {
       const d = await callWordstat(phrase, { mode:'dynamics', period:'PERIOD_MONTHLY', fromDate, toDate });
       const monthly = d && d.results ? d.results.filter(r=>r.count!=null) : [];
@@ -1330,7 +1385,7 @@ async function gatherKeywordFrequencyData(brief) {
     }
   }
 
-  return { frequencies, seasonality, source: source === 'yandex' ? 'Yandex Wordstat' : 'Google Ads' };
+  return { frequencies: filtered, seasonality, source: source === 'yandex' ? 'Yandex Wordstat' : 'Google Ads' };
 }
 
 // Полный список фраз+частотностей как ОТДЕЛЬНЫЙ блок markdown, собранный
