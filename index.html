@@ -380,8 +380,8 @@ const saveUiLang = l => { try { localStorage.setItem('ca_uilang', l); } catch {}
 // стороне базы вместо фильтрации в коде (см. api/_auth.js). anon key ПУБЛИЧНЫЙ
 // по определению (в отличие от service_role) — не секрет, нормально видеть
 // его в клиентском коде, как и PROXY воркера ниже.
-const SUPABASE_URL = 'https://YOUR-PROJECT.supabase.co'; // TODO(владелица): подставить URL проекта (Settings → API)
-const SUPABASE_ANON_KEY = 'YOUR-ANON-KEY'; // TODO(владелица): подставить anon/public key (НЕ service_role)
+const SUPABASE_URL = 'https://akfyaavisigavvzjmadn.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_ugKFALTIZeEaR7idC19cdA_yfJ0RAq0'; // Publishable key — новое название anon/public в Supabase, публичный, не секрет
 
 const AT_KEY = 'ca_access_token', RT_KEY = 'ca_refresh_token';
 const getAccessToken = () => { try { return localStorage.getItem(AT_KEY)||''; } catch { return ''; } };
