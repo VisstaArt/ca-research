@@ -532,13 +532,30 @@ async function callSearch(query, opts) {
   } catch { return []; }
 }
 
-// Реальная частотность (M7): Yandex Wordstat. null при недоступности/не настроенном
-// API — вызывающий код (gatherWordstatData) трактует это как «данных нет», не падает.
+// Реальная частотность (M7): Yandex Wordstat (только для рынка России —
+// маршрутизация в keywordSourceForMarket). null при недоступности/не
+// настроенном API — вызывающий код (gatherKeywordFrequencyData) трактует
+// это как «данных нет», не падает.
 async function callWordstat(phrase, opts) {
   try {
     const res = await authFetch('/api/wordstat', {
       method: 'POST', headers: {'Content-Type':'application/json'},
       body: JSON.stringify({phrase, ...(opts||{})}),
+    });
+    if (!res.ok) return null;
+    return await res.json();
+  } catch { return null; }
+}
+
+// Реальная частотность (M7) для рынков вне России — Google Ads Keyword Planner
+// (REQ-025). Та же форма ответа, что у callWordstat — gatherKeywordFrequencyData
+// переиспользует один код для обоих источников. null при недоступности/не
+// настроенном API — трактуется как «данных нет», не падает.
+async function callGoogleAds(phrase, market, lang) {
+  try {
+    const res = await authFetch('/api/google-ads', {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({phrase, market, lang}),
     });
     if (!res.ok) return null;
     return await res.json();
@@ -1234,9 +1251,22 @@ function last12MonthsRange() {
   return { fromDate: fromDate.toISOString(), toDate: toDate.toISOString() };
 }
 
-// Реальная частотность для M7 (Yandex Wordstat) — 2-3 «якорных» фразы дают уже
-// несколько десятков похожих ИЗМЕРЕННЫХ фраз каждая (results+associations),
-// поэтому не нужно заранее знать все кластеры SEO-02 — Wordstat сам их предлагает.
+// Маршрутизация источника частотности по рынку (REQ-025, 25.08.2026): Yandex
+// Wordstat реально работает только для русскоязычного рынка (доминирует в РФ,
+// ~70%) — для остальных исследуемых рынков (Турция, ОАЭ, англоязычные) нужен
+// Google Ads. Казахстан/Беларусь тоже идут в Google, хотя там у Yandex
+// заметное меньшинство (~28-35%) — решение владелицы для первой версии: один
+// источник на рынок, без слияния данных из двух API с разной логикой
+// матчинга (Wordstat — точная строка, Google Ads — смысловые варианты).
+function keywordSourceForMarket(market) {
+  const m = String(market || '').toLowerCase();
+  if (/росси|russia|\bрф\b/i.test(m)) return 'yandex';
+  return 'google'; // всё остальное, включая KZ/BY и пустой рынок
+}
+
+// Реальная частотность для M7 — 2-3 «якорных» фразы дают уже несколько
+// десятков похожих ИЗМЕРЕННЫХ фраз каждая, поэтому не нужно заранее знать все
+// кластеры SEO-02 — источник сам их предлагает (см. keywordSourceForMarket).
 // ВАЖНО: Wordstat матчит по точной строке, не по смыслу (в отличие от Tavily-
 // поиска в gatherSeoEvidence, где длинная фраза — нормально). Живой тест
 // подтвердил: «попап для сайта» → totalCount 157, 10 associations; «попап для
@@ -1244,12 +1274,12 @@ function last12MonthsRange() {
 // склейка product+niche+market почти всегда даёт 0 реальных запросов. Поэтому
 // главный якорь — короткое ядро продукта (до « для »/« for »), а не вся фраза
 // целиком; нишу/рынок добавляем ВТОРЫМ, более широким якорем, не единственным.
-// Сезонность (дополнительно) — отдельный метод (dynamics), по фразе, а не по
-// «якорю»: считаем её только для топ-N САМЫХ частотных найденных фраз, иначе
-// пришлось бы гонять dynamics на все 30+ фраз из topRequests — медленно и не нужно,
-// сезонность важна прежде всего для ключевых, а не хвостовых запросов.
-async function gatherWordstatData(brief) {
+// Сезонность — ТОЛЬКО для Yandex в этой версии (Google Ads даёт помесячную
+// историю через отдельный, ещё не подключённый endpoint) — для Google-рынков
+// seasonality всегда [], M7 честно пишет «не замерено» по сезонности.
+async function gatherKeywordFrequencyData(brief) {
   const market = brief.geoMarket || brief.geoCompany || '';
+  const source = keywordSourceForMarket(market);
   const product = brief.niche || brief.name || '';
   const core = (product.split(/\s+(?:для|for)\s+/i)[0] || product).trim();
   const niches = (brief.selectedNiche||'').split(',').map(s=>s.trim()).filter(Boolean).slice(0,2);
@@ -1263,8 +1293,10 @@ async function gatherWordstatData(brief) {
   for (const phrase of uniqueSeeds) {
     // numPhrases 50 — владелица делает это вручную в Wordstat и хочет ПОЛНЫЙ список
     // похожих/ассоциативных фраз по теме, не только по одной введённой фразе;
-    // 0-показов исключаем сразу здесь — Wordstat их возвращает, но это шум, не спрос.
-    const d = await callWordstat(phrase, { numPhrases: 50 });
+    // 0-показов исключаем сразу здесь — источники их возвращают, но это шум, не спрос.
+    const d = source === 'yandex'
+      ? await callWordstat(phrase, { numPhrases: 50 })
+      : await callGoogleAds(phrase, market, brief.lang);
     if (!d) continue;
     for (const r of [...(d.results||[]), ...(d.associations||[])]) {
       if (!r.phrase || !r.count || seen.has(r.phrase)) continue;
@@ -1274,27 +1306,29 @@ async function gatherWordstatData(brief) {
   }
 
   const seasonality = [];
-  const { fromDate, toDate } = last12MonthsRange();
-  const topByCount = [...frequencies].sort((a,b)=>b.count-a.count).slice(0, 8);
-  for (const { phrase } of topByCount) {
-    const d = await callWordstat(phrase, { mode:'dynamics', period:'PERIOD_MONTHLY', fromDate, toDate });
-    const monthly = d && d.results ? d.results.filter(r=>r.count!=null) : [];
-    if (monthly.length) seasonality.push({ phrase, monthly });
+  if (source === 'yandex') {
+    const { fromDate, toDate } = last12MonthsRange();
+    const topByCount = [...frequencies].sort((a,b)=>b.count-a.count).slice(0, 8);
+    for (const { phrase } of topByCount) {
+      const d = await callWordstat(phrase, { mode:'dynamics', period:'PERIOD_MONTHLY', fromDate, toDate });
+      const monthly = d && d.results ? d.results.filter(r=>r.count!=null) : [];
+      if (monthly.length) seasonality.push({ phrase, monthly });
+    }
   }
 
-  return { frequencies, seasonality };
+  return { frequencies, seasonality, source: source === 'yandex' ? 'Yandex Wordstat' : 'Google Ads' };
 }
 
-// Полный список фраз+частотностей из Wordstat как ОТДЕЛЬНЫЙ блок markdown,
-// собранный кодом, а не моделью — владелица делает это вручную в самой Wordstat
+// Полный список фраз+частотностей как ОТДЕЛЬНЫЙ блок markdown, собранный
+// кодом, а не моделью — владелица делает это вручную в самой Wordstat
 // (заходит и смотрит весь список похожих запросов) и хочет ровно то же самое
 // автоматически: НИКАКОГО отбора/додумывания моделью, просто то, что вернула
 // система, отсортировано по частотности, без нулей (уже отфильтровано выше).
-function wordstatFullListBlock(frequencies) {
+function wordstatFullListBlock(frequencies, source) {
   if (!frequencies || !frequencies.length) return '';
   const sorted = [...frequencies].sort((a,b)=>b.count-a.count);
   const rows = sorted.map(w => '| '+w.phrase+' | '+w.count+' |').join('\n');
-  return '\n\n#### Полный список запросов по Wordstat (как есть, без отбора моделью)\n'
+  return '\n\n#### Полный список запросов по '+(source||'Wordstat')+' (как есть, без отбора моделью)\n'
     + '| Фраза | Частотность (показов/мес) |\n|---|---|\n' + rows + '\n';
 }
 
@@ -1975,20 +2009,23 @@ H1, subheadline, bullet points, CTA text
 
 function buildM7Prompt(brief, lang, prev, evidence, wordstatData) {
   const ctx = prev ? `\nCONTEXT:\n${prev.slice(0,1500)}\n` : '';
-  // Реальная частотность (Yandex Wordstat, измерено только что) — если API не настроен
-  // или ничего не нашёл, wordstatData пуст и модуль ведёт себя как раньше («не замерено»).
+  // Реальная частотность (Yandex Wordstat ИЛИ Google Ads — источник зависит от
+  // рынка, см. keywordSourceForMarket, REQ-025) — если API не настроен или
+  // ничего не нашёл, wordstatData пуст и модуль ведёт себя как раньше («не замерено»).
   const freq = (wordstatData && wordstatData.frequencies) || [];
   const seas = (wordstatData && wordstatData.seasonality) || [];
+  const srcLabel = (wordstatData && wordstatData.source) || 'Wordstat';
   const wordstatBlock = freq.length
-    ? '\n═══════════════════════════════════════════════\nREAL WORDSTAT FREQUENCY DATA (Yandex, measured just now)\n═══════════════════════════════════════════════\n'
+    ? '\n═══════════════════════════════════════════════\nREAL FREQUENCY DATA ('+srcLabel+', measured just now)\n═══════════════════════════════════════════════\n'
       + freq.map(w=>w.phrase+': '+w.count+'/мес').join('\n')
       + '\n\nЭто РЕАЛЬНО измеренные числа (не из evidence, не выдумка) — используй их как приоритетный источник частотности для SEO-02.\n'
     : '';
-  // Помесячная динамика за 12 месяцев — только для топ-фраз (см. gatherWordstatData).
+  // Помесячная динамика за 12 месяцев — только для топ-фраз, только для Yandex
+  // (см. gatherKeywordFrequencyData — Google Ads пока без сезонности).
   // Модель сама решает, растёт/падает/сезонит фраза, глядя на РЕАЛЬНЫЕ 12 чисел —
   // не придумывает «зимний пик», а описывает то, что реально в массиве.
   const seasonBlock = seas.length
-    ? '\n═══════════════════════════════════════════════\nREAL WORDSTAT SEASONALITY DATA (Yandex, monthly, last 12 months)\n═══════════════════════════════════════════════\n'
+    ? '\n═══════════════════════════════════════════════\nREAL SEASONALITY DATA ('+srcLabel+', monthly, last 12 months)\n═══════════════════════════════════════════════\n'
       + seas.map(w=>w.phrase+':\n'+w.monthly.map(m=>'  '+m.date.slice(0,7)+': '+m.count).join('\n')).join('\n')
       + '\n\nЭто РЕАЛЬНЫЕ помесячные числа — опиши на их основе сезонность словами (например «пик в декабре-январе, спад летом» или «стабильно весь год», если колебания небольшие). Не выдумывай сезонность для фраз, которых нет в этом блоке.\n'
     : '';
@@ -2001,19 +2038,19 @@ SEO-00 — Источники (ОБЯЗАТЕЛЬНЫЙ, идёт ПЕРВЫМ)
 
 ЧАСТОТНОСТИ — КРИТИЧНО (главное правило этого модуля):
 Допустимы ДВА источника числа частотности:
-1. Блок REAL WORDSTAT FREQUENCY DATA выше (если есть) — бери число оттуда напрямую, в источнике пиши «Wordstat» вместо [n].
+1. Блок REAL FREQUENCY DATA выше (если есть) — бери число оттуда напрямую, в источнике пиши «${srcLabel}» вместо [n].
 2. Конкретная выдержка evidence — и тогда рядом ОБЯЗАТЕЛЬНА ссылка [n].
 Если кластера нет ни там, ни там — пиши «не замерено». НЕ придумывай ни точное число, ни диапазон.
-- Выдуманная частотность вида «2 000–3 500 /мес» или «900–1200» без Wordstat и без [n] — ГРУБАЯ ОШИБКА и главный дефект этого модуля. Лучше честное «не замерено», чем правдоподобные выдуманные цифры: заказчик планирует по ним контент и бюджет.
-- Ссылка на wordstat.yandex.ru как «источник» без конкретного числа ИЗ блока Wordstat выше или ИЗ evidence не считается подтверждением.
+- Выдуманная частотность вида «2 000–3 500 /мес» или «900–1200» без ${srcLabel} и без [n] — ГРУБАЯ ОШИБКА и главный дефект этого модуля. Лучше честное «не замерено», чем правдоподобные выдуманные цифры: заказчик планирует по ним контент и бюджет.
+- Ссылка на wordstat.yandex.ru/ads.google.com как «источник» без конкретного числа ИЗ блока выше или ИЗ evidence не считается подтверждением.
 
 SEO-01 — Search Competitors (страницы, которые РЕАЛЬНО находятся по целевым запросам):
 | URL | Найдено по запросу | Тип страницы | О чём страница | Title | Чем сильна | [n] |
 Rules: URL берутся ТОЛЬКО из evidence. Позиции в топ-10 НЕ указывай — поиск их не возвращает; вместо позиции указывай запрос, по которому страница нашлась.
 
 SEO-02 — Semantic Core:
-| Кластер | Тип (инфо/коммерч/навигац) | Примеры запросов | Частотность (число из Wordstat, ИЛИ число + [n], ИЛИ «не замерено») | Сезонность (по блоку WORDSTAT SEASONALITY DATA, ИЛИ «не замерено») | Конкуренция (оценка + обоснование) | Приоритет | Тип страницы |
-Кластеры, для которых в блоке Wordstat выше есть точное или близкое совпадение фразы — используй эти реальные числа в первую очередь, не ограничивайся только кластерами из evidence. Сезонность заполняй ТОЛЬКО для кластеров, чья фраза (или близкий вариант) есть в блоке WORDSTAT SEASONALITY DATA — для остальных честно «не замерено», не додумывай по общим соображениям о нише. После таблицы обязательной строкой: «Замерить вручную в Wordstat: <перечисли кластеры, где стоит „не замерено“>» — это рабочее задание специалисту, а не отговорка.
+| Кластер | Тип (инфо/коммерч/навигац) | Примеры запросов | Частотность (число из ${srcLabel}, ИЛИ число + [n], ИЛИ «не замерено») | Сезонность (по блоку REAL SEASONALITY DATA, ИЛИ «не замерено») | Конкуренция (оценка + обоснование) | Приоритет | Тип страницы |
+Кластеры, для которых в блоке ${srcLabel} выше есть точное или близкое совпадение фразы — используй эти реальные числа в первую очередь, не ограничивайся только кластерами из evidence. Сезонность заполняй ТОЛЬКО для кластеров, чья фраза (или близкий вариант) есть в блоке REAL SEASONALITY DATA — для остальных честно «не замерено», не додумывай по общим соображениям о нише. После таблицы обязательной строкой: «Замерить вручную в ${srcLabel}: <перечисли кластеры, где стоит „не замерено“>» — это рабочее задание специалисту, а не отговорка.
 
 SEO-03 — Content Audit (только по сайтам, попавшим в evidence):
 | Конкурент | Тип контента | Темы | Частота публикаций (или «не проверено») | Что работает | Как сделать лучше | [n] |
@@ -2038,7 +2075,7 @@ Output JSON between <<<CHART_DATA_START>>> and <<<CHART_DATA_END>>>:
     { "cluster": "cluster name", "volume": number or null, "type": "info/commercial/nav", "priority": 1-3 }
   ]
 }
-Включи ВСЕ кластеры из таблицы SEO-02 — type и priority брать из таблицы можно всегда, это не требует замера. Поле "volume": число ТОЛЬКО если частотность подтверждена блоком Wordstat выше ИЛИ источником [n] в таблице; если в таблице «не замерено» — ставь null, а не выдуманное число. Не подменяй null нулём или приблизительной оценкой.`;
+Включи ВСЕ кластеры из таблицы SEO-02 — type и priority брать из таблицы можно всегда, это не требует замера. Поле "volume": число ТОЛЬКО если частотность подтверждена блоком ${srcLabel} выше ИЛИ источником [n] в таблице; если в таблице «не замерено» — ставь null, а не выдуманное число. Не подменяй null нулём или приблизительной оценкой.`;
 }
 
 function buildReportPrompt(brief, results, lang) {
@@ -3285,10 +3322,11 @@ function App() {
           userPrompt = buildM3Prompt(Bn, lang, prevContent || '', evidence, comps);
         } else if (mod.id === 'M7') {
           // SEO: реальная выдача по целевым запросам вместо частотностей «из памяти»
-          // + реальная частотность из Yandex Wordstat (если ключи настроены, иначе пусто —
-          // модуль ведёт себя как раньше, честное «не замерено»).
+          // + реальная частотность из Yandex Wordstat (Россия) или Google Ads (все
+          // остальные рынки, REQ-025) — если ключи не настроены, пусто, модуль
+          // ведёт себя как раньше, честное «не замерено».
           const evidence = await gatherSeoEvidence(Bn);
-          wordstatData = await gatherWordstatData(Bn);
+          wordstatData = await gatherKeywordFrequencyData(Bn);
           userPrompt = buildM7Prompt(Bn, lang, prevContent || '', evidence, wordstatData);
         } else {
           // Контекст берём от стадии, на которой модуль СТРОИТСЯ (requires), в рамках своей ниши,
@@ -3308,7 +3346,7 @@ function App() {
         // Приклеен кодом ПОСЛЕ ответа модели — не проходит через LLM, значит не может
         // быть урезан/отфильтрован по вкусу модели (владелица просила ровно полный
         // список системы, как при ручной проверке в самой Wordstat).
-        if (mod.id === 'M7' && wordstatData) full += wordstatFullListBlock(wordstatData.frequencies);
+        if (mod.id === 'M7' && wordstatData) full += wordstatFullListBlock(wordstatData.frequencies, wordstatData.source);
         // M3 VoC гигиена (ТЗ-M3-VOC.md п.1-4): верификация цитат+дедуп+гейт по коду,
         // тем же приёмом — модель уже ответила, дальше правит только код.
         if (mod.id === 'M3') full = await processM3Voc(full, wn);
