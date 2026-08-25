@@ -1059,13 +1059,20 @@ function competitorDomainsFromM2(m2Result) {
   if (!t06 || !t06.rows.length) return [];
   const urlKey = Object.keys(t06.rows[0]).find(k => k.toLowerCase().includes('сайт'));
   if (!urlKey) return [];
+  // Проверка формы хоста ОБЯЗАТЕЛЬНА: URL() не бросает исключение на кривом
+  // вводе (пробел/мусор в ячейке таблицы вместо реального URL) — молча
+  // percent-encode'ит и IDNA-кодирует что попало, живой прогон 25.08 поймал
+  // результат вида "xn--%20-8cdtc9cga7b1b9d" (пробел внутри). Валидный домен
+  // после punycode — только ascii буквы/цифры/дефисы/точки.
+  const validHost = /^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)+$/i;
   const domains = new Set();
   for (const row of t06.rows) {
     const raw = (row[urlKey] || '').trim();
     if (!raw || raw === '—' || /по запросу/i.test(raw)) continue;
     try {
       const withScheme = /^https?:\/\//i.test(raw) ? raw : 'https://' + raw;
-      domains.add(new URL(withScheme).hostname.replace(/^www\./, ''));
+      const host = new URL(withScheme).hostname.replace(/^www\./, '');
+      if (validHost.test(host)) domains.add(host);
     } catch {}
   }
   return [...domains];
@@ -1136,11 +1143,18 @@ async function gatherVoCEvidence(brief, discoveredCompetitors, m2Result) {
   // 3. Язык самой категории продукта
   queries.push(product+' '+market+' отзывы клиентов форум');
 
-  // Реестр площадок (ТЗ-M3-VOC.md, п.2) — сузить поиск до доменов, где реально
-  // обсуждают нишу, вместо открытого веба (который тащит мусор с любых отзовиков).
-  // Пустой список — открытый веб как раньше (новая ниша без конкурентов и находок).
-  const domains = await ensureDomainRegistry(brief.selectedNiche || '', m2Result, brief);
-  return gatherEvidence(queries, 20, 6, { depth:'advanced', raw:true, contentChars:1500, perDomain:3, maxItems:45, include_domains: domains });
+  // Реестр площадок (ТЗ-M3-VOC.md, п.2) — ПОКА НЕ ограничивает сам поиск VoC.
+  // Живой прогон 25.08 показал: сужение include_domains до реестра дало 0 цитат
+  // там, где открытый веб раньше находил реальные (12 цитат с 8 площадок, 20 июля).
+  // Причина — реестр строится из доменов КОНКУРЕНТОВ (они не публикуют жалобы на
+  // себя) + случайных находок общих запросов «форум обсуждение» (не факт, что
+  // это форумы вообще — среди находок был, например, обычный интернет-магазин
+  // парфюмерии). Резкое сужение опаснее мусора от открытого поиска. Реестр
+  // продолжаем наполнять (пригодится M9 — контент-радар, который смотрит именно
+  // на площадки конкурентов) — просто пока не передаём его в include_domains
+  // здесь. Возврат к сужению — отдельная, аккуратно проверенная задача позже.
+  await ensureDomainRegistry(brief.selectedNiche || '', m2Result, brief);
+  return gatherEvidence(queries, 20, 6, { depth:'advanced', raw:true, contentChars:1500, perDomain:3, maxItems:45 });
 }
 
 // M3 VoC гигиена (ТЗ-M3-VOC.md, п.1-4) — вызывается ПОСЛЕ ответа модели, на готовом
