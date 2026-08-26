@@ -1314,12 +1314,16 @@ async function extractWordstatSeeds(brief) {
       + 'Ниша/описание: ' + product + '\n'
       + 'Формат: ' + (brief.format || '—') + '\n'
       + 'Услуги: ' + ((brief.services||[]).join(', ') || '—') + '\n\n'
-      + 'Выбери 2-3 КОРОТКИЕ (1-3 слова) фразы — ровно то, что реальный человек вбил бы в поиск, ища ЭТОТ ТИП продукта/инструмента. НЕ выгоду, НЕ боль, НЕ описание пользы целиком (плохо: «инструмент для захвата лидов» — это описание, не поисковый запрос; хорошо: «попап», «виджет для сайта»). Верни JSON-массив: ["фраза1","фраза2"]';
-    const raw = await callGPT(sys, user, 0.2, 200);
+      + 'Выбери 3-4 поисковые фразы — ровно то, что реальный человек вбил бы в поиск. НЕ выгоду, НЕ боль, НЕ описание пользы целиком (плохо: «инструмент для захвата лидов» — это описание, не запрос).\n\n'
+      + 'Два правила:\n'
+      + '1. Не только общая категория — минимум одна фраза ОТДЕЛЬНО под то, что именно ОТЛИЧАЕТ продукт (например если в описании есть ИИ/автоматизация — «умный попап» или «попап с ии» отдельным пунктом, не только общее «попап»). Без этого частотность найдётся для категории вообще, но не для того, чем продукт реально отличается.\n'
+      + '2. Осторожно с однословными омонимами: если короткое слово в обычном поиске может значить что-то ДРУГОЕ, не связанное с продуктом (например «попап» — это ещё и рыболовная насадка для карпа, «капсула» — ещё и лекарство) — используй 2-словную фразу, которая снимает двусмысленность («попап для сайта», не просто «попап»), даже если она чуть длиннее. Проверь каждую однословную фразу на этот риск перед тем, как включить её как есть.\n\n'
+      + 'Верни JSON-массив 3-4 строк: ["фраза1","фраза2","фраза3"]';
+    const raw = await callGPT(sys, user, 0.2, 250);
     const m = raw.match(/\[[\s\S]*\]/);
     const arr = m ? JSON.parse(m[0]) : null;
     const seeds = Array.isArray(arr) ? arr.map(s=>String(s||'').trim()).filter(Boolean) : [];
-    return seeds.length ? seeds.slice(0, 3) : fallback();
+    return seeds.length ? seeds.slice(0, 4) : fallback();
   } catch { return fallback(); }
 }
 
@@ -1361,7 +1365,7 @@ function relevantKeywordFilter(frequencies, seeds, brief) {
 async function gatherKeywordFrequencyData(brief) {
   const market = brief.geoMarket || brief.geoCompany || '';
   const source = keywordSourceForMarket(market);
-  const uniqueSeeds = [...new Set(await extractWordstatSeeds(brief))].slice(0, 3);
+  const uniqueSeeds = [...new Set(await extractWordstatSeeds(brief))].slice(0, 4);
   const frequencies = [];
   const seen = new Set();
   for (const phrase of uniqueSeeds) {
