@@ -504,6 +504,11 @@ const addTrendSnapshot = async (snap) => {
 // usage последнего вызова OpenAI — боковой канал, чтобы не менять сигнатуру callGPT
 // (её зовут в 5 местах). Цикл прогона читает это сразу после вызова.
 let lastGptUsage = null;
+// Счётчик платных вызовов Tavily за текущий модуль (для расчёта тарифов,
+// 26.08.2026) — тот же боковой приём, что lastGptUsage: run() обнуляет перед
+// сбором evidence, читает после. Не меняет сигнатуру gatherEvidence/callSearch,
+// которые сейчас вызываются во многих местах.
+let searchCallCount = 0;
 async function callGPT(system, user, temperature, maxTokens) {
   lastGptUsage = null;
   const res = await authFetch('/api/proxy', {
@@ -521,6 +526,7 @@ async function callGPT(system, user, temperature, maxTokens) {
 
 // Реальный веб-поиск (Tavily). Возвращает выдержки с URL; [] при недоступности поиска.
 async function callSearch(query, opts) {
+  searchCallCount++; // считаем попытку вызова Tavily — платится независимо от числа результатов
   try {
     const res = await authFetch('/api/search', {
       method: 'POST', headers: {'Content-Type':'application/json'},
@@ -3385,6 +3391,7 @@ function App() {
 
       let full = '';
       let wordstatData = null;   // hoisted: нужен после callGPT, чтобы приклеить сырой список (см. ниже)
+      searchCallCount = 0;       // для расчёта тарифов (26.08.2026) — считаем ТОЛЬКО за этот модуль
       try {
         const sameNiche = col.filter(r => (r.niche||'') === wn);
         const prevContent = sameNiche.length ? sameNiche[sameNiche.length-1].content : '';
@@ -3439,10 +3446,11 @@ function App() {
       clearInterval(stepTimer);
 
       const usage = lastGptUsage;
+      const searchCalls = searchCallCount;
       const chartData = extractChartData(full);
       const nicheData = mod.id === 'M1_2' ? extractNicheData(full) : null;
       const cleanedContent = cleanContent(full);
-      const result = { id:mod.id, niche:wn, content:cleanedContent, chartData, ...(nicheData?{nicheData}:{}), ...(usage?{usage}:{}), at:new Date().toISOString() };
+      const result = { id:mod.id, niche:wn, content:cleanedContent, chartData, ...(nicheData?{nicheData}:{}), ...(usage?{usage}:{}), ...(searchCalls?{searchCalls}:{}), at:new Date().toISOString() };
       col.push(result);
       const upd = { ...p, results:col, updatedAt:new Date().toISOString() };
       setProj(upd); sv(upd);
@@ -3961,6 +3969,7 @@ function App() {
             onClick={async ()=>{
               setGeneratingTrend(true);
               try {
+                searchCallCount = 0; // для расчёта тарифов (26.08.2026) — стоимость M8 отдельно от M1-M7
                 const Bn = trendNiche ? {...brief, selectedNiche: trendNiche} : brief;
                 const evidence = await gatherTrendEvidence(Bn);
                 const prev = (trendSnapshots||[])[0];
@@ -3975,7 +3984,7 @@ function App() {
                   project_id: proj.id, niche: trendNiche,
                   snapshot_date: new Date().toISOString().slice(0,10),
                   trends: chartData.trends||[], newsworthy: chartData.newsworthy||[], delta: chartData.delta||{},
-                  content: cleaned,
+                  content: cleaned, usage: lastGptUsage, search_calls: searchCallCount,
                 });
                 if (created) setTrendSnapshots(s=>[created, ...(s||[])]);
               } catch(e) {}

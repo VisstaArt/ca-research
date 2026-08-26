@@ -34,12 +34,13 @@ export default async function handler(req, res) {
 
     if (req.method === 'POST') {
       const body = req.body || {};
-      const { project_id, niche, snapshot_date, trends, newsworthy, delta, content } = body;
+      const { project_id, niche, snapshot_date, trends, newsworthy, delta, content, usage, search_calls } = body;
       if (!project_id) return res.status(400).json({ error: { message: 'project_id is required' } });
       const row = {
         project_id, niche: niche || '',
         snapshot_date: snapshot_date || new Date().toISOString().slice(0, 10),
         trends: trends || [], newsworthy: newsworthy || [], delta: delta || {}, content: content || '',
+        usage: usage || null, search_calls: search_calls != null ? search_calls : null,
       };
       const r = await fetch(base + 'trend_snapshots', {
         method: 'POST',
