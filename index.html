@@ -1328,25 +1328,31 @@ async function extractWordstatSeeds(brief) {
 }
 
 // Защита от нерелевантных ассоциаций даже при хорошем якоре (владелица,
-// 25.08): Wordstat/Google Ads возвращают ПОХОЖИЕ по форме, но не всегда
-// релевантные по смыслу фразы. Держим только те, что делят хотя бы одно
-// значимое слово со словарём темы (сиды + niche + format + services) —
-// дёшево (без доп. вызова модели) и отсекает явный дрейф в сторону, не
-// требуя полного семантического понимания.
-// Сравниваем по началу слова (первые 5 букв), не по точному совпадению —
-// иначе «попап» из словаря темы не совпадёт с «попапы»/«попапов» из
-// реального ответа Wordstat (русские окончания). Грубый, но дешёвый стемминг.
+// 25.08-26.08, поймано ДВАЖДЫ на живых прогонах). Первая версия сверяла
+// ЛЮБОЕ одно общее слово со словарём из niche/format/services — этого не
+// хватило: якорь «захват лидов» → Wordstat вернул «захватывающие фильмы»/
+// «захватывающий детектив» (99625 — выше всех) — общий корень «захват», но
+// разный смысл («изъять» vs «увлечь»), а «фильм» из словаря темы никак не
+// связан с «лид». Один общий корень — слишком слабое условие для
+// многословных якорей.
+// Сравниваем не с общим «мешком слов» по всему брифу, а с КАЖДЫМ сидом
+// отдельно: фраза релевантна, если содержит ВСЕ значимые корни хотя бы
+// ОДНОГО сида целиком — не любой один корень откуда угодно. Для сида из
+// 2+ слов («захват лидов») это исключает «захватывающие фильмы» (нет корня
+// «лид»), но пропустит «захват заявок с сайта» (есть оба корня). Для
+// однословных сидов защита слабее (нечего требовать вторым условием) —
+// поэтому extractWordstatSeeds отдельно просит избегать голых омонимов.
+// Стемминг по первым 5 буквам — грубо, но снимает русские окончания.
 function wordStem(w) { return w.length > 5 ? w.slice(0, 5) : w; }
-function relevantKeywordFilter(frequencies, seeds, brief) {
-  const vocab = new Set();
-  const addWords = s => String(s||'').toLowerCase().split(/[^a-zа-яё0-9]+/i).forEach(w => { if (w.length >= 4) vocab.add(wordStem(w)); });
-  seeds.forEach(addWords);
-  addWords(brief.niche); addWords(brief.format);
-  (brief.services||[]).forEach(addWords);
-  if (!vocab.size) return frequencies; // нечего сверить — доверяем как есть
+function significantStems(s) {
+  return String(s||'').toLowerCase().split(/[^a-zа-яё0-9]+/i).filter(w=>w.length>=4).map(wordStem);
+}
+function relevantKeywordFilter(frequencies, seeds) {
+  const seedStemSets = (seeds||[]).map(significantStems).filter(s=>s.length);
+  if (!seedStemSets.length) return frequencies; // нечего сверить — доверяем как есть
   return frequencies.filter(f => {
-    const words = String(f.phrase).toLowerCase().split(/[^a-zа-яё0-9]+/i);
-    return words.some(w => w.length >= 4 && vocab.has(wordStem(w)));
+    const phraseStems = new Set(significantStems(f.phrase));
+    return seedStemSets.some(seedStems => seedStems.every(st => phraseStems.has(st)));
   });
 }
 
@@ -1382,7 +1388,7 @@ async function gatherKeywordFrequencyData(brief) {
       frequencies.push({ phrase: r.phrase, count: r.count });
     }
   }
-  const filtered = relevantKeywordFilter(frequencies, uniqueSeeds, brief);
+  const filtered = relevantKeywordFilter(frequencies, uniqueSeeds);
 
   const seasonality = [];
   if (source === 'yandex') {
