@@ -433,11 +433,28 @@ async function refreshTokens() {
 async function authFetch(url, opts) {
   const o = opts || {};
   const withAuth = h => ({ ...(h||{}), Authorization: 'Bearer ' + getAccessToken() });
-  let res = await fetch(url, { ...o, headers: withAuth(o.headers) });
-  if (res.status === 401) {
-    if (await refreshTokens()) res = await fetch(url, { ...o, headers: withAuth(o.headers) });
+  const attempt = async () => {
+    let res = await fetch(url, { ...o, headers: withAuth(o.headers) });
+    if (res.status === 401) {
+      if (await refreshTokens()) res = await fetch(url, { ...o, headers: withAuth(o.headers) });
+    }
+    return res;
+  };
+  // Ретрай ТОЛЬКО на сетевой обрыв (fetch бросает исключение), не на HTTP-статус:
+  // 4xx/5xx возвращаем как есть, их разбирает вызывающий код. Связь до Vercel у
+  // владелицы рвётся периодически (ERR_CONNECTION_CLOSED 25.08, «Failed to fetch»
+  // 27.08) — в тот раз сервер ответил 200, ответ до браузера не дошёл, и весь
+  // прогон M7 встал, потеряв уже ОПЛАЧЕННЫЕ поиски и вызовы Wordstat. Одна
+  // сетевая икота не должна стоить целого прогона.
+  let lastErr;
+  for (let i = 0; i < 3; i++) {
+    try { return await attempt(); }
+    catch (e) {
+      lastErr = e;
+      if (i < 2) await new Promise(r => setTimeout(r, 1500 * (i + 1)));
+    }
   }
-  return res;
+  throw lastErr;
 }
 
 // ── DB SYNC (Supabase, через api/projects.js) ────────────────────────────────
@@ -3226,6 +3243,7 @@ function App() {
   const [seedCandidates, setSeedCandidates] = React.useState([]);
   const [pendingM7Niche, setPendingM7Niche] = React.useState('');
   const confirmedSeedsRef = React.useRef({});
+  const pausedRunRef = React.useRef(null); // параметры run(), прерванного паузой — см. continueAfterSeeds
 
   const switchUiLang = () => { const nl = uiLang==='en'?'ru':'en'; setUiLang(nl); saveUiLang(nl); };
 
@@ -3415,6 +3433,11 @@ function App() {
         const candidates = await extractWordstatSeeds(Bn);
         setSeedCandidates(candidates);
         setPendingM7Niche(wn);
+        // Запоминаем, ЧЕМ был этот прогон, чтобы continueAfterSeeds продолжил его
+        // теми же параметрами: иначе после паузы терялись rerunNiche (в пересчёт
+        // уходили лишние ниши) и regenNote (замечание владелицы «что поправить»
+        // молча пропадало).
+        pausedRunRef.current = { modsToRun: allSelected, briefOverride: B, forceRerun, rerunNiche, regenNote };
         setShowSeedConfirm(true);
         return; // весь run() останавливается здесь — ждём continueAfterSeeds
       }
@@ -3553,9 +3576,18 @@ function App() {
     if (!confirmed.length) return;
     confirmedSeedsRef.current[pendingM7Niche] = confirmed;
     setShowSeedConfirm(false);
-    // run() сам пропустит уже готовые (модуль,ниша) и дойдёт до M7 этой ниши —
-    // на этот раз confirmedSeedsRef уже заполнен, повторной паузы не будет.
-    run(mods, brief);
+    // Продолжаем ТОТ ЖЕ прогон, теми же параметрами (см. pausedRunRef) — run()
+    // сам пропустит уже готовые (модуль,ниша) и дойдёт до M7 этой ниши, где
+    // confirmedSeedsRef уже заполнен, поэтому повторной паузы не будет.
+    const pr = pausedRunRef.current;
+    pausedRunRef.current = null;
+    // forceRerun НЕ переносим — намеренно. Он выкидывает из результатов всю
+    // запрошенную цепочку, а к моменту паузы модули до M7 (M2…M6 при ↺ на M2)
+    // уже посчитаны и оплачены — повтор forceRerun стёр бы их и прогнал заново
+    // за деньги. Ниша и замечание переносятся: без rerunNiche в пересчёт ушли бы
+    // соседние ниши.
+    if (pr) run(pr.modsToRun, pr.briefOverride, false, pr.rerunNiche, pr.regenNote);
+    else run(mods, brief);
   }, [seedCandidates, pendingM7Niche, mods, brief, run]);
 
   // Повторно открыть выбор ниш (кнопка «Добавить ниши»): восстанавливаем список ниш
@@ -4242,6 +4274,10 @@ function App() {
                         const idx = order.indexOf(r.id);
                         const chain = isPerNiche(r.id) ? (idx>=0 ? order.slice(idx) : [r.id]) : [r.id];
                         const rn = r.niche||'';
+                        // Явная перегенерация M7 = повод пересобрать и поисковые фразы:
+                        // сбрасываем подтверждённые сиды, чтобы панель подтверждения
+                        // открылась заново и владелица могла их поправить.
+                        if (chain.includes('M7')) delete confirmedSeedsRef.current[rn];
                         // чистим цепочку только для ЭТОЙ ниши (у по-нишевых), глобальные — как есть
                         const upd={...proj,results:(proj.results||[]).filter(x=> !(chain.includes(x.id) && (isPerNiche(x.id) ? (x.niche||'')===rn : true))),updatedAt:new Date().toISOString()};
                         setProj(upd);sv(upd);
