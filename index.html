@@ -1377,7 +1377,15 @@ function relevantKeywordFilter(frequencies, seeds) {
   const vocab = new Set();
   (seeds||[]).forEach(s => significantStems(s).forEach(st => vocab.add(st)));
   if (!vocab.size) return frequencies; // нечего сверить — доверяем как есть
-  return frequencies.filter(f => significantStems(f.phrase).some(st => vocab.has(st)));
+  // Подтверждённые человеком фразы не фильтруем никогда: их отобрала владелица,
+  // никакой лексический фильтр не вправе их выкинуть (у Google Ads нет
+  // totalCount, поэтому сверяем ещё и по самому списку сидов, не только по флагу).
+  const seedSet = new Set((seeds||[]).map(s => String(s).toLowerCase().trim()));
+  return frequencies.filter(f =>
+    f.confirmed
+    || seedSet.has(String(f.phrase).toLowerCase().trim())
+    || significantStems(f.phrase).some(st => vocab.has(st))
+  );
 }
 
 // Реальная частотность для M7 — 2-3 «якорных» фразы дают уже несколько
@@ -1402,7 +1410,10 @@ function relevantKeywordFilter(frequencies, seeds) {
 async function fetchKeywordFrequencyData(brief, seeds) {
   const market = brief.geoMarket || brief.geoCompany || '';
   const source = keywordSourceForMarket(market);
-  const uniqueSeeds = [...new Set(seeds)].filter(Boolean).slice(0, 4);
+  // Потолок 12, а не 4: список отобран ЧЕЛОВЕКОМ вручную, тихо обрезать его до
+  // первых четырёх — терять именно ту работу, ради которой делалась пауза
+  // (владелица дополняла список, а фразы с 5-й молча не запрашивались).
+  const uniqueSeeds = [...new Set(seeds)].filter(Boolean).slice(0, 12);
   const frequencies = [];
   const seen = new Set();
   for (const phrase of uniqueSeeds) {
@@ -1413,6 +1424,16 @@ async function fetchKeywordFrequencyData(brief, seeds) {
       ? await callWordstat(phrase, { numPhrases: 50 })
       : await callGoogleAds(phrase, market, brief.lang);
     if (!d) continue;
+    // Частотность САМОЙ подтверждённой фразы: Wordstat отдаёт её в totalCount, и
+    // до 28.08 она молча выбрасывалась — брались только results/associations
+    // (похожие фразы, которые предложил сам Wordstat). Из-за этого ключи, которые
+    // владелица отобрала руками, единственные и оставались «не замерено», а в
+    // таблицу попадали случайные ассоциации. Это и была причина жалобы «в таблице
+    // не те ключи, что мы пишем». confirmed: true — их нельзя терять дальше.
+    if (d.totalCount && !seen.has(phrase)) {
+      seen.add(phrase);
+      frequencies.push({ phrase, count: d.totalCount, confirmed: true });
+    }
     for (const r of [...(d.results||[]), ...(d.associations||[])]) {
       if (!r.phrase || !r.count || seen.has(r.phrase)) continue;
       seen.add(r.phrase);
@@ -2149,8 +2170,9 @@ function buildM7Prompt(brief, lang, prev, evidence, wordstatData) {
   const srcLabel = (wordstatData && wordstatData.source) || 'Wordstat';
   const wordstatBlock = freq.length
     ? '\n═══════════════════════════════════════════════\nREAL FREQUENCY DATA ('+srcLabel+', measured just now)\n═══════════════════════════════════════════════\n'
-      + freq.map(w=>w.phrase+': '+w.count+'/мес').join('\n')
+      + freq.map(w=>w.phrase+': '+w.count+'/мес'+(w.confirmed?'   ← ОПОРНАЯ ФРАЗА (выбрана владелицей)':'')).join('\n')
       + '\n\nЭто РЕАЛЬНО измеренные числа (не из evidence, не выдумка) — используй их как приоритетный источник частотности для SEO-02.\n'
+      + 'Фразы с пометкой «ОПОРНАЯ ФРАЗА» владелица отобрала вручную как главные для ниши. Каждая из них ОБЯЗАНА стать отдельным кластером в SEO-02 со своей измеренной частотностью — не заменяй их близкими по смыслу ассоциациями и не своди несколько опорных фраз в один кластер. Остальные фразы блока — материал для дополнительных кластеров.\n'
     : '';
   // Помесячная динамика за 12 месяцев — только для топ-фраз, только для Yandex
   // (см. fetchKeywordFrequencyData — Google Ads пока без сезонности).
