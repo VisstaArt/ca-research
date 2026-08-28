@@ -440,20 +440,42 @@ async function authFetch(url, opts) {
     }
     return res;
   };
-  // Ретрай ТОЛЬКО на сетевой обрыв (fetch бросает исключение), не на HTTP-статус:
-  // 4xx/5xx возвращаем как есть, их разбирает вызывающий код. Связь до Vercel у
-  // владелицы рвётся периодически (ERR_CONNECTION_CLOSED 25.08, «Failed to fetch»
-  // 27.08) — в тот раз сервер ответил 200, ответ до браузера не дошёл, и весь
-  // прогон M7 встал, потеряв уже ОПЛАЧЕННЫЕ поиски и вызовы Wordstat. Одна
-  // сетевая икота не должна стоить целого прогона.
-  let lastErr;
+  // Ретраим ДВА вида временных сбоев, каждый уже стоил владелице оплаченного прогона:
+  // 1. Сетевой обрыв (fetch бросает исключение) — связь до Vercel рвётся
+  //    периодически (ERR_CONNECTION_CLOSED 25.08, «Failed to fetch» 27.08: сервер
+  //    ответил 200, ответ до браузера не дошёл, весь M7 встал).
+  // 2. 429 (лимит частоты у OpenAI) и 5xx — 26.08 модуль M3 сохранился с
+  //    содержимым «Error: API 429», то есть не сгенерировался вообще, а прогон
+  //    поехал дальше как ни в чём не бывало.
+  // Остальные статусы (400/401/403…) возвращаем как есть — это не «повтори
+  // позже», а осмысленный ответ, его разбирает вызывающий код.
+  const retryableStatus = s => s === 429 || (s >= 500 && s < 600);
+  // Пауза дольше, чем при сетевом сбое: лимит частоты за 1.5 с не рассасывается.
+  // Retry-After от сервера уважаем, если он есть (в секундах), но не больше 20 с.
+  const waitFor = (res, i) => {
+    const ra = res && res.headers && Number(res.headers.get('retry-after'));
+    const fromHeader = Number.isFinite(ra) && ra > 0 ? Math.min(ra * 1000, 20000) : 0;
+    return Math.max(fromHeader, 3000 * (i + 1));
+  };
+  let lastErr, lastRes;
   for (let i = 0; i < 3; i++) {
-    try { return await attempt(); }
-    catch (e) {
+    try {
+      lastRes = await attempt();
+      lastErr = null;
+      if (retryableStatus(lastRes.status) && i < 2) {
+        await new Promise(r => setTimeout(r, waitFor(lastRes, i)));
+        continue;
+      }
+      return lastRes;
+    } catch (e) {
       lastErr = e;
       if (i < 2) await new Promise(r => setTimeout(r, 1500 * (i + 1)));
     }
   }
+  // Сюда попадаем, только если исчерпали попытки. Повторный вызов НЕ делаем —
+  // это лишние деньги: отдаём последний реальный ответ, а если его не было
+  // вообще (все попытки — сетевой обрыв), пробрасываем исключение.
+  if (lastRes) return lastRes;
   throw lastErr;
 }
 
@@ -865,9 +887,16 @@ function buildModuleEntry(r) {
     if (tables[key]) key = key + ' (' + (idx + 1) + ')';   // одинаковые заголовки не затираем
     tables[key] = t.rows;
   });
+  // status — чтобы потребитель контракта отличал «модуль отработал, данных в
+  // нише не нашлось» от «модуль вообще не выполнился». Без этого провал выглядел
+  // как пустой результат: 26.08 M3 упал с «Error: API 429», контент-машина
+  // увидела пустые VOICE_OF_CUSTOMER/PAIN_BANK и приняла это за дефект промпта.
+  const failed = !!r.failed || /^Error:/.test(String(r.content || '').trim());
   return {
     title: m ? (m.titleRu || m.title) : r.id,
     generated_at: r.at || null,
+    status: failed ? 'failed' : 'ok',
+    ...(failed ? { error: r.error || String(r.content || '').trim() } : {}),
     tables: tables,
     markdown: r.content || '',
     chartData: r.chartData || null,
@@ -1036,10 +1065,20 @@ function buildAgentPackage(brief, lang, results, report) {
       modules: modulesForNiche,
     };
   }
+  // Сводка провалившихся модулей на верхнем уровне — чтобы потребителю контракта
+  // не приходилось обходить все ниши, проверяя status у каждого модуля. Пустой
+  // массив = все модули отработали.
+  const failedModules = [];
+  for (const r of all) {
+    if (r.failed || /^Error:/.test(String(r.content || '').trim())) {
+      failedModules.push({ module: r.id, niche: r.niche || null, error: r.error || String(r.content || '').trim(), at: r.at || null });
+    }
+  }
   return {
     schema_version: 3,
     generated_at: new Date().toISOString(),
     research_language: lang,
+    failed_modules: failedModules,
     project: brief,
     niches: (m12 && m12.nicheData && m12.nicheData.niches) || [],   // полная карта разведки (M1.2)
     selected_niches: nichesOf(brief),                                // какие из них реально исследованы в этом прогоне
@@ -3459,9 +3498,12 @@ function App() {
     setProj(p); setRep(p.report); sv(p); setSc('work');
 
     const col = [...existing];
+    // Ниши, где какой-то модуль упал: остальные её модули пропускаем (см. ниже).
+    const failedNiches = new Set();
 
     for (const w of runnable) {
       const mod = w.mod, wn = w.niche;
+      if (failedNiches.has(wn)) continue; // предыдущий модуль этой ниши не выполнился
       // Бриф, сфокусированный на одной нише: фильтр ниш и запросы поиска сужаются до неё.
       const Bn = wn ? { ...B, selectedNiche: wn } : { ...B };
 
@@ -3561,11 +3603,28 @@ function App() {
       const chartData = extractChartData(full);
       const nicheData = mod.id === 'M1_2' ? extractNicheData(full) : null;
       const cleanedContent = cleanContent(full);
-      const result = { id:mod.id, niche:wn, content:cleanedContent, chartData, ...(nicheData?{nicheData}:{}), ...(usage?{usage}:{}), ...(searchCalls?{searchCalls}:{}), at:new Date().toISOString() };
+      // Модуль не сгенерировался (сеть/лимит частоты/ошибка API): в content лежит
+      // «Error: ...», а не исследование. Помечаем это ЯВНО — иначе провал выглядит
+      // снаружи как «отработал, но ничего не нашёл»: 26.08 M3 упал с «Error: API
+      // 429», а agent_package отдал контент-машине просто пустые VOICE_OF_CUSTOMER
+      // и PAIN_BANK, и там это разобрали как дефект блока промпта.
+      const failed = /^Error:/.test(cleanedContent.trim());
+      const result = { id:mod.id, niche:wn, content:cleanedContent, chartData, ...(failed?{failed:true, error:cleanedContent.trim()}:{}), ...(nicheData?{nicheData}:{}), ...(usage?{usage}:{}), ...(searchCalls?{searchCalls}:{}), at:new Date().toISOString() };
       col.push(result);
       const upd = { ...p, results:col, updatedAt:new Date().toISOString() };
       setProj(upd); sv(upd);
       setExp(ex => ({...ex, [resKey(result)]:false}));
+
+      // Дальше по цепочке этой ниши идти НЕЛЬЗЯ: зависимые модули построятся на
+      // строке «Error: ...» вместо исследования и будут стоить денег впустую.
+      // Так 26.08 M4 сделал три персоны, приняв за контекст падение M3. Другие
+      // ниши не трогаем — у них свои данные, они не пострадали.
+      if (failed) {
+        failedNiches.add(wn);
+        setBlockMsg('Модуль ' + (mod.label || mod.id) + (wn ? ' [' + wn + ']' : '') + ' не выполнился: ' + cleanedContent.trim()
+          + '. Остальные модули этой ниши пропущены, чтобы не строить их на пустом результате — нажмите ↺ на этом модуле, когда будете готовы повторить.');
+        continue;
+      }
 
       // After M1.2 — стоп: человек выбирает нишу (только при первичной разведке, не при перегенерации ниши)
       if (mod.id === 'M1_2' && !rerunNiche) {
