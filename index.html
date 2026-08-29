@@ -1404,6 +1404,26 @@ async function extractWordstatSeeds(brief) {
 // работе в Wordstat, — а отсев по смыслу для итоговой таблицы делает модель,
 // которая смысл понимает (правила в buildM7Prompt).
 
+// Минус-слова (стоп-слова) — стандартный приём сборщиков семантики. Важное
+// отличие от моих прошлых, неудачных фильтров: это ЧЁРНЫЙ список (убрать
+// заведомо мусорное), а не белый (оставить только похожее на сид). Белый
+// список резал хорошее — «всплывающее окно» не содержит слова «попап» и
+// терялось; чёрный такого сделать не может, он трогает только перечисленное.
+// Список намеренно короткий и про заведомо чужие темы, а не про «похоже/не
+// похоже»: тематическую релевантность судит модель, она понимает смысл.
+// Не добавлять сюда «скачать», «бесплатно», «отзывы» и подобное — в разных
+// нишах это законные коммерческие запросы («скачать попап для сайта»).
+const NOISE_PATTERNS = [
+  /\bторрент/i, /\bвзлом/i, /\bчит(ы|ов)?\b/i, /\bскачать мод/i, /\bмод(ы)? на\b/i,
+  /\bвакансии?\b/i, /\bзарплат/i, /\bрезюме\b/i,
+  /\bпорно/i, /\bсекс\b/i,
+  /как пишется/i, /\bсинонимы?\b/i, /\bзначение слова/i,
+];
+function isNoiseKeyword(phrase) {
+  const p = String(phrase || '');
+  return NOISE_PATTERNS.some(re => re.test(p));
+}
+
 // Реальная частотность для M7 — 2-3 «якорных» фразы дают уже несколько
 // десятков похожих ИЗМЕРЕННЫХ фраз каждая, поэтому не нужно заранее знать все
 // кластеры SEO-02 — источник сам их предлагает (см. keywordSourceForMarket).
@@ -1432,6 +1452,8 @@ async function fetchKeywordFrequencyData(brief, seeds) {
   const uniqueSeeds = [...new Set(seeds)].filter(Boolean).slice(0, 12);
   const frequencies = [];
   const seen = new Set();
+  const ideas = [];            // правая колонка Wordstat — подсказки, не ядро
+  const seenIdea = new Set();
   for (const phrase of uniqueSeeds) {
     // numPhrases 200 (было 50, потолок API — 2000): владелице нужен рабочий
     // объём для SEO-плана — порядка 30 непересекающихся кластеров на нишу, а
@@ -1453,10 +1475,26 @@ async function fetchKeywordFrequencyData(brief, seeds) {
       seen.add(phrase);
       frequencies.push({ phrase, count: d.totalCount, confirmed: true });
     }
-    for (const r of [...(d.results||[]), ...(d.associations||[])]) {
+    // ТОЛЬКО results (левая колонка Wordstat — фразы, СОДЕРЖАЩИЕ запрос).
+    // associations (правая колонка, «похожие запросы») в ядро больше НЕ идут.
+    // Она построена на поведении («что ещё искали эти люди»), а не на словах
+    // запроса, и по профессиональной практике это подсказка для новых идей, а
+    // не готовая семантика. Прогон 28.08 показал цену смешивания: в списке
+    // оказались «портал» (3 281 965), «скачать мод на трансформеров», «как
+    // выглядит кляп», «ry7 ru интернет магазин» — ни одна из них не содержит
+    // ни одного слова из подтверждённых фраз. Ассоциации сохраняем отдельно,
+    // ниже они уходят в собственный раздел отчёта как идеи для расширения.
+    for (const r of (d.results || [])) {
       if (!r.phrase || !r.count || seen.has(r.phrase)) continue;
+      if (isNoiseKeyword(r.phrase)) continue;
       seen.add(r.phrase);
       frequencies.push({ phrase: r.phrase, count: r.count });
+    }
+    for (const r of (d.associations || [])) {
+      if (!r.phrase || !r.count || seenIdea.has(r.phrase) || seen.has(r.phrase)) continue;
+      if (isNoiseKeyword(r.phrase)) continue;
+      seenIdea.add(r.phrase);
+      ideas.push({ phrase: r.phrase, count: r.count });
     }
   }
   // Лексический фильтр УБРАН (29.08). Он задумывался как защита от плохих
@@ -1489,7 +1527,8 @@ async function fetchKeywordFrequencyData(brief, seeds) {
     }
   }
 
-  return { frequencies: filtered, seasonality, source: source === 'yandex' ? 'Yandex Wordstat' : 'Google Ads' };
+  ideas.sort((a,b)=>b.count-a.count);
+  return { frequencies: filtered, ideas, seasonality, source: source === 'yandex' ? 'Yandex Wordstat' : 'Google Ads' };
 }
 
 // Полный список фраз+частотностей как ОТДЕЛЬНЫЙ блок markdown, собранный
@@ -1497,12 +1536,27 @@ async function fetchKeywordFrequencyData(brief, seeds) {
 // (заходит и смотрит весь список похожих запросов) и хочет ровно то же самое
 // автоматически: НИКАКОГО отбора/додумывания моделью, просто то, что вернула
 // система, отсортировано по частотности, без нулей (уже отфильтровано выше).
-function wordstatFullListBlock(frequencies, source) {
-  if (!frequencies || !frequencies.length) return '';
-  const sorted = [...frequencies].sort((a,b)=>b.count-a.count);
-  const rows = sorted.map(w => '| '+w.phrase+' | '+w.count+' |').join('\n');
-  return '\n\n#### Полный список запросов по '+(source||'Wordstat')+' (как есть, без отбора моделью)\n'
-    + '| Фраза | Частотность (показов/мес) |\n|---|---|\n' + rows + '\n';
+function wordstatFullListBlock(frequencies, source, ideas) {
+  let out = '';
+  if (frequencies && frequencies.length) {
+    const sorted = [...frequencies].sort((a,b)=>b.count-a.count);
+    const rows = sorted.map(w => '| '+w.phrase+' | '+w.count+' |').join('\n');
+    out += '\n\n#### Полный список запросов по '+(source||'Wordstat')+' (как есть, без отбора моделью)\n'
+      + '| Фраза | Частотность (показов/мес) |\n|---|---|\n' + rows + '\n';
+  }
+  // Правая колонка Wordstat — отдельно и с оговоркой. Это НЕ семантическое ядро:
+  // связь тут поведенческая («что ещё искали эти люди»), а не по словам запроса,
+  // поэтому рядом с релевантным попадается совершенно постороннее. Ценность в
+  // другом — здесь видны темы, до которых сами бы не додумались; годное отсюда
+  // имеет смысл вручную добавить в список фраз на следующем прогоне.
+  if (ideas && ideas.length) {
+    const rows = ideas.map(w => '| '+w.phrase+' | '+w.count+' |').join('\n');
+    out += '\n\n#### Похожие запросы (правая колонка ' + (source||'Wordstat') + ') — идеи для расширения, НЕ ядро\n'
+      + 'Связь поведенческая, а не по словам запроса, поэтому среди релевантного попадается постороннее. '
+      + 'Не использовать напрямую: пригодное можно вручную добавить в список фраз на следующем прогоне.\n\n'
+      + '| Фраза | Частотность (показов/мес) |\n|---|---|\n' + rows + '\n';
+  }
+  return out;
 }
 
 // Досье для M2: конкуренты, аналоги, цены, отзывы — в выбранной нише
@@ -3591,7 +3645,7 @@ function App() {
         // Приклеен кодом ПОСЛЕ ответа модели — не проходит через LLM, значит не может
         // быть урезан/отфильтрован по вкусу модели (владелица просила ровно полный
         // список системы, как при ручной проверке в самой Wordstat).
-        if (mod.id === 'M7' && wordstatData) full += wordstatFullListBlock(wordstatData.frequencies, wordstatData.source);
+        if (mod.id === 'M7' && wordstatData) full += wordstatFullListBlock(wordstatData.frequencies, wordstatData.source, wordstatData.ideas);
         // M3 VoC гигиена (ТЗ-M3-VOC.md п.1-4): верификация цитат+дедуп+гейт по коду,
         // тем же приёмом — модель уже ответила, дальше правит только код.
         if (mod.id === 'M3') full = await processM3Voc(full, wn);
