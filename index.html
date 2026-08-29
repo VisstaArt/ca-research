@@ -2465,13 +2465,35 @@ Output JSON between <<<CHART_DATA_START>>> and <<<CHART_DATA_END>>>:
 }
 
 function buildReportPrompt(brief, results, lang) {
-  const completedIds = results.map(r=>r.id);
-  const sections = results.map(r => {
-    const m = MODULES.find(x=>x.id===r.id);
-    // 12000, а не 4000: таблицы идут в конце модулей (матрица ниш в M1.2, персоны в M4),
-    // при короткой обрезке отчёт их просто не видел и пересказывал вступление
-    return '=== '+r.id+': '+(m?m.title:r.id)+' ===\n'+r.content.slice(0,12000);
-  }).join('\n\n---\n\n');
+  // Задача 5 от контент-машины: «нужно, чтобы отчёты по нишам собирались в одну
+  // кучу». Разбор показал, что дело не в сборке, а в двух поломках при нескольких
+  // нишах:
+  //  1. Секции шли БЕЗ указания ниши: при двух нишах модель видела два одинаково
+  //     озаглавленных блока «=== M2: Competitors ===» и не могла их различить —
+  //     конкуренты разных ниш сливались в одну секцию.
+  //  2. completedIds шёл с дублями (results.map по всем нишам), поэтому в
+  //     STRUCTURE список секций повторялся: «# Конкуренты (M2)» дважды, без
+  //     пояснения, что это разные ниши.
+  // Тот же класс ошибки, что был в buildFullMd (группировка по нишам).
+  const ok = results.filter(r => !r.failed && !/^Error:/.test(String(r.content||'').trim()));
+  const completedIds = [...new Set(ok.map(r => r.id))];
+  const nicheList = [...new Set(ok.filter(r => isPerNiche(r.id)).map(r => r.niche || ''))].filter(Boolean);
+  const multi = nicheList.length > 1;
+  // 12000, а не 4000: таблицы идут в конце модулей (матрица ниш в M1.2, персоны в M4),
+  // при короткой обрезке отчёт их просто не видел и пересказывал вступление
+  const body = r => {
+    const m = MODULES.find(x => x.id === r.id);
+    return '=== ' + r.id + (r.niche ? ' [НИША: ' + r.niche + ']' : '') + ': ' + (m ? m.title : r.id) + ' ===\n'
+      + String(r.content || '').slice(0, 12000);
+  };
+  const globalSec = ok.filter(r => !isPerNiche(r.id)).map(body);
+  // Сгруппировано по нишам, а не вперемешку: модель должна видеть, где кончается
+  // одна ниша и начинается другая.
+  const nicheSec = nicheList.map(n =>
+    '########## ДАННЫЕ ПО НИШЕ: ' + n + ' ##########\n\n'
+    + ok.filter(r => isPerNiche(r.id) && (r.niche || '') === n).map(body).join('\n\n---\n\n')
+  );
+  const sections = [...globalSec, ...nicheSec].join('\n\n---\n\n');
 
   const hasCompany = brief.currentRevenue || brief.currentClients || brief.currentAvgCheck;
   const companyBlock = hasCompany
@@ -2499,12 +2521,39 @@ function buildReportPrompt(brief, results, lang) {
         + 'переноси оценки как есть. Под таблицей одной строкой — какая ниша выбрана для этого исследования и почему.]\n'
       : '')+
     (hasCompany ? '## Позиция компании на рынке (текущая доля, потенциал роста в цифрах)\n' : '')+
+    (multi
+      ? '## Сравнение исследованных ниш\n[ОДНА таблица, строки — исследованные ниши ('+nicheList.join(', ')+'), '
+        + 'колонки: Ниша | Кто покупатель | Главная боль | Сколько конкурентов и кто сильнейший | Спрос по ключам | '
+        + 'Чем мы можем отличиться | Насколько уверены в данных (1-5). Заполняй ТОЛЬКО из данных этих ниш выше, не выдумывай. '
+        + 'Под таблицей 2-3 строки: чем ниши отличаются по смыслу и какую стоит вести первой — с обоснованием из таблицы.]\n'
+      : '')+
     '## Фокус прямо сейчас (3 конкретных действия из реальных данных)\n\n'+
-    completedIds.map(id => {
-      const m = MODULES.find(x=>x.id===id);
-      return '# '+(m ? (m.title+' ('+id+')') : id)+'\n[full section with all data, tables, and "Что это значит для вас:" block]';
-    }).join('\n\n')+'\n\n'+
+    // При нескольких нишах модульные секции идут ВНУТРИ раздела своей ниши.
+    // Раньше completedIds шёл с дублями, и структура просила «# Конкуренты (M2)»
+    // дважды подряд — без указания, что это разные ниши.
+    (multi
+      ? nicheList.map(n =>
+          '# Ниша: ' + n + '\n'
+          + completedIds.filter(id => isPerNiche(id)).map(id => {
+              const m = MODULES.find(x => x.id === id);
+              return '## ' + (m ? (m.titleRu || m.title) + ' (' + id + ')' : id)
+                + '\n[раздел по ЭТОЙ нише: данные, таблицы и блок «Что это значит для вас:». '
+                + 'Бери только строки, помеченные НИША: ' + n + ' — не смешивай с другой нишей]';
+            }).join('\n\n')
+        ).join('\n\n')
+        + (completedIds.some(id => !isPerNiche(id))
+            ? '\n\n' + completedIds.filter(id => !isPerNiche(id)).map(id => {
+                const m = MODULES.find(x => x.id === id);
+                return '# ' + (m ? (m.titleRu || m.title) + ' (' + id + ')' : id) + '\n[общий раздел по проекту, не по нише]';
+              }).join('\n\n')
+            : '')
+      : completedIds.map(id => {
+          const m = MODULES.find(x=>x.id===id);
+          return '# '+(m ? (m.title+' ('+id+')') : id)+'\n[full section with all data, tables, and "Что это значит для вас:" block]';
+        }).join('\n\n')
+    )+'\n\n'+
     '# Выводы\n'+
+    (multi ? '## Итог по каждой нише (по 2-3 строки на нишу, что с ней делать)\n' : '')+
     '## Топ-3 приоритета (с обоснованием из данных)\n'+
     '## План на 90 дней (конкретные шаги, не общие рекомендации)';
 }
@@ -3899,9 +3948,16 @@ function App() {
     if (!proj?.results?.length) return;
     setRepping(true); setRepOpen(true); setRep(''); setXled('');
     try {
+      // Потолок вывода зависит от числа ниш: с двумя нишами отчёт теперь содержит
+      // отдельный раздел на каждую плюс сводное сравнение, и в стандартные 8000
+      // токенов не влезал — обрывался на середине последней ниши (тот же случай,
+      // что уже был у M1.2, где потолок пришлось поднимать до 16000).
+      const nCnt = nichesOf(brief).length || 1;
+      const repTok = nCnt > 1 ? Math.min(8000 + 6000 * (nCnt - 1), 24000) : 8000;
       const r = await callGPT(
         'Write a professional research report. ALL output in '+lang+' only. No fabricated data.',
-        buildReportPrompt(brief, proj.results, lang)
+        buildReportPrompt(brief, proj.results, lang),
+        undefined, repTok
       );
       setRep(r);
       const upd = {...proj, report:r, updatedAt:new Date().toISOString()};
