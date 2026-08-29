@@ -604,11 +604,11 @@ async function callWordstat(phrase, opts) {
 // (REQ-025). Та же форма ответа, что у callWordstat — fetchKeywordFrequencyData
 // переиспользует один код для обоих источников. null при недоступности/не
 // настроенном API — трактуется как «данных нет», не падает.
-async function callGoogleAds(phrase, market, lang) {
+async function callGoogleAds(phrase, market, lang, siteUrl) {
   try {
     const res = await authFetch('/api/google-ads', {
       method: 'POST', headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({phrase, market, lang}),
+      body: JSON.stringify({phrase, market, lang, ...(siteUrl?{siteUrl}:{})}),
     });
     if (!res.ok) return null;
     return await res.json();
@@ -1443,7 +1443,7 @@ function isNoiseKeyword(phrase) {
 // только ПРЕДЛАГАЕТ кандидатов — их утверждает/правит владелица в UI
 // (showSeedConfirm/continueAfterSeeds в run()) ДО того, как тратится платный
 // вызов Wordstat/Google Ads. Эта функция принимает уже готовый список.
-async function fetchKeywordFrequencyData(brief, seeds) {
+async function fetchKeywordFrequencyData(brief, seeds, competitorDomains) {
   const market = brief.geoMarket || brief.geoCompany || '';
   const source = keywordSourceForMarket(market);
   // Потолок 12, а не 4: список отобран ЧЕЛОВЕКОМ вручную, тихо обрезать его до
@@ -1488,7 +1488,18 @@ async function fetchKeywordFrequencyData(brief, seeds) {
       if (!r.phrase || !r.count || seen.has(r.phrase)) continue;
       if (isNoiseKeyword(r.phrase)) continue;
       seen.add(r.phrase);
-      frequencies.push({ phrase: r.phrase, count: r.count });
+      // monthly/competition приходят только от Google (у Wordstat их нет) —
+      // переносим как есть, ниже из них берётся сезонность без доп. вызова и
+      // колонка «Конкуренция» с реальным числом вместо оценки модели.
+      // Совпавшую с сидом фразу помечаем confirmed: у Google нет totalCount,
+      // поэтому опорная фраза узнаётся только так.
+      frequencies.push({
+        phrase: r.phrase, count: r.count,
+        ...(String(r.phrase).toLowerCase().trim() === String(phrase).toLowerCase().trim() ? { confirmed: true } : {}),
+        ...(r.competition ? { competition: r.competition } : {}),
+        ...(r.competitionIndex != null ? { competitionIndex: r.competitionIndex } : {}),
+        ...(Array.isArray(r.monthly) && r.monthly.length ? { monthly: r.monthly } : {}),
+      });
     }
     for (const r of (d.associations || [])) {
       if (!r.phrase || !r.count || seenIdea.has(r.phrase) || seen.has(r.phrase)) continue;
@@ -1497,6 +1508,29 @@ async function fetchKeywordFrequencyData(brief, seeds) {
       ideas.push({ phrase: r.phrase, count: r.count });
     }
   }
+  // Ключи по САЙТАМ КОНКУРЕНТОВ — только Google: GenerateKeywordIdeas принимает
+  // URL как затравку («по каким запросам работает вот этот сайт»). У Wordstat
+  // такой возможности нет вообще, а это ровно то, ради чего покупают key.so.
+  // Домены берём из M2 (BLOCK 06), то есть бесплатно — они уже собраны.
+  // Ограничение 3 сайта: каждый — отдельный вызов, а ценность быстро убывает.
+  if (source === 'google' && Array.isArray(competitorDomains) && competitorDomains.length) {
+    for (const domain of competitorDomains.slice(0, 3)) {
+      const d = await callGoogleAds(null, market, brief.lang, 'https://' + domain);
+      if (!d) continue;
+      for (const r of (d.results || [])) {
+        if (!r.phrase || !r.count || seen.has(r.phrase)) continue;
+        if (isNoiseKeyword(r.phrase)) continue;
+        seen.add(r.phrase);
+        frequencies.push({
+          phrase: r.phrase, count: r.count, fromCompetitor: domain,
+          ...(r.competition ? { competition: r.competition } : {}),
+          ...(r.competitionIndex != null ? { competitionIndex: r.competitionIndex } : {}),
+          ...(Array.isArray(r.monthly) && r.monthly.length ? { monthly: r.monthly } : {}),
+        });
+      }
+    }
+  }
+
   // Лексический фильтр УБРАН (29.08). Он задумывался как защита от плохих
   // АВТОМАТИЧЕСКИ подобранных сидов, но с 26.08 сиды подтверждает человек —
   // защита переехала выше по потоку. А на живых прогонах фильтр делал ровно
@@ -1524,6 +1558,17 @@ async function fetchKeywordFrequencyData(brief, seeds) {
       const d = await callWordstat(phrase, { mode:'dynamics', period:'PERIOD_MONTHLY', fromDate, toDate });
       const monthly = d && d.results ? d.results.filter(r=>r.count!=null) : [];
       if (monthly.length) seasonality.push({ phrase, monthly });
+    }
+  } else {
+    // Google отдаёт помесячную историю (monthlySearchVolumes) ПРЯМО в ответе на
+    // тот же запрос — отдельный вызов, как у Яндекса, не нужен вообще. Раньше мы
+    // это поле не читали и честно писали «сезонность не замерено» для всех
+    // не-российских рынков, хотя данные уже лежали в ответе.
+    const withMonthly = filtered.filter(f => Array.isArray(f.monthly) && f.monthly.length);
+    const confirmedFirst = withMonthly.filter(f => f.confirmed);
+    const rest = withMonthly.filter(f => !f.confirmed).sort((a,b)=>b.count-a.count);
+    for (const f of [...confirmedFirst, ...rest].slice(0, 8)) {
+      seasonality.push({ phrase: f.phrase, monthly: f.monthly });
     }
   }
 
@@ -2260,9 +2305,12 @@ function buildM7Prompt(brief, lang, prev, evidence, wordstatData) {
   const srcLabel = (wordstatData && wordstatData.source) || 'Wordstat';
   const wordstatBlock = freq.length
     ? '\n═══════════════════════════════════════════════\nREAL FREQUENCY DATA ('+srcLabel+', measured just now)\n═══════════════════════════════════════════════\n'
-      + freq.map(w=>w.phrase+': '+w.count+'/мес'+(w.confirmed?'   ← ОПОРНАЯ ФРАЗА (выбрана владелицей)':'')).join('\n')
+      + freq.map(w=>w.phrase+': '+w.count+'/мес'
+          + (w.competition ? '   конкуренция: '+w.competition+(w.competitionIndex!=null?' ('+w.competitionIndex+'/100)':'') : '')
+          + (w.confirmed?'   ← ОПОРНАЯ ФРАЗА (выбрана владелицей)':'')).join('\n')
       + '\n\nЭто РЕАЛЬНО измеренные числа (не из evidence, не выдумка) — используй их как приоритетный источник частотности для SEO-02.\n'
       + 'Фразы с пометкой «ОПОРНАЯ ФРАЗА» владелица отобрала вручную как главные для ниши. Каждая из них ОБЯЗАНА стать отдельным кластером в SEO-02 со своей измеренной частотностью — не заменяй их близкими по смыслу ассоциациями и не своди несколько опорных фраз в один кластер. Остальные фразы блока — материал для дополнительных кластеров.\n'
+      + 'Где рядом с фразой указана «конкуренция» — это ИЗМЕРЕННАЯ величина от источника (LOW/MEDIUM/HIGH и индекс 0-100), а не оценка. Для таких кластеров бери её в колонку «Конкуренция» как есть, с пометкой источника, вместо собственной прикидки. Свою оценку давай только там, где измеренной величины нет.\n'
     : '';
   // Помесячная динамика за 12 месяцев — только для топ-фраз, только для Yandex
   // (см. fetchKeywordFrequencyData — Google Ads пока без сезонности).
@@ -3625,7 +3673,10 @@ function App() {
           // владелицей выше по циклу (см. паузу перед M7) — сюда доходим только
           // когда confirmedSeedsRef.current[wn] уже заполнен.
           const evidence = await gatherSeoEvidence(Bn);
-          wordstatData = await fetchKeywordFrequencyData(Bn, confirmedSeedsRef.current[wn] || []);
+          // Домены конкурентов из уже готового M2 этой ниши — для Google-рынков
+          // по ним дополнительно собираются ключи (см. fetchKeywordFrequencyData).
+          const compDomains = competitorDomainsFromM2(findDep('M2'));
+          wordstatData = await fetchKeywordFrequencyData(Bn, confirmedSeedsRef.current[wn] || [], compDomains);
           userPrompt = buildM7Prompt(Bn, lang, prevContent || '', evidence, wordstatData);
         } else {
           // Контекст берём от стадии, на которой модуль СТРОИТСЯ (requires), в рамках своей ниши,

@@ -21,6 +21,11 @@ const LANGUAGE_CONSTANTS = {
   german: 1001, немецкий: 1001,
   french: 1002, французский: 1002,
 };
+// Google отдаёт месяц названием (MonthOfYear enum), Wordstat — датой. Приводим к общему виду.
+const MONTHS = {
+  JANUARY:'01', FEBRUARY:'02', MARCH:'03', APRIL:'04', MAY:'05', JUNE:'06',
+  JULY:'07', AUGUST:'08', SEPTEMBER:'09', OCTOBER:'10', NOVEMBER:'11', DECEMBER:'12',
+};
 function languageConstant(lang) {
   const key = String(lang || '').toLowerCase().trim();
   const id = LANGUAGE_CONSTANTS[key] || 1000; // по умолчанию английский
@@ -45,9 +50,12 @@ export default async function handler(req, res) {
     return res.status(503).json({ error: { message: 'Google Ads is not configured', code: 'google_ads_unconfigured' } });
   }
 
-  const { phrase, market, lang } = req.body || {};
-  if (!phrase || typeof phrase !== 'string') {
-    return res.status(400).json({ error: { message: 'phrase is required' } });
+  // siteUrl — «дай ключи, по которым работает вот этот сайт»: GenerateKeywordIdeas
+  // принимает URL как затравку вместо фразы. У Yandex Wordstat такого нет вообще,
+  // и это ровно то, ради чего покупают сервисы вроде key.so.
+  const { phrase, siteUrl, market, lang } = req.body || {};
+  if (!phrase && !siteUrl) {
+    return res.status(400).json({ error: { message: 'phrase or siteUrl is required' } });
   }
 
   try {
@@ -101,20 +109,49 @@ export default async function handler(req, res) {
         language: languageConstant(lang),
         ...(geoTargetConstants.length ? { geoTargetConstants } : {}),
         keywordPlanNetwork: 'GOOGLE_SEARCH',
-        keywordSeed: { keywords: [phrase.slice(0, 400)] },
+        // Затравка: фраза, сайт, либо и то и другое (Google допускает все три варианта).
+        ...(phrase && siteUrl
+          ? { keywordAndUrlSeed: { keywords: [String(phrase).slice(0, 400)], url: String(siteUrl).slice(0, 2000) } }
+          : siteUrl
+            ? { urlSeed: { url: String(siteUrl).slice(0, 2000) } }
+            : { keywordSeed: { keywords: [String(phrase).slice(0, 400)] } }),
       }),
     });
     const ideaData = await ideaRes.json();
     if (!ideaRes.ok) {
-      console.error('[google-ads/generateKeywordIdeas]', ideaRes.status, phrase, JSON.stringify(ideaData));
+      console.error('[google-ads/generateKeywordIdeas]', ideaRes.status, phrase || siteUrl, JSON.stringify(ideaData));
       return res.status(ideaRes.status).json({ error: { message: ideaData?.error?.message || 'Google Ads error' } });
     }
 
-    // Та же форма ответа, что api/wordstat.js (topRequests) — gatherKeywordFrequencyData
+    // Та же форма ответа, что api/wordstat.js (topRequests) — fetchKeywordFrequencyData
     // в index.html переиспользует один и тот же код для обоих источников.
+    // Дополнительно к частоте забираем то, чего у Яндекса нет вообще:
+    //  - monthlySearchVolumes: помесячная история за 12 месяцев В ТОМ ЖЕ ответе,
+    //    то есть сезонность по Google не требует отдельного вызова;
+    //  - competition/competitionIndex: реальная метрика конкуренции по ключу
+    //    (в отчёте эту колонку до сих пор заполняла оценка модели, то есть догадка).
+    const num = v => { const n = Number(v); return Number.isFinite(n) ? n : null; };
     const results = (ideaData.results || [])
       .filter(r => r.text && r.keywordMetrics && r.keywordMetrics.avgMonthlySearches != null)
-      .map(r => ({ phrase: r.text, count: Number(r.keywordMetrics.avgMonthlySearches) }));
+      .map(r => {
+        const km = r.keywordMetrics;
+        // month у Google — enum названием месяца («JANUARY»), не число. Приводим к
+        // «YYYY-MM», как в ответе Wordstat/dynamics, чтобы дальше по коду был один формат.
+        const monthly = (km.monthlySearchVolumes || [])
+          .map(m => {
+            const mi = MONTHS[String(m.month || '').toUpperCase()];
+            if (!mi || !m.year) return null;
+            return { date: m.year + '-' + mi, count: num(m.monthlySearches) };
+          })
+          .filter(m => m && m.count != null);
+        return {
+          phrase: r.text,
+          count: Number(km.avgMonthlySearches),
+          ...(km.competition ? { competition: km.competition } : {}),
+          ...(km.competitionIndex != null ? { competitionIndex: num(km.competitionIndex) } : {}),
+          ...(monthly.length ? { monthly } : {}),
+        };
+      });
     res.status(200).json({ results });
   } catch (e) {
     res.status(500).json({ error: { message: e.message } });
