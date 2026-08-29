@@ -564,7 +564,24 @@ async function callGPT(system, user, temperature, maxTokens) {
       ...(temperature != null ? { temperature } : {}),
       messages:[{role:'system',content:system},{role:'user',content:user}]}),
   });
-  if (!res.ok) throw new Error('API ' + res.status);
+  // Читаем тело ошибки, а не бросаем сразу «API 429». Без причины невозможно
+  // отличить два совершенно разных случая с одинаковым кодом: кончились деньги
+  // на счету OpenAI (insufficient_quota — повторять бесполезно, надо пополнить)
+  // и слишком частые запросы (rate_limit_exceeded — повтор как раз помогает).
+  // 27-29.08 владелица дважды получала голое «Error: API 429» и мы гадали.
+  if (!res.ok) {
+    let detail = '';
+    try {
+      const body = await res.json();
+      const msg = body?.error?.message || '';
+      const code = body?.error?.code || body?.error?.type || '';
+      detail = [code, msg].filter(Boolean).join(': ');
+    } catch {}
+    if (res.status === 429 && /quota|billing|insufficient/i.test(detail)) {
+      throw new Error('Закончились средства на счету OpenAI. Пополните баланс — повтор не поможет. (' + detail + ')');
+    }
+    throw new Error('API ' + res.status + (detail ? ' — ' + detail : ''));
+  }
   const d = await res.json();
   if (d.error) throw new Error(d.error.message||'API error');
   if (d.usage) lastGptUsage = { prompt: d.usage.prompt_tokens||0, completion: d.usage.completion_tokens||0, total: d.usage.total_tokens||0 };
@@ -1364,12 +1381,20 @@ function keywordSourceForMarket(market) {
 // человек реально вбил бы в поиск, ища ИМЕННО ТИП продукта — не выгоду,
 // не боль, не описание. При сбое (сеть/парсинг) — старая эвристика как
 // запасной вариант, лучше несовершенный якорь, чем совсем без частотности.
+// Ошибка последнего подбора фраз — боковой канал, как lastGptUsage. Пусто, если
+// всё прошло успешно. run() читает сразу после вызова и показывает владелице.
+let lastSeedError = null;
 async function extractWordstatSeeds(brief) {
+  lastSeedError = null;
   const product = brief.niche || brief.name || '';
-  const fallback = () => {
-    const core = (product.split(/\s+(?:для|for)\s+/i)[0] || product).trim();
-    return [core].filter(Boolean).slice(0, 1);
-  };
+  // Запасного варианта «отрезать всё после для» больше НЕТ. Он давал мусор и,
+  // хуже того, молча: ниша «инструмент для захвата лидов/умные попапы с ИИ»
+  // превращалась в «инструмент», и это показывалось владелице как нормальная
+  // подсказка. 29.08 так и вышло — вызов модели упал с 429, а она увидела не
+  // ошибку, а плохую подсказку, и решила, что модель стала хуже подбирать.
+  // Честнее вернуть пусто и сказать, что подобрать не вышло: фразы всё равно
+  // утверждает человек, пустое поле он заполнит сам, а мусорную подсказку
+  // может принять за рекомендацию.
   if (!product) return [];
   try {
     const sys = 'Ты подбираешь короткие поисковые фразы для проверки реальной частотности в Yandex Wordstat / Google Keyword Planner. Отвечай ТОЛЬКО JSON-массивом строк, без пояснений и markdown-обёртки.';
@@ -1387,8 +1412,12 @@ async function extractWordstatSeeds(brief) {
     const m = raw.match(/\[[\s\S]*\]/);
     const arr = m ? JSON.parse(m[0]) : null;
     const seeds = Array.isArray(arr) ? arr.map(s=>String(s||'').trim()).filter(Boolean) : [];
-    return seeds.length ? seeds.slice(0, 4) : fallback();
-  } catch { return fallback(); }
+    if (!seeds.length) lastSeedError = 'Модель вернула пустой список — впишите фразы вручную.';
+    return seeds.slice(0, 4);
+  } catch (e) {
+    lastSeedError = 'Не удалось подобрать фразы: ' + (e.message || e) + '. Впишите их вручную.';
+    return [];
+  }
 }
 
 // Лексический фильтр Wordstat-ассоциаций: ПРОБОВАЛИ И ОТКАЗАЛИСЬ (25-29.08.2026).
@@ -3423,6 +3452,7 @@ function App() {
   // это только для чтения внутри run(), рендерить не нужно.
   const [showSeedConfirm, setShowSeedConfirm] = React.useState(false);
   const [seedCandidates, setSeedCandidates] = React.useState([]);
+  const [seedError, setSeedError] = React.useState(null);   // подбор фраз не удался — показываем причину
   const [pendingM7Niche, setPendingM7Niche] = React.useState('');
   const confirmedSeedsRef = React.useRef({});
   const pausedRunRef = React.useRef(null); // параметры run(), прерванного паузой — см. continueAfterSeeds
@@ -3616,7 +3646,10 @@ function App() {
       if (mod.id === 'M7' && !confirmedSeedsRef.current[wn]) {
         setCurMod(null); setCurNiche(''); setCurStep(''); setCurStepIdx(0);
         const candidates = await extractWordstatSeeds(Bn);
-        setSeedCandidates(candidates);
+        setSeedError(lastSeedError);
+        // Пустой список — не повод показать пустую панель без единого поля:
+        // даём одну пустую строку, чтобы было куда печатать.
+        setSeedCandidates(candidates.length ? candidates : ['']);
         setPendingM7Niche(wn);
         // Запоминаем, ЧЕМ был этот прогон, чтобы continueAfterSeeds продолжил его
         // теми же параметрами: иначе после паузы терялись rerunNiche (в пересчёт
@@ -4626,6 +4659,11 @@ function App() {
                 <div className="card">
                   <h3 style={{fontSize:16,fontWeight:500,marginBottom:6}}>{t.seedConfirmTitle}</h3>
                   <p style={{fontSize:13,color:'#666',marginBottom:14,lineHeight:1.5}}>{t.seedConfirmSub}</p>
+                  {seedError && (
+                    <div style={{background:'#FDF2F2',border:'1px solid #F5C2C2',borderRadius:8,padding:'10px 14px',marginBottom:14,fontSize:13,color:'#8B2020',lineHeight:1.5}}>
+                      {seedError}
+                    </div>
+                  )}
                   {seedCandidates.map((s, i) => (
                     <div key={i} style={{display:'flex',gap:8,marginBottom:8}}>
                       <input value={s} onChange={e=>setSeedCandidates(p=>p.map((x,j)=>j===i?e.target.value:x))}
