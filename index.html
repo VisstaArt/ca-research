@@ -321,6 +321,15 @@ const MODULES = [
     id: 'M5', color: '#633806', bg: '#FAEEDA', border: '#EF9F27', dark: '#412402',
     // Офферы и гипотезы опираются на персоны и их боли из M4
     requires: ['M4'],
+    // offChain (решение владелицы 26.08.2026, задача 4 от контент-машины): M5 не
+    // нужен для генерации постов и статей — контракт брал из него только
+    // hypotheses, и то справочно. Офферы работают на этапе воронки и лендинга, а
+    // не при написании поста, поэтому гонять их в каждом исследовании — тратить
+    // деньги клиента заранее. Модуль НЕ удалён и не disabled: он рабочий и
+    // остаётся доступным по явному выбору, просто больше не подхватывается
+    // автоматически перегенерацией соседей (вопрос «оставлять ли по запросу»
+    // в задаче помечен открытым — это самый обратимый вариант).
+    offChain: true,
     title: 'Offers & Hypotheses',
     titleRu: 'Офферы и гипотезы',
     taglineEn: 'What to sell, how to position it, and which offers to test first',
@@ -1075,6 +1084,28 @@ function buildAgentPackage(brief, lang, results, report) {
         AWARENESS_MIX: (m4 && m4.chartData && m4.chartData.awarenessLevels) || [],
         OBJECTIONS: withStableIds(pickTable(modulesForNiche, 'M4', 'BLOCK 12'), 'objection'),
         HOOK_BANK: (m3 && m3.chartData && m3.chartData.hookBank) || [],
+        // Задача 2 от контент-машины: BLOCK 15 M4. В их промпте планирования уже
+        // стоит плейсхолдер {{COGNITIVE_TACTICS}} с пометкой, что это сильнее
+        // универсальных копирайтинг-формул — потому что подтверждено исследованием
+        // ЭТОЙ аудитории, а не общей теорией. Считалось и никуда не отдавалось.
+        COGNITIVE_TACTICS: pickTable(modulesForNiche, 'M4', 'BLOCK 15'),
+        // Задача 1 от контент-машины: M6 не экспортировался ЦЕЛИКОМ, хотя это
+        // самый «контентный» модуль — за него уже платят, а данные лежали мёртвым
+        // грузом. Блоки 18-22 идут в контент-план, дизайн-систему каруселей,
+        // генерацию баннеров и модуль лендингов.
+        PERSONA_ARCHETYPES: pickTable(modulesForNiche, 'M6', 'BLOCK 18'),
+        // По контракту это ОДНО поле из ДВУХ блоков (19 Visual Strategy + 19A
+        // Archetype Map). pickTable ищет по вхождению подстроки и вернул бы
+        // только первый; берём оба и склеиваем, защищаясь от случая, когда
+        // «BLOCK 19» совпало с тем же «BLOCK 19A» (модель пропустила 19).
+        VISUAL_STRATEGY: (() => {
+          const a = pickTable(modulesForNiche, 'M6', 'BLOCK 19');
+          const b = pickTable(modulesForNiche, 'M6', 'BLOCK 19A');
+          return a === b ? a : [...a, ...b];
+        })(),
+        CONTENT_SYSTEM: pickTable(modulesForNiche, 'M6', 'BLOCK 20'),
+        CREATIVE_BRIEFS: pickTable(modulesForNiche, 'M6', 'BLOCK 21'),
+        LANDING_TZ: pickTable(modulesForNiche, 'M6', 'BLOCK 22'),
         // Не входит в контракт генерации, но полезно потребителю как справка:
         competitors: pickTable(modulesForNiche, 'M2', 'BLOCK 06'),
         hypotheses: pickTable(modulesForNiche, 'M5', 'BLOCK 16'),
@@ -4508,7 +4539,10 @@ function App() {
                         // run() внутри (rerunNiche falsy → работает по ВСЕМ выбранным нишам сразу)
                         // тихо стирал и пересчитывал уже готовые M2–M7 всех выбранных ниш —
                         // ↺ на карте ниш неожиданно жёг лимит на весь пройденный прогон.
-                        const order = MODULES.filter(x=>!x.disabled).map(x=>x.id);
+                        // offChain-модули (M5) в автоцепочку не попадают — см. флаг в MODULES.
+                        // Исключение: сам модуль, на котором нажали ↺, запускается всегда,
+                        // иначе кнопка на его карточке молча ничего бы не делала.
+                        const order = MODULES.filter(x=>!x.disabled && (!x.offChain || x.id===r.id)).map(x=>x.id);
                         const idx = order.indexOf(r.id);
                         const chain = isPerNiche(r.id) ? (idx>=0 ? order.slice(idx) : [r.id]) : [r.id];
                         const rn = r.niche||'';
