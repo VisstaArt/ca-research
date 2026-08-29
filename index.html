@@ -1747,6 +1747,29 @@ async function fetchSite(url) {
 }
 
 // ── SYSTEM PROMPT
+// Глоссарий в ПРОМПТ, а не только в линтер (29.08.2026, решение владелицы).
+// Линтер ловил английский жаргон в готовом отчёте и показывал его человеку —
+// то есть работа по исправлению всё равно оставалась ручной. Владелица: нужно,
+// чтобы термины СРАЗУ были на языке исследования, прямо в таблицах. Правило 8
+// («не смешивай алфавиты») этого не давало: оно говорит ЧЕГО не делать, но не
+// говорит, ЧЕМ заменить — модель не знает, как по-русски «guardrails» или
+// «TOFU», и оставляет как есть. Отдаём тот же словарь LINT_DICT, по которому
+// работает линтер, как обязательный список замен. Линтер остаётся проверкой
+// того, что правило сработало: если он пуст — термины переведены.
+// Для языков на латинице глоссарий не нужен — там английский жаргон не
+// выглядит инородным, а словаря замен под них у нас и нет.
+function glossaryRule(lang) {
+  const target = String(lang || '').toLowerCase();
+  if (LATIN_SCRIPT_LANGS.some(l => target.includes(l))) return '';
+  const pairs = Object.entries(LINT_DICT).map(([en, ru]) => en + ' → ' + ru).join('; ');
+  return '8a. ТЕРМИНОЛОГИЯ — переводи профессиональный жаргон, не оставляй его латиницей. '
+    + 'Это относится и к таблицам, и к заголовкам колонок, и к тексту. Обязательные замены: '
+    + pairs + '. '
+    + 'Если нужного термина здесь нет — всё равно дай перевод на ' + lang
+    + ', а исходное слово можно оставить в скобках при первом упоминании. '
+    + 'Исключения ровно два: названия брендов/продуктов и общепринятые аббревиатуры (TAM, SAM, SOM, JTBD, CJM, LPR, VoC, SEO, CR, CTR).\n';
+}
+
 function buildSystem(brief, lang) {
   const lines = Object.entries(brief).filter(([,v])=>v).map(([k,v])=>{
     if(k==='geoCompany') return '- Company Geography (all markets): '+v;
@@ -1787,6 +1810,7 @@ function buildSystem(brief, lang) {
     '6. End each block with "Итог / Следующие шаги" (3-5 steps).\n'+
     '7. Confidence scale — use consistently and print this legend ONCE at the top of the module output: 5 = 3+ независимых свежих источника; 4 = 2 источника; 3 = 1 источник; 2 = косвенные данные/эвристика; 1 = нет публичных данных.\n'+
     '8. Never mix scripts: no Latin or Greek words inside '+lang+' sentences (brand names and accepted abbreviations like TAM, CJM are fine). If a paragraph comes out garbled or mixed-script — rewrite it before finishing.\n'+
+    glossaryRule(lang)+
     '9. ANY specific metric not measured from evidence — «+18 клиентов», «на 120%», «в 2-3 раза», «CR 4%→12%», forecasts — must EITHER be omitted OR labeled «(гипотеза, не обещание)» right next to it. This applies EVERYWHERE: offer formulas, forecasts, SEO H1/titles, ad hooks, creative copy, case-study headlines. NEVER present a fabricated number as an achieved result or real client case (no «кейс: конверсия выросла на 120%» unless that number is in evidence with a [n]).'+
     nicheFilter+editorNote;
 }
