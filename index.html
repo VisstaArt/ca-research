@@ -714,11 +714,84 @@ async function gatherEvidence(queries, maxQueries, maxResults, opts) {
   return out;
 }
 
+// ── ЯЗЫК ПОИСКОВЫХ ЗАПРОСОВ ─────────────────────────────────────────────────
+// До 31.08.2026 ВСЕ запросы во всех четырёх ищущих модулях были захардкожены
+// по-русски. Для Турции это означало поиск «попап Турция мало заявок с сайта» —
+// по-русски: ни турецких форумов, ни отзывов на турецком не находилось в
+// принципе. То есть выход на нерусские рынки был сломан на уровне сбора данных,
+// хотя M7 под них уже был готов (Google Keyword Planner подключён 25.08).
+//
+// Почему через модель, а не таблицей переводов: языков в списке десять, и дело
+// не в переводе слов. «Отзывы и жалобы» в разных странах живут на разных
+// площадках, и запрос должен это учитывать — в Турции это Ekşi Sözlük, в другой
+// стране своё. Модель это знает, а список площадок, захардкоженный мной, устареет
+// и будет врать (уже наступали на это с реестром доменов 25.08).
+//
+// Русский путь НЕ ТРОГАЕТСЯ вообще: возвращаются те же строки, что были. Это
+// единственный рынок, на котором сейчас реально работают, и рисковать им ради
+// ещё не начатых нельзя.
+const QUERY_PARTS_RU = {
+  demand:           'спрос',
+  demandForum:      'спрос отзывы форум',
+  priceCompetitors: 'цена конкуренты обзор рынка',
+  forumProblems:    'форум обсуждение проблемы с заявками и клиентами',
+  marketTrends:     'тренды рынка объём',
+  whichIndustries:  'для каких сфер бизнеса и отраслей применяется',
+  losingLeads:      'какие отрасли и ниши теряют заявки и лиды на сайте',
+  caseExamples:     'примеры применения по отраслям кейсы',
+  usedInNiches:     'в каких нишах и отраслях используют',
+  reviewsPrices:    'отзывы цены тарифы',
+  alternativeCheap: 'альтернатива',
+  cheaperSmall:     'дешевле небольшая компания',
+  officialPrices:   'официальный сайт цены тарифы',
+  fewLeads:         'мало заявок с сайта конверсия проблемы',
+  forumComplaints:  'форум "не работает" OR "бесит" OR "разочарован"',
+  howToIncrease:    'как увеличить заявки с сайта',
+  discussion:       'обсуждение',
+  reviewsDrawbacks: 'отзывы недостатки жалобы',
+  notRecommend:     '"не рекомендую" OR "разочарован" проблемы поддержка',
+  clientReviews:    'отзывы клиентов форум',
+  communities:      'сообщества телеграм-каналы где общаются профессионалы',
+  bloggers:         'блогеры эксперты кого читают и смотрят',
+  howToChoose:      'как выбрать',
+  forNiche:         'для',
+  seoSemantics:     'seo продвижение семантика запросы',
+  keywordStats:     'частотность запросов вордстат статистика',
+};
+let queryPartsCache = {};   // ключ «язык|рынок» — один вызов модели на прогон, не на модуль
+async function localizedQueryParts(lang, market) {
+  const target = String(lang || 'Russian');
+  if (/^rus|^рус/i.test(target)) return QUERY_PARTS_RU;
+  const key = target + '|' + market;
+  if (queryPartsCache[key]) return queryPartsCache[key];
+  try {
+    const sys = 'Ты переводишь заготовки поисковых запросов для маркетингового исследования. Отвечай ТОЛЬКО JSON-объектом с теми же ключами, без пояснений и markdown-обёртки.';
+    const user = 'Рынок исследования: ' + (market || '—') + '. Язык поиска: ' + target + '.\n\n'
+      + 'Ниже заготовки поисковых запросов на русском. Переведи КАЖДУЮ так, как реальный человек на этом рынке набрал бы её в поиске.\n\n'
+      + 'Это НЕ дословный перевод. Два правила:\n'
+      + '1. Используй те слова, которыми в этой стране реально ищут. Дословный перевод русского маркетингового оборота часто не гуглится вообще.\n'
+      + '2. Где речь об отзывах, жалобах, форумах и сообществах — добавь в запрос название площадки, где в ЭТОЙ стране такие обсуждения реально живут (например для Турции это ekşi sözlük). Если не уверен в площадке для этой страны — не выдумывай, оставь запрос без названия.\n\n'
+      + 'Верни JSON с теми же ключами:\n' + JSON.stringify(QUERY_PARTS_RU, null, 1);
+    const raw = await callGPT(sys, user, 0.2, 900);
+    const m = raw.match(/\{[\s\S]*\}/);
+    const obj = m ? JSON.parse(m[0]) : null;
+    if (obj && typeof obj === 'object') {
+      // Недостающие ключи добираем русскими — лучше один запрос не на том языке,
+      // чем упавший сбор доказательств.
+      const merged = { ...QUERY_PARTS_RU, ...obj };
+      queryPartsCache[key] = merged;
+      return merged;
+    }
+  } catch {}
+  return QUERY_PARTS_RU;   // не смогли перевести — работаем как раньше, не падаем
+}
+
 // Досье для разведки ниш: по каждой услуге/вертикали-кандидату — спрос и конкуренция.
 // Копаем так же глубоко, как для VoC: на стоп-точке M1.2 человек выбирает нишу,
 // и цена ошибки здесь — впустую потраченный весь остальной прогон.
 async function gatherNicheEvidence(brief, lang) {
   const market = brief.geoMarket || brief.geoCompany || '';
+  const Q = await localizedQueryParts(brief.researchLang, market);
   const manual = (brief.nicheCandidates||'').split(',').map(s=>s.trim()).filter(Boolean);
   const base = manual.length ? manual.slice(0, 6)
     : (brief.selectedServices && brief.selectedServices.length ? brief.selectedServices : (brief.services||[])).slice(0, 6);
@@ -727,19 +800,19 @@ async function gatherNicheEvidence(brief, lang) {
   const queries = [];
   for (const s of topics) {
     // Спрос: если тема — вертикаль клиентов, ищем спрос на продукт внутри неё; иначе — на саму услугу
-    queries.push(s+' '+market+' '+(manual.length ? product+' спрос' : 'спрос отзывы форум'));
+    queries.push(s+' '+market+' '+(manual.length ? product+' '+Q.demand : Q.demandForum));
     // Конкуренция и цены
-    queries.push(s+' '+market+' цена конкуренты обзор рынка');
+    queries.push(s+' '+market+' '+Q.priceCompetitors);
     // Живые обсуждения — подтверждают, что боль в этой вертикали реальная, а не предполагаемая
-    queries.push(s+' '+market+' форум обсуждение проблемы с заявками и клиентами');
+    queries.push(s+' '+market+' '+Q.forumProblems);
   }
-  queries.push(product+' '+market+' тренды рынка объём');
+  queries.push(product+' '+market+' '+Q.marketTrends);
   // Широкий прочёс отраслей — чтобы находить конкретные вертикали (стоматологии,
   // косметология, автосервисы…), а не только услуги из брифа. Даёт объёмную карту ниш.
-  queries.push(product+' '+market+' для каких сфер бизнеса и отраслей применяется');
-  queries.push(product+' '+market+' какие отрасли и ниши теряют заявки и лиды на сайте');
-  queries.push(product+' '+market+' примеры применения по отраслям кейсы');
-  queries.push((brief.niche||product)+' '+market+' в каких нишах и отраслях используют');
+  queries.push(product+' '+market+' '+Q.whichIndustries);
+  queries.push(product+' '+market+' '+Q.losingLeads);
+  queries.push(product+' '+market+' '+Q.caseExamples);
+  queries.push((brief.niche||product)+' '+market+' '+Q.usedInNiches);
   return gatherEvidence(queries, 26, 6, { depth:'advanced', raw:true, contentChars:1200, perDomain:3, maxItems:50 });
 }
 
@@ -1054,6 +1127,7 @@ async function ensureDomainRegistry(niche, m2Result, brief) {
 
 async function gatherVoCEvidence(brief, discoveredCompetitors, m2Result) {
   const market = brief.geoMarket || brief.geoCompany || '';
+  const Q = await localizedQueryParts(brief.researchLang, market);
   const product = brief.niche || brief.name || '';
   const niches = (brief.selectedNiche||'').split(',').map(s=>s.trim()).filter(Boolean).slice(0,3);
   const topics = niches.length ? niches : [product];
@@ -1066,24 +1140,24 @@ async function gatherVoCEvidence(brief, discoveredCompetitors, m2Result) {
   const queries = [];
   // 1. Боли квалифицированного сегмента (бизнес, привлекающий клиентов через свой сайт)
   for (const n of topics) {
-    queries.push(n+' '+market+' мало заявок с сайта конверсия проблемы');
-    queries.push(n+' '+market+' форум "не работает" OR "бесит" OR "разочарован"');
-    queries.push('как увеличить заявки с сайта '+n+' '+market+' обсуждение');
+    queries.push(n+' '+market+' '+Q.fewLeads);
+    queries.push(n+' '+market+' '+Q.forumComplaints);
+    queries.push(Q.howToIncrease+' '+n+' '+market+' '+Q.discussion);
   }
   // 2. Отзывы о конкурентах = сразу и боль, и язык, и подсказки по фичам
   for (const c of competitors) {
-    queries.push(c+' отзывы недостатки жалобы');
-    queries.push(c+' "не рекомендую" OR "разочарован" проблемы поддержка');
+    queries.push(c+' '+Q.reviewsDrawbacks);
+    queries.push(c+' '+Q.notRecommend);
   }
   // 3. Язык самой категории продукта
-  queries.push(product+' '+market+' отзывы клиентов форум');
+  queries.push(product+' '+market+' '+Q.clientReviews);
   // 4. ГДЕ СИДИТ АУДИТОРИЯ (задача 3 от контент-машины). Отдельные запросы нужны
   // потому, что всё выше ищет ЖАЛОБЫ — и находит площадки жалоб, а не места, где
   // аудитория живёт постоянно. Два запроса, не больше: каждый стоит платного
   // вызова поиска, а блок 08A и так опирается на весь собранный материал.
   const audienceTopic = topics[0] || product;
-  queries.push(audienceTopic+' '+market+' сообщества телеграм-каналы где общаются профессионалы');
-  queries.push(audienceTopic+' '+market+' блогеры эксперты кого читают и смотрят');
+  queries.push(audienceTopic+' '+market+' '+Q.communities);
+  queries.push(audienceTopic+' '+market+' '+Q.bloggers);
 
   // Реестр площадок (ТЗ-M3-VOC.md, п.2) — ПОКА НЕ ограничивает сам поиск VoC.
   // Живой прогон 25.08 показал: сужение include_domains до реестра дало 0 цитат
@@ -1180,18 +1254,19 @@ async function processM3Voc(full, niche) {
 // Всё остальное модуль обязан помечать как незамеренное, а не выдумывать.
 async function gatherSeoEvidence(brief) {
   const market = brief.geoMarket || brief.geoCompany || '';
+  const Q = await localizedQueryParts(brief.researchLang, market);
   const product = brief.niche || brief.name || '';
   const niches = (brief.selectedNiche||'').split(',').map(s=>s.trim()).filter(Boolean).slice(0,3);
   const topics = niches.length ? niches : [product];
   const queries = [];
   for (const n of topics) {
     // Поиск по самому целевому запросу = фактическая выдача: кто реально по нему находится
-    queries.push(product+' для '+n);
-    queries.push('как выбрать '+product+' '+n+' '+market);
+    queries.push(product+' '+Q.forNiche+' '+n);
+    queries.push(Q.howToChoose+' '+product+' '+n+' '+market);
   }
   queries.push(product+' '+market);
-  queries.push(product+' '+market+' частотность запросов вордстат статистика');
-  queries.push(product+' '+market+' seo продвижение семантика запросы');
+  queries.push(product+' '+market+' '+Q.keywordStats);
+  queries.push(product+' '+market+' '+Q.seoSemantics);
   // perDomain=2 — для SEO важна ширина выдачи (разные домены), а не глубина одного сайта
   return gatherEvidence(queries, 12, 8, { depth:'advanced', raw:true, contentChars:1000, perDomain:2, maxItems:35 });
 }
@@ -1498,6 +1573,7 @@ function wordstatFullListBlock(frequencies, source, ideas) {
 // альтернативы уже известным конкурентам, «новый сервис»/стартап-формулировки.
 async function gatherCompetitorEvidence(brief) {
   const market = brief.geoMarket || brief.geoCompany || '';
+  const Q = await localizedQueryParts(brief.researchLang, market);
   const product = brief.niche || brief.name || '';
   const niche = brief.selectedNiche || '';
   const named = (brief.competitors||'').split(/[,;]/).map(s=>s.trim()).filter(Boolean).slice(0, 4);
@@ -1510,12 +1586,12 @@ async function gatherCompetitorEvidence(brief) {
     (niche || product)+' '+market+' новый сервис небольшая команда стартап',
   ];
   for (const c of named) {
-    queries.push(c+' отзывы цены тарифы');
-    queries.push('альтернатива '+c+' '+market+' дешевле небольшая компания');
+    queries.push(c+' '+Q.reviewsPrices);
+    queries.push(Q.alternativeCheap+' '+c+' '+market+' '+Q.cheaperSmall);
     // ТЗ-ИССЛЕДОВАНИЕ-ПОД-КОНТЕНТ.md п.5.6: цены/позиционирование — с сайта
     // САМОГО конкурента, не из статей-рейтингов. "-топ -рейтинг -обзор -сравнение"
     // отжимает типичные листикл-заголовки от выдачи по этому запросу.
-    queries.push(c+' официальный сайт цены тарифы -топ -рейтинг -обзор -сравнение');
+    queries.push(c+' '+Q.officialPrices+' -топ -рейтинг -обзор -сравнение');
   }
   return gatherEvidence(queries, 15, 4);
 }
@@ -1608,6 +1684,7 @@ function buildSystem(brief, lang) {
     if(k==='selectedNiche') return '- SELECTED NICHE (chosen at M1.2 stop-point): '+v;
     if(k==='nicheCandidates') return '- Niche candidates (from specialist): '+v;
     if(k==='regenNote') return ''; // не обычное поле брифа — отдельный CRITICAL-блок ниже (editorNote)
+    if(k==='researchLang') return ''; // служебное: язык для сборщиков поисковых запросов, в брифе не нужен
     return '- '+k+': '+v;
   }).filter(Boolean).join('\n');
   const nicheFilter = brief.selectedNiche
@@ -3577,7 +3654,10 @@ function App() {
       const mod = w.mod, wn = w.niche;
       if (failedNiches.has(wn)) continue; // предыдущий модуль этой ниши не выполнился
       // Бриф, сфокусированный на одной нише: фильтр ниш и запросы поиска сужаются до неё.
-      const Bn = wn ? { ...B, selectedNiche: wn } : { ...B };
+      // researchLang кладём в бриф, чтобы сборщики поисковых запросов знали язык
+      // исследования: до 31.08 все запросы были захардкожены по-русски, и для
+      // нерусских рынков поиск искал не то и не там (см. localizedQueryParts).
+      const Bn = { ...B, ...(wn ? { selectedNiche: wn } : {}), researchLang: lang };
 
       // Пауза перед M7 — владелица подтверждает/правит поисковые фразы ДО того,
       // как тратится платный вызов Wordstat/Google Ads (26.08.2026, её же
