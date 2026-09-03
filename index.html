@@ -643,6 +643,20 @@ async function callGoogleAds(phrase, market, lang, siteUrl) {
   } catch { return null; }
 }
 
+// Карта сайта: какие страницы уже опубликованы. null при любой неудаче —
+// вызывающий код считает это «карты нет» и работает как раньше.
+async function callSitemap(url) {
+  try {
+    const res = await authFetch('/api/sitemap', {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({url}),
+    });
+    if (!res.ok) return null;
+    const d = await res.json();
+    return Array.isArray(d.urls) && d.urls.length ? d : null;
+  } catch { return null; }
+}
+
 // M3 VoC — программная верификация цитат (ТЗ-M3-VOC.md, п.1). null при полном
 // отказе эндпоинта (не путать с «страница не открылась» — это per-item verified:false
 // внутри results, см. api/verify-quotes.js) — processM3Voc различает эти два случая.
@@ -2317,7 +2331,11 @@ H1, subheadline, bullet points, CTA text
 - Вместо выдуманной цифры используй качественную формулировку: «рост числа заявок», «больше лидов без роста бюджета».`;
 }
 
-function buildM7Prompt(brief, lang, prev, evidence, wordstatData) {
+// siteMaps — что УЖЕ опубликовано: у клиента и у конкурентов. Идея из открытой
+// библиотеки goose-skills: не начинать контент-план с чистого листа. Без этого
+// модуль спокойно предлагает тему, которая на сайте давно есть, и новая статья
+// начинает конкурировать со старой в выдаче — ровно то, чего просили избежать.
+function buildM7Prompt(brief, lang, prev, evidence, wordstatData, siteMaps) {
   const ctx = prev ? `\nCONTEXT:\n${prev.slice(0,1500)}\n` : '';
   // Реальная частотность (Yandex Wordstat ИЛИ Google Ads — источник зависит от
   // рынка, см. keywordSourceForMarket, REQ-025) — если API не настроен или
@@ -2343,7 +2361,16 @@ function buildM7Prompt(brief, lang, prev, evidence, wordstatData) {
       + seas.map(w=>w.phrase+':\n'+w.monthly.map(m=>'  '+m.date.slice(0,7)+': '+m.count).join('\n')).join('\n')
       + '\n\nЭто РЕАЛЬНЫЕ помесячные числа — опиши на их основе сезонность словами (например «пик в декабре-январе, спад летом» или «стабильно весь год», если колебания небольшие). Не выдумывай сезонность для фраз, которых нет в этом блоке.\n'
     : '';
-  return `${ctx}${evidenceSection(evidence)}${wordstatBlock}${seasonBlock}
+  const own = (siteMaps && siteMaps.own) || null;
+  const rivals = (siteMaps && siteMaps.competitors) || [];
+  const listUrls = us => us.slice(0, 120).join('\n');
+  const sitemapBlock = (own || rivals.length)
+    ? '\n═══════════════════════════════════════════════\nУЖЕ ОПУБЛИКОВАННЫЕ СТРАНИЦЫ (карты сайтов, прочитаны только что)\n═══════════════════════════════════════════════\n'
+      + (own ? 'НАШ САЙТ (' + own.origin + '), страниц: ' + own.urls.length + (own.truncated ? '+ (список обрезан)' : '') + '\n' + listUrls(own.urls) + '\n\n' : '')
+      + rivals.map(r => 'КОНКУРЕНТ (' + r.origin + '), страниц: ' + r.urls.length + (r.truncated ? '+ (обрезан)' : '') + '\n' + listUrls(r.urls)).join('\n\n')
+      + '\n\nЭто реальные адреса опубликованных страниц, не догадки. Тема страницы читается из адреса.\n'
+    : '';
+  return `${ctx}${evidenceSection(evidence)}${wordstatBlock}${seasonBlock}${sitemapBlock}
 Fill module M7 SEO blocks. ALL output in ${lang}.
 
 SEO-00 — Источники (ОБЯЗАТЕЛЬНЫЙ, идёт ПЕРВЫМ)
@@ -2376,7 +2403,7 @@ SEO-02 — Semantic Core:
 3. РАЗМЕТЬ ГРУППУ по частотности — это рабочая классификация SEO: ВЧ (высокочастотные — верхняя часть выгрузки по этой нише), СЧ (среднечастотные), НЧ (низкочастотные, длинный хвост). Границы определи САМ по фактическому распределению чисел в этой выгрузке, а не по универсальным порогам: в узкой B2B-нише 200 показов — это уже ВЧ, в массовой — НЧ. Нужны все три группы: по ВЧ пишут опорные статьи, по НЧ — точечные, и именно длинный хвост не даёт статьям конкурировать друг с другом.
 4. ОБЪЁМ: ориентир — около 30 кластеров, если материала хватает (нижняя граница осмысленного — 12). Заказчику нужен рабочий объём для контент-плана: по одному кластеру на статью, чтобы статьи не перекрывались по ключам. Таблица из 5-8 строк при сотнях фраз в выгрузке — недоработка. Группируй близкие формулировки в один кластер (в «Примеры запросов» перечисляй варианты), но не сливай в кучу разные намерения — два разных намерения это два кластера и две статьи.
 
-SEO-03 — Content Audit (только по сайтам, попавшим в evidence):
+SEO-03 — Content Audit (по сайтам из evidence И по картам сайтов конкурентов, если они есть в блоке УЖЕ ОПУБЛИКОВАННЫЕ СТРАНИЦЫ — карта показывает ВЕСЬ их контент, а не те несколько страниц, что попали в поиск):
 | Конкурент | Тип контента | Темы | Частота публикаций (или «не проверено») | Что работает | Как сделать лучше | [n] |
 
 SEO-04 — Site Structure (наша будущая структура — это проектирование, источники не нужны):
@@ -2388,6 +2415,8 @@ CRITICAL: ссылочные данные (доноры, беклинки) че�
 
 SEO-07 — SEO Content Plan:
 | Приоритет | Тип страницы | H1 | Кластер запросов | Объём (знаки) | Этап воронки | Ожидаемый трафик (пометь «прогноз, не замер») |
+ПРАВИЛО «НЕ ПОВТОРЯТЬСЯ» — если выше есть блок УЖЕ ОПУБЛИКОВАННЫЕ СТРАНИЦЫ с нашим сайтом: прежде чем предложить страницу, сверься с этим списком. Тема, которая там уже есть, в план НЕ идёт как новая. Вместо неё либо строка с пометкой «обновить существующую: <адрес>», либо другой кластер. Причина не формальная: две наши страницы под один кластер конкурируют между собой в выдаче, и обе проседают. Если нашего сайта в блоке нет — правило не применяется, пиши план с нуля.
+
 ПРАВИЛО H1: заголовки НЕ должны содержать выдуманных цифр и несуществующих кейсов. Запрещено «увеличил конверсию на 120% (кейсы клиентов)», «+250 заявок» и т.п. — таких замеров у нас нет. H1 строй вокруг запроса кластера («Умный AI-попап для интернет-магазина»), а не вокруг выдуманного результата. Число в H1 допустимо только с пометкой «(гипотеза)».
 
 ═══════════════════════════════════════════════
@@ -3437,7 +3466,7 @@ function App() {
   }, [unlocked]);
   const [proj, setProj] = React.useState(null);
 
-  const empty = { name:'', niche:'', geoCompany:'', geoMarket:'', format:'', audience:'', result:'', price:'', competitors:'', extra:'', currentRevenue:'', currentClients:'', currentAvgCheck:'', targetSegment:'', priceLayer:'', services:[], selectedServices:[], selectedNiche:'', nicheCandidates:'' };
+  const empty = { siteUrl:'', name:'', niche:'', geoCompany:'', geoMarket:'', format:'', audience:'', result:'', price:'', competitors:'', extra:'', currentRevenue:'', currentClients:'', currentAvgCheck:'', targetSegment:'', priceLayer:'', services:[], selectedServices:[], selectedNiche:'', nicheCandidates:'' };
   const [brief, setBrief] = React.useState(empty);
   const [lang, setLang] = React.useState('Russian');
   const [mods, setMods] = React.useState(['M1_2','M2']);
@@ -3510,6 +3539,9 @@ function App() {
     setParsing(true); setPMsg('⟳ Reading site pages…');
     try {
       const pages = await fetchSite(siteUrl.trim());
+      // Адрес сайта нужен потом в M7 (карта опубликованных страниц), а жил он
+      // только в состоянии формы и терялся сразу после разбора брифа.
+      setBrief(p => ({...p, siteUrl: siteUrl.trim()}));
       if (!pages.length) throw new Error('No readable content found. Fill manually.');
       const combined = pages.map(p=>'['+p.url+']\n'+p.text).join('\n\n---\n\n');
       setPMsg('⟳ Read '+pages.length+' page(s) — extracting brief…');
@@ -3755,7 +3787,17 @@ function App() {
           // по ним дополнительно собираются ключи (см. fetchKeywordFrequencyData).
           const compDomains = competitorDomainsFromM2(findDep('M2'));
           wordstatData = await fetchKeywordFrequencyData(Bn, confirmedSeedsRef.current[wn] || [], compDomains);
-          userPrompt = buildM7Prompt(Bn, lang, prevContent || '', evidence, wordstatData);
+          // Что уже опубликовано — у нас и у конкурентов. Бесплатно: sitemap.xml,
+          // без платных сервисов. Конкурентов берём не больше двух: карта у каждого
+          // до 300 адресов, больше не влезет в промпт с пользой.
+          const ownMap = Bn.siteUrl ? await callSitemap(Bn.siteUrl) : null;
+          const rivalMaps = [];
+          for (const d of (compDomains || []).slice(0, 2)) {
+            const m = await callSitemap(d);
+            if (m) rivalMaps.push(m);
+          }
+          userPrompt = buildM7Prompt(Bn, lang, prevContent || '', evidence, wordstatData,
+                                     { own: ownMap, competitors: rivalMaps });
         } else {
           // Контекст берём от стадии, на которой модуль СТРОИТСЯ (requires), в рамках своей ниши,
           // и целиком: без полного M3 модуль M4 не видит цитат VoC и вынужден их выдумывать.
