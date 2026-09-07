@@ -56,4 +56,29 @@ check('конкуренты ниши А', pkg.research_by_niche['Ниша А'].k
 check('конкуренты ниши Б', pkg.research_by_niche['Ниша Б'].key_data.competitors, [{ 'Название': 'Игрек', 'Сайт/URL': 'y.ru' }]);
 check('сирота отброшена', pkg.research_by_niche['Ниша А'].modules.M4, undefined);
 
+// Ловушка номеров блоков: «BLOCK 04» не должен цепляться за «BLOCK 04_0».
+// Именно на ней контент-машина полгода получала в AUDIENCE_SEGMENTS список
+// источников вместо сегментов — таблица источников в M1.2 стоит ПЕРВОЙ.
+var mods = { M1_2: { tables: {
+  'BLOCK 04_0 — Источники разведки': [{ 'URL': 'https://x.ru' }],
+  'BLOCK 04 — Target Audience Segments': [{ 'Сегмент': 'Владельцы магазинов' }],
+  'BLOCK 04_1 — Service Effectiveness': [{ 'Ниша': 'A' }]
+} } };
+check('BLOCK 04 берёт сегменты, а не источники', C.pickTable(mods, 'M1_2', 'BLOCK 04'),
+  [{ 'Сегмент': 'Владельцы магазинов' }]);
+check('BLOCK 04_0 берётся отдельно', C.pickTable(mods, 'M1_2', 'BLOCK 04_0'),
+  [{ 'URL': 'https://x.ru' }]);
+check('BLOCK 04_1 берётся отдельно', C.pickTable(mods, 'M1_2', 'BLOCK 04_1'),
+  [{ 'Ниша': 'A' }]);
+// Та же ловушка у буквенных подблоков
+var m2 = { M3: { tables: {
+  'BLOCK 07 — Voice of Customer': [{ 'Цитата': 'раз' }],
+  'BLOCK 07A — Raw language': [{ 'Цитата': 'два' }],
+  'BLOCK 07C — Альтернативы': [{ 'Альтернатива': 'ничего не делать' }]
+} } };
+check('BLOCK 07 не цепляет 07A и 07C', C.pickTable(m2, 'M3', 'BLOCK 07'),
+  [{ 'Цитата': 'раз' }]);
+check('BLOCK 07C берётся отдельно', C.pickTable(m2, 'M3', 'BLOCK 07C'),
+  [{ 'Альтернатива': 'ничего не делать' }]);
+
 console.log(failed === 0 ? '\nвсё сошлось' : '\nПРОВАЛОВ: ' + failed);
