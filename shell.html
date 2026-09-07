@@ -1,0 +1,558 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Платформа — оболочка</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap">
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.7/babel.min.js"></script>
+<script src="lib/auth.js"></script>
+<style>
+/* Значения из ДИЗАЙН-ТОКЕНЫ.md. Не править здесь по ходу дела: сначала правка
+   в документе и согласование, потом код. Светлая тема задана в голом :root,
+   тёмная переопределяет ТОЛЬКО токены — двумя блоками, потому что у темы три
+   состояния, а не два: явный выбор ставит атрибут, а системная не ставит
+   ничего, и тогда работает только prefers-color-scheme. */
+:root{
+  --bone:#F0EEE8; --paper:#F8F7F6; --raise:#FEFEFE;
+  --ink:#151412; --ink-2:#5A574F; --ink-3:#747168;
+  --line:#E0DED7; --line-2:#EEEDEA;
+  --clay:#0ABAB5; --clay-deep:#16A39F;
+  --go:#0E8A5F; --go-bg:#EAEDE7;
+  --maybe:#BE9722; --maybe-bg:#F3EEE6;
+  --no:#A6384E; --no-bg:#F1EAE7;
+  --sans:Montserrat,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  --serif:'Source Serif 4',Georgia,'Times New Roman',serif;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bone:#151411; --paper:#201F1A; --raise:#2A2823;
+    --ink:#ECEBE9; --ink-2:#BBB9B4; --ink-3:#918F87;
+    --line:#37352F; --line-2:#2B2924;
+    --clay:#A6D8D5; --clay-deep:#0ABAB5;
+    --go:#9EBDAD; --go-bg:#1C4631;
+    --maybe:#D7C3A0; --maybe-bg:#5F4C1C;
+    --no:#CAA3A8; --no-bg:#53242A;
+  }
+}
+:root[data-theme="dark"]{
+  --bone:#151411; --paper:#201F1A; --raise:#2A2823;
+  --ink:#ECEBE9; --ink-2:#BBB9B4; --ink-3:#918F87;
+  --line:#37352F; --line-2:#2B2924;
+  --clay:#A6D8D5; --clay-deep:#0ABAB5;
+  --go:#9EBDAD; --go-bg:#1C4631;
+  --maybe:#D7C3A0; --maybe-bg:#5F4C1C;
+  --no:#CAA3A8; --no-bg:#53242A;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bone);color:var(--ink);font-family:var(--sans);
+  font-size:14.5px;line-height:1.6;-webkit-font-smoothing:antialiased;
+  font-variant-numeric:tabular-nums}
+h1,h2,h3{margin:0;font-weight:600;text-wrap:balance}
+button{font:inherit;color:inherit;cursor:pointer}
+input,select{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--clay);outline-offset:2px}
+
+/* ── Каркас: меню фиксированной ширины, содержимое тянется во всю ширину окна.
+   Потолок 1500px, иначе на широком мониторе строки расползаются нечитаемо. */
+.app{display:flex;min-height:100vh}
+.side{width:264px;flex:0 0 264px;background:var(--paper);
+  border-right:1px solid var(--line);display:flex;flex-direction:column}
+.main{flex:1;min-width:0;display:flex;flex-direction:column}
+.wrap{width:100%;max-width:1500px;margin:0 auto;padding:32px 40px 64px}
+
+.brand{padding:20px 18px 16px;border-bottom:1px solid var(--line-2)}
+.brand b{display:block;font-size:15px;font-weight:600;letter-spacing:-.01em}
+.brand span{display:block;margin-top:3px;font-size:12px;color:var(--ink-3)}
+.brand .back{display:block;margin-top:12px;padding:0;border:0;background:none;
+  font-size:12.5px;color:var(--ink-2);transition:color .15s}
+.brand .back:hover{color:var(--clay)}
+
+.mods{padding:12px 10px;flex:1;overflow-y:auto}
+.grp{padding:14px 8px 6px;font-size:11px;font-weight:600;letter-spacing:.07em;
+  text-transform:uppercase;color:var(--ink-3)}
+.mod{position:relative;display:block;width:100%;text-align:left;
+  padding:8px 10px;margin-bottom:1px;border:0;border-radius:7px;background:none;
+  font-size:13.5px;color:var(--ink-2);transition:background .15s,color .15s}
+.mod:hover:not(:disabled){background:var(--bone);color:var(--ink)}
+.mod[aria-current="page"]{background:var(--raise);color:var(--ink);font-weight:500;
+  box-shadow:0 1px 2px rgba(0,0,0,.04)}
+.mod[aria-current="page"]::before{content:"";position:absolute;left:-10px;top:7px;
+  bottom:7px;width:3px;border-radius:0 3px 3px 0;background:var(--clay)}
+.mod:disabled{color:var(--ink-3);cursor:default;opacity:.65}
+.mod .cnt{float:right;min-width:18px;padding:0 5px;border-radius:9px;
+  background:var(--clay);color:#fff;font-size:11px;font-weight:500;text-align:center}
+.mod .lock{float:right;font-size:11px;font-weight:400;color:var(--ink-3)}
+
+.foot{padding:12px 14px;border-top:1px solid var(--line-2);
+  display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.tbtn{padding:4px 9px;border:1px solid var(--line);border-radius:6px;
+  background:var(--bone);color:var(--ink-2);font-size:12px}
+.tbtn[aria-pressed="true"]{background:var(--clay);border-color:var(--clay);color:#fff}
+
+/* ── Общее ── */
+.card{background:var(--paper);border:1px solid var(--line);border-radius:12px;
+  padding:22px 24px;margin-bottom:16px}
+.card h2{font-size:17px;margin-bottom:4px}
+.lede{color:var(--ink-2);font-size:13.5px;margin:0 0 18px}
+.hdr{margin-bottom:24px}
+.hdr h1{font-size:24px;letter-spacing:-.02em}
+.hdr p{margin:6px 0 0;color:var(--ink-2);font-size:14px}
+
+label{display:block;margin-bottom:14px}
+label .lab{display:block;margin-bottom:5px;font-size:12.5px;font-weight:500;color:var(--ink-2)}
+label .hint{display:block;margin-top:4px;font-size:12px;color:var(--ink-3)}
+input,select{width:100%;padding:9px 11px;border:1px solid var(--line);
+  border-radius:8px;background:var(--raise);font-size:14px}
+input:focus,select:focus{border-color:var(--clay);outline:none;
+  box-shadow:0 0 0 3px color-mix(in srgb,var(--clay) 18%,transparent)}
+
+.btn{padding:9px 18px;border:1px solid var(--line);border-radius:8px;
+  background:var(--raise);font-size:13.5px;font-weight:500;transition:.15s}
+.btn:hover:not(:disabled){border-color:var(--ink-3)}
+.btn-primary{background:var(--clay);border-color:var(--clay);color:#fff}
+.btn-primary:hover:not(:disabled){background:var(--clay-deep);border-color:var(--clay-deep)}
+.btn:disabled{opacity:.5;cursor:default}
+a.btn{display:inline-block;text-decoration:none}
+
+/* Верхняя полоса на внешних экранах: без неё выйти и сменить тему можно было
+   бы только внутри рынка — то есть человек, у которого ещё нет ни одного
+   клиента, оказался бы заперт. */
+.top{display:flex;align-items:center;gap:8px;padding:10px 40px;
+  border-bottom:1px solid var(--line);background:var(--paper)}
+.top .sp{flex:1}
+@media (max-width:980px){ .top{padding:10px 18px} }
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+
+.warn{display:flex;gap:10px;padding:12px 14px;border-radius:9px;
+  background:var(--maybe-bg);border:1px solid color-mix(in srgb,var(--maybe) 35%,transparent);
+  font-size:13px;line-height:1.55;margin-bottom:16px}
+.warn b{color:var(--maybe);flex:0 0 auto}
+
+/* ── Плитки клиентов и рынков ── */
+.tiles{display:grid;gap:12px;grid-template-columns:repeat(auto-fill,minmax(280px,1fr))}
+.tile{text-align:left;padding:18px 20px;border:1px solid var(--line);border-radius:12px;
+  background:var(--paper);transition:.15s}
+.tile:hover{border-color:var(--clay);transform:translateY(-1px)}
+.tile b{display:block;font-size:15px;font-weight:600;margin-bottom:3px}
+.tile span{display:block;font-size:12.5px;color:var(--ink-3)}
+.tile.add{border-style:dashed;color:var(--ink-2);display:flex;align-items:center;
+  justify-content:center;min-height:96px;font-size:13.5px}
+
+.chip{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:20px;
+  font-size:11.5px;font-weight:500}
+.chip-go{background:var(--go-bg);color:var(--go)}
+.chip-wait{background:var(--bone);color:var(--ink-3);border:1px solid var(--line)}
+
+.empty{padding:56px 24px;text-align:center;color:var(--ink-3);font-size:14px}
+.empty p{max-width:440px;margin:0 auto 18px;line-height:1.65}
+
+/* ── Вход ── */
+.login{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px}
+.login .card{width:100%;max-width:380px;margin:0}
+.err{color:var(--no);font-size:13px;margin:10px 0 0}
+
+/* ── До 980px меню уезжает наверх горизонтальной лентой ── */
+@media (max-width:980px){
+  .app{flex-direction:column}
+  .side{width:auto;flex:none;border-right:0;border-bottom:1px solid var(--line)}
+  .mods{display:flex;gap:4px;overflow-x:auto;padding:8px 10px}
+  .grp{display:none}
+  .mod{width:auto;white-space:nowrap;margin:0}
+  .mod[aria-current="page"]::before{display:none}
+  .wrap{padding:24px 18px 48px}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+<div id="root"></div>
+<script type="text/babel">
+const { useState, useEffect, useCallback } = React;
+const { signIn, refreshTokens, getRefreshToken, clearTokens } = window.CAAuth;
+
+// ─────────────────────────────────────────────────────────────────────────────
+// ХРАНИЛИЩЕ
+//
+// Пока localStorage. Таблиц clients/markets в базе ещё нет — их создание это
+// SQL, который запускает владелица, и отдельный шаг. Здесь нарочно ОДИН слой
+// со своими именами: когда таблицы появятся, меняется только он, а экраны
+// ниже не трогаются вообще.
+// ─────────────────────────────────────────────────────────────────────────────
+const KEY = 'ca_shell_v1';
+const store = {
+  read()  { try { return JSON.parse(localStorage.getItem(KEY) || '{"clients":[]}'); }
+            catch { return { clients: [] }; } },
+  write(d){ try { localStorage.setItem(KEY, JSON.stringify(d)); } catch {} },
+};
+const uid = () => Math.random().toString(36).slice(2, 10);
+
+// Список стран и языков — короткий и честный: то, с чем реально работаем.
+// Расширяется по мере надобности, а не «на всякий случай».
+const COUNTRIES = [
+  { code:'RU', name:'Россия',  langs:['Русский'] },
+  { code:'TR', name:'Турция',  langs:['Турецкий','Русский','Английский'] },
+  { code:'AE', name:'ОАЭ',     langs:['Английский','Арабский','Русский'] },
+  { code:'KZ', name:'Казахстан', langs:['Русский','Казахский'] },
+  { code:'US', name:'США',     langs:['Английский'] },
+  { code:'DE', name:'Германия', langs:['Немецкий','Английский'] },
+];
+
+// Оболочка знает СПИСОК МОДУЛЕЙ, но не знает, что у исследования внутри M1…M7.
+// Это требование свода: внутренняя структура меняется (M5 уже выведен из
+// автоцепочки), и если состав M-модулей протечёт сюда, каждое такое изменение
+// станет правкой общего кода.
+const MODULES = [
+  { id:'research', group:'Начало проекта', name:'Исследование ЦА', always:true },
+  { id:'content',  group:'Работа', name:'Контент-план' },
+  { id:'inbox',    group:'Работа', name:'Контент', count:0 },
+  { id:'landing',  group:'Работа', name:'Лендинг' },
+  { id:'brand',    group:'Настройки', name:'Бренд' },
+  { id:'voice',    group:'Настройки', name:'Голос' },
+  { id:'channels', group:'Настройки', name:'Площадки' },
+];
+const GROUPS = ['Начало проекта','Настройки','Работа'];
+
+// ─────────────────────────────────────────────────────────────────────────────
+function Login({ onIn }) {
+  const [email, setEmail] = useState('');
+  const [pw, setPw] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState('');
+  const go = async e => {
+    e.preventDefault();
+    setBusy(true); setErr('');
+    const ok = await signIn(email.trim(), pw).catch(() => false);
+    setBusy(false);
+    if (ok) onIn(); else setErr('Не подошли почта или пароль.');
+  };
+  return (
+    <div className="login">
+      <form className="card" onSubmit={go}>
+        <h2>Вход</h2>
+        <p className="lede">Тот же аккаунт, что и в инструменте исследования.</p>
+        <label>
+          <span className="lab">Почта</span>
+          <input type="email" value={email} onChange={e=>setEmail(e.target.value)}
+                 autoComplete="username" required />
+        </label>
+        <label>
+          <span className="lab">Пароль</span>
+          <input type="password" value={pw} onChange={e=>setPw(e.target.value)}
+                 autoComplete="current-password" required />
+        </label>
+        <button className="btn btn-primary" style={{width:'100%'}} disabled={busy}>
+          {busy ? 'Проверяю…' : 'Войти'}
+        </button>
+        {err && <p className="err">{err}</p>}
+      </form>
+    </div>
+  );
+}
+
+// ── Экран 1: клиенты ────────────────────────────────────────────────────────
+function Clients({ data, onOpen, onAdd }) {
+  const [adding, setAdding] = useState(false);
+  const [f, setF] = useState({ name:'', domain:'', what:'' });
+  const save = e => {
+    e.preventDefault();
+    onAdd({ id: uid(), ...f, markets: [] });
+    setF({ name:'', domain:'', what:'' }); setAdding(false);
+  };
+  if (adding) return (
+    <div className="wrap" style={{maxWidth:620}}>
+      <div className="hdr">
+        <h1>Новый клиент</h1>
+        <p>Бренд целиком: он общий для всех стран, в которых вы работаете.</p>
+      </div>
+      <form className="card" onSubmit={save}>
+        <label>
+          <span className="lab">Название бренда</span>
+          <input value={f.name} onChange={e=>setF({...f,name:e.target.value})} required autoFocus />
+        </label>
+        <label>
+          <span className="lab">Сайт</span>
+          <input value={f.domain} onChange={e=>setF({...f,domain:e.target.value})}
+                 placeholder="example.com" />
+        </label>
+        <label>
+          <span className="lab">Суть продукта</span>
+          <input value={f.what} onChange={e=>setF({...f,what:e.target.value})}
+                 placeholder="Что вы продаёте и кому" />
+          <span className="hint">Одной строкой. Подробности спросит исследование.</span>
+        </label>
+        <div className="row">
+          <button className="btn btn-primary" disabled={!f.name.trim()}>Создать</button>
+          <button type="button" className="btn" onClick={()=>setAdding(false)}>Отмена</button>
+        </div>
+      </form>
+    </div>
+  );
+  return (
+    <div className="wrap">
+      <div className="hdr">
+        <h1>Клиенты</h1>
+        <p>Бренд — верхний уровень. Внутри него страны, в которых вы работаете.</p>
+      </div>
+      {data.clients.length === 0 ? (
+        <div className="card empty">
+          <p>Здесь пока пусто. Начните с бренда — названия, сайта и одной строки
+             о том, что он продаёт.</p>
+          <button className="btn btn-primary" onClick={()=>setAdding(true)}>Создать клиента</button>
+        </div>
+      ) : (
+        <div className="tiles">
+          {data.clients.map(c => (
+            <button key={c.id} className="tile" onClick={()=>onOpen(c.id)}>
+              <b>{c.name}</b>
+              <span>{c.domain || 'без сайта'} · {c.markets.length
+                ? c.markets.length + ' ' + plural(c.markets.length,'рынок','рынка','рынков')
+                : 'рынков нет'}</span>
+            </button>
+          ))}
+          <button className="tile add" onClick={()=>setAdding(true)}>+ Ещё клиент</button>
+        </div>
+      )}
+    </div>
+  );
+}
+const plural = (n,a,b,c) => {
+  const d = n % 100, e = n % 10;
+  if (d > 10 && d < 20) return c;
+  if (e === 1) return a;
+  if (e >= 2 && e <= 4) return b;
+  return c;
+};
+
+// ── Экран 2: рынки клиента ──────────────────────────────────────────────────
+function Markets({ client, onOpen, onAdd, onBack }) {
+  const [adding, setAdding] = useState(false);
+  const [country, setCountry] = useState('RU');
+  const [lang, setLang] = useState('Русский');
+  const c = COUNTRIES.find(x => x.code === country);
+  const pickCountry = code => {
+    setCountry(code);
+    setLang(COUNTRIES.find(x => x.code === code).langs[0]);
+  };
+  const save = e => {
+    e.preventDefault();
+    onAdd({ id: uid(), country, countryName: c.name, lang, research: null });
+    setAdding(false);
+  };
+  if (adding) return (
+    <div className="wrap" style={{maxWidth:620}}>
+      <div className="hdr">
+        <h1>Новый рынок</h1>
+        <p>Рынок — это страна и язык вместе. Исследование делается для него.</p>
+      </div>
+      <form className="card" onSubmit={save}>
+        <label>
+          <span className="lab">Страна</span>
+          <select value={country} onChange={e=>pickCountry(e.target.value)}>
+            {COUNTRIES.map(x => <option key={x.code} value={x.code}>{x.name}</option>)}
+          </select>
+        </label>
+        <label>
+          <span className="lab">Язык аудитории</span>
+          <select value={lang} onChange={e=>setLang(e.target.value)}>
+            {c.langs.map(l => <option key={l} value={l}>{l}</option>)}
+          </select>
+          <span className="hint">Страна не отвечает на этот вопрос за вас: в ОАЭ
+            покупают и по-английски, и по-арабски, а в Турции есть русскоязычная
+            аудитория.</span>
+        </label>
+        {/* Требование свода: необратимость языка человек обязан увидеть В МОМЕНТ
+            выбора, а не в документации. Иначе он узнает об этом, когда
+            исследование уже оплачено, и это будет наша вина, а не его
+            невнимательность. */}
+        <div className="warn">
+          <b>Язык менять нельзя</b>
+          <span>Отзывы, цитаты и формулировки собираются на языке аудитории.
+            Другой язык — это другой рынок и другое исследование, за отдельные
+            деньги. Страну и язык после создания рынка не поменять.</span>
+        </div>
+        <div className="row">
+          <button className="btn btn-primary">Создать рынок</button>
+          <button type="button" className="btn" onClick={()=>setAdding(false)}>Отмена</button>
+        </div>
+      </form>
+    </div>
+  );
+  return (
+    <div className="wrap">
+      <div className="hdr">
+        <h1>{client.name}</h1>
+        <p>{client.what || 'Суть продукта не заполнена'}</p>
+      </div>
+      <button className="btn" style={{marginBottom:20}} onClick={onBack}>← Все клиенты</button>
+      {client.markets.length === 0 ? (
+        <div className="card empty">
+          <p>У бренда пока нет ни одного рынка. Рынок — это страна и язык:
+             с него начинается исследование.</p>
+          <button className="btn btn-primary" onClick={()=>setAdding(true)}>Добавить рынок</button>
+        </div>
+      ) : (
+        <div className="tiles">
+          {client.markets.map(m => (
+            <button key={m.id} className="tile" onClick={()=>onOpen(m.id)}>
+              <b>{m.countryName}</b>
+              <span style={{marginBottom:8}}>{m.lang}</span>
+              <span className={'chip ' + (m.research ? 'chip-go' : 'chip-wait')}>
+                {m.research ? 'исследование готово' : 'исследования ещё нет'}
+              </span>
+            </button>
+          ))}
+          <button className="tile add" onClick={()=>setAdding(true)}>+ Ещё рынок</button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Экран 3: рынок с боковым меню модулей ───────────────────────────────────
+function Market({ client, market, onBack, theme, setTheme, onOut }) {
+  const [tab, setTab] = useState('research');
+  const done = !!market.research;
+  return (
+    <div className="app">
+      <aside className="side">
+        <div className="brand">
+          <b>{client.name}</b>
+          <span>{market.countryName} · {market.lang}</span>
+          <button className="back" onClick={onBack}>← Все рынки</button>
+        </div>
+        <nav className="mods" aria-label="Модули">
+          {GROUPS.map(g => {
+            const items = MODULES.filter(m => m.group === g);
+            if (!items.length) return null;
+            return (
+              <React.Fragment key={g}>
+                <div className="grp">{g}</div>
+                {items.map(m => {
+                  const open = m.always || done;
+                  return (
+                    <button key={m.id} className="mod" disabled={!open}
+                      aria-current={tab === m.id ? 'page' : undefined}
+                      onClick={()=>open && setTab(m.id)}>
+                      {m.name}
+                      {!open && <span className="lock">нужно исследование</span>}
+                    </button>
+                  );
+                })}
+              </React.Fragment>
+            );
+          })}
+        </nav>
+        <div className="foot">
+          {[['light','Светлая'],['dark','Тёмная'],['system','Как в системе']].map(([v,l]) => (
+            <button key={v} className="tbtn" aria-pressed={theme === v}
+                    onClick={()=>setTheme(v)}>{l}</button>
+          ))}
+          <button className="tbtn" onClick={onOut}>Выйти</button>
+        </div>
+      </aside>
+      <div className="main">
+        <div className="wrap">
+          <Slot tab={tab} done={done} />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Место, куда встанут модули. Оболочка сама ничего не считает и не генерирует —
+// она только даёт модулю площадку и говорит, кто вошёл, какой клиент и рынок.
+function Slot({ tab, done }) {
+  const mod = MODULES.find(m => m.id === tab);
+  if (tab === 'research') return (
+    <>
+      <div className="hdr">
+        <h1>Исследование ЦА</h1>
+        <p>Первый модуль: он ни от чего не зависит и открыт всегда.</p>
+      </div>
+      <div className="card">
+        <h2>Сюда встанет нынешний инструмент</h2>
+        <p className="lede">Бриф, карта ниш, прогон модулей и сводный отчёт —
+          то, что сейчас живёт отдельной страницей.</p>
+        <a className="btn" href="index.html">Открыть его как есть →</a>
+      </div>
+      {!done && (
+        <div className="warn">
+          <b>Пока не пройдено</b>
+          <span>Остальные модули ждут исследования: без него им неоткуда взять
+            ни болей аудитории, ни её языка.</span>
+        </div>
+      )}
+    </>
+  );
+  return (
+    <>
+      <div className="hdr"><h1>{mod ? mod.name : ''}</h1></div>
+      <div className="card empty">
+        <p>Модуль ещё не подключён. Каркас на месте — начинка приедет следующим шагом.</p>
+      </div>
+    </>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+function App() {
+  const [ready, setReady] = useState(false);
+  const [inside, setInside] = useState(false);
+  const [data, setData] = useState(store.read);
+  const [clientId, setClientId] = useState(null);
+  const [marketId, setMarketId] = useState(null);
+  const [theme, setTheme] = useState(() => {
+    try { return localStorage.getItem('ca_theme') || 'system'; } catch { return 'system'; }
+  });
+
+  // Тема: 'system' НЕ ставит атрибут — тогда работает prefers-color-scheme.
+  useEffect(() => {
+    const r = document.documentElement;
+    if (theme === 'system') r.removeAttribute('data-theme');
+    else r.setAttribute('data-theme', theme);
+    try { localStorage.setItem('ca_theme', theme); } catch {}
+  }, [theme]);
+
+  // Токен Supabase живёт около часа. Refresh-токен переживает перезагрузку, и
+  // если он есть — молча продлеваем, чтобы не гонять человека через вход.
+  useEffect(() => {
+    if (!getRefreshToken()) { setReady(true); return; }
+    refreshTokens().then(ok => { setInside(ok); setReady(true); })
+                   .catch(() => setReady(true));
+  }, []);
+
+  const save = useCallback(d => { setData(d); store.write(d); }, []);
+  const client = data.clients.find(c => c.id === clientId) || null;
+  const market = client && client.markets.find(m => m.id === marketId) || null;
+
+  if (!ready) return null;
+  if (!inside) return <Login onIn={()=>setInside(true)} />;
+
+  const bar = (
+    <div className="top">
+      <div className="sp"></div>
+      {[['light','Светлая'],['dark','Тёмная'],['system','Как в системе']].map(([v,l]) => (
+        <button key={v} className="tbtn" aria-pressed={theme === v}
+                onClick={()=>setTheme(v)}>{l}</button>
+      ))}
+      <button className="tbtn" onClick={()=>{ clearTokens(); setInside(false); }}>Выйти</button>
+    </div>
+  );
+
+  if (market) return (
+    <Market client={client} market={market} theme={theme} setTheme={setTheme}
+      onBack={()=>setMarketId(null)}
+      onOut={()=>{ clearTokens(); setInside(false); }} />
+  );
+  if (client) return (
+    <>{bar}<Markets client={client} onBack={()=>setClientId(null)} onOpen={setMarketId}
+      onAdd={m => save({ ...data, clients: data.clients.map(c =>
+        c.id === clientId ? { ...c, markets: [...c.markets, m] } : c) })} /></>
+  );
+  return (
+    <>{bar}<Clients data={data} onOpen={setClientId}
+      onAdd={c => save({ ...data, clients: [...data.clients, c] })} /></>
+  );
+}
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
