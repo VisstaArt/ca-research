@@ -36,8 +36,11 @@ function fingerprint(s) {
 
 eval(rd(BASE + 'tools/babel.min.js'));
 
-var TARGETS = [{ src: 'shell.jsx', out: 'shell.js' },
-               { src: 'app.jsx',   out: 'app.js'   }];
+// html — страница, в которой надо проставить метку версии у <script src>.
+// Без метки браузер отдаёт из кэша вчерашний файл, и человек не видит правок:
+// владелица 08.09.2026 не нашла новый переключатель, хотя на сайте он уже был.
+var TARGETS = [{ src: 'shell.jsx', out: 'shell.js', html: 'shell.html' },
+               { src: 'app.jsx',   out: 'app.js',   html: 'index.html' }];
 
 var built = 0;
 TARGETS.forEach(function (t) {
@@ -50,7 +53,16 @@ TARGETS.forEach(function (t) {
            + '// Правки вносить в ' + t.src + ', затем: osascript -l JavaScript tools/build.js\n'
            + '// отпечаток-исходника: ' + fingerprint(src) + '\n';
   wr(BASE + t.out, head + code);
-  console.log('  ' + t.src + ' → ' + t.out + '  (' + Math.round(code.length / 1024) + ' КБ)');
+
+  // Метка версии в адресе скрипта. Меняется вместе с кодом, поэтому браузер
+  // обязан скачать новый файл, а не достать вчерашний из кэша.
+  var fp = fingerprint(src).slice(0, 8);
+  var page = rd(BASE + t.html);
+  var re = new RegExp('src="' + t.out.replace('.', '\\.') + '(\\?v=[0-9a-f]+)?"');
+  if (!re.test(page)) throw new Error('в ' + t.html + ' не найден <script src="' + t.out + '">');
+  wr(BASE + t.html, page.replace(re, 'src="' + t.out + '?v=' + fp + '"'));
+
+  console.log('  ' + t.src + ' → ' + t.out + '  (' + Math.round(code.length / 1024) + ' КБ, версия ' + fp + ')');
   built++;
 });
 console.log('собрано файлов: ' + built);
