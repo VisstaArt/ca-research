@@ -8,6 +8,7 @@
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <script src="https://unpkg.com/@babel/standalone@7.29.7/babel.min.js"></script>
 <script src="lib/auth.js"></script>
+<script src="lib/migrate.js"></script>
 <style>
 /* Значения из ДИЗАЙН-ТОКЕНЫ.md. Не править здесь по ходу дела: сначала правка
    в документе и согласование, потом код. Светлая тема задана в голом :root,
@@ -168,7 +169,8 @@ a.btn{display:inline-block;text-decoration:none}
 <div id="root"></div>
 <script type="text/babel">
 const { useState, useEffect, useCallback } = React;
-const { signIn, refreshTokens, getRefreshToken, clearTokens } = window.CAAuth;
+const { signIn, refreshTokens, getRefreshToken, clearTokens, authFetch } = window.CAAuth;
+const { buildShellData } = window.CAMigrate;
 
 // ─────────────────────────────────────────────────────────────────────────────
 // ХРАНИЛИЩЕ
@@ -179,10 +181,41 @@ const { signIn, refreshTokens, getRefreshToken, clearTokens } = window.CAAuth;
 // ниже не трогаются вообще.
 // ─────────────────────────────────────────────────────────────────────────────
 const KEY = 'ca_shell_v1';
+const OLD_KEY = 'ca_v6';   // проекты нынешнего инструмента, ТОЛЬКО ЧИТАЕМ
 const store = {
   read()  { try { return JSON.parse(localStorage.getItem(KEY) || '{"clients":[]}'); }
             catch { return { clients: [] }; } },
   write(d){ try { localStorage.setItem(KEY, JSON.stringify(d)); } catch {} },
+};
+
+// Проекты инструмента берём ИЗ ДВУХ мест и объединяем по id.
+//
+// В браузере (ca_v6) они появляются мгновенно и работают без сети. В базе они
+// полные и не привязаны к одной машине: если владелица откроет оболочку с
+// другого компьютера, localStorage там пуст, и без базы она снова увидела бы
+// пустоту. Старый ключ только читаем и никогда не переписываем — инструмент
+// работает и должен продолжать работать, что бы ни делала оболочка.
+const readLocalProjects = () => {
+  try { const l = JSON.parse(localStorage.getItem(OLD_KEY) || '[]');
+        return Array.isArray(l) ? l : []; } catch { return []; }
+};
+const readDbProjects = async () => {
+  try {
+    const r = await authFetch('/api/projects', { headers: { 'Content-Type':'application/json' } });
+    if (!r.ok) return [];
+    const d = await r.json();
+    if (!Array.isArray(d.projects)) return [];
+    return d.projects.map(row => ({ id: row.id, brief: row.brief || {},
+      lang: row.lang || 'Russian', results: row.results || [] }));
+  } catch { return []; }
+};
+const mergeById = (a, b) => {
+  const out = [], seen = {};
+  for (const r of [...a, ...b]) {
+    if (!r || !r.id || seen[r.id]) continue;
+    seen[r.id] = 1; out.push(r);
+  }
+  return out;
 };
 const uid = () => Math.random().toString(36).slice(2, 10);
 
@@ -250,7 +283,7 @@ function Login({ onIn }) {
 }
 
 // ── Экран 1: клиенты ────────────────────────────────────────────────────────
-function Clients({ data, onOpen, onAdd }) {
+function Clients({ data, onOpen, onAdd, importing }) {
   const [adding, setAdding] = useState(false);
   const [f, setF] = useState({ name:'', domain:'', what:'' });
   const save = e => {
@@ -295,8 +328,12 @@ function Clients({ data, onOpen, onAdd }) {
       </div>
       {data.clients.length === 0 ? (
         <div className="card empty">
-          <p>Здесь пока пусто. Начните с бренда — названия, сайта и одной строки
-             о том, что он продаёт.</p>
+          {importing ? (
+            <p>Ищу ваши проекты в инструменте и в базе…</p>
+          ) : (
+            <p>Здесь пока пусто. Начните с бренда — названия, сайта и одной строки
+               о том, что он продаёт.</p>
+          )}
           <button className="btn btn-primary" onClick={()=>setAdding(true)}>Создать клиента</button>
         </div>
       ) : (
@@ -304,7 +341,7 @@ function Clients({ data, onOpen, onAdd }) {
           {data.clients.map(c => (
             <button key={c.id} className="tile" onClick={()=>onOpen(c.id)}>
               <b>{c.name}</b>
-              <span>{c.domain || 'без сайта'} · {c.markets.length
+              <span>{c.fromOld ? 'из инструмента · ' : ''}{c.domain || 'без сайта'} · {c.markets.length
                 ? c.markets.length + ' ' + plural(c.markets.length,'рынок','рынка','рынков')
                 : 'рынков нет'}</span>
             </button>
@@ -395,7 +432,9 @@ function Markets({ client, onOpen, onAdd, onBack }) {
           {client.markets.map(m => (
             <button key={m.id} className="tile" onClick={()=>onOpen(m.id)}>
               <b>{m.countryName}</b>
-              <span style={{marginBottom:8}}>{m.lang}</span>
+              <span style={{marginBottom:8}}>{m.lang}
+                {m.projectIds && m.projectIds.length > 1
+                  ? ' · ' + m.projectIds.length + ' прогона в инструменте' : ''}</span>
               <span className={'chip ' + (m.research ? 'chip-go' : 'chip-wait')}>
                 {m.research ? 'исследование готово' : 'исследования ещё нет'}
               </span>
@@ -521,6 +560,24 @@ function App() {
                    .catch(() => setReady(true));
   }, []);
 
+  // Перенос проектов инструмента. Идёт ОДИН раз — пока у оболочки нет ни одного
+  // клиента. Дальше она живёт своей жизнью, иначе перенос затирал бы то, что
+  // человек здесь уже поправил.
+  const [importing, setImporting] = useState(false);
+  useEffect(() => {
+    if (!inside || data.clients.length) return;
+    setImporting(true);
+    const local = readLocalProjects();
+    // Локальные показываем сразу, не дожидаясь сети: если сеть медленная или
+    // база недоступна, человек всё равно видит свои проекты, а не пустоту.
+    if (local.length) save(buildShellData(local));
+    readDbProjects().then(db => {
+      const all = mergeById(local, db);
+      if (all.length) save(buildShellData(all));
+      setImporting(false);
+    }).catch(() => setImporting(false));
+  }, [inside]);
+
   const save = useCallback(d => { setData(d); store.write(d); }, []);
   const client = data.clients.find(c => c.id === clientId) || null;
   const market = client && client.markets.find(m => m.id === marketId) || null;
@@ -529,6 +586,10 @@ function App() {
   if (!inside) return <Login onIn={()=>setInside(true)} />;
 
   const bar = (
+    <>
+    {importing && <div className="top" style={{justifyContent:'center',color:'var(--ink-3)',fontSize:12.5}}>
+      Переношу проекты из инструмента…
+    </div>}
     <div className="top">
       <div className="sp"></div>
       {[['light','Светлая'],['dark','Тёмная'],['system','Как в системе']].map(([v,l]) => (
@@ -537,6 +598,7 @@ function App() {
       ))}
       <button className="tbtn" onClick={()=>{ clearTokens(); setInside(false); }}>Выйти</button>
     </div>
+    </>
   );
 
   if (market) return (
@@ -550,7 +612,7 @@ function App() {
         c.id === clientId ? { ...c, markets: [...c.markets, m] } : c) })} /></>
   );
   return (
-    <>{bar}<Clients data={data} onOpen={setClientId}
+    <>{bar}<Clients data={data} onOpen={setClientId} importing={importing}
       onAdd={c => save({ ...data, clients: [...data.clients, c] })} /></>
   );
 }
