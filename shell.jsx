@@ -232,8 +232,9 @@ function Markets({ client, onOpen, onAdd, onBack }) {
             исследование уже оплачено, и это будет наша вина, а не его
             невнимательность. */}
         <div className="warn">
-          <b>Язык менять нельзя</b>
-          <span>Отзывы, цитаты и формулировки собираются на языке аудитории.
+          <span className="rule"></span>
+          <span><b>Язык менять нельзя</b>
+            Отзывы, цитаты и формулировки собираются на языке аудитории.
             Другой язык — это другой рынок и другое исследование, за отдельные
             деньги. Страну и язык после создания рынка не поменять.</span>
         </div>
@@ -266,6 +267,7 @@ function Markets({ client, onOpen, onAdd, onBack }) {
                 {m.projectIds && m.projectIds.length > 1
                   ? ' · ' + m.projectIds.length + ' прогона в инструменте' : ''}</span>
               <span className={'chip ' + (m.research ? 'chip-go' : 'chip-wait')}>
+                <span className="dot"></span>
                 {m.research ? 'исследование готово' : 'исследования ещё нет'}
               </span>
             </button>
@@ -278,7 +280,7 @@ function Markets({ client, onOpen, onAdd, onBack }) {
 }
 
 // ── Экран 3: рынок с боковым меню модулей ───────────────────────────────────
-function Market({ client, market, onBack, theme, setTheme, onOut }) {
+function Market({ client, market, onBack, theme, setTheme, pal, setPal, onOut }) {
   const [tab, setTab] = useState('research');
   const done = !!market.research;
   return (
@@ -312,6 +314,10 @@ function Market({ client, market, onBack, theme, setTheme, onOut }) {
           })}
         </nav>
         <div className="foot">
+          {[['tiffany','Тиффани'],['coconut','Кокос']].map(([v,l]) => (
+            <button key={v} className="tbtn" aria-pressed={pal === v}
+                    onClick={()=>setPal(v)}>{l}</button>
+          ))}
           {[['light','Светлая'],['dark','Тёмная'],['system','Как в системе']].map(([v,l]) => (
             <button key={v} className="tbtn" aria-pressed={theme === v}
                     onClick={()=>setTheme(v)}>{l}</button>
@@ -346,8 +352,9 @@ function Slot({ tab, done }) {
       </div>
       {!done && (
         <div className="warn">
-          <b>Пока не пройдено</b>
-          <span>Остальные модули ждут исследования: без него им неоткуда взять
+          <span className="rule"></span>
+          <span><b>Пока не пройдено</b>
+            Остальные модули ждут исследования: без него им неоткуда взять
             ни болей аудитории, ни её языка.</span>
         </div>
       )}
@@ -373,6 +380,17 @@ function App() {
   const [theme, setTheme] = useState(() => {
     try { return localStorage.getItem('ca_theme') || 'system'; } catch { return 'system'; }
   });
+  // ВРЕМЕННО, пока владелица выбирает палитру. После выбора победившая
+  // переезжает в :root, а это состояние и кнопки удаляются.
+  const [pal, setPal] = useState(() => {
+    try { return localStorage.getItem('ca_pal') || 'tiffany'; } catch { return 'tiffany'; }
+  });
+  useEffect(() => {
+    const r = document.documentElement;
+    if (pal === 'tiffany') r.removeAttribute('data-pal');
+    else r.setAttribute('data-pal', pal);
+    try { localStorage.setItem('ca_pal', pal); } catch {}
+  }, [pal]);
 
   // Тема: 'system' НЕ ставит атрибут — тогда работает prefers-color-scheme.
   useEffect(() => {
@@ -422,6 +440,10 @@ function App() {
     </div>}
     <div className="top">
       <div className="sp"></div>
+      {[['tiffany','Тиффани'],['coconut','Кокос']].map(([v,l]) => (
+        <button key={v} className="tbtn" aria-pressed={pal === v}
+                onClick={()=>setPal(v)}>{l}</button>
+      ))}
       {[['light','Светлая'],['dark','Тёмная'],['system','Как в системе']].map(([v,l]) => (
         <button key={v} className="tbtn" aria-pressed={theme === v}
                 onClick={()=>setTheme(v)}>{l}</button>
@@ -433,6 +455,7 @@ function App() {
 
   if (market) return (
     <Market client={client} market={market} theme={theme} setTheme={setTheme}
+      pal={pal} setPal={setPal}
       onBack={()=>setMarketId(null)}
       onOut={()=>{ clearTokens(); setInside(false); }} />
   );

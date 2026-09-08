@@ -1,6 +1,6 @@
 // СОБРАНО АВТОМАТИЧЕСКИ из shell.jsx — не править руками.
 // Правки вносить в shell.jsx, затем: osascript -l JavaScript tools/build.js
-// отпечаток-исходника: a233d1e1a5953bc5
+// отпечаток-исходника: 0bbaadc1e6234fc7
 const {
   useState,
   useEffect,
@@ -368,7 +368,9 @@ function Markets({
     className: "hint"
   }, "\u0421\u0442\u0440\u0430\u043D\u0430 \u043D\u0435 \u043E\u0442\u0432\u0435\u0447\u0430\u0435\u0442 \u043D\u0430 \u044D\u0442\u043E\u0442 \u0432\u043E\u043F\u0440\u043E\u0441 \u0437\u0430 \u0432\u0430\u0441: \u0432 \u041E\u0410\u042D \u043F\u043E\u043A\u0443\u043F\u0430\u044E\u0442 \u0438 \u043F\u043E-\u0430\u043D\u0433\u043B\u0438\u0439\u0441\u043A\u0438, \u0438 \u043F\u043E-\u0430\u0440\u0430\u0431\u0441\u043A\u0438, \u0430 \u0432 \u0422\u0443\u0440\u0446\u0438\u0438 \u0435\u0441\u0442\u044C \u0440\u0443\u0441\u0441\u043A\u043E\u044F\u0437\u044B\u0447\u043D\u0430\u044F \u0430\u0443\u0434\u0438\u0442\u043E\u0440\u0438\u044F.")), /*#__PURE__*/React.createElement("div", {
     className: "warn"
-  }, /*#__PURE__*/React.createElement("b", null, "\u042F\u0437\u044B\u043A \u043C\u0435\u043D\u044F\u0442\u044C \u043D\u0435\u043B\u044C\u0437\u044F"), /*#__PURE__*/React.createElement("span", null, "\u041E\u0442\u0437\u044B\u0432\u044B, \u0446\u0438\u0442\u0430\u0442\u044B \u0438 \u0444\u043E\u0440\u043C\u0443\u043B\u0438\u0440\u043E\u0432\u043A\u0438 \u0441\u043E\u0431\u0438\u0440\u0430\u044E\u0442\u0441\u044F \u043D\u0430 \u044F\u0437\u044B\u043A\u0435 \u0430\u0443\u0434\u0438\u0442\u043E\u0440\u0438\u0438. \u0414\u0440\u0443\u0433\u043E\u0439 \u044F\u0437\u044B\u043A \u2014 \u044D\u0442\u043E \u0434\u0440\u0443\u0433\u043E\u0439 \u0440\u044B\u043D\u043E\u043A \u0438 \u0434\u0440\u0443\u0433\u043E\u0435 \u0438\u0441\u0441\u043B\u0435\u0434\u043E\u0432\u0430\u043D\u0438\u0435, \u0437\u0430 \u043E\u0442\u0434\u0435\u043B\u044C\u043D\u044B\u0435 \u0434\u0435\u043D\u044C\u0433\u0438. \u0421\u0442\u0440\u0430\u043D\u0443 \u0438 \u044F\u0437\u044B\u043A \u043F\u043E\u0441\u043B\u0435 \u0441\u043E\u0437\u0434\u0430\u043D\u0438\u044F \u0440\u044B\u043D\u043A\u0430 \u043D\u0435 \u043F\u043E\u043C\u0435\u043D\u044F\u0442\u044C.")), /*#__PURE__*/React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "rule"
+  }), /*#__PURE__*/React.createElement("span", null, /*#__PURE__*/React.createElement("b", null, "\u042F\u0437\u044B\u043A \u043C\u0435\u043D\u044F\u0442\u044C \u043D\u0435\u043B\u044C\u0437\u044F"), "\u041E\u0442\u0437\u044B\u0432\u044B, \u0446\u0438\u0442\u0430\u0442\u044B \u0438 \u0444\u043E\u0440\u043C\u0443\u043B\u0438\u0440\u043E\u0432\u043A\u0438 \u0441\u043E\u0431\u0438\u0440\u0430\u044E\u0442\u0441\u044F \u043D\u0430 \u044F\u0437\u044B\u043A\u0435 \u0430\u0443\u0434\u0438\u0442\u043E\u0440\u0438\u0438. \u0414\u0440\u0443\u0433\u043E\u0439 \u044F\u0437\u044B\u043A \u2014 \u044D\u0442\u043E \u0434\u0440\u0443\u0433\u043E\u0439 \u0440\u044B\u043D\u043E\u043A \u0438 \u0434\u0440\u0443\u0433\u043E\u0435 \u0438\u0441\u0441\u043B\u0435\u0434\u043E\u0432\u0430\u043D\u0438\u0435, \u0437\u0430 \u043E\u0442\u0434\u0435\u043B\u044C\u043D\u044B\u0435 \u0434\u0435\u043D\u044C\u0433\u0438. \u0421\u0442\u0440\u0430\u043D\u0443 \u0438 \u044F\u0437\u044B\u043A \u043F\u043E\u0441\u043B\u0435 \u0441\u043E\u0437\u0434\u0430\u043D\u0438\u044F \u0440\u044B\u043D\u043A\u0430 \u043D\u0435 \u043F\u043E\u043C\u0435\u043D\u044F\u0442\u044C.")), /*#__PURE__*/React.createElement("div", {
     className: "row"
   }, /*#__PURE__*/React.createElement("button", {
     className: "btn btn-primary"
@@ -404,7 +406,9 @@ function Markets({
     }
   }, m.lang, m.projectIds && m.projectIds.length > 1 ? ' · ' + m.projectIds.length + ' прогона в инструменте' : ''), /*#__PURE__*/React.createElement("span", {
     className: 'chip ' + (m.research ? 'chip-go' : 'chip-wait')
-  }, m.research ? 'исследование готово' : 'исследования ещё нет'))), /*#__PURE__*/React.createElement("button", {
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "dot"
+  }), m.research ? 'исследование готово' : 'исследования ещё нет'))), /*#__PURE__*/React.createElement("button", {
     className: "tile add",
     onClick: () => setAdding(true)
   }, "+ \u0415\u0449\u0451 \u0440\u044B\u043D\u043E\u043A")));
@@ -417,6 +421,8 @@ function Market({
   onBack,
   theme,
   setTheme,
+  pal,
+  setPal,
   onOut
 }) {
   const [tab, setTab] = useState('research');
@@ -454,7 +460,12 @@ function Market({
     }));
   })), /*#__PURE__*/React.createElement("div", {
     className: "foot"
-  }, [['light', 'Светлая'], ['dark', 'Тёмная'], ['system', 'Как в системе']].map(([v, l]) => /*#__PURE__*/React.createElement("button", {
+  }, [['tiffany', 'Тиффани'], ['coconut', 'Кокос']].map(([v, l]) => /*#__PURE__*/React.createElement("button", {
+    key: v,
+    className: "tbtn",
+    "aria-pressed": pal === v,
+    onClick: () => setPal(v)
+  }, l)), [['light', 'Светлая'], ['dark', 'Тёмная'], ['system', 'Как в системе']].map(([v, l]) => /*#__PURE__*/React.createElement("button", {
     key: v,
     className: "tbtn",
     "aria-pressed": theme === v,
@@ -490,7 +501,9 @@ function Slot({
     href: "index.html"
   }, "\u041E\u0442\u043A\u0440\u044B\u0442\u044C \u0435\u0433\u043E \u043A\u0430\u043A \u0435\u0441\u0442\u044C \u2192")), !done && /*#__PURE__*/React.createElement("div", {
     className: "warn"
-  }, /*#__PURE__*/React.createElement("b", null, "\u041F\u043E\u043A\u0430 \u043D\u0435 \u043F\u0440\u043E\u0439\u0434\u0435\u043D\u043E"), /*#__PURE__*/React.createElement("span", null, "\u041E\u0441\u0442\u0430\u043B\u044C\u043D\u044B\u0435 \u043C\u043E\u0434\u0443\u043B\u0438 \u0436\u0434\u0443\u0442 \u0438\u0441\u0441\u043B\u0435\u0434\u043E\u0432\u0430\u043D\u0438\u044F: \u0431\u0435\u0437 \u043D\u0435\u0433\u043E \u0438\u043C \u043D\u0435\u043E\u0442\u043A\u0443\u0434\u0430 \u0432\u0437\u044F\u0442\u044C \u043D\u0438 \u0431\u043E\u043B\u0435\u0439 \u0430\u0443\u0434\u0438\u0442\u043E\u0440\u0438\u0438, \u043D\u0438 \u0435\u0451 \u044F\u0437\u044B\u043A\u0430.")));
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "rule"
+  }), /*#__PURE__*/React.createElement("span", null, /*#__PURE__*/React.createElement("b", null, "\u041F\u043E\u043A\u0430 \u043D\u0435 \u043F\u0440\u043E\u0439\u0434\u0435\u043D\u043E"), "\u041E\u0441\u0442\u0430\u043B\u044C\u043D\u044B\u0435 \u043C\u043E\u0434\u0443\u043B\u0438 \u0436\u0434\u0443\u0442 \u0438\u0441\u0441\u043B\u0435\u0434\u043E\u0432\u0430\u043D\u0438\u044F: \u0431\u0435\u0437 \u043D\u0435\u0433\u043E \u0438\u043C \u043D\u0435\u043E\u0442\u043A\u0443\u0434\u0430 \u0432\u0437\u044F\u0442\u044C \u043D\u0438 \u0431\u043E\u043B\u0435\u0439 \u0430\u0443\u0434\u0438\u0442\u043E\u0440\u0438\u0438, \u043D\u0438 \u0435\u0451 \u044F\u0437\u044B\u043A\u0430.")));
   return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
     className: "hdr"
   }, /*#__PURE__*/React.createElement("h1", null, mod ? mod.name : '')), /*#__PURE__*/React.createElement("div", {
@@ -512,6 +525,22 @@ function App() {
       return 'system';
     }
   });
+  // ВРЕМЕННО, пока владелица выбирает палитру. После выбора победившая
+  // переезжает в :root, а это состояние и кнопки удаляются.
+  const [pal, setPal] = useState(() => {
+    try {
+      return localStorage.getItem('ca_pal') || 'tiffany';
+    } catch {
+      return 'tiffany';
+    }
+  });
+  useEffect(() => {
+    const r = document.documentElement;
+    if (pal === 'tiffany') r.removeAttribute('data-pal');else r.setAttribute('data-pal', pal);
+    try {
+      localStorage.setItem('ca_pal', pal);
+    } catch {}
+  }, [pal]);
 
   // Тема: 'system' НЕ ставит атрибут — тогда работает prefers-color-scheme.
   useEffect(() => {
@@ -573,7 +602,12 @@ function App() {
     className: "top"
   }, /*#__PURE__*/React.createElement("div", {
     className: "sp"
-  }), [['light', 'Светлая'], ['dark', 'Тёмная'], ['system', 'Как в системе']].map(([v, l]) => /*#__PURE__*/React.createElement("button", {
+  }), [['tiffany', 'Тиффани'], ['coconut', 'Кокос']].map(([v, l]) => /*#__PURE__*/React.createElement("button", {
+    key: v,
+    className: "tbtn",
+    "aria-pressed": pal === v,
+    onClick: () => setPal(v)
+  }, l)), [['light', 'Светлая'], ['dark', 'Тёмная'], ['system', 'Как в системе']].map(([v, l]) => /*#__PURE__*/React.createElement("button", {
     key: v,
     className: "tbtn",
     "aria-pressed": theme === v,
@@ -590,6 +624,8 @@ function App() {
     market: market,
     theme: theme,
     setTheme: setTheme,
+    pal: pal,
+    setPal: setPal,
     onBack: () => setMarketId(null),
     onOut: () => {
       clearTokens();
