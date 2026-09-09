@@ -9,213 +9,225 @@
 <script src="lib/auth.js?v=19b5c3b1"></script>
 <script src="lib/migrate.js?v=38b613fb"></script>
 <style>
-/* Значения из ДИЗАЙН-ТОКЕНЫ.md. Не править здесь по ходу дела: сначала правка
-   в документе и согласование, потом код. Светлая тема задана в голом :root,
-   тёмная переопределяет ТОЛЬКО токены — двумя блоками, потому что у темы три
-   состояния, а не два: явный выбор ставит атрибут, а системная не ставит
-   ничего, и тогда работает только prefers-color-scheme. */
+/* ── Оформление платформы ────────────────────────────────────────────────────
+   Перенесено из макета, согласованного с владелицей 09.09.2026.
+   Разбор референса ZIXO и все замеры — в истории того макета; здесь только
+   итог. Ключевые решения, которые нельзя менять по ходу, не обсудив:
+
+   1. ФОН ГЛУБЖЕ КАРТОЧЕК. Это и делает стекло видимым. В референсе отношение
+      светлот фона к карточке 1.48; здесь 1.03–1.65 по зонам картинки. Если
+      фон осветлить — карточки растворятся, мы это проходили.
+   2. ПОЧТИ ВЕСЬ ЭКРАН БЕЗ ЦВЕТА. В рабочей области референса 99.5% пикселей
+      чёрно-белые. Цвет — по причине, не для красоты.
+   3. ТРИ РОЛИ ЦВЕТА. Бирюза #06BDBD (цвет логотипа) — заливкой: главная
+      кнопка, активный раздел, метка. Она же углублённая — акцентным текстом.
+      Фиолетовый и серый — только статусы. Больше цвета нет нигде.
+   4. БИРЮЗА НИКОГДА НЕ ТЕКСТ в чистом виде: контраст 2.21 при норме 4.5.
+   5. Шрифт один на весь интерфейс. Антиква — только для цитат.            */
 :root{
-  --bone:#F0EEE8; --paper:#F8F7F6; --raise:#FEFEFE;
-  --ink:#151412; --ink-2:#5A574F; --ink-3:#747168;
-  --line:#E0DED7; --line-2:#EEEDEA;
-  --clay:#0ABAB5; --clay-deep:#33CEC8;
-  --go:#0E8A5F; --go-bg:#EAEDE7;
-  --maybe:#BE9722; --maybe-bg:#F3EEE6;
-  --no:#A6384E; --no-bg:#F1EAE7;
+  --mist-1:#F9F7F1; --mist-2:#CAC5BA;
+  --card:#FBF9F2cc; --card-solid:#FBF9F2; --raise:#FEFEFE;
+  --ink:#171512; --ink-2:#6B6862; --ink-3:#63615B;
+  --line:rgba(23,21,18,.09); --line-2:rgba(23,21,18,.05);
+  --hi:rgba(255,255,255,.55);
+  --mid:#06BDBD;          /* фирменный — заливкой */
+  --acc-ink:#06BDBD;      /* он же в тексте */
+  --go:#06BDBD; --maybe:#4D66F7; --no:#6E6C66;
   --sans:Montserrat,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
   --serif:'Source Serif 4',Georgia,'Times New Roman',serif;
+  --bgimg:url("data:image/jpeg;base64,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qpFjM1kk0MzQzNDM1IixQAEoiwASkiwSiKMtQQAWKIESiLAAACLAAAAFSiKIAACLAAESiAAiiAiiAiiAiwSiCkogIsAAPbFJRFgAIAABAACWAAAAAEUSgAKRRKAAAACy1q4ox1ic50i4upDWbQyahEiFiBIWBCxlRm6iwABKRRlYgACUQEUQCUsCARYAAARRFEURRAAoEWAAEURYAAkWACUQCURRJRAASURZSUQEWAHtiwAFAiwiiKIIAiwAAAIKgqCpQABYKAtMtKy2MrCpDVwNsjbGkqKRIUVKMtDE6w5TpI5tQksIIEKhagoRLTLRcNQgEsQBKIACASlgQACLAAoiiAASiAABUoiwAASiLAESiASiAASiAiwSiASykogAPapZFEAACgRRJqEUQQlEUQCUSgKRRKpFUshpkVlFQAFEtCSFSlJVuaWKREbZtSaGbJGrgbmQlGJ0hzbhhUsABUqEtVABJpGZsYahlRARYAqUkURRFEURRAAQACURYAAAsURYAARYAiURYARYAARYJRJRFElElVAe4NRKIsiLAAAFAAgAIogAAgAAAAACUCCpQQsgWUFEQWDRC51C3GhNZKyLLTDWSEKgqQsCKjKiWFAAqCoSwUAAQAQQBAASwABYEAiwAAASiLAAFAiwAAiwABIsAEogAIsEogEsEogr2xqAAJRFkRRFgACgRRFglEURRFgEAAQABRKhYgAAKLkWIVBoE1kFydM52TNGahu86azqnObyQEAERYARRFigAAJYVAIVCAJYAAEAKBAgAEURYAAAARRFgAlLFgAlEWACUkWACUQCUQCWCWAHtDcAAAAAiiLIiiKIFAAiwqBLTKiKIqIqosBIAgAAAAIAg1c6IQqCag1nUIgAWDd50ueg5TeSCIKCAoIAAixQEoijKkgIogAIogAUCKSAAAASiKIAAACLABKWKIBKIogSKIBKIogIsIsAPYGpUoFAAAAAAJRFGWkZahFEURRFEUslEBFgERYJRFEAAgJYAXWaJYCFgXfOibwSwWAA1kdZjRM9Ycp0wQQFAAABAEUsABJoZUSUkURYARRAAAqURSRYAAAJRFEWACURRFgCxRFglEWAJFEAlEWCUQHrWNSgWCpQKAAAAAAAAAIioACFAILASwASyAEoiwSiAiiWUAQAANM6MNZAAAAG+dOsxsxO2TlNwyAAAAAAISiL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QlSTTu546w/4tg/yxx//AP8A/DDDDDDDDDDDD3//AP8A8sP/APDfD7D/AI3YQXYVfffffQz/AP8A/gAAAAEM88884EYyEqr/AAaZei7VRou2306wjrml98888wwwwwwwwwwwwww//wD/APDD/jD/AB6w/wAP0F2lX333333/AP8A8gAAADPPPMAAAAFPHKHhlyVVTThVS4j2yp5wqgnstrhnvsssvvjj3jjywww0/wD/APDD/wA0/wAO8P8ADpB9Bd999999AAAAAAAE8wAAEc88s8+u0oaL/VZ9KJJlB6vXHnniiS+W22uCCe6GKS62++uLDDD3/wD6w/7w/wAv+v8AL9B1p9999999AAAAAAM84AAc8888+8+q2iGGTpp9x+NpJTqTbv3Tqy+KW++uOy//AKkohgkvvrgww/8A+8Nf8vete9etcFWlX333330AAAATzzgATzz77Lb776pbxgKbM1FWavWVPsoN9tutc98988IIIIJJb8rLYpL64sPPf89PP8vcPeudO1G1H333330AAQzzjABzz77oII4oJKJL5zjJY/V3sRmG1M5asvteM8s9PPPPP/8APOf/APzktjktriw0/wC8NP8ATvL3LvxtRp199999A088gAEc8++qCe++++OCCW+8MGGnBzkLJlnT6m2T3DrTDPzzzzPPPzz3/wD6gkvjktvjy8/70/29y9w707dSdffffUPPKABPPPvognvuggguvrgsviBDMjQ77s4eVU88wrg5w96w/wDvMc/P88NPf+8IJLY4rLK4PO8vevMedudOXknX330BTwBDzz7qIZ76III5oL76oK7qgygYuvwofnklcYr5KZbuNOPc87K9v+8sPf8A/vCSy+OC2+PTvLzP3PzPvTtZN199MY0IE88+qCW+qCCCyiGayiO++OIO3QmQkCeBt5rvmKCOS/vPTPzvavD3/LDzzzzvKC2uKy2OD3PTvbzbvD/1ZJ19/vMAk4w+C2+qCOOOKS2uCCcQcEgaTl/g+8g7hFrHOujbCy+XvTvDvSvDD3vDz/LT/vKS2OKS2LTvT/LTvnbvVZJBrz//AAAMFILmsjnrilqmBALqvponivNNDhKKokp8Yeqtm6cZb0x+y9wk9/z387w/z09/7wstrgti09y9zy522422fTXR9/7wAAPDOPPPvvgghgoiisiqurththksjpxTTfY+7vvij3vuhtn4361/wv69/wAsNPf84Lb4ra4Pe9P8Pds9dM1HX10/Oc8gDCRzzzT7qL65KZaMbo4c/a4N5OUMJGn0OMfPb74pY7a/NfsM+oL+8vPf88sPPc9La5LYpPctO9s9dc8EFHHW20fuMgADQzjzS5jS6r7776Os0q+/Hu3kEMN0ukcEMMPa5qL8/O8vO84LP88sNPO888Pc9rI5LIvO9vM+ec/MsEUHH33103uc8sPPJgzSqZ7L6t9X2NcV08W1321McV8EEEEMPK45Lp/Oc/P+8pLPf88tPPc9vOc7IZ6Y/P8AfnbPnTjbVNJx99995xPDzOwMYU8W+amTJx5/dBBL199pBpijZdNNNBBDTmO2jLTrDDz/ALzgu9/zz2//AM//AL3/AN84534+z6HMio88TUcaUcdXbw5yFKFPPLjspuyySdRTWeYQQQQWaahwSw885zQ9rsjow0zz489/zwgsst9/94y9707y0306v8pHBMD8xwQQQQSQ04bVxMBGMMMOKrqm50bZfaeaddbfVbaZlvRTTQwyQ8zsvtz28/zy088889y49mtrk/y9707888rmsmBGJy5zwwwQwww85a5xCMMJOLjpor9eXdbXUa08cTScZZnoRccT4Rw8jsst/wA89PPPPe8sP85qYrI7M9PdOc8Y47pboyhhAfPc8sMMMMMHX13vu9Czj4oqcX0lHWmUPl/H200mHcM/EXV0csPY4ZbJ7/oLsvvOc8vM7bZqZOcPcvN77657ob6RwQyM+Kc8MMEFH33311soiCxZIvHm0EFWvesPPP30120lW8+llG+ctNPPP+W8OKKs8Net/crarK7e9PP7oMNPMa5KrKxgRjI8M8MMFHH333322NjhobeVG0EG1OMMMMNPONMMNNEHUlVU1GWEkH+9PMc99Kc/P9uevZ7Zvc/7qMN/+8/IbK7qQygTAd/K88HX3320nEddxIq+Vn2lU0MMGGEHEMOEEEEMfrJK47+8sPPPPc889vM/O9uds9qZqY7qMMP/AP8A+9z2xionsjvJGNyk6w0ffffbW7214Er9SdQdeSwQQQQQQQQww3vohvvvuv8A/v8Af/vvPPLzP7HTnfnfzaiODDDf/wD+wQUd7w/itmtrGDML85wwffffeSSk031p6SdSQfWyQQQQwwww3voggsuttqigsktotgjjrp24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");
 }
+/* Тёмная тема пока не доведена — решение владелицы 09.09.2026 отложить её
+   отдельным заходом: жемчужная картинка на тёмном не работает, нужен свой
+   фон и пересчёт всех цветов. Здесь минимальный рабочий набор, чтобы
+   страница не ломалась у тех, у кого система в тёмном режиме. */
 @media (prefers-color-scheme:dark){
   :root:not([data-theme="light"]){
-    --bone:#151411; --paper:#201F1A; --raise:#2A2823;
-    --ink:#ECEBE9; --ink-2:#BBB9B4; --ink-3:#918F87;
-    --line:#37352F; --line-2:#2B2924;
-    --clay:#A6D8D5; --clay-deep:#0ABAB5;
-    --go:#9EBDAD; --go-bg:#1C4631;
-    --maybe:#D7C3A0; --maybe-bg:#5F4C1C;
-    --no:#CAA3A8; --no-bg:#53242A;
+    --mist-1:#1A1815; --mist-2:#0E0C0A;
+    --card:#252119cc; --card-solid:#252119; --raise:#2C2820;
+    --ink:#F4F1E8; --ink-2:#A6A29A; --ink-3:#A8A49D;
+    --line:rgba(255,255,255,.09); --line-2:rgba(255,255,255,.05);
+    --hi:rgba(255,255,255,.06);
+    --bgimg:none;
   }
 }
 :root[data-theme="dark"]{
-  --bone:#151411; --paper:#201F1A; --raise:#2A2823;
-  --ink:#ECEBE9; --ink-2:#BBB9B4; --ink-3:#918F87;
-  --line:#37352F; --line-2:#2B2924;
-  --clay:#A6D8D5; --clay-deep:#0ABAB5;
-  --go:#9EBDAD; --go-bg:#1C4631;
-  --maybe:#D7C3A0; --maybe-bg:#5F4C1C;
-  --no:#CAA3A8; --no-bg:#53242A;
+  --mist-1:#1A1815; --mist-2:#0E0C0A;
+  --card:#252119cc; --card-solid:#252119; --raise:#2C2820;
+  --ink:#F4F1E8; --ink-2:#A6A29A; --ink-3:#A8A49D;
+  --line:rgba(255,255,255,.09); --line-2:rgba(255,255,255,.05);
+  --hi:rgba(255,255,255,.06);
+  --bgimg:none;
 }
-/* ── Палитра «кокос» (подборка владелицы 08.09.2026) ──────────────────────────
-   Тёмная бирюза, кость, песок, светлая бирюза. Годится ЦЕЛИКОМ, но только при
-   правиле «цвет — заливка и метка, текст — обычный»: светлая бирюза как текст
-   даёт контраст 1.45, песок 1.70. Как заливка кнопки с тёмным текстом — 5.74
-   и 4.90, проходят. Тёмная бирюза #214245 работает основным текстом (8.31) и
-   фоном тёмной темы. Все значения посчитаны, не подобраны на глаз.
-
-   ВРЕМЕННО: переключатель палитр стоит, пока владелица выбирает. После выбора
-   победившая переезжает в :root, проигравшая и переключатель удаляются. */
-:root[data-pal="coconut"]{
-  --bone:#E5E1D3; --paper:#F2EFE6; --raise:#FAF8F3;
-  --ink:#214245; --ink-2:#3C5A5C; --ink-3:#546E70;
-  --line:#D8D3C2; --line-2:#E9E5D9;
-  --clay:#6ACCC7; --clay-deep:#95DEDA;
-  --go:#0E7A55; --go-bg:#DDE6DC;
-  --maybe:#B07A2A; --maybe-bg:#EFE6D6;
-  --no:#9B3346; --no-bg:#EFDFDC;
-}
-@media (prefers-color-scheme:dark){
-  :root:not([data-theme="light"])[data-pal="coconut"]{
-    --bone:#1A3336; --paper:#214245; --raise:#2B5155;
-    --ink:#E5E1D3; --ink-2:#B9C6C2; --ink-3:#9CB0AE;
-    --line:#35595C; --line-2:#2A4C50;
-    --clay:#6ACCC7; --clay-deep:#95DEDA;
-    --go:#8FBFA6; --go-bg:#1D4536;
-    --maybe:#D3A671; --maybe-bg:#4E3D1E;
-    --no:#D3A0A6; --no-bg:#4C2830;
-  }
-}
-:root[data-theme="dark"][data-pal="coconut"]{
-  --bone:#1A3336; --paper:#214245; --raise:#2B5155;
-  --ink:#E5E1D3; --ink-2:#B9C6C2; --ink-3:#9CB0AE;
-  --line:#35595C; --line-2:#2A4C50;
-  --clay:#6ACCC7; --clay-deep:#95DEDA;
-  --go:#8FBFA6; --go-bg:#1D4536;
-  --maybe:#D3A671; --maybe-bg:#4E3D1E;
-  --no:#D3A0A6; --no-bg:#4C2830;
-}
-
 *{box-sizing:border-box}
-body{margin:0;background:var(--bone);color:var(--ink);font-family:var(--sans);
-  font-size:14.5px;line-height:1.6;-webkit-font-smoothing:antialiased;
-  font-variant-numeric:tabular-nums}
-h1,h2,h3{margin:0;font-weight:600;text-wrap:balance}
+html{-webkit-font-smoothing:antialiased}
+body{margin:0;color:var(--ink);font-family:var(--sans);font-size:14.5px;
+  line-height:1.55;font-variant-numeric:tabular-nums;min-height:100vh;
+  background:
+    radial-gradient(900px 620px at 46% 60%, color-mix(in srgb, var(--mid) 7%, transparent), transparent 62%),
+    var(--bgimg) center/cover no-repeat fixed,
+    linear-gradient(168deg, var(--mist-1), var(--mist-2));
+  transition:background-color .3s}
 button{font:inherit;color:inherit;cursor:pointer}
 input,select{font:inherit;color:inherit}
-:focus-visible{outline:2px solid var(--clay);outline-offset:2px}
+:focus-visible{outline:2px solid var(--mid);outline-offset:2px}
+h1,h2,h3{margin:0;font-weight:600;letter-spacing:-.02em;text-wrap:balance}
 
-/* ── Каркас: меню фиксированной ширины, содержимое тянется во всю ширину окна.
-   Потолок 1500px, иначе на широком мониторе строки расползаются нечитаемо. */
-.app{display:flex;min-height:100vh}
-.side{width:264px;flex:0 0 264px;background:var(--paper);
-  border-right:1px solid var(--line);display:flex;flex-direction:column}
+/* ── Каркас ── */
+.app{display:flex;min-height:100vh;max-width:1500px;margin:0 auto}
+.side{width:270px;flex:0 0 270px;padding:20px 14px;margin:14px 0 14px 14px;
+  align-self:flex-start;position:sticky;top:14px;
+  border-radius:24px;background:color-mix(in srgb, var(--card-solid) 88%, transparent);
+  backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
+  border:1px solid rgba(255,255,255,.7);
+  box-shadow:0 20px 44px -26px rgba(45,36,22,.3), inset 0 1px 0 rgba(255,255,255,.8)}
 .main{flex:1;min-width:0;display:flex;flex-direction:column}
-.wrap{width:100%;max-width:1500px;margin:0 auto;padding:32px 40px 64px}
+.wrap{width:100%;padding:26px 30px 70px}
 
-.brand{padding:20px 18px 16px;border-bottom:1px solid var(--line-2)}
-.brand b{display:block;font-size:15px;font-weight:600;letter-spacing:-.01em}
-.brand span{display:block;margin-top:3px;font-size:12px;color:var(--ink-3)}
-.brand .back{display:block;margin-top:12px;padding:0;border:0;background:none;
-  font-size:12.5px;color:var(--ink-2);transition:color .15s}
-.brand .back:hover{color:var(--clay)}
+/* ── Шапка меню: логотип платформы, под ним контекст клиента ── */
+.brand{padding:2px 8px 14px}
+.brand img{height:32px;width:auto;display:block}
+.brand b,.brand span{display:none} /* старая текстовая версия знака не нужна */
+.client{padding:0 8px 14px;display:flex;flex-direction:column}
+.client b{font-size:13.5px;font-weight:700;letter-spacing:-.01em}
+.client i{font-style:normal;font-size:11.5px;color:var(--ink-3);margin-top:2px}
+.client .back{align-self:flex-start;margin-top:12px;padding:0;border:0;background:none;
+  font-size:12.5px;font-weight:600;color:var(--ink-2);transition:color .15s}
+.client .back:hover{color:var(--acc-ink)}
 
-.mods{padding:12px 10px;flex:1;overflow-y:auto}
-.grp{padding:14px 8px 6px;font-size:11px;font-weight:600;letter-spacing:.07em;
-  text-transform:uppercase;color:var(--ink-3)}
-.mod{position:relative;display:block;width:100%;text-align:left;
-  padding:8px 10px;margin-bottom:1px;border:0;border-radius:7px;background:none;
-  font-size:13.5px;color:var(--ink-2);transition:background .15s,color .15s}
-.mod:hover:not(:disabled){background:var(--bone);color:var(--ink)}
-.mod[aria-current="page"]{background:var(--raise);color:var(--ink);font-weight:500;
-  box-shadow:0 1px 2px rgba(0,0,0,.04)}
-.mod[aria-current="page"]::before{content:"";position:absolute;left:-10px;top:7px;
-  bottom:7px;width:3px;border-radius:0 3px 3px 0;background:var(--clay)}
-.mod:disabled{color:var(--ink-3);cursor:default;opacity:.65}
-.mod .cnt{float:right;min-width:18px;padding:0 5px;border-radius:9px;
-  background:var(--clay);color:#fff;font-size:11px;font-weight:500;text-align:center}
-.mod .lock{float:right;font-size:11px;font-weight:400;color:var(--ink-3)}
+.mods{display:flex;flex-direction:column;gap:2px;padding-top:6px;
+  border-top:1px solid var(--line-2);margin-top:4px}
+.grp{font-size:10px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;
+  color:var(--ink-3);padding:16px 10px 6px}
+.grp:first-child{padding-top:6px}
+.mod{display:flex;align-items:center;width:100%;text-align:left;border:0;
+  background:none;padding:9px 12px;border-radius:12px;color:var(--ink-2);
+  font-size:13.5px;font-weight:500;position:relative;transition:background .15s}
+.mod:hover:not(:disabled):not([aria-current]){background:color-mix(in srgb, var(--ink) 4%, transparent)}
+/* Активный раздел — тёмный графит. Он единственный тёмный элемент страницы,
+   поэтому взгляд идёт к нему сам, без цветной подсветки. */
+.mod[aria-current="page"]{color:var(--mist-1);font-weight:600;
+  background:linear-gradient(150deg, #262320, #171512);
+  box-shadow:0 14px 26px -14px rgba(23,21,18,.45), inset 0 1px 0 rgba(255,255,255,.14)}
+.mod:disabled{color:var(--ink-3);cursor:default;opacity:.55}
+/* Счётчик: число чернилами, бирюза сведена к точке — она лишь отмечает,
+   что раздел ждёт решения. */
+.mod .cnt{margin-left:auto;display:inline-flex;align-items:center;gap:6px;
+  font-size:11.5px;font-weight:700;color:var(--ink);line-height:1;
+  padding-left:9px;border-left:1px solid var(--line)}
+.mod .cnt::before{content:"";width:5px;height:5px;border-radius:50%;
+  background:var(--mid);flex:0 0 auto}
+.mod[aria-current="page"] .cnt{color:var(--mist-1);border-left-color:rgba(255,255,255,.2)}
+.mod:disabled .cnt{color:var(--ink-3)}
+.mod:disabled .cnt::before{background:var(--ink-3);opacity:.5}
+.mod .lock{margin-left:auto;font-size:10.5px;font-weight:600;color:var(--ink-3)}
 
-.foot{padding:12px 14px;border-top:1px solid var(--line-2);
-  display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-.tbtn{padding:4px 9px;border:1px solid var(--line);border-radius:6px;
-  background:var(--bone);color:var(--ink-2);font-size:12px}
-.tbtn[aria-pressed="true"]{background:var(--clay);border-color:var(--clay);color:#fff}
+.foot{margin-top:18px;padding-top:14px;border-top:1px solid var(--line-2);
+  display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+.tbtn{padding:5px 11px;border:1px solid var(--line);border-radius:999px;
+  background:var(--card-solid);color:var(--ink-2);font-size:12px;font-weight:500}
+.tbtn[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--mist-1)}
+.top{display:flex;align-items:center;gap:8px;padding:14px 30px;flex-wrap:wrap}
+.top .sp{flex:1}
 
-/* ── Общее ── */
-.card{background:var(--paper);border:1px solid var(--line);border-radius:12px;
-  padding:22px 24px;margin-bottom:16px}
+/* ── Поверхности ── */
+.card{background:var(--card);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+  border:1px solid var(--line);border-radius:22px;padding:24px 26px;margin-bottom:16px;
+  box-shadow:inset 0 1px 0 var(--hi), 0 14px 30px -24px rgba(45,36,22,.3)}
 .card h2{font-size:17px;margin-bottom:4px}
 .lede{color:var(--ink-2);font-size:13.5px;margin:0 0 18px}
 .hdr{margin-bottom:24px}
-.hdr h1{font-size:24px;letter-spacing:-.02em}
-.hdr p{margin:6px 0 0;color:var(--ink-2);font-size:14px}
+.hdr h1{font-size:28px;letter-spacing:-.025em}
+.hdr p{margin:7px 0 0;color:var(--ink-2);font-size:14px}
 
-label{display:block;margin-bottom:14px}
-label .lab{display:block;margin-bottom:5px;font-size:12.5px;font-weight:500;color:var(--ink-2)}
-label .hint{display:block;margin-top:4px;font-size:12px;color:var(--ink-3)}
-input,select{width:100%;padding:9px 11px;border:1px solid var(--line);
-  border-radius:8px;background:var(--raise);font-size:14px}
-input:focus,select:focus{border-color:var(--clay);outline:none;
-  box-shadow:0 0 0 3px color-mix(in srgb,var(--clay) 18%,transparent)}
+label{display:block;margin-bottom:15px}
+label .lab{display:block;margin-bottom:6px;font-size:12.5px;font-weight:600;color:var(--ink-2)}
+label .hint{display:block;margin-top:5px;font-size:12px;color:var(--ink-3)}
+input,select{width:100%;padding:10px 13px;border:1px solid var(--line);
+  border-radius:12px;background:var(--card-solid);font-size:14px}
+input:focus,select:focus{border-color:var(--mid);outline:none;
+  box-shadow:0 0 0 3px color-mix(in srgb,var(--mid) 18%,transparent)}
 
-.btn{padding:9px 18px;border:1px solid var(--line);border-radius:8px;
-  background:var(--raise);font-size:13.5px;font-weight:500;transition:.15s}
+/* ── Кнопки ──────────────────────────────────────────────────────────────────
+   Градиент светлее сверху, глубже снизу — так, как свет падает на выпуклую
+   поверхность; за счёт этого кнопка выглядит объёмной, а не наклеенной.
+   Оба конца градиента проверены с тёмным текстом: 9.94 и 7.02 при норме 4.5.
+   Отклик на нажатие: кнопка проседает на 1px и тень поджимается — короткое
+   движение в 90мс, ровно чтобы палец почувствовал ответ. */
+.btn{padding:10px 20px;border:1px solid var(--line);border-radius:999px;
+  background:var(--card-solid);font-size:13.5px;font-weight:600;
+  transition:transform .09s ease, box-shadow .18s ease, background .18s ease,
+             border-color .18s ease}
 .btn:hover:not(:disabled){border-color:var(--ink-3)}
-/* Тёмный текст, а не белый: белый на бирюзе даёт 2.41 при норме WCAG 4.5,
-   тёмный — 7.63. И наведение СВЕТЛЕЕТ: пока оно темнело, тёмный текст на нём
-   выглядел грязно, а белый туда не поставить — 3.10, тоже не проходит. */
-.btn-primary{background:var(--clay);border-color:var(--clay);color:#151412;font-weight:600}
-.btn-primary:hover:not(:disabled){background:var(--clay-deep);border-color:var(--clay-deep)}
-:root[data-pal="coconut"] .btn-primary{color:#214245}
+.btn:active:not(:disabled){transform:translateY(1px)}
+.btn-primary{color:#12100D;border-color:color-mix(in srgb, var(--mid) 70%, black);
+  background:linear-gradient(180deg,
+    color-mix(in srgb, var(--mid) 84%, white),
+    color-mix(in srgb, var(--mid) 84%, black));
+  box-shadow:0 8px 18px -8px color-mix(in srgb, var(--mid) 70%, transparent),
+             inset 0 1px 0 rgba(255,255,255,.55)}
+.btn-primary:hover:not(:disabled){
+  background:linear-gradient(180deg,
+    color-mix(in srgb, var(--mid) 70%, white),
+    color-mix(in srgb, var(--mid) 92%, black));
+  border-color:color-mix(in srgb, var(--mid) 80%, black);
+  box-shadow:0 12px 24px -10px color-mix(in srgb, var(--mid) 80%, transparent),
+             inset 0 1px 0 rgba(255,255,255,.6)}
+.btn-primary:active:not(:disabled){transform:translateY(1px);
+  box-shadow:0 4px 10px -6px color-mix(in srgb, var(--mid) 70%, transparent),
+             inset 0 1px 2px rgba(0,0,0,.18)}
 .btn:disabled{opacity:.5;cursor:default}
-a.btn{display:inline-block;text-decoration:none}
-
-/* Верхняя полоса на внешних экранах: без неё выйти и сменить тему можно было
-   бы только внутри рынка — то есть человек, у которого ещё нет ни одного
-   клиента, оказался бы заперт. */
-.top{display:flex;align-items:center;gap:8px;padding:10px 40px;
-  border-bottom:1px solid var(--line);background:var(--paper)}
-.top .sp{flex:1}
-@media (max-width:980px){ .top{padding:10px 18px} }
 .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
 
-.warn{display:flex;gap:12px;padding:13px 15px;border-radius:10px;
-  background:var(--maybe-bg);font-size:13px;line-height:1.55;margin-bottom:16px;
-  color:var(--ink)}
+/* Плашка «важно»: цвет корешком, текст обычный — цветная надпись не проходит
+   по контрасту ни в одном статусном цвете. */
+.warn{display:flex;gap:12px;padding:14px 16px;border-radius:14px;
+  background:color-mix(in srgb, var(--maybe) 8%, var(--card-solid));
+  font-size:13px;line-height:1.55;margin-bottom:16px;color:var(--ink)}
 .warn .rule{width:3px;border-radius:2px;background:var(--maybe);flex:0 0 auto}
 .warn b{display:block;margin-bottom:2px;color:var(--ink)}
 
-/* Метка состояния: цвет точкой, слово обычным текстом. Цветная надпись не
-   проходит по контрасту ни в одном из статусных цветов — а точка проходит. */
-.chip .dot{width:8px;height:8px;border-radius:50%;flex:0 0 auto}
-.chip-go .dot{background:var(--go)}
-.chip-wait .dot{background:var(--ink-3)}
-
 /* ── Плитки клиентов и рынков ── */
-.tiles{display:grid;gap:12px;grid-template-columns:repeat(auto-fill,minmax(280px,1fr))}
-.tile{text-align:left;padding:18px 20px;border:1px solid var(--line);border-radius:12px;
-  background:var(--paper);transition:.15s}
-.tile:hover{border-color:var(--clay);transform:translateY(-1px)}
-.tile b{display:block;font-size:15px;font-weight:600;margin-bottom:3px}
+.tiles{display:grid;gap:14px;grid-template-columns:repeat(auto-fill,minmax(290px,1fr))}
+.tile{text-align:left;padding:20px 22px;border-radius:20px;
+  background:var(--card);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+  border:1px solid var(--line);transition:.2s cubic-bezier(.2,.8,.2,1);
+  box-shadow:inset 0 1px 0 var(--hi), 0 12px 26px -22px rgba(45,36,22,.3)}
+.tile:hover{transform:translateY(-2px);border-color:color-mix(in srgb, var(--mid) 40%, var(--line));
+  box-shadow:inset 0 1px 0 var(--hi), 0 20px 34px -22px rgba(45,36,22,.4)}
+.tile b{display:block;font-size:15.5px;font-weight:700;margin-bottom:3px}
 .tile span{display:block;font-size:12.5px;color:var(--ink-3)}
 .tile.add{border-style:dashed;color:var(--ink-2);display:flex;align-items:center;
-  justify-content:center;min-height:96px;font-size:13.5px}
+  justify-content:center;min-height:104px;font-size:13.5px;font-weight:600;background:none}
+.tile.add:hover{background:color-mix(in srgb, var(--mid) 5%, transparent)}
 
-.chip{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:20px;
-  font-size:11.5px;font-weight:500}
-/* Слово всегда обычным цветом текста: цветная надпись не проходит по контрасту
-   ни в одном статусном цвете. Значение несёт точка слева. */
-.chip-go{background:var(--go-bg);color:var(--ink)}
-.chip-wait{background:var(--bone);color:var(--ink-2);border:1px solid var(--line)}
+.chip{display:inline-flex;align-items:center;gap:7px;padding:4px 11px;border-radius:999px;
+  font-size:11.5px;font-weight:600;color:var(--ink)}
+.chip .dot{width:7px;height:7px;border-radius:50%;flex:0 0 auto}
+.chip-go{background:color-mix(in srgb, var(--go) 12%, var(--card-solid))}
+.chip-go .dot{background:var(--go)}
+.chip-wait{background:color-mix(in srgb, var(--ink) 5%, var(--card-solid));color:var(--ink-2)}
+.chip-wait .dot{background:var(--ink-3)}
 
 .empty{padding:56px 24px;text-align:center;color:var(--ink-3);font-size:14px}
-.empty p{max-width:440px;margin:0 auto 18px;line-height:1.65}
+.empty p{max-width:460px;margin:0 auto 20px;line-height:1.65}
 
 /* ── Вход ── */
 .login{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px}
-.login .card{width:100%;max-width:380px;margin:0}
-.err{color:var(--no);font-size:13px;margin:10px 0 0}
+.login .card{width:100%;max-width:390px;margin:0}
+.login .card img{height:30px;width:auto;display:block;margin-bottom:18px}
+.err{color:var(--maybe);font-size:13px;margin:10px 0 0;font-weight:600}
 
-/* ── До 980px меню уезжает наверх горизонтальной лентой ── */
 @media (max-width:980px){
   .app{flex-direction:column}
-  .side{width:auto;flex:none;border-right:0;border-bottom:1px solid var(--line)}
-  .mods{display:flex;gap:4px;overflow-x:auto;padding:8px 10px}
+  .side{width:auto;flex:none;position:static;margin:12px 12px 0}
+  .mods{flex-direction:row;overflow-x:auto;gap:4px}
   .grp{display:none}
-  .mod{width:auto;white-space:nowrap;margin:0}
-  .mod[aria-current="page"]::before{display:none}
-  .wrap{padding:24px 18px 48px}
+  .mod{width:auto;white-space:nowrap}
+  .wrap{padding:20px 16px 48px}
+  .top{padding:12px 16px}
 }
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 <div id="root"></div>
-<script src="shell.js?v=0bbaadc1"></script>
+<script src="shell.js?v=23ae3f94"></script>
