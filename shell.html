@@ -149,33 +149,28 @@ input:focus,select:focus{border-color:var(--mid);outline:none;
   box-shadow:0 0 0 3px color-mix(in srgb,var(--mid) 18%,transparent)}
 
 /* ── Кнопки ──────────────────────────────────────────────────────────────────
-   Градиент светлее сверху, глубже снизу — так, как свет падает на выпуклую
-   поверхность; за счёт этого кнопка выглядит объёмной, а не наклеенной.
-   Оба конца градиента проверены с тёмным текстом: 9.94 и 7.02 при норме 4.5.
-   Отклик на нажатие: кнопка проседает на 1px и тень поджимается — короткое
-   движение в 90мс, ровно чтобы палец почувствовал ответ. */
+   Плоские, с мягким градиентом — не объёмные. Первый заход получился
+   выпуклым: белый блик по верхней кромке и глубокая тень читались как
+   «выдавленная» кнопка, и главная выбивалась из общего плоского строя.
+   Здесь у ВСЕХ кнопок одна конструкция: тонкая рамка, мягкий градиент
+   сверху вниз, никаких бликов и падающих теней. Отличаются только
+   насыщенностью — по важности действия.
+   Оба конца каждого градиента проверены с их текстом, минимум 7.41. */
 .btn{padding:10px 20px;border:1px solid var(--line);border-radius:999px;
-  background:var(--card-solid);font-size:13.5px;font-weight:600;
-  transition:transform .09s ease, box-shadow .18s ease, background .18s ease,
-             border-color .18s ease}
-.btn:hover:not(:disabled){border-color:var(--ink-3)}
-.btn:active:not(:disabled){transform:translateY(1px)}
-.btn-primary{color:#12100D;border-color:color-mix(in srgb, var(--mid) 70%, black);
+  font-size:13.5px;font-weight:600;color:var(--ink);
   background:linear-gradient(180deg,
-    color-mix(in srgb, var(--mid) 84%, white),
-    color-mix(in srgb, var(--mid) 84%, black));
-  box-shadow:0 8px 18px -8px color-mix(in srgb, var(--mid) 70%, transparent),
-             inset 0 1px 0 rgba(255,255,255,.55)}
-.btn-primary:hover:not(:disabled){
+    color-mix(in srgb, var(--card-solid) 50%, white),
+    color-mix(in srgb, var(--card-solid) 96%, black));
+  transition:transform .09s ease, filter .18s ease, border-color .18s ease}
+.btn:hover:not(:disabled){border-color:var(--ink-3);filter:brightness(.985)}
+.btn:active:not(:disabled){transform:translateY(1px);filter:brightness(.96)}
+.btn-primary{color:#12100D;border-color:color-mix(in srgb, var(--mid) 55%, black);
   background:linear-gradient(180deg,
-    color-mix(in srgb, var(--mid) 70%, white),
-    color-mix(in srgb, var(--mid) 92%, black));
-  border-color:color-mix(in srgb, var(--mid) 80%, black);
-  box-shadow:0 12px 24px -10px color-mix(in srgb, var(--mid) 80%, transparent),
-             inset 0 1px 0 rgba(255,255,255,.6)}
-.btn-primary:active:not(:disabled){transform:translateY(1px);
-  box-shadow:0 4px 10px -6px color-mix(in srgb, var(--mid) 70%, transparent),
-             inset 0 1px 2px rgba(0,0,0,.18)}
+    color-mix(in srgb, var(--mid) 90%, white),
+    color-mix(in srgb, var(--mid) 90%, black))}
+.btn-primary:hover:not(:disabled){border-color:color-mix(in srgb, var(--mid) 65%, black);
+  filter:brightness(1.04)}
+.btn-primary:active:not(:disabled){transform:translateY(1px);filter:brightness(.95)}
 .btn:disabled{opacity:.5;cursor:default}
 .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
 
