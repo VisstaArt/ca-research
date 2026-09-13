@@ -234,7 +234,7 @@ const T = {
 // ── MODULES CONFIG
 const MODULES = [
   {
-    id: 'M1', color: '#639922', bg: '#EAF3DE', border: '#97C459', dark: '#27500A',
+    id: 'M1', color: 'var(--ink)', bg: 'var(--card-solid)', border: 'var(--line)', dark: 'var(--ink)',
     disabled: true, // временно отключён: ждёт подключения реальных данных гос. статистики
     title: 'Market Capacity',
     titleRu: 'Ёмкость рынка (TAM/SAM/SOM)',
@@ -248,7 +248,7 @@ const MODULES = [
     steps: ['Collecting geo & demographic statistics (Block 01)…','Mapping open data sources (Block 02)…','Building TAM→SAM→SOM model (Block 03)…'],
   },
   {
-    id: 'M2', color: '#4A7C1F', bg: '#EFF6E4', border: '#A8CE6E', dark: '#2E4F0C',
+    id: 'M2', color: 'var(--ink)', bg: 'var(--card-solid)', border: 'var(--line)', dark: 'var(--ink)',
     title: 'Niche Scouting',
     titleRu: 'Разведка ниш',
     taglineEn: 'Map of services and niches with scoring — pick one to research deeply',
@@ -261,7 +261,7 @@ const MODULES = [
     steps: ['Searching real market signals (web search)…','Describing target audience segments (Block 04)…','Evaluating service effectiveness per niche (Block 04_1)…','Prioritizing niches with scoring (Block 04_2)…','Preparing niche cards…'],
   },
   {
-    id: 'M3', color: '#0F6E56', bg: '#E1F5EE', border: '#5DCAA5', dark: '#085041',
+    id: 'M3', color: 'var(--ink)', bg: 'var(--card-solid)', border: 'var(--line)', dark: 'var(--ink)',
     title: 'Competitors & Gap Analysis',
     titleRu: 'Конкуренты и гэп-анализ',
     taglineEn: 'Who you compete with, how they position, and where the gaps are',
@@ -276,7 +276,7 @@ const MODULES = [
   {
     // Контент-радар. Место в цепочке — по зависимостям, а не по номеру: нужен
     // список конкурентов из M2, а урожай его каналов кормит M3.
-    id: 'M4', color: '#7A3E9D', bg: '#F1E8F8', border: '#C09BDC', dark: '#4E2467',
+    id: 'M4', color: 'var(--ink)', bg: 'var(--card-solid)', border: 'var(--line)', dark: 'var(--ink)',
     requires: ['M3'],
     title: 'Content Radar',
     titleRu: 'Контент-радар',
@@ -290,7 +290,7 @@ const MODULES = [
     steps: ['Collecting competitor channels (Block 24_0)…','Measuring channel size and cadence (Block 24)…','Breaking down top content (Block 24A)…','Deriving what works (Block 24B)…','Computing niche benchmarks (Block 24C)…'],
   },
   {
-    id: 'M5', color: '#1565A8', bg: '#E3EFFE', border: '#7EB3F0', dark: '#0D3E6E',
+    id: 'M5', color: 'var(--ink)', bg: 'var(--card-solid)', border: 'var(--line)', dark: 'var(--ink)',
     // VoC ищет жалобы на конкурентов, которых находит M2 — без M2 сбор деградирует.
     // M9 идёт перед ним: его каналы и комментарии — то же сырьё, собранное один раз.
     requires: ['M3'],
@@ -306,7 +306,7 @@ const MODULES = [
     steps: ['Collecting VoC quotes from reviews, forums, social media (Block 07)…','Clustering search intents by awareness stage (Block 08)…','Mapping funnel roles and headline formulas…'],
   },
   {
-    id: 'M6', color: '#3C3489', bg: '#EEEDFE', border: '#AFA9EC', dark: '#26215C',
+    id: 'M6', color: 'var(--ink)', bg: 'var(--card-solid)', border: 'var(--line)', dark: 'var(--ink)',
     // Персоны строятся на дословных цитатах из M3 — без VoC это выдумка
     requires: ['M5'],
     title: 'Customer Psychology',
@@ -321,7 +321,7 @@ const MODULES = [
     steps: ['Building LPR personas with real language (Block 09)…','Mapping Jobs-to-be-Done per segment (Block 10)…','Assessing awareness levels by Schwartz (Block 11)…','Cataloguing fears and doubts (Block 12)…','Mapping decision criteria and trust triggers (Block 13)…','Building customer journey map CJM (Block 14)…','Identifying cognitive tactics and influence patterns (Block 15)…'],
   },
   {
-    id: 'M7', color: '#633806', bg: '#FAEEDA', border: '#EF9F27', dark: '#412402',
+    id: 'M7', color: 'var(--ink)', bg: 'var(--card-solid)', border: 'var(--line)', dark: 'var(--ink)',
     // Офферы и гипотезы опираются на персоны и их боли из M4
     requires: ['M6'],
     // Возвращён в цепочку 12.09.2026 (владелица: «если считаешь что нужно, давай
@@ -342,7 +342,7 @@ const MODULES = [
     steps: ['Generating marketing hypotheses (Block 16)…','Collecting offer input data (Block 17A)…','Running offer workbench — draft options (Block 17B)…','Finalising offers per segment (Block 17 Final)…'],
   },
   {
-    id: 'M8', color: '#72243E', bg: '#FBEAF0', border: '#ED93B1', dark: '#4B1528',
+    id: 'M8', color: 'var(--ink)', bg: 'var(--card-solid)', border: 'var(--line)', dark: 'var(--ink)',
     title: 'SEO Strategy',
     titleRu: 'SEO-стратегия',
     // Описание правится вместе с промптом: 10.09.2026 из M7 убраны SEO-04
@@ -366,7 +366,7 @@ const MODULES = [
     // Пока живёт здесь и продолжает работать: блоки 18–22 кормят четыре поля
     // контракта, и выключать его можно только ПОСЛЕ того, как контент-завод
     // начнёт делать их сам, — иначе поля обнулятся, а делать будет некому.
-    id: 'CONTENT', color: '#712B13', bg: '#FAECE7', border: '#F0997B', dark: '#4A1B0C',
+    id: 'CONTENT', color: 'var(--ink)', bg: 'var(--card-solid)', border: 'var(--line)', dark: 'var(--ink)',
     // Контент-система и креативы строятся на архетипах персон из M4
     requires: ['M6'],
     title: 'Content & Creatives',
@@ -3225,7 +3225,7 @@ function MD({ text }) {
   const lines = text.split('\n');
   const out = []; let tbl = []; let k = 0;
   const ft = () => {
-    if (tbl.length < 2) { tbl.forEach(l => out.push(<p key={k++} style={{margin:'2px 0',fontSize:12,color:'#666'}}>{l}</p>)); tbl=[]; return; }
+    if (tbl.length < 2) { tbl.forEach(l => out.push(<p key={k++} style={{margin:'2px 0',fontSize:12,color:'var(--ink-2)'}}>{l}</p>)); tbl=[]; return; }
     const hdrs = tbl[0].split('|').map(h=>h.trim()).filter(Boolean);
     const rows = tbl.slice(2).map(r=>r.split('|').map(c=>c.trim()).filter(Boolean));
     out.push(
@@ -3270,10 +3270,10 @@ function CountdownTimer({ totalSeconds, label }) {
   const pct = Math.min(100, (elapsed / totalSeconds) * 100);
   return (
     <div>
-      <div style={{fontSize:11,color:'#aaa',marginBottom:4}}>{label}</div>
+      <div style={{fontSize:11,color:'var(--ink-3)',marginBottom:4}}>{label}</div>
       <div className="timer">{mm}:{ss}</div>
-      <div style={{marginTop:8,height:3,background:'#333',borderRadius:2}}>
-        <div style={{height:'100%',width:`${pct}%`,background:'#4ade80',borderRadius:2,transition:'width 1s linear'}}/>
+      <div style={{marginTop:8,height:3,background:'var(--ink)',borderRadius:2}}>
+        <div style={{height:'100%',width:`${pct}%`,background:'var(--mid)',borderRadius:2,transition:'width 1s linear'}}/>
       </div>
     </div>
   );
@@ -3290,21 +3290,21 @@ function PieChart({ data, title }) {
       type: 'doughnut',
       data: {
         labels: data.map(d=>d.label),
-        datasets: [{ data: data.map(d=>d.value), backgroundColor: data.map((d,i)=>d.color||['#639922','#0F6E56','#3C3489','#633806','#712B13','#72243E'][i%6]) }]
+        datasets: [{ data: data.map(d=>d.value), backgroundColor: data.map((d,i)=>d.color||['var(--mid)','var(--acc-strong-ink)','var(--acc-ink)','var(--acc-quiet-ink)','var(--acc-quiet-ink)','var(--acc-quiet-ink)'][i%6]) }]
       },
       options: { plugins: { legend: { position: 'right' } }, responsive: true }
     });
     return () => { if(chartRef.current) chartRef.current.destroy(); };
   }, [data]);
   return (
-    <div style={{background:'#fff',border:'1px solid #eee',borderRadius:10,padding:'1rem',marginBottom:10}}>
+    <div style={{background:'var(--card-solid)',border:'1px solid #eee',borderRadius:10,padding:'1rem',marginBottom:10}}>
       <p style={{fontSize:13,fontWeight:500,marginBottom:8}}>{title}</p>
       <canvas ref={canvasRef} height={200}/>
     </div>
   );
 }
 
-function BarChart({ labels, values, title, color='#639922' }) {
+function BarChart({ labels, values, title, color='var(--mid)' }) {
   const canvasRef = useRef(null);
   const chartRef = useRef(null);
   useEffect(() => {
@@ -3318,7 +3318,7 @@ function BarChart({ labels, values, title, color='#639922' }) {
     return () => { if(chartRef.current) chartRef.current.destroy(); };
   }, [labels, values]);
   return (
-    <div style={{background:'#fff',border:'1px solid #eee',borderRadius:10,padding:'1rem',marginBottom:10}}>
+    <div style={{background:'var(--card-solid)',border:'1px solid #eee',borderRadius:10,padding:'1rem',marginBottom:10}}>
       <p style={{fontSize:13,fontWeight:500,marginBottom:8}}>{title}</p>
       <canvas ref={canvasRef} height={200}/>
     </div>
@@ -3334,7 +3334,7 @@ function NicheScoreChart({ niches }) {
     if (!canvasRef.current || !niches?.length) return;
     if (chartRef.current) chartRef.current.destroy();
     const sorted = [...niches].sort((a,b)=>(b.score||0)-(a.score||0));
-    const col = v => v==='Go' ? '#4A7C1F' : v==='Maybe' ? '#D98A2B' : '#C0503A';
+    const col = v => v==='Go' ? 'var(--acc-ink)' : v==='Maybe' ? 'var(--acc-quiet)' : 'var(--acc-quiet-ink)';
     chartRef.current = new Chart(canvasRef.current, {
       type: 'bar',
       data: { labels: sorted.map(n=>n.name), datasets: [{ data: sorted.map(n=>n.score||0), backgroundColor: sorted.map(n=>col(n.verdict)) }] },
@@ -3344,8 +3344,8 @@ function NicheScoreChart({ niches }) {
   }, [niches]);
   const h = Math.max(160, (niches?.length||0) * 24);
   return (
-    <div style={{background:'#fff',border:'1px solid #eee',borderRadius:10,padding:'1rem',marginBottom:14}}>
-      <p style={{fontSize:13,fontWeight:500,marginBottom:8}}>Ниши по эффективности (баллу): <span style={{color:'#4A7C1F'}}>Go</span> · <span style={{color:'#D98A2B'}}>Maybe</span> · <span style={{color:'#C0503A'}}>No-Go</span></p>
+    <div style={{background:'var(--card-solid)',border:'1px solid #eee',borderRadius:10,padding:'1rem',marginBottom:14}}>
+      <p style={{fontSize:13,fontWeight:500,marginBottom:8}}>Ниши по эффективности (баллу): <span style={{color:'var(--acc-ink)'}}>Go</span> · <span style={{color:'var(--acc-quiet)'}}>Maybe</span> · <span style={{color:'var(--acc-quiet-ink)'}}>No-Go</span></p>
       <div style={{position:'relative',height:h}}><canvas ref={canvasRef}/></div>
     </div>
   );
@@ -3357,14 +3357,14 @@ function ScatterChart({ data, title }) {
   useEffect(() => {
     if (!canvasRef.current || !data?.length) return;
     if (chartRef.current) chartRef.current.destroy();
-    const colors = { Go:'#639922', Hold:'#EF9F27', Stop:'#e44' };
+    const colors = { Go:'var(--mid)', Hold:'var(--acc-quiet)', Stop:'var(--acc-quiet-ink)' };
     chartRef.current = new Chart(canvasRef.current, {
       type: 'bubble',
       data: {
         datasets: data.map(d => ({
           label: d.name,
           data: [{ x: d.demand||0, y: d.competition||0, r: Math.max(6, (d.score||3)*3) }],
-          backgroundColor: (colors[d.verdict]||'#888') + '99'
+          backgroundColor: (colors[d.verdict]||'var(--ink-3)') + '99'
         }))
       },
       options: {
@@ -3378,9 +3378,9 @@ function ScatterChart({ data, title }) {
     return () => { if(chartRef.current) chartRef.current.destroy(); };
   }, [data]);
   return (
-    <div style={{background:'#fff',border:'1px solid #eee',borderRadius:10,padding:'1rem',marginBottom:10}}>
+    <div style={{background:'var(--card-solid)',border:'1px solid #eee',borderRadius:10,padding:'1rem',marginBottom:10}}>
       <p style={{fontSize:13,fontWeight:500,marginBottom:4}}>{title}</p>
-      <p style={{fontSize:11,color:'#888',marginBottom:8}}>Size = score. Green=Go, Orange=Hold, Red=Stop</p>
+      <p style={{fontSize:11,color:'var(--ink-3)',marginBottom:8}}>Size = score. Green=Go, Orange=Hold, Red=Stop</p>
       <canvas ref={canvasRef} height={220}/>
     </div>
   );
@@ -3400,7 +3400,7 @@ function CompetitorMapChart({ data, title }) {
           label: d.name + (d.isUs ? ' (мы)' : ''),
           data: [{ x: d.price||0, y: d.quality||0, r: d.isUs ? 11 : 7 }],
           backgroundColor: d.isUs ? '#639922DD' : '#0F6E5666',
-          borderColor: d.isUs ? '#27500A' : 'transparent',
+          borderColor: d.isUs ? 'var(--acc-strong-ink)' : 'transparent',
           borderWidth: d.isUs ? 2 : 0
         }))
       },
@@ -3415,9 +3415,9 @@ function CompetitorMapChart({ data, title }) {
     return () => { if(chartRef.current) chartRef.current.destroy(); };
   }, [data]);
   return (
-    <div style={{background:'#fff',border:'1px solid #eee',borderRadius:10,padding:'1rem',marginBottom:10}}>
+    <div style={{background:'var(--card-solid)',border:'1px solid #eee',borderRadius:10,padding:'1rem',marginBottom:10}}>
       <p style={{fontSize:13,fontWeight:500,marginBottom:4}}>{title}</p>
-      <p style={{fontSize:11,color:'#888',marginBottom:8}}>Зелёная точка — мы. Пустые зоны на карте — свободное позиционирование.</p>
+      <p style={{fontSize:11,color:'var(--ink-3)',marginBottom:8}}>Зелёная точка — мы. Пустые зоны на карте — свободное позиционирование.</p>
       <canvas ref={canvasRef} height={220}/>
     </div>
   );
@@ -3431,11 +3431,11 @@ function AwarenessChart({ data }) {
     if (!canvasRef.current || !data?.length) return;
     if (chartRef.current) chartRef.current.destroy();
     const lv = [
-      ['Не осознаёт','unaware','#C0503A'],
-      ['Проблема','problem','#D98A2B'],
-      ['Решения','solution','#E3B23C'],
-      ['Продукты','product','#7FB04F'],
-      ['Всё знает','most','#4A7C1F'],
+      ['Не осознаёт','unaware','var(--acc-quiet-ink)'],
+      ['Проблема','problem','var(--acc-quiet)'],
+      ['Решения','solution','var(--acc-quiet)'],
+      ['Продукты','product','var(--mid)'],
+      ['Всё знает','most','var(--acc-ink)'],
     ];
     chartRef.current = new Chart(canvasRef.current, {
       type:'bar',
@@ -3446,7 +3446,7 @@ function AwarenessChart({ data }) {
   }, [data]);
   const h = Math.max(160, (data?.length||0) * 40 + 50);
   return (
-    <div style={{background:'#fff',border:'1px solid #eee',borderRadius:10,padding:'1rem',marginBottom:10}}>
+    <div style={{background:'var(--card-solid)',border:'1px solid #eee',borderRadius:10,padding:'1rem',marginBottom:10}}>
       <p style={{fontSize:13,fontWeight:500,marginBottom:8}}>Уровни осознанности по сегментам (%)</p>
       <div style={{position:'relative',height:h}}><canvas ref={canvasRef}/></div>
     </div>
@@ -3495,7 +3495,7 @@ function ModuleCharts({ moduleId, chartData }) {
             labels={measured.map(c=>c.cluster)}
             values={measured.map(c=>c.volume)}
             title="Semantic Clusters by Volume"
-            color='#72243E'
+            color='var(--acc-quiet-ink)'
           />
         </div>
       );
@@ -5876,35 +5876,35 @@ function ModuleCard({ m, on, onToggle, uiLang }) {
   const what = uiLang==='ru' ? m.whatRu : m.whatEn;
   const outputs = uiLang==='ru' ? m.outputsRu : m.outputsEn;
   if (m.disabled) return (
-    <div style={{border:'1px dashed #ddd',borderRadius:12,overflow:'hidden',cursor:'not-allowed',marginBottom:8,background:'#fafafa',opacity:0.65}}>
+    <div style={{border:'1px dashed #ddd',borderRadius:12,overflow:'hidden',cursor:'not-allowed',marginBottom:8,background:'var(--card-solid)',opacity:0.65}}>
       <div style={{display:'flex',alignItems:'center',gap:10,padding:'11px 14px'}}>
-        <span style={{fontSize:11,fontWeight:500,padding:'3px 8px',borderRadius:4,background:'#eee',color:'#999',flexShrink:0}}>{m.label||m.id}</span>
+        <span style={{fontSize:11,fontWeight:500,padding:'3px 8px',borderRadius:4,background:'var(--line)',color:'var(--ink-3)',flexShrink:0}}>{m.label||m.id}</span>
         <div style={{flex:1}}>
-          <div style={{fontSize:13,fontWeight:500,color:'#999'}}>{title}</div>
-          <div style={{fontSize:11,color:'#aaa',marginTop:1}}>{t.moduleDisabledNote}</div>
+          <div style={{fontSize:13,fontWeight:500,color:'var(--ink-3)'}}>{title}</div>
+          <div style={{fontSize:11,color:'var(--ink-3)',marginTop:1}}>{t.moduleDisabledNote}</div>
         </div>
-        <span style={{fontSize:9,fontWeight:600,letterSpacing:0.5,padding:'3px 8px',borderRadius:4,background:'#f0f0f0',color:'#999',flexShrink:0,textTransform:'uppercase'}}>{t.moduleDisabledBadge}</span>
+        <span style={{fontSize:9,fontWeight:600,letterSpacing:0.5,padding:'3px 8px',borderRadius:4,background:'var(--line-2)',color:'var(--ink-3)',flexShrink:0,textTransform:'uppercase'}}>{t.moduleDisabledBadge}</span>
       </div>
     </div>
   );
   return (
-    <div onClick={onToggle} style={{border:on?'2px solid '+m.color:'1px solid #e5e5e5',borderRadius:12,overflow:'hidden',cursor:'pointer',marginBottom:8,background:'#fff',transition:'border 0.15s'}}>
+    <div onClick={onToggle} style={{border:on?'2px solid '+m.color:'1px solid #e5e5e5',borderRadius:12,overflow:'hidden',cursor:'pointer',marginBottom:8,background:'var(--card-solid)',transition:'border 0.15s'}}>
       <div style={{display:'flex',alignItems:'center',gap:10,padding:'11px 14px'}}>
         <span style={{fontSize:11,fontWeight:500,padding:'3px 8px',borderRadius:4,background:m.bg,color:m.dark,flexShrink:0}}>{m.label||m.id}</span>
         <div style={{flex:1}}>
-          <div style={{fontSize:13,fontWeight:500,color:'#111'}}>{title}</div>
-          <div style={{fontSize:11,color:'#888',marginTop:1}}>{tagline}</div>
+          <div style={{fontSize:13,fontWeight:500,color:'var(--ink)'}}>{title}</div>
+          <div style={{fontSize:11,color:'var(--ink-3)',marginTop:1}}>{tagline}</div>
         </div>
-        <span style={{fontSize:10,color:'#aaa',flexShrink:0}}>{m.estimatedMin} min</span>
+        <span style={{fontSize:10,color:'var(--ink-3)',flexShrink:0}}>{m.estimatedMin} min</span>
         <div style={{width:18,height:18,borderRadius:4,border:on?'none':'1.5px solid #ccc',background:on?m.color:'transparent',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
-          {on && <span style={{color:'#fff',fontSize:11}}>✓</span>}
+          {on && <span style={{color:'var(--card-solid)',fontSize:11}}>✓</span>}
         </div>
       </div>
       {on && (
         <div style={{padding:'0 14px 12px',borderTop:'1px solid '+m.border}}>
-          <p style={{fontSize:12,color:'#555',lineHeight:1.6,margin:'10px 0 8px'}}>{what}</p>
+          <p style={{fontSize:12,color:'var(--ink-2)',lineHeight:1.6,margin:'10px 0 8px'}}>{what}</p>
           <div style={{display:'flex',flexWrap:'wrap',gap:4}}>
-            {outputs.map((o,i)=><span key={i} style={{fontSize:10,padding:'2px 7px',borderRadius:3,background:'#f5f5f5',color:'#666'}}>{o}</span>)}
+            {outputs.map((o,i)=><span key={i} style={{fontSize:10,padding:'2px 7px',borderRadius:3,background:'var(--mist-1)',color:'var(--ink-2)'}}>{o}</span>)}
           </div>
         </div>
       )}
@@ -5917,30 +5917,30 @@ function PriceLayerScreen({ layers, selected, onToggle, onContinue, onBack, uiLa
   const t = T[uiLang];
   if (generating) return (
     <div className="card" style={{textAlign:'center',padding:'3rem'}}>
-      <p style={{fontSize:14,color:'#666',marginBottom:8}}>{t.generating2}</p>
-      <p style={{fontSize:12,color:'#aaa'}}>~30 seconds</p>
+      <p style={{fontSize:14,color:'var(--ink-2)',marginBottom:8}}>{t.generating2}</p>
+      <p style={{fontSize:12,color:'var(--ink-3)'}}>~30 seconds</p>
     </div>
   );
   return (
     <div>
       <div className="card">
         <h2 style={{fontSize:18,fontWeight:500,marginBottom:6}}>{t.chooseLayer}</h2>
-        <p style={{fontSize:13,color:'#666',marginBottom:16,lineHeight:1.5}}>{t.chooseLayerSub}</p>
+        <p style={{fontSize:13,color:'var(--ink-2)',marginBottom:16,lineHeight:1.5}}>{t.chooseLayerSub}</p>
         {layers.map((layer, i) => {
           const isOn = selected.includes(i);
-          const colors = ['#1565A8','#639922','#633806'];
-          const bgs = ['#E3EFFE','#EAF3DE','#FAEEDA'];
-          const darks = ['#0D3E6E','#27500A','#412402'];
+          const colors = ['var(--acc-ink)','var(--mid)','var(--acc-quiet-ink)'];
+          const bgs = ['color-mix(in srgb, var(--mid) 10%, var(--card-solid))','color-mix(in srgb, var(--mid) 12%, var(--card-solid))','color-mix(in srgb, var(--acc-quiet) 12%, var(--card-solid))'];
+          const darks = ['var(--acc-strong-ink)','var(--acc-strong-ink)','var(--acc-quiet-ink)'];
           return (
             <div key={i} onClick={()=>onToggle(i)}
-              style={{border:isOn?'2px solid '+colors[i]:'1px solid #e5e5e5',borderRadius:12,padding:'1rem 1.25rem',marginBottom:10,cursor:'pointer',background:isOn?bgs[i]:'#fff'}}>
+              style={{border:isOn?'2px solid '+colors[i]:'1px solid #e5e5e5',borderRadius:12,padding:'1rem 1.25rem',marginBottom:10,cursor:'pointer',background:isOn?bgs[i]:'var(--card-solid)'}}>
               <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:isOn?10:0}}>
                 <div style={{flex:1}}>
-                  <div style={{fontSize:14,fontWeight:500,color:isOn?darks[i]:'#111'}}>{layer.name}</div>
-                  <div style={{fontSize:12,color:isOn?colors[i]:'#888',marginTop:2}}>{layer.priceRange}</div>
+                  <div style={{fontSize:14,fontWeight:500,color:isOn?darks[i]:'var(--ink)'}}>{layer.name}</div>
+                  <div style={{fontSize:12,color:isOn?colors[i]:'var(--ink-3)',marginTop:2}}>{layer.priceRange}</div>
                 </div>
                 <div style={{width:18,height:18,borderRadius:50,border:isOn?'none':'1.5px solid #ccc',background:isOn?colors[i]:'transparent',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
-                  {isOn && <span style={{color:'#fff',fontSize:11}}>✓</span>}
+                  {isOn && <span style={{color:'var(--card-solid)',fontSize:11}}>✓</span>}
                 </div>
               </div>
               {isOn && (
@@ -5964,7 +5964,7 @@ function PriceLayerScreen({ layers, selected, onToggle, onContinue, onBack, uiLa
             </div>
           );
         })}
-        <p style={{fontSize:12,color:'#888',marginTop:4}}>{t.layerNote}</p>
+        <p style={{fontSize:12,color:'var(--ink-3)',marginTop:4}}>{t.layerNote}</p>
       </div>
       <div style={{display:'flex',gap:10}}>
         <button onClick={onBack}>{t.backToM1}</button>
@@ -6016,8 +6016,8 @@ function GlossaryTip({ term, children }) {
         style={{borderBottom:'1px dashed #378ADD',cursor:'pointer',color:'inherit'}}
       >{children}</span>
       {show && (
-        <span style={{position:'absolute',bottom:'100%',left:0,zIndex:10,background:'#fff',border:'1px solid #ddd',borderRadius:8,padding:'8px 10px',fontSize:11,color:'#333',lineHeight:1.5,whiteSpace:'normal',width:220,boxShadow:'0 2px 8px rgba(0,0,0,0.12)'}}>
-          <strong style={{color:'#0C447C'}}>{term}</strong><br/>{def}
+        <span style={{position:'absolute',bottom:'100%',left:0,zIndex:10,background:'var(--card-solid)',border:'1px solid #ddd',borderRadius:8,padding:'8px 10px',fontSize:11,color:'var(--ink)',lineHeight:1.5,whiteSpace:'normal',width:220,boxShadow:'0 2px 8px rgba(0,0,0,0.12)'}}>
+          <strong style={{color:'var(--acc-ink)'}}>{term}</strong><br/>{def}
         </span>
       )}
     </span>
@@ -6086,33 +6086,33 @@ function MarketPositionBlock({ chartData, brief, lang }) {
   const topNiches = d.niches ? d.niches.filter(n=>n.verdict==='Go').slice(0,3) : [];
 
   return (
-    <div style={{margin:'16px 0',padding:'1rem',background:'#f8fcf4',border:'1px solid #c8e6a0',borderRadius:12}}>
-      <p style={{fontSize:13,fontWeight:500,color:'#27500A',marginBottom:12}}>Market position</p>
+    <div style={{margin:'16px 0',padding:'1rem',background:'color-mix(in srgb, var(--mid) 6%, var(--card-solid))',border:'1px solid #c8e6a0',borderRadius:12}}>
+      <p style={{fontSize:13,fontWeight:500,color:'var(--acc-strong-ink)',marginBottom:12}}>Market position</p>
       <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(140px,1fr))',gap:10,marginBottom:12}}>
         {d.tamSamSom && (
           <>
-            <div style={{background:'#fff',borderRadius:8,padding:'10px 12px'}}>
-              <div style={{fontSize:10,color:'#888',marginBottom:2}}>Total market (TAM)</div>
-              <div style={{fontSize:16,fontWeight:500,color:'#111'}}>{(d.tamSamSom.tam||0).toLocaleString()}</div>
-              <div style={{fontSize:10,color:'#aaa'}}>{currency} clients</div>
+            <div style={{background:'var(--card-solid)',borderRadius:8,padding:'10px 12px'}}>
+              <div style={{fontSize:10,color:'var(--ink-3)',marginBottom:2}}>Total market (TAM)</div>
+              <div style={{fontSize:16,fontWeight:500,color:'var(--ink)'}}>{(d.tamSamSom.tam||0).toLocaleString()}</div>
+              <div style={{fontSize:10,color:'var(--ink-3)'}}>{currency} clients</div>
             </div>
-            <div style={{background:'#fff',borderRadius:8,padding:'10px 12px'}}>
-              <div style={{fontSize:10,color:'#888',marginBottom:2}}>Serviceable (SAM)</div>
-              <div style={{fontSize:16,fontWeight:500,color:'#111'}}>{(d.tamSamSom.sam||0).toLocaleString()}</div>
-              <div style={{fontSize:10,color:'#aaa'}}>{currency} clients</div>
+            <div style={{background:'var(--card-solid)',borderRadius:8,padding:'10px 12px'}}>
+              <div style={{fontSize:10,color:'var(--ink-3)',marginBottom:2}}>Serviceable (SAM)</div>
+              <div style={{fontSize:16,fontWeight:500,color:'var(--ink)'}}>{(d.tamSamSom.sam||0).toLocaleString()}</div>
+              <div style={{fontSize:10,color:'var(--ink-3)'}}>{currency} clients</div>
             </div>
-            <div style={{background:'#fff',borderRadius:8,padding:'10px 12px',border:'1.5px solid #97C459'}}>
-              <div style={{fontSize:10,color:'#3B6D11',marginBottom:2}}>Your target (SOM)</div>
-              <div style={{fontSize:16,fontWeight:500,color:'#27500A'}}>{(d.tamSamSom.som||0).toLocaleString()}</div>
-              <div style={{fontSize:10,color:'#3B6D11'}}>{currency} clients / year</div>
+            <div style={{background:'var(--card-solid)',borderRadius:8,padding:'10px 12px',border:'1.5px solid #97C459'}}>
+              <div style={{fontSize:10,color:'var(--acc-strong-ink)',marginBottom:2}}>Your target (SOM)</div>
+              <div style={{fontSize:16,fontWeight:500,color:'var(--acc-strong-ink)'}}>{(d.tamSamSom.som||0).toLocaleString()}</div>
+              <div style={{fontSize:10,color:'var(--acc-strong-ink)'}}>{currency} clients / year</div>
             </div>
           </>
         )}
         {compClients !== null && (
-          <div style={{background:'#fff',borderRadius:8,padding:'10px 12px',border:'1.5px solid #378ADD'}}>
-            <div style={{fontSize:10,color:'#185FA5',marginBottom:2}}>Your clients now</div>
-            <div style={{fontSize:16,fontWeight:500,color:'#0C447C'}}>{compClients.toLocaleString()}</div>
-            <div style={{fontSize:10,color:'#185FA5'}}>
+          <div style={{background:'var(--card-solid)',borderRadius:8,padding:'10px 12px',border:'1.5px solid #378ADD'}}>
+            <div style={{fontSize:10,color:'var(--acc-ink)',marginBottom:2}}>Your clients now</div>
+            <div style={{fontSize:16,fontWeight:500,color:'var(--acc-ink)'}}>{compClients.toLocaleString()}</div>
+            <div style={{fontSize:10,color:'var(--acc-ink)'}}>
               {totalSOM ? '+ '+(Math.max(0,totalSOM-compClients)).toLocaleString()+' more possible' : 'active'}
             </div>
           </div>
@@ -6122,17 +6122,17 @@ function MarketPositionBlock({ chartData, brief, lang }) {
       {(compClients !== null || pct !== null) && totalSOM && (
         <div style={{marginBottom:12}}>
           <div style={{display:'flex',justifyContent:'space-between',marginBottom:4}}>
-            <span style={{fontSize:11,color:'#555'}}>Market capacity used</span>
-            <span style={{fontSize:11,fontWeight:500,color:'#27500A'}}>
+            <span style={{fontSize:11,color:'var(--ink-2)'}}>Market capacity used</span>
+            <span style={{fontSize:11,fontWeight:500,color:'var(--acc-strong-ink)'}}>
               {compClients ? compClients+' / '+totalSOM+' clients' : (pct||0)+'% of SOM'}
             </span>
           </div>
-          <div style={{height:8,background:'#e5e5e5',borderRadius:4,overflow:'hidden'}}>
-            <div style={{height:'100%',background:'#639922',borderRadius:4,width:(compClients&&totalSOM?Math.min(100,Math.round(compClients/totalSOM*100)):pct||2)+'%',transition:'width 0.6s'}}/>
+          <div style={{height:8,background:'var(--line)',borderRadius:4,overflow:'hidden'}}>
+            <div style={{height:'100%',background:'var(--mid)',borderRadius:4,width:(compClients&&totalSOM?Math.min(100,Math.round(compClients/totalSOM*100)):pct||2)+'%',transition:'width 0.6s'}}/>
           </div>
           <div style={{display:'flex',justifyContent:'space-between',marginTop:3}}>
-            <span style={{fontSize:10,color:'#888'}}>You</span>
-            <span style={{fontSize:10,color:'#aaa'}}>
+            <span style={{fontSize:10,color:'var(--ink-3)'}}>You</span>
+            <span style={{fontSize:10,color:'var(--ink-3)'}}>
               {compClients && totalSOM ? Math.max(0,totalSOM-compClients)+' clients still available in SOM' : 'SOM capacity'}
             </span>
           </div>
@@ -6140,17 +6140,17 @@ function MarketPositionBlock({ chartData, brief, lang }) {
       )}
 
       {!hasCompanyData && (
-        <p style={{fontSize:12,color:'#888',fontStyle:'italic'}}>
+        <p style={{fontSize:12,color:'var(--ink-3)',fontStyle:'italic'}}>
           Add your current clients, revenue, or avg check in the brief to see your market share and growth potential.
         </p>
       )}
 
       {topNiches.length > 0 && (
         <div>
-          <p style={{fontSize:11,color:'#3B6D11',marginBottom:6,fontWeight:500}}>Top niches to target (Go)</p>
+          <p style={{fontSize:11,color:'var(--acc-strong-ink)',marginBottom:6,fontWeight:500}}>Top niches to target (Go)</p>
           <div style={{display:'flex',flexWrap:'wrap',gap:6}}>
             {topNiches.map((n,i)=>(
-              <span key={i} style={{fontSize:11,padding:'3px 10px',borderRadius:4,background:'#EAF3DE',color:'#27500A',border:'1px solid #97C459'}}>
+              <span key={i} style={{fontSize:11,padding:'3px 10px',borderRadius:4,background:'color-mix(in srgb, var(--mid) 12%, var(--card-solid))',color:'var(--acc-strong-ink)',border:'1px solid #97C459'}}>
                 {n.name} · score {n.score}
               </span>
             ))}
@@ -6179,18 +6179,18 @@ function LockScreen({ t, onUnlock }) {
     if (ok) onUnlock(); else setErr(true);
   };
   return (
-    <div style={{minHeight:'100vh',display:'flex',alignItems:'center',justifyContent:'center',background:'#f7f7f5'}}>
-      <form onSubmit={submit} style={{background:'#fff',border:'1px solid #e5e5e5',borderRadius:14,padding:'32px 36px',width:340,textAlign:'center'}}>
+    <div style={{minHeight:'100vh',display:'flex',alignItems:'center',justifyContent:'center',background:'var(--line-2)'}}>
+      <form onSubmit={submit} style={{background:'var(--card-solid)',border:'1px solid #e5e5e5',borderRadius:14,padding:'32px 36px',width:340,textAlign:'center'}}>
         <div style={{fontSize:26,marginBottom:6}}>🔒</div>
-        <div style={{fontSize:17,fontWeight:600,color:'#111',marginBottom:4}}>{t.lockTitle}</div>
-        <div style={{fontSize:12,color:'#888',marginBottom:18,lineHeight:1.5}}>{t.lockSub}</div>
+        <div style={{fontSize:17,fontWeight:600,color:'var(--ink)',marginBottom:4}}>{t.lockTitle}</div>
+        <div style={{fontSize:12,color:'var(--ink-3)',marginBottom:18,lineHeight:1.5}}>{t.lockSub}</div>
         <input type="email" value={email} onChange={e=>setEmail(e.target.value)} placeholder="Email" autoFocus autoComplete="username"
-          style={{width:'100%',boxSizing:'border-box',padding:'10px 12px',fontSize:14,border:'1px solid '+(err?'#d33':'#ddd'),borderRadius:8,outline:'none',marginBottom:10}} />
+          style={{width:'100%',boxSizing:'border-box',padding:'10px 12px',fontSize:14,border:'1px solid '+(err?'var(--acc-quiet-ink)':'var(--line)'),borderRadius:8,outline:'none',marginBottom:10}} />
         <input type="password" value={pw} onChange={e=>setPw(e.target.value)} placeholder={t.lockPlaceholder} autoComplete="current-password"
-          style={{width:'100%',boxSizing:'border-box',padding:'10px 12px',fontSize:14,border:'1px solid '+(err?'#d33':'#ddd'),borderRadius:8,outline:'none',marginBottom:10}} />
-        {err && <div style={{fontSize:11,color:'#d33',marginBottom:10}}>{t.lockError}</div>}
+          style={{width:'100%',boxSizing:'border-box',padding:'10px 12px',fontSize:14,border:'1px solid '+(err?'var(--acc-quiet-ink)':'var(--line)'),borderRadius:8,outline:'none',marginBottom:10}} />
+        {err && <div style={{fontSize:11,color:'var(--acc-quiet-ink)',marginBottom:10}}>{t.lockError}</div>}
         <button type="submit" disabled={busy||!email.trim()||!pw.trim()}
-          style={{width:'100%',padding:'10px 0',fontSize:14,fontWeight:500,color:'#fff',background:busy?'#999':'#111',border:'none',borderRadius:8,cursor:'pointer'}}>
+          style={{width:'100%',padding:'10px 0',fontSize:14,fontWeight:500,color:'var(--card-solid)',background:busy?'var(--ink-3)':'var(--ink)',border:'none',borderRadius:8,cursor:'pointer'}}>
           {busy ? '…' : t.lockButton}
         </button>
       </form>
@@ -6893,7 +6893,7 @@ function App() {
     <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'1.5rem'}}>
       <div>
         <h2 style={{fontSize:22,fontWeight:500}}>{t.appTitle}</h2>
-        <p style={{fontSize:13,color:'#666',marginTop:3}}>{t.appSub} · {MODEL}</p>
+        <p style={{fontSize:13,color:'var(--ink-2)',marginTop:3}}>{t.appSub} · {MODEL}</p>
       </div>
       <div style={{display:'flex',gap:8,alignItems:'center'}}>
         <button onClick={switchUiLang} style={{padding:'5px 12px',fontSize:12,fontWeight:500}}>{uiLang==='en'?'RU':'EN'}</button>
@@ -6904,7 +6904,7 @@ function App() {
 
   // ── ACCESS GATE (все хуки уже объявлены выше — условные возвраты безопасны)
   if (unlocked === null) return (
-    <div style={{minHeight:'100vh',display:'flex',alignItems:'center',justifyContent:'center',color:'#999',fontSize:13}}>…</div>
+    <div style={{minHeight:'100vh',display:'flex',alignItems:'center',justifyContent:'center',color:'var(--ink-3)',fontSize:13}}>…</div>
   );
   if (unlocked === false) return <LockScreen t={t} onUnlock={()=>setUnlocked(true)} />;
 
@@ -6924,7 +6924,7 @@ function App() {
     if (!готов) return (
       <div className="card" style={{margin:'1.5rem'}}>
         <p style={{fontSize:14,marginBottom:6}}>Отчёта пока нет.</p>
-        <p style={{fontSize:13,color:'#666'}}>Он появится после первого прогона:
+        <p style={{fontSize:13,color:'var(--ink-2)'}}>Он появится после первого прогона:
           здесь будут все модули с графиками, картами и выводами.</p>
       </div>
     );
@@ -6943,8 +6943,8 @@ function App() {
       </div>
       {projs.length === 0 && (
         <div className="card" style={{textAlign:'center',padding:'3rem'}}>
-          <p style={{fontSize:15,color:'#666',marginBottom:8}}>{t.noProjects}</p>
-          <p style={{fontSize:13,color:'#999',marginBottom:'1.5rem'}}>{t.noProjectsSub}</p>
+          <p style={{fontSize:15,color:'var(--ink-2)',marginBottom:8}}>{t.noProjects}</p>
+          <p style={{fontSize:13,color:'var(--ink-3)',marginBottom:'1.5rem'}}>{t.noProjectsSub}</p>
           <button className="btn-primary" onClick={goNew} style={{padding:'10px 24px'}}>{t.newProject}</button>
         </div>
       )}
@@ -6955,19 +6955,19 @@ function App() {
             <div style={{display:'flex',gap:12,alignItems:'flex-start'}}>
               <div style={{flex:1}}>
                 <p style={{fontSize:14,fontWeight:500,marginBottom:3}}>{p.brief?.name||'Untitled'}</p>
-                <p style={{fontSize:12,color:'#666',marginBottom:8}}>{[p.brief?.geoMarket||p.brief?.geo,p.brief?.niche,p.lang].filter(Boolean).join(' · ')}</p>
+                <p style={{fontSize:12,color:'var(--ink-2)',marginBottom:8}}>{[p.brief?.geoMarket||p.brief?.geo,p.brief?.niche,p.lang].filter(Boolean).join(' · ')}</p>
                 <div style={{display:'flex',gap:4,flexWrap:'wrap'}}>
                   {(p.mods||[]).map(mid => {
                     const m=MODULES.find(x=>x.id===mid); const d=done.includes(mid);
-                    return m ? <span key={mid} className="tag" style={{background:d?m.color:'#f5f5f5',color:d?'#fff':'#666',borderColor:d?m.color:'#ddd'}}>{mid}{d?' ✓':''}</span> : null;
+                    return m ? <span key={mid} className="tag" style={{background:d?m.color:'var(--mist-1)',color:d?'var(--card-solid)':'var(--ink-2)',borderColor:d?m.color:'var(--line)'}}>{mid}{d?' ✓':''}</span> : null;
                   })}
-                  {p.report && <span className="tag" style={{background:'#E6F1FB',color:'#0C447C',borderColor:'#85B7EB'}}>Report ✓</span>}
+                  {p.report && <span className="tag" style={{background:'color-mix(in srgb, var(--mid) 12%, transparent)',color:'var(--acc-ink)',borderColor:'var(--mid)'}}>Report ✓</span>}
                 </div>
               </div>
               <div style={{textAlign:'right',flexShrink:0}}>
-                <p style={{fontSize:11,color:'#888',marginBottom:2}}>{done.length}/{(p.mods||[]).length} modules</p>
-                <p style={{fontSize:10,color:'#aaa',marginBottom:8}}>{new Date(p.updatedAt||p.createdAt).toLocaleDateString()}</p>
-                <button onClick={e=>{e.stopPropagation();saveAll(loadAll().filter(x=>x.id!==p.id));deleteFromDb(p.id);ref();}} style={{padding:'2px 8px',fontSize:10,color:'#e44',borderColor:'#e44'}}>delete</button>
+                <p style={{fontSize:11,color:'var(--ink-3)',marginBottom:2}}>{done.length}/{(p.mods||[]).length} modules</p>
+                <p style={{fontSize:10,color:'var(--ink-3)',marginBottom:8}}>{new Date(p.updatedAt||p.createdAt).toLocaleDateString()}</p>
+                <button onClick={e=>{e.stopPropagation();saveAll(loadAll().filter(x=>x.id!==p.id));deleteFromDb(p.id);ref();}} style={{padding:'2px 8px',fontSize:10,color:'var(--acc-quiet-ink)',borderColor:'var(--acc-quiet-ink)'}}>delete</button>
               </div>
             </div>
           </div>
@@ -6989,26 +6989,26 @@ function App() {
 
       <div className="card">
         <p style={{fontSize:13,fontWeight:500,marginBottom:4}}>{t.autoFill}</p>
-        <p style={{fontSize:12,color:'#666',marginBottom:10}}>{t.autoFillSub}</p>
+        <p style={{fontSize:12,color:'var(--ink-2)',marginBottom:10}}>{t.autoFillSub}</p>
         <div style={{display:'flex',gap:8,marginBottom:8}}>
           <input value={siteUrl} onChange={e=>setSiteUrl(e.target.value)} onKeyDown={e=>e.key==='Enter'&&parseSite()} placeholder="https://client-site.com" style={{flex:1}}/>
           <button onClick={parseSite} disabled={!siteUrl.trim()||parsing} style={{whiteSpace:'nowrap',flexShrink:0,padding:'0 16px'}}>
             {parsing ? t.reading : t.readSite}
           </button>
         </div>
-        {pMsg && <p style={{fontSize:12,color:pMsg.startsWith('✓')?'#27500A':pMsg.startsWith('✗')?'#c00':'#666'}}>{pMsg}</p>}
+        {pMsg && <p style={{fontSize:12,color:pMsg.startsWith('✓')?'var(--acc-strong-ink)':pMsg.startsWith('✗')?'var(--acc-quiet-ink)':'var(--ink-2)'}}>{pMsg}</p>}
       </div>
 
       <div className="card">
         <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'1rem'}}>
           <p style={{fontSize:13,fontWeight:500}}>{t.briefTitle}</p>
-          <span className="tag" style={{background:'#E6F1FB',color:'#0C447C',borderColor:'#85B7EB'}}>fill in any language</span>
+          <span className="tag" style={{background:'color-mix(in srgb, var(--mid) 12%, transparent)',color:'var(--acc-ink)',borderColor:'var(--mid)'}}>fill in any language</span>
         </div>
         <div style={{display:'grid',gap:2}}>
           <Field label={t.fName}><input value={brief.name} onChange={e=>setBrief(p=>({...p,name:e.target.value}))} placeholder={t.fNamePh}/></Field>
           <Field label={t.fNiche} info={t.fNicheInfo}><input value={brief.niche} onChange={e=>setBrief(p=>({...p,niche:e.target.value}))} placeholder={t.fNichePh}/></Field>
           <Field label={t.fGeoComp} info={t.fGeoCompInfo}><input value={brief.geoCompany} onChange={e=>setBrief(p=>({...p,geoCompany:e.target.value}))} placeholder={t.fGeoCompPh}/></Field>
-          <Field label={t.fGeoMarket} info={t.fGeoMarketInfo}><input value={brief.geoMarket} onChange={e=>setBrief(p=>({...p,geoMarket:e.target.value}))} placeholder={t.fGeoMarketPh} style={{borderColor:'#378ADD'}}/></Field>
+          <Field label={t.fGeoMarket} info={t.fGeoMarketInfo}><input value={brief.geoMarket} onChange={e=>setBrief(p=>({...p,geoMarket:e.target.value}))} placeholder={t.fGeoMarketPh} style={{borderColor:'var(--mid)'}}/></Field>
           <Field label={t.fFormat}><input value={brief.format} onChange={e=>setBrief(p=>({...p,format:e.target.value}))} placeholder={t.fFormatPh}/></Field>
           <Field label={t.fAudience}><input value={brief.audience} onChange={e=>setBrief(p=>({...p,audience:e.target.value}))} placeholder={t.fAudiencePh}/></Field>
           <Field label={t.fResult}><input value={brief.result} onChange={e=>setBrief(p=>({...p,result:e.target.value}))} placeholder={t.fResultPh}/></Field>
@@ -7020,20 +7020,20 @@ function App() {
         {(brief.services||[]).length > 0 && (
           <React.Fragment>
             <div style={{borderTop:'1px solid #eee',margin:'1rem 0'}}/>
-            <p style={{fontSize:12,fontWeight:500,color:'#666',marginBottom:4}}>{t.servicesTitle} <span style={{fontSize:11,fontWeight:400,color:'#aaa'}}>— {t.servicesSub}</span></p>
+            <p style={{fontSize:12,fontWeight:500,color:'var(--ink-2)',marginBottom:4}}>{t.servicesTitle} <span style={{fontSize:11,fontWeight:400,color:'var(--ink-3)'}}>— {t.servicesSub}</span></p>
             <div style={{display:'flex',gap:6,flexWrap:'wrap',marginBottom:4}}>
               {(brief.services||[]).map((s,i) => {
                 const on = (brief.selectedServices||[]).includes(s);
                 return (
                   <button key={i} type="button"
                     onClick={()=>setBrief(p=>({...p, selectedServices: on ? (p.selectedServices||[]).filter(x=>x!==s) : [...(p.selectedServices||[]), s]}))}
-                    style={{padding:'5px 12px',fontSize:12,borderRadius:14,border:'1px solid '+(on?'#378ADD':'#ddd'),background:on?'#E6F1FB':'#fff',color:on?'#0C447C':'#555',fontWeight:on?500:400,cursor:'pointer'}}>
+                    style={{padding:'5px 12px',fontSize:12,borderRadius:14,border:'1px solid '+(on?'var(--mid)':'var(--line)'),background:on?'color-mix(in srgb, var(--mid) 12%, transparent)':'var(--card-solid)',color:on?'var(--acc-ink)':'var(--ink-2)',fontWeight:on?500:400,cursor:'pointer'}}>
                     {on ? '✓ ' : ''}{s}
                   </button>
                 );
               })}
             </div>
-            <p style={{fontSize:11,color:'#aaa'}}>{t.servicesHint}</p>
+            <p style={{fontSize:11,color:'var(--ink-3)'}}>{t.servicesHint}</p>
           </React.Fragment>
         )}
 
@@ -7042,7 +7042,7 @@ function App() {
         </Field>
 
         <div style={{borderTop:'1px solid #eee',margin:'1rem 0'}}/>
-        <p style={{fontSize:12,fontWeight:500,color:'#666',marginBottom:8}}>{t.companyDataTitle} <span style={{fontSize:11,fontWeight:400,color:'#aaa'}}>— {t.companyDataSub}</span></p>
+        <p style={{fontSize:12,fontWeight:500,color:'var(--ink-2)',marginBottom:8}}>{t.companyDataTitle} <span style={{fontSize:11,fontWeight:400,color:'var(--ink-3)'}}>— {t.companyDataSub}</span></p>
         <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:8}}>
           <Field label={t.fRevenue} optional info={t.fRevenueInfo}><input value={brief.currentRevenue} onChange={e=>setBrief(p=>({...p,currentRevenue:e.target.value}))} placeholder={t.fRevenuePh}/></Field>
           <Field label={t.fClients} optional info={t.fClientsInfo}><input value={brief.currentClients} onChange={e=>setBrief(p=>({...p,currentClients:e.target.value}))} placeholder={t.fClientsPh}/></Field>
@@ -7050,7 +7050,7 @@ function App() {
         </div>
 
         <div style={{borderTop:'1px solid #eee',margin:'1rem 0'}}/>
-        <p style={{fontSize:12,fontWeight:500,color:'#666',marginBottom:8}}>{t.skipM1Title} <span style={{fontSize:11,fontWeight:400,color:'#aaa'}}>— {t.skipM1Sub}</span></p>
+        <p style={{fontSize:12,fontWeight:500,color:'var(--ink-2)',marginBottom:8}}>{t.skipM1Title} <span style={{fontSize:11,fontWeight:400,color:'var(--ink-3)'}}>— {t.skipM1Sub}</span></p>
         <Field label={t.fTargetSegment} optional info={t.fTargetSegmentInfo}><input value={brief.targetSegment} onChange={e=>setBrief(p=>({...p,targetSegment:e.target.value}))} placeholder={t.fTargetSegmentPh}/></Field>
         <Field label={t.fPriceLayer} optional info={t.fPriceLayerInfo}>
           <select value={brief.priceLayer} onChange={e=>setBrief(p=>({...p,priceLayer:e.target.value}))}>
@@ -7064,10 +7064,10 @@ function App() {
 
       <div className="card">
         <p style={{fontSize:13,fontWeight:500,marginBottom:4}}>{t.researchLang}</p>
-        <p style={{fontSize:12,color:'#666',marginBottom:10}}>{t.researchLangSub}</p>
+        <p style={{fontSize:12,color:'var(--ink-2)',marginBottom:10}}>{t.researchLangSub}</p>
         <div style={{display:'flex',gap:6,flexWrap:'wrap',marginBottom:8}}>
           {LANGS.map(l => (
-            <button key={l} onClick={()=>setLang(l)} style={{padding:'5px 12px',fontSize:12,borderColor:l===lang?'#378ADD':'#ddd',background:l===lang?'#E6F1FB':'#fff',color:l===lang?'#0C447C':'#111',fontWeight:l===lang?500:400}}>
+            <button key={l} onClick={()=>setLang(l)} style={{padding:'5px 12px',fontSize:12,borderColor:l===lang?'var(--mid)':'var(--line)',background:l===lang?'color-mix(in srgb, var(--mid) 12%, transparent)':'var(--card-solid)',color:l===lang?'var(--acc-ink)':'var(--ink)',fontWeight:l===lang?500:400}}>
               {l}
             </button>
           ))}
@@ -7080,7 +7080,7 @@ function App() {
           они потом видны и меняются, но первый раз их спрашивают тут. */}
       <div className="card">
         <p style={{fontSize:13,fontWeight:500,marginBottom:4}}>Модель и ключ</p>
-        <p style={{fontSize:12,color:'#666',marginBottom:10}}>
+        <p style={{fontSize:12,color:'var(--ink-2)',marginBottom:10}}>
           На чём считаем и за чей счёт. Меняется в любой момент — модели улучшаются,
           и выбор не должен быть вшит навсегда.
         </p>
@@ -7091,7 +7091,7 @@ function App() {
         </select>
         {clientIdFromUrl && тарифРазработчика ? (
           <>
-            <p style={{fontSize:12,color:'#666',marginBottom:6}}>
+            <p style={{fontSize:12,color:'var(--ink-2)',marginBottom:6}}>
               {ownKey === null ? 'Смотрю, заведён ли свой ключ…'
                 : ownKey ? 'Работаем на ключе клиента: …' + ownKey + '. Кредиты платформы не тратятся.'
                 : 'Свой ключ не заведён — работа идёт на ключе платформы и тратит кредиты.'}
@@ -7106,10 +7106,10 @@ function App() {
                   {keyBusy ? 'Сохраняю…' : 'Сохранить'}</button>
               </div>
             )}
-            {keyMsg && <p style={{fontSize:12,color:'#666',marginTop:6}}>{keyMsg}</p>}
+            {keyMsg && <p style={{fontSize:12,color:'var(--ink-2)',marginTop:6}}>{keyMsg}</p>}
           </>
         ) : (
-          <p style={{fontSize:12,color:'#666'}}>
+          <p style={{fontSize:12,color:'var(--ink-2)'}}>
             {clientIdFromUrl
               ? 'Работа идёт на ключах платформы — так устроена подписка.'
               : 'Ключ клиента заводится из платформы — там известно, чей это проект.'}
@@ -7119,14 +7119,14 @@ function App() {
 
       <div className="card">
         <p style={{fontSize:13,fontWeight:500,marginBottom:4}}>{t.selectModules}</p>
-        <p style={{fontSize:12,color:'#666',marginBottom:10}}>{t.selectModulesSub}</p>
+        <p style={{fontSize:12,color:'var(--ink-2)',marginBottom:10}}>{t.selectModulesSub}</p>
         {MODULES.map(m => (
           <ModuleCard key={m.id} m={m} on={mods.includes(m.id)} onToggle={()=>setMods(p=>p.includes(m.id)?p.filter(x=>x!==m.id):[...p,m.id])} uiLang={uiLang}/>
         ))}
       </div>
 
-      <div className="card" style={{background:'#fffbf0',borderColor:'#f5d89e'}}>
-        <p style={{fontSize:12,color:'#7a5f00'}}>
+      <div className="card" style={{background:'color-mix(in srgb, var(--acc-quiet) 6%, var(--card-solid))',borderColor:'var(--acc-quiet)'}}>
+        <p style={{fontSize:12,color:'var(--acc-quiet-ink)'}}>
           <strong>{t.modelLabel}:</strong> {MODEL} &nbsp;·&nbsp;
           <strong>{t.dataPolicy}:</strong> {t.dataPolicyVal} &nbsp;·&nbsp;
           <strong>{t.estTime}:</strong> ~{mods.reduce((s,id)=>s+(MODULES.find(m=>m.id===id)?.estimatedMin||8),0)} min
@@ -7141,7 +7141,7 @@ function App() {
       ) : (
         <React.Fragment>
           {blockMsg && (
-            <p style={{fontSize:12,color:'#c00',marginBottom:8,lineHeight:1.5}}>⚠ {blockMsg}</p>
+            <p style={{fontSize:12,color:'var(--acc-quiet-ink)',marginBottom:8,lineHeight:1.5}}>⚠ {blockMsg}</p>
           )}
           <button className="btn-primary" onClick={()=>run()} disabled={!brief.name||!mods.length}
             style={{width:'100%',padding:'13px',fontSize:14,opacity:brief.name&&mods.length?1:0.4}}>
@@ -7161,7 +7161,7 @@ function App() {
       </div>
 
       {publications === null ? (
-        <div className="card"><p style={{fontSize:13,color:'#c00'}}>БД не настроена или недоступна — трекер работает только через Supabase, локальной подстраховки здесь нет.</p></div>
+        <div className="card"><p style={{fontSize:13,color:'var(--acc-quiet-ink)'}}>БД не настроена или недоступна — трекер работает только через Supabase, локальной подстраховки здесь нет.</p></div>
       ) : (
         <React.Fragment>
           <div className="card">
@@ -7206,13 +7206,13 @@ function App() {
 
           <div className="card">
             <p style={{fontSize:13,fontWeight:500,marginBottom:10}}>Публикации ({publications.length})</p>
-            {publications.length === 0 && <p style={{fontSize:12,color:'#888'}}>Пока пусто — добавьте первую публикацию выше.</p>}
+            {publications.length === 0 && <p style={{fontSize:12,color:'var(--ink-3)'}}>Пока пусто — добавьте первую публикацию выше.</p>}
             {publications.map(pub => (
               <div key={pub.id} style={{border:'1px solid #e5e5e5',borderRadius:10,padding:'10px 14px',marginBottom:8}}>
                 <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',gap:10}}>
                   <div>
                     <p style={{fontSize:13,fontWeight:500}}>{pub.topic || '(без темы)'}</p>
-                    <p style={{fontSize:11,color:'#888'}}>
+                    <p style={{fontSize:11,color:'var(--ink-3)'}}>
                       {pub.date} · {pub.platform||'—'} · {pub.format||'—'}{pub.character&&pub.character!=='none'?' · '+pub.character:''}
                       {pub.url && <> · <a href={pub.url} target="_blank" rel="noreferrer">ссылка</a></>}
                     </p>
@@ -7225,7 +7225,7 @@ function App() {
                 {(pub.metrics_snapshots||[]).length > 0 && (
                   <div style={{marginTop:8,overflowX:'auto'}}>
                     <table style={{fontSize:11,width:'100%',borderCollapse:'collapse'}}>
-                      <thead><tr style={{color:'#888'}}>
+                      <thead><tr style={{color:'var(--ink-3)'}}>
                         <th style={{textAlign:'left',padding:'2px 6px'}}>Дата</th>
                         <th style={{padding:'2px 6px'}}>Просмотры</th><th style={{padding:'2px 6px'}}>Лайки</th>
                         <th style={{padding:'2px 6px'}}>Комменты</th><th style={{padding:'2px 6px'}}>Репосты</th>
@@ -7251,7 +7251,7 @@ function App() {
                   </div>
                 )}
                 {metricsFormFor === pub.id && (
-                  <div style={{marginTop:10,padding:10,background:'#fafafa',borderRadius:8}}>
+                  <div style={{marginTop:10,padding:10,background:'var(--card-solid)',borderRadius:8}}>
                     <div style={{display:'grid',gridTemplateColumns:'repeat(5,1fr)',gap:6,marginBottom:8}}>
                       <Field label="Дата"><input type="date" value={metricsForm.snapshot_date||''} onChange={e=>setMetricsForm(f=>({...f,snapshot_date:e.target.value}))}/></Field>
                       <Field label="Просмотры" optional><input type="number" value={metricsForm.views||''} onChange={e=>setMetricsForm(f=>({...f,views:e.target.value}))}/></Field>
@@ -7299,7 +7299,7 @@ function App() {
         <div style={{display:'flex',gap:6,flexWrap:'wrap',marginBottom:16}}>
           {nichesOf(brief).map(n => (
             <button key={n} onClick={()=>setTrendNiche(n)}
-              style={{fontSize:12,padding:'5px 12px',borderColor:n===trendNiche?'#378ADD':'#ddd',background:n===trendNiche?'#E6F1FB':'#fff',color:n===trendNiche?'#0C447C':'#111',fontWeight:n===trendNiche?500:400}}>
+              style={{fontSize:12,padding:'5px 12px',borderColor:n===trendNiche?'var(--mid)':'var(--line)',background:n===trendNiche?'color-mix(in srgb, var(--mid) 12%, transparent)':'var(--card-solid)',color:n===trendNiche?'var(--acc-ink)':'var(--ink)',fontWeight:n===trendNiche?500:400}}>
               {n}
             </button>
           ))}
@@ -7307,7 +7307,7 @@ function App() {
       )}
 
       {trendSnapshots === null ? (
-        <div className="card"><p style={{fontSize:13,color:'#c00'}}>БД не настроена или недоступна — история трендов хранится только в Supabase, локальной подстраховки здесь нет.</p></div>
+        <div className="card"><p style={{fontSize:13,color:'var(--acc-quiet-ink)'}}>БД не настроена или недоступна — история трендов хранится только в Supabase, локальной подстраховки здесь нет.</p></div>
       ) : (
         <React.Fragment>
           <button className="btn-primary" disabled={generatingTrend}
@@ -7339,13 +7339,13 @@ function App() {
             {generatingTrend ? 'Собираю…' : '🔭 Обновить сейчас'}
           </button>
 
-          {(trendSnapshots||[]).length === 0 && <p style={{fontSize:12,color:'#888'}}>Пока нет снапшотов — нажмите «Обновить сейчас» (платный вызов Tavily+OpenAI).</p>}
+          {(trendSnapshots||[]).length === 0 && <p style={{fontSize:12,color:'var(--ink-3)'}}>Пока нет снапшотов — нажмите «Обновить сейчас» (платный вызов Tavily+OpenAI).</p>}
           {(trendSnapshots||[]).map(snap => (
             <div key={snap.id} className="card">
               <p style={{fontSize:13,fontWeight:500,marginBottom:8}}>{snap.snapshot_date}</p>
               {snap.delta && snap.delta.summary && (
-                <div style={{background:'#EFF6E4',border:'1px solid #cfe3b4',borderRadius:8,padding:'8px 12px',marginBottom:10}}>
-                  <span style={{fontSize:11,fontWeight:700,color:'#2E4F0C',textTransform:'uppercase'}}>Дельта:</span> <span style={{fontSize:13,color:'#111'}}>{snap.delta.summary}</span>
+                <div style={{background:'color-mix(in srgb, var(--mid) 8%, var(--card-solid))',border:'1px solid #cfe3b4',borderRadius:8,padding:'8px 12px',marginBottom:10}}>
+                  <span style={{fontSize:11,fontWeight:700,color:'var(--acc-strong-ink)',textTransform:'uppercase'}}>Дельта:</span> <span style={{fontSize:13,color:'var(--ink)'}}>{snap.delta.summary}</span>
                 </div>
               )}
               <MD text={snap.content}/>
@@ -7388,11 +7388,11 @@ function App() {
             <button onClick={()=>setSc('list')}>{t.backProjects}</button>
             <h2 style={{fontSize:18,fontWeight:500}}>{brief.name}</h2>
           </div>
-          <p style={{fontSize:12,color:'#666'}}>
+          <p style={{fontSize:12,color:'var(--ink-2)'}}>
             {[brief.geoMarket||brief.geo,brief.niche].filter(Boolean).join(' · ')}
-            <span className="tag" style={{marginLeft:8,background:'#E6F1FB',color:'#0C447C',borderColor:'#85B7EB'}}>{lang}</span>
-            <span className="tag" style={{marginLeft:4,background:'#f0f0f0',color:'#444',borderColor:'#ddd'}}>{MODEL}</span>
-            {brief.priceLayer && <span className="tag" style={{marginLeft:4,background:'#FAEEDA',color:'#633806',borderColor:'#EF9F27'}}>{brief.priceLayer}</span>}
+            <span className="tag" style={{marginLeft:8,background:'color-mix(in srgb, var(--mid) 12%, transparent)',color:'var(--acc-ink)',borderColor:'var(--mid)'}}>{lang}</span>
+            <span className="tag" style={{marginLeft:4,background:'var(--line-2)',color:'var(--ink-2)',borderColor:'var(--line)'}}>{MODEL}</span>
+            {brief.priceLayer && <span className="tag" style={{marginLeft:4,background:'color-mix(in srgb, var(--acc-quiet) 12%, var(--card-solid))',color:'var(--acc-quiet-ink)',borderColor:'var(--acc-quiet)'}}>{brief.priceLayer}</span>}
           </p>
         </div>
         <div style={{display:'flex',gap:8,flexShrink:0,flexWrap:'wrap'}}>
@@ -7402,29 +7402,29 @@ function App() {
             </button>
           )}
           {!isRun && pending.length === 0 && doneCount > 0 && (
-            <button className="btn-primary" onClick={()=>setSc('form')} style={{background:'#378ADD',borderColor:'#378ADD'}}>
+            <button className="btn-primary" onClick={()=>setSc('form')} style={{background:'var(--mid)',borderColor:'var(--mid)'}}>
               + Add modules ↗
             </button>
           )}
           {!isRun && modDone('M2') && (
-            <button onClick={openNichePicker} style={{fontSize:12,padding:'7px 12px',color:'#2E4F0C',borderColor:'#A8CE6E',background:'#EFF6E4',fontWeight:500}}
+            <button onClick={openNichePicker} style={{fontSize:12,padding:'7px 12px',color:'var(--acc-strong-ink)',borderColor:'var(--mid)',background:'color-mix(in srgb, var(--mid) 8%, var(--card-solid))',fontWeight:500}}
               title="Добавить ещё ниши к исследованию — прогонятся только новые, готовые не тронутся">
               ＋ Добавить ниши
             </button>
           )}
           {!isRun && (
-            <button onClick={()=>setSc('tracker')} style={{fontSize:12,padding:'7px 12px',color:'#185FA5',borderColor:'#85B7EB',background:'#E6F1FB',fontWeight:500}}
+            <button onClick={()=>setSc('tracker')} style={{fontSize:12,padding:'7px 12px',color:'var(--acc-ink)',borderColor:'var(--mid)',background:'color-mix(in srgb, var(--mid) 12%, transparent)',fontWeight:500}}
               title="M10: публикации и метрики по этому проекту">
               📊 Трекер
             </button>
           )}
           {!isRun && modDone('M3') && (
-            <button onClick={()=>{setTrendNiche(workNiches[0]||''); setSc('trends');}} style={{fontSize:12,padding:'7px 12px',color:'#0C447C',borderColor:'#85B7EB',background:'#E6F1FB',fontWeight:500}}
+            <button onClick={()=>{setTrendNiche(workNiches[0]||''); setSc('trends');}} style={{fontSize:12,padding:'7px 12px',color:'var(--acc-ink)',borderColor:'var(--mid)',background:'color-mix(in srgb, var(--mid) 12%, transparent)',fontWeight:500}}
               title="M8: что изменилось в нише за период">
               🔭 Тренды
             </button>
           )}
-          <button onClick={()=>setSc('form')} style={{fontSize:12,padding:'7px 12px',color:'#666',borderColor:'#ddd'}}>
+          <button onClick={()=>setSc('form')} style={{fontSize:12,padding:'7px 12px',color:'var(--ink-2)',borderColor:'var(--line)'}}>
             Edit brief ✎
           </button>
         </div>
@@ -7434,10 +7434,10 @@ function App() {
         <div style={{display:'flex',gap:3,marginBottom:5}}>
           {allMods.map(m => {
             const d=modDone(m.id), a=curMod===m.id;
-            return <div key={m.id} title={m.title} style={{flex:1,height:4,borderRadius:2,background:d?m.color:a?m.color+'99':'#e0e0e0'}}/>;
+            return <div key={m.id} title={m.title} style={{flex:1,height:4,borderRadius:2,background:d?m.color:a?m.color+'99':'var(--line)'}}/>;
           })}
         </div>
-        <p style={{fontSize:11,color:'#888'}}>
+        <p style={{fontSize:11,color:'var(--ink-3)'}}>
           {isRun ? (curModData ? curModData.title : '')+(curNiche?' · ниша: '+curNiche:'') : doneCount+'/'+allMods.length+' modules done'+(pending.length?' · '+pending.length+' '+t.pending:'')+(workNiches.length?' · '+workNiches.length+' ниш(и)':'')}
         </p>
       </div>
@@ -7446,14 +7446,14 @@ function App() {
         <div className="status-bar">
           <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',gap:16}}>
             <div style={{flex:1}}>
-              <p style={{fontSize:12,color:'#aaa',marginBottom:4}}>{curModData.id} · {curModData.title}{curNiche?' · ниша: '+curNiche:''}</p>
+              <p style={{fontSize:12,color:'var(--ink-3)',marginBottom:4}}>{curModData.id} · {curModData.title}{curNiche?' · ниша: '+curNiche:''}</p>
               <p style={{fontSize:14,fontWeight:500,marginBottom:10}}>{curStep}</p>
               <div style={{display:'flex',gap:4}}>
                 {curModData.steps.map((_,i)=>(
-                  <div key={i} style={{flex:1,height:2,borderRadius:1,background:i<=curStepIdx?curModData.color:'#333'}}/>
+                  <div key={i} style={{flex:1,height:2,borderRadius:1,background:i<=curStepIdx?curModData.color:'var(--ink)'}}/>
                 ))}
               </div>
-              <p style={{fontSize:10,color:'#666',marginTop:4}}>{curStepIdx+1} / {curModData.steps.length} steps</p>
+              <p style={{fontSize:10,color:'var(--ink-2)',marginTop:4}}>{curStepIdx+1} / {curModData.steps.length} steps</p>
             </div>
             <CountdownTimer totalSeconds={curModData.estimatedMin*60} label="Est. remaining"/>
           </div>
@@ -7468,17 +7468,17 @@ function App() {
           <React.Fragment key={resKey(r)}>
             {showNicheHeader && (
               <div style={{display:'flex',alignItems:'center',gap:8,margin:'18px 0 8px'}}>
-                <span style={{fontSize:11,fontWeight:700,color:'#2E4F0C',textTransform:'uppercase',letterSpacing:'0.05em',background:'#EFF6E4',border:'1px solid #A8CE6E',borderRadius:6,padding:'3px 10px'}}>Ниша: {r.niche}</span>
-                <div style={{flex:1,height:1,background:'#e5e5e5'}}/>
+                <span style={{fontSize:11,fontWeight:700,color:'var(--acc-strong-ink)',textTransform:'uppercase',letterSpacing:'0.05em',background:'color-mix(in srgb, var(--mid) 8%, var(--card-solid))',border:'1px solid #A8CE6E',borderRadius:6,padding:'3px 10px'}}>Ниша: {r.niche}</span>
+                <div style={{flex:1,height:1,background:'var(--line)'}}/>
               </div>
             )}
             <div style={{marginBottom:8,border:'1px solid '+m.border,borderRadius:12,overflow:'hidden'}}>
               <div style={{display:'flex',alignItems:'center',background:m.bg}}>
                 <div onClick={()=>setExp(e=>({...e,[resKey(r)]:!e[resKey(r)]}))} style={{display:'flex',alignItems:'center',gap:9,padding:'11px 14px',cursor:'pointer',flex:1}}>
-                  <span className="tag" style={{background:m.color,color:'#fff',borderColor:m.color}}>{m.id}</span>
+                  <span className="tag" style={{background:m.color,color:'var(--card-solid)',borderColor:m.color}}>{m.id}</span>
                   <span style={{flex:1,fontSize:13,fontWeight:500,color:m.dark}}>{m.title}</span>
-                  {r.usage && <span style={{fontSize:10,color:'#aaa',marginRight:8}} title={'запрос '+r.usage.prompt.toLocaleString('ru-RU')+' + ответ '+r.usage.completion.toLocaleString('ru-RU')+' токенов'}>≈{(r.usage.total/1000).toFixed(1)}k т.</span>}
-                  <span style={{fontSize:10,color:'#888',marginRight:4}}>{r.at?new Date(r.at).toLocaleDateString():''}</span>
+                  {r.usage && <span style={{fontSize:10,color:'var(--ink-3)',marginRight:8}} title={'запрос '+r.usage.prompt.toLocaleString('ru-RU')+' + ответ '+r.usage.completion.toLocaleString('ru-RU')+' токенов'}>≈{(r.usage.total/1000).toFixed(1)}k т.</span>}
+                  <span style={{fontSize:10,color:'var(--ink-3)',marginRight:4}}>{r.at?new Date(r.at).toLocaleDateString():''}</span>
                   <span style={{fontSize:12,color:m.color}}>{open?'▲':'▼'}</span>
                 </div>
                 {!isRun && (
@@ -7512,8 +7512,8 @@ function App() {
                 )}
               </div>
               {regenKey === resKey(r) && (
-                <div onClick={e=>e.stopPropagation()} style={{padding:'12px 16px',background:'#fafafa',borderTop:'1px solid '+m.border}}>
-                  <p style={{fontSize:11,color:'#666',marginBottom:6}}>Что поправить? (необязательно — пусто = обычная перегенерация, как раньше)</p>
+                <div onClick={e=>e.stopPropagation()} style={{padding:'12px 16px',background:'var(--card-solid)',borderTop:'1px solid '+m.border}}>
+                  <p style={{fontSize:11,color:'var(--ink-2)',marginBottom:6}}>Что поправить? (необязательно — пусто = обычная перегенерация, как раньше)</p>
                   <textarea value={regenNote} onChange={e=>setRegenNote(e.target.value)} rows={3}
                     placeholder="Например: цены конкурентов выглядят неправдоподобно, перепроверь"
                     style={{width:'100%',fontSize:12,padding:6,fontFamily:'inherit',boxSizing:'border-box'}}/>
@@ -7543,20 +7543,20 @@ function App() {
                         run(chain, undefined, true, rn||undefined, regenNote.trim()||undefined);
                         setRegenKey(null);
                       }}
-                      style={{padding:'5px 12px',fontSize:11,background:m.color,color:'#fff',border:'none',borderRadius:6,cursor:'pointer'}}>
+                      style={{padding:'5px 12px',fontSize:11,background:m.color,color:'var(--card-solid)',border:'none',borderRadius:6,cursor:'pointer'}}>
                       Перегенерировать
                     </button>
-                    <button onClick={()=>setRegenKey(null)} style={{padding:'5px 12px',fontSize:11,color:'#666',border:'1px solid #ddd',borderRadius:6,background:'#fff',cursor:'pointer'}}>
+                    <button onClick={()=>setRegenKey(null)} style={{padding:'5px 12px',fontSize:11,color:'var(--ink-2)',border:'1px solid #ddd',borderRadius:6,background:'var(--card-solid)',cursor:'pointer'}}>
                       Отмена
                     </button>
                   </div>
                 </div>
               )}
               {open && (
-                <div style={{padding:'14px 16px',background:'#fff',borderTop:'1px solid '+m.border}}>
+                <div style={{padding:'14px 16px',background:'var(--card-solid)',borderTop:'1px solid '+m.border}}>
                   {editKey === resKey(r) ? (
                     <div>
-                      <p style={{fontSize:11,color:'#666',marginBottom:6}}>Правка вручную — сохраняется сразу, без вызова модели. График/диаграмма (если есть) построены по исходной генерации и ручной правкой текста не пересчитываются.</p>
+                      <p style={{fontSize:11,color:'var(--ink-2)',marginBottom:6}}>Правка вручную — сохраняется сразу, без вызова модели. График/диаграмма (если есть) построены по исходной генерации и ручной правкой текста не пересчитываются.</p>
                       <textarea value={editDraft} onChange={e=>setEditDraft(e.target.value)} rows={20}
                         style={{width:'100%',fontFamily:'monospace',fontSize:12,padding:8,boxSizing:'border-box'}}/>
                       <div style={{display:'flex',gap:8,marginTop:8}}>
@@ -7564,10 +7564,10 @@ function App() {
                             const upd={...proj, results: (proj.results||[]).map(x=>resKey(x)===editKey?{...x,content:editDraft,editedAt:new Date().toISOString()}:x), updatedAt:new Date().toISOString()};
                             setProj(upd); sv(upd); setEditKey(null);
                           }}
-                          style={{padding:'5px 12px',fontSize:11,background:m.color,color:'#fff',border:'none',borderRadius:6,cursor:'pointer'}}>
+                          style={{padding:'5px 12px',fontSize:11,background:m.color,color:'var(--card-solid)',border:'none',borderRadius:6,cursor:'pointer'}}>
                           Сохранить правки
                         </button>
-                        <button onClick={()=>setEditKey(null)} style={{padding:'5px 12px',fontSize:11,color:'#666',border:'1px solid #ddd',borderRadius:6,background:'#fff',cursor:'pointer'}}>
+                        <button onClick={()=>setEditKey(null)} style={{padding:'5px 12px',fontSize:11,color:'var(--ink-2)',border:'1px solid #ddd',borderRadius:6,background:'var(--card-solid)',cursor:'pointer'}}>
                           Отмена
                         </button>
                       </div>
@@ -7586,34 +7586,34 @@ function App() {
               <div style={{marginBottom:16}}>
                 <div className="card">
                   <h3 style={{fontSize:16,fontWeight:500,marginBottom:6}}>{t.nichePickTitle}</h3>
-                  <p style={{fontSize:13,color:'#666',marginBottom:14,lineHeight:1.5}}>{t.nichePickSub}</p>
+                  <p style={{fontSize:13,color:'var(--ink-2)',marginBottom:14,lineHeight:1.5}}>{t.nichePickSub}</p>
                   <NicheScoreChart niches={nicheOpts}/>
                   <div style={{maxHeight:nicheOpts.length>10?520:'none',overflowY:nicheOpts.length>10?'auto':'visible',paddingRight:nicheOpts.length>10?4:0}}>
                   {nicheOpts.map((n, i) => {
                     const isOn = selNiches.includes(i);
-                    const c = '#4A7C1F', bg = '#EFF6E4', dark = '#2E4F0C';
+                    const c = 'var(--acc-ink)', bg = 'color-mix(in srgb, var(--mid) 8%, var(--card-solid))', dark = 'var(--acc-strong-ink)';
                     return (
                       <div key={i} onClick={()=>setSelNiches(p=>p.includes(i)?p.filter(x=>x!==i):[...p,i])}
-                        style={{border:isOn?'2px solid '+c:'1px solid #e5e5e5',borderRadius:12,padding:'1rem 1.25rem',marginBottom:8,cursor:'pointer',background:isOn?bg:'#fff'}}>
+                        style={{border:isOn?'2px solid '+c:'1px solid #e5e5e5',borderRadius:12,padding:'1rem 1.25rem',marginBottom:8,cursor:'pointer',background:isOn?bg:'var(--card-solid)'}}>
                         <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:8}}>
                           <div style={{flex:1,display:'flex',alignItems:'center',gap:8,flexWrap:'wrap'}}>
-                            <span style={{fontSize:14,fontWeight:500,color:isOn?dark:'#111'}}>{n.name}</span>
-                            {n.recommended && <span style={{fontSize:10,fontWeight:600,padding:'2px 8px',borderRadius:10,background:isOn?'rgba(255,255,255,0.7)':'#EAF3DE',color:'#27500A'}}>★ {t.nicheRecommended}</span>}
-                            <span style={{fontSize:11,fontWeight:600,padding:'2px 8px',borderRadius:4,background:n.verdict==='Go'?'#EAF3DE':n.verdict==='Maybe'?'#FAEEDA':'#FAECE7',color:n.verdict==='Go'?'#27500A':n.verdict==='Maybe'?'#633806':'#712B13'}}>{n.verdict}</span>
+                            <span style={{fontSize:14,fontWeight:500,color:isOn?dark:'var(--ink)'}}>{n.name}</span>
+                            {n.recommended && <span style={{fontSize:10,fontWeight:600,padding:'2px 8px',borderRadius:10,background:isOn?'rgba(255,255,255,0.7)':'color-mix(in srgb, var(--mid) 12%, var(--card-solid))',color:'var(--acc-strong-ink)'}}>★ {t.nicheRecommended}</span>}
+                            <span style={{fontSize:11,fontWeight:600,padding:'2px 8px',borderRadius:4,background:n.verdict==='Go'?'color-mix(in srgb, var(--mid) 12%, var(--card-solid))':n.verdict==='Maybe'?'color-mix(in srgb, var(--acc-quiet) 12%, var(--card-solid))':'color-mix(in srgb, var(--acc-quiet) 10%, var(--card-solid))',color:n.verdict==='Go'?'var(--acc-strong-ink)':n.verdict==='Maybe'?'var(--acc-quiet-ink)':'var(--acc-quiet-ink)'}}>{n.verdict}</span>
                           </div>
                           <div style={{width:18,height:18,borderRadius:'50%',border:isOn?'none':'1.5px solid #ccc',background:isOn?c:'transparent',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
-                            {isOn && <span style={{color:'#fff',fontSize:11}}>✓</span>}
+                            {isOn && <span style={{color:'var(--card-solid)',fontSize:11}}>✓</span>}
                           </div>
                         </div>
                         <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr 1fr',gap:8,marginBottom:n.why?8:0}}>
                           {[[t.nicheDemand,n.demand],[t.nicheCompetition,n.competition],[t.nicheEconomics,n.economics],[t.nicheScore,n.score]].map(([l,v])=>(
-                            <div key={l} style={{background:isOn?'rgba(255,255,255,0.6)':'#f8f8f8',borderRadius:8,padding:'8px 10px'}}>
-                              <div style={{fontSize:10,color:isOn?dark:'#999',marginBottom:2}}>{l}</div>
-                              <div style={{fontSize:13,fontWeight:500,color:isOn?dark:'#444'}}>{v ?? '—'}</div>
+                            <div key={l} style={{background:isOn?'rgba(255,255,255,0.6)':'var(--line-2)',borderRadius:8,padding:'8px 10px'}}>
+                              <div style={{fontSize:10,color:isOn?dark:'var(--ink-3)',marginBottom:2}}>{l}</div>
+                              <div style={{fontSize:13,fontWeight:500,color:isOn?dark:'var(--ink-2)'}}>{v ?? '—'}</div>
                             </div>
                           ))}
                         </div>
-                        {n.why && <p style={{fontSize:12,color:isOn?dark:'#777',lineHeight:1.5,margin:0}}>{n.why}</p>}
+                        {n.why && <p style={{fontSize:12,color:isOn?dark:'var(--ink-3)',lineHeight:1.5,margin:0}}>{n.why}</p>}
                       </div>
                     );
                   })}
@@ -7628,46 +7628,46 @@ function App() {
               <div style={{marginBottom:16}}>
                 <div className="card">
                   <h3 style={{fontSize:16,fontWeight:500,marginBottom:6}}>{t.chooseLayer}</h3>
-                  <p style={{fontSize:13,color:'#666',marginBottom:14,lineHeight:1.5}}>{t.chooseLayerSub}</p>
+                  <p style={{fontSize:13,color:'var(--ink-2)',marginBottom:14,lineHeight:1.5}}>{t.chooseLayerSub}</p>
                   {generatingLayers ? (
-                    <p style={{fontSize:13,color:'#888',padding:'1rem 0'}}>{t.generating2}</p>
+                    <p style={{fontSize:13,color:'var(--ink-3)',padding:'1rem 0'}}>{t.generating2}</p>
                   ) : priceLayers.map((layer, i) => {
                     const isOn = selectedLayers.includes(i);
-                    const colors = ['#1565A8','#639922','#633806'];
-                    const bgs = ['#E3EFFE','#EAF3DE','#FAEEDA'];
-                    const darks = ['#0D3E6E','#27500A','#412402'];
+                    const colors = ['var(--acc-ink)','var(--mid)','var(--acc-quiet-ink)'];
+                    const bgs = ['color-mix(in srgb, var(--mid) 10%, var(--card-solid))','color-mix(in srgb, var(--mid) 12%, var(--card-solid))','color-mix(in srgb, var(--acc-quiet) 12%, var(--card-solid))'];
+                    const darks = ['var(--acc-strong-ink)','var(--acc-strong-ink)','var(--acc-quiet-ink)'];
                     return (
                       <div key={i} onClick={()=>setSelectedLayers(s=>s.includes(i)?s.filter(x=>x!==i):[...s,i])}
-                        style={{border:isOn?'2px solid '+colors[i]:'1px solid #e5e5e5',borderRadius:12,padding:'1rem 1.25rem',marginBottom:8,cursor:'pointer',background:isOn?bgs[i]:'#fff'}}>
+                        style={{border:isOn?'2px solid '+colors[i]:'1px solid #e5e5e5',borderRadius:12,padding:'1rem 1.25rem',marginBottom:8,cursor:'pointer',background:isOn?bgs[i]:'var(--card-solid)'}}>
                         <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:10}}>
                           <div style={{flex:1}}>
-                            <div style={{fontSize:14,fontWeight:500,color:isOn?darks[i]:'#111'}}>{layer.name}</div>
-                            <div style={{fontSize:12,color:isOn?colors[i]:'#888',marginTop:2}}>{layer.priceRange}</div>
+                            <div style={{fontSize:14,fontWeight:500,color:isOn?darks[i]:'var(--ink)'}}>{layer.name}</div>
+                            <div style={{fontSize:12,color:isOn?colors[i]:'var(--ink-3)',marginTop:2}}>{layer.priceRange}</div>
                           </div>
                           <div style={{width:18,height:18,borderRadius:'50%',border:isOn?'none':'1.5px solid #ccc',background:isOn?colors[i]:'transparent',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
-                            {isOn && <span style={{color:'#fff',fontSize:11}}>✓</span>}
+                            {isOn && <span style={{color:'var(--card-solid)',fontSize:11}}>✓</span>}
                           </div>
                         </div>
                         <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:8,marginBottom:layer.players&&layer.players.length>0?10:0}}>
                           {[['Clients / SOM',layer.som],['Competition',layer.competition],['AOV/CAC efficiency',layer.efficiency]].map(([l,v])=>(
-                            <div key={l} style={{background:isOn?'rgba(255,255,255,0.6)':'#f8f8f8',borderRadius:8,padding:'8px 10px'}}>
-                              <div style={{fontSize:10,color:isOn?darks[i]:'#999',marginBottom:2}}>{l}</div>
-                              <div style={{fontSize:13,fontWeight:500,color:isOn?darks[i]:'#444'}}>{v||'—'}</div>
+                            <div key={l} style={{background:isOn?'rgba(255,255,255,0.6)':'var(--line-2)',borderRadius:8,padding:'8px 10px'}}>
+                              <div style={{fontSize:10,color:isOn?darks[i]:'var(--ink-3)',marginBottom:2}}>{l}</div>
+                              <div style={{fontSize:13,fontWeight:500,color:isOn?darks[i]:'var(--ink-2)'}}>{v||'—'}</div>
                             </div>
                           ))}
                         </div>
                         {layer.players && layer.players.length > 0 && (
                           <div>
-                            <div style={{fontSize:10,color:isOn?darks[i]:'#999',marginBottom:4}}>Key players in this layer</div>
+                            <div style={{fontSize:10,color:isOn?darks[i]:'var(--ink-3)',marginBottom:4}}>Key players in this layer</div>
                             <div style={{display:'flex',flexWrap:'wrap',gap:4}}>
-                              {layer.players.map((p,j)=><span key={j} style={{fontSize:11,padding:'2px 8px',borderRadius:3,background:isOn?'rgba(255,255,255,0.7)':'#f0f0f0',color:isOn?darks[i]:'#555'}}>{p}</span>)}
+                              {layer.players.map((p,j)=><span key={j} style={{fontSize:11,padding:'2px 8px',borderRadius:3,background:isOn?'rgba(255,255,255,0.7)':'var(--line-2)',color:isOn?darks[i]:'var(--ink-2)'}}>{p}</span>)}
                             </div>
                           </div>
                         )}
                       </div>
                     );
                   })}
-                  <p style={{fontSize:12,color:'#888',marginTop:4,marginBottom:14}}>{t.layerNote}</p>
+                  <p style={{fontSize:12,color:'var(--ink-3)',marginTop:4,marginBottom:14}}>{t.layerNote}</p>
                   <div style={{display:'flex',gap:10}}>
                     <button className="btn-primary" onClick={continueAfterLayers} disabled={selectedLayers.length===0}>{t.continueToM2}</button>
                     <button onClick={()=>setShowLayers(false)}>{t.backToM1}</button>
@@ -7679,9 +7679,9 @@ function App() {
               <div style={{marginBottom:16}}>
                 <div className="card">
                   <h3 style={{fontSize:16,fontWeight:500,marginBottom:6}}>{t.seedConfirmTitle}</h3>
-                  <p style={{fontSize:13,color:'#666',marginBottom:14,lineHeight:1.5}}>{t.seedConfirmSub}</p>
+                  <p style={{fontSize:13,color:'var(--ink-2)',marginBottom:14,lineHeight:1.5}}>{t.seedConfirmSub}</p>
                   {seedError && (
-                    <div style={{background:'#FDF2F2',border:'1px solid #F5C2C2',borderRadius:8,padding:'10px 14px',marginBottom:14,fontSize:13,color:'#8B2020',lineHeight:1.5}}>
+                    <div style={{background:'color-mix(in srgb, var(--acc-quiet) 8%, var(--card-solid))',border:'1px solid #F5C2C2',borderRadius:8,padding:'10px 14px',marginBottom:14,fontSize:13,color:'var(--acc-quiet-ink)',lineHeight:1.5}}>
                       {seedError}
                     </div>
                   )}
@@ -7690,11 +7690,11 @@ function App() {
                       <input value={s} onChange={e=>setSeedCandidates(p=>p.map((x,j)=>j===i?e.target.value:x))}
                         style={{flex:1,padding:'8px 10px',fontSize:13,border:'1px solid #e5e5e5',borderRadius:8}}/>
                       <button onClick={()=>setSeedCandidates(p=>p.filter((_,j)=>j!==i))}
-                        style={{padding:'0 12px',color:'#999',border:'1px solid #e5e5e5',borderRadius:8,background:'#fff',cursor:'pointer'}}>✕</button>
+                        style={{padding:'0 12px',color:'var(--ink-3)',border:'1px solid #e5e5e5',borderRadius:8,background:'var(--card-solid)',cursor:'pointer'}}>✕</button>
                     </div>
                   ))}
                   <button onClick={()=>setSeedCandidates(p=>[...p,''])}
-                    style={{padding:'6px 12px',fontSize:12,color:'#666',border:'1px dashed #ccc',borderRadius:8,background:'#fff',cursor:'pointer',marginBottom:14}}>
+                    style={{padding:'6px 12px',fontSize:12,color:'var(--ink-2)',border:'1px dashed #ccc',borderRadius:8,background:'var(--card-solid)',cursor:'pointer',marginBottom:14}}>
                     {t.seedAdd}
                   </button>
                   <div style={{display:'flex',gap:10}}>
@@ -7711,21 +7711,21 @@ function App() {
       {!isRun && (
         <div style={{marginTop:16}}>
           <div style={{border:'1px solid #e5e5e5',borderRadius:12,overflow:'hidden',marginBottom:10}}>
-            <div style={{display:'flex',alignItems:'center',gap:10,padding:'12px 14px',background:'#f8f8f8',borderBottom:'1px solid #e5e5e5'}}>
-              <span style={{flex:1,fontSize:14,fontWeight:500}}>Report <span style={{fontSize:11,fontWeight:400,color:'#888'}}>in {lang}</span></span>
+            <div style={{display:'flex',alignItems:'center',gap:10,padding:'12px 14px',background:'var(--line-2)',borderBottom:'1px solid #e5e5e5'}}>
+              <span style={{flex:1,fontSize:14,fontWeight:500}}>Report <span style={{fontSize:11,fontWeight:400,color:'var(--ink-3)'}}>in {lang}</span></span>
               {!rep&&!repping&&<button className="btn-primary" onClick={genRep}>{t.generateReport}</button>}
               {rep&&!repping&&<button onClick={genRep}>{t.regenerate}</button>}
               {(rep||repping)&&<button onClick={()=>setRepOpen(o=>!o)}>{repOpen?t.collapse:t.expand}</button>}
             </div>
-            {repping && <p style={{padding:'14px',fontSize:13,color:'#888'}}>{t.generating} (~2–3 min)</p>}
+            {repping && <p style={{padding:'14px',fontSize:13,color:'var(--ink-3)'}}>{t.generating} (~2–3 min)</p>}
             {rep && repOpen && (
               <>
                 <div style={{padding:'14px',maxHeight:600,overflowY:'auto'}}><MD text={rep}/></div>
-                <div style={{padding:'10px 14px',borderTop:'1px solid #e5e5e5',background:'#f8f8f8',display:'flex',gap:8,alignItems:'center',flexWrap:'wrap'}}>
-                  <span style={{fontSize:12,color:'#666',flexShrink:0}}>{t.translateTo}</span>
+                <div style={{padding:'10px 14px',borderTop:'1px solid #e5e5e5',background:'var(--line-2)',display:'flex',gap:8,alignItems:'center',flexWrap:'wrap'}}>
+                  <span style={{fontSize:12,color:'var(--ink-2)',flexShrink:0}}>{t.translateTo}</span>
                   <div style={{display:'flex',gap:5,flexWrap:'wrap',flex:1}}>
                     {['Russian','English','Turkish','Arabic','German'].filter(l=>l!==lang).map(l=>(
-                      <button key={l} onClick={()=>setXl(l)} style={{padding:'4px 10px',fontSize:11,borderColor:xl===l?'#378ADD':'#ddd',background:xl===l?'#E6F1FB':'#fff',color:xl===l?'#0C447C':'#111'}}>{l}</button>
+                      <button key={l} onClick={()=>setXl(l)} style={{padding:'4px 10px',fontSize:11,borderColor:xl===l?'var(--mid)':'var(--line)',background:xl===l?'color-mix(in srgb, var(--mid) 12%, transparent)':'var(--card-solid)',color:xl===l?'var(--acc-ink)':'var(--ink)'}}>{l}</button>
                     ))}
                     <input value={xl} onChange={e=>setXl(e.target.value)} placeholder="other…" style={{width:90,fontSize:11,padding:'4px 8px'}}/>
                   </div>
@@ -7733,7 +7733,7 @@ function App() {
                 </div>
                 {xled && (
                   <div style={{padding:'14px',borderTop:'1px solid #e5e5e5',maxHeight:400,overflowY:'auto'}}>
-                    <p style={{fontSize:11,fontWeight:500,color:'#888',marginBottom:8}}>TRANSLATION — {xl}</p>
+                    <p style={{fontSize:11,fontWeight:500,color:'var(--ink-3)',marginBottom:8}}>TRANSLATION — {xl}</p>
                     <MD text={xled}/>
                   </div>
                 )}
@@ -7743,32 +7743,32 @@ function App() {
           {(()=>{
             if (lint.skipped || (!lint.hard.length && !lint.soft.length)) return null;
             const row = (f,i)=>(
-              <span key={i} style={{display:'inline-block',background:'#fff',border:'1px solid #e6d5a8',borderRadius:5,padding:'2px 7px',margin:'0 5px 5px 0',fontSize:11}}
+              <span key={i} style={{display:'inline-block',background:'var(--card-solid)',border:'1px solid #e6d5a8',borderRadius:5,padding:'2px 7px',margin:'0 5px 5px 0',fontSize:11}}
                     title={f.sample}>
-                <b>{f.term}</b>{f.count>1?<span style={{color:'#999'}}> ×{f.count}</span>:null}
-                {f.suggest?<span style={{color:'#7a5c00'}}> → {f.suggest}</span>:null}
+                <b>{f.term}</b>{f.count>1?<span style={{color:'var(--ink-3)'}}> ×{f.count}</span>:null}
+                {f.suggest?<span style={{color:'var(--acc-quiet-ink)'}}> → {f.suggest}</span>:null}
               </span>
             );
             return (
-              <div style={{background:'#FFF9E8',border:'1px solid #EDD9A3',borderRadius:8,padding:'10px 14px',marginBottom:10}}>
-                <p style={{fontSize:12,fontWeight:600,color:'#7a5c00',marginBottom:6}}>
+              <div style={{background:'color-mix(in srgb, var(--acc-quiet) 8%, var(--card-solid))',border:'1px solid #EDD9A3',borderRadius:8,padding:'10px 14px',marginBottom:10}}>
+                <p style={{fontSize:12,fontWeight:600,color:'var(--acc-quiet-ink)',marginBottom:6}}>
                   Проверка языка: найдена латиница в русском тексте
                   {' '}({lint.hard.length+lint.soft.length} {lint.hard.length+lint.soft.length===1?'термин':'терминов'})
                 </p>
                 {lint.hard.length>0 && (
                   <div style={{marginBottom:6}}>
-                    <p style={{fontSize:11,color:'#8a6d1f',marginBottom:4}}>Есть русский эквивалент — стоит заменить:</p>
+                    <p style={{fontSize:11,color:'var(--acc-quiet-ink)',marginBottom:4}}>Есть русский эквивалент — стоит заменить:</p>
                     <div>{lint.hard.map(row)}</div>
                   </div>
                 )}
                 {lint.soft.length>0 && (
                   <div>
-                    <p style={{fontSize:11,color:'#8a6d1f',marginBottom:4}}>Прочая латиница — проверьте, законна ли она здесь (название конкурента и дословная цитата — законны):</p>
+                    <p style={{fontSize:11,color:'var(--acc-quiet-ink)',marginBottom:4}}>Прочая латиница — проверьте, законна ли она здесь (название конкурента и дословная цитата — законны):</p>
                     <div>{lint.soft.slice(0,40).map(row)}</div>
-                    {lint.soft.length>40 && <span style={{fontSize:11,color:'#999'}}>…и ещё {lint.soft.length-40}</span>}
+                    {lint.soft.length>40 && <span style={{fontSize:11,color:'var(--ink-3)'}}>…и ещё {lint.soft.length-40}</span>}
                   </div>
                 )}
-                <p style={{fontSize:10,color:'#a08a52',marginTop:6}}>
+                <p style={{fontSize:10,color:'var(--acc-quiet-ink)',marginTop:6}}>
                   Наведите на термин — покажет, в каком месте текста он встретился. Ничего не заменяется автоматически:
                   решение за вами. Чтобы исправить — ↺ на нужном модуле с замечанием.
                 </p>
@@ -7776,15 +7776,15 @@ function App() {
             );
           })()}
           <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr 1fr',gap:8}}>
-            <button onClick={()=>dlMd(buildFullMd(),'_full')} style={{fontWeight:500,borderColor:'#111'}}>{t.dlFullMd}</button>
+            <button onClick={()=>dlMd(buildFullMd(),'_full')} style={{fontWeight:500,borderColor:'var(--ink)'}}>{t.dlFullMd}</button>
             <button onClick={()=>rep&&dlMd(rep,'_summary')} disabled={!rep} style={{opacity:rep?1:0.4}}>{t.dlReport}</button>
-            <button onClick={()=>{const html=generateHTMLReport(brief,proj.results,lang,priceLayers,selectedLayers,null);const w=window.open('','_blank');w.document.write(html);w.document.close();}} style={{background:'#111',color:'#fff',borderColor:'#111',fontWeight:500}}>↗ Полный отчёт</button>
+            <button onClick={()=>{const html=generateHTMLReport(brief,proj.results,lang,priceLayers,selectedLayers,null);const w=window.open('','_blank');w.document.write(html);w.document.close();}} style={{background:'var(--ink)',color:'var(--card-solid)',borderColor:'var(--ink)',fontWeight:500}}>↗ Полный отчёт</button>
             <button onClick={()=>xled&&dlMd(xled,'_translated')} disabled={!xled} style={{opacity:xled?1:0.4}}>{t.dlTranslation}</button>
             <button onClick={dlCsv}>{t.dlData}</button>
-            <button onClick={dlJson} style={{borderColor:'#EF9F27',color:'#633806'}}>{t.dlAgent}</button>
+            <button onClick={dlJson} style={{borderColor:'var(--acc-quiet)',color:'var(--acc-quiet-ink)'}}>{t.dlAgent}</button>
           </div>
-          <p style={{fontSize:11,color:'#888',textAlign:'center',marginTop:8}}>{t.autoSaved}</p>
-          {(()=>{const rs=proj.results||[];const tot=rs.reduce((s,r)=>s+(r.usage?r.usage.total:0),0);const sc=rs.reduce((s,r)=>s+(r.searchCalls||0),0);const kc=rs.reduce((s,r)=>s+(r.keywordCalls||0),0);return (tot>0||sc||kc)?(<p style={{fontSize:11,color:'#888',textAlign:'center',marginTop:2}}>За прогон: ≈{(tot/1000).toFixed(1)}k токенов OpenAI · поиск Tavily {sc} {plural(sc,'запрос','запроса','запросов')} · частотность {kc} {plural(kc,'запрос','запроса','запросов')} <span style={{color:'#bbb'}}>(три отдельные платные статьи, считаются каждая своим счётчиком)</span></p>):null;})()}
+          <p style={{fontSize:11,color:'var(--ink-3)',textAlign:'center',marginTop:8}}>{t.autoSaved}</p>
+          {(()=>{const rs=proj.results||[];const tot=rs.reduce((s,r)=>s+(r.usage?r.usage.total:0),0);const sc=rs.reduce((s,r)=>s+(r.searchCalls||0),0);const kc=rs.reduce((s,r)=>s+(r.keywordCalls||0),0);return (tot>0||sc||kc)?(<p style={{fontSize:11,color:'var(--ink-3)',textAlign:'center',marginTop:2}}>За прогон: ≈{(tot/1000).toFixed(1)}k токенов OpenAI · поиск Tavily {sc} {plural(sc,'запрос','запроса','запросов')} · частотность {kc} {plural(kc,'запрос','запроса','запросов')} <span style={{color:'var(--ink-3)'}}>(три отдельные платные статьи, считаются каждая своим счётчиком)</span></p>):null;})()}
         </div>
       )}
     </div>
@@ -7800,9 +7800,9 @@ class ErrorBoundary extends React.Component {
       const msg = String((this.state.err && (this.state.err.message||this.state.err)) || 'Unknown error');
       const stack = String((this.state.err && this.state.err.stack) || '').slice(0, 800);
       return (
-        <div style={{maxWidth:680,margin:'40px auto',padding:'20px 24px',border:'1px solid #f0b4b4',background:'#fdf2f2',borderRadius:12}}>
-          <div style={{fontWeight:600,color:'#a33',marginBottom:8,fontSize:15}}>⚠ Ошибка интерфейса — пришлите этот текст разработчику</div>
-          <div style={{fontSize:12,color:'#a33',whiteSpace:'pre-wrap',fontFamily:'monospace'}}>{msg}{'\n\n'}{stack}</div>
+        <div style={{maxWidth:680,margin:'40px auto',padding:'20px 24px',border:'1px solid #f0b4b4',background:'color-mix(in srgb, var(--acc-quiet) 8%, var(--card-solid))',borderRadius:12}}>
+          <div style={{fontWeight:600,color:'var(--acc-quiet-ink)',marginBottom:8,fontSize:15}}>⚠ Ошибка интерфейса — пришлите этот текст разработчику</div>
+          <div style={{fontSize:12,color:'var(--acc-quiet-ink)',whiteSpace:'pre-wrap',fontFamily:'monospace'}}>{msg}{'\n\n'}{stack}</div>
           <button onClick={()=>location.reload()} style={{marginTop:14,padding:'8px 16px',cursor:'pointer'}}>Перезагрузить страницу</button>
         </div>
       );
