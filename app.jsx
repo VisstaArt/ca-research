@@ -5982,6 +5982,27 @@ function NicheHero({ list, canPick, selected, onToggle, onContinue, statusOf }) 
 }
 
 
+
+// ── ШАПКА ЭТАПА ─────────────────────────────────────────────────────────────
+// Жемчужная плашка — ЗАГОЛОВОК, отдельно и выше рабочей поверхности, без
+// свалки данных (владелица, 14.09: «просто бриф, дата, язык — модули здесь
+// не нужны»). Имя этапа антиквой, как имя на обложке отчёта.
+function StageHeader({ имя, lang, справа }) {
+  const дата = new Date().toLocaleDateString('ru-RU', { day:'numeric', month:'long', year:'numeric' });
+  return (
+    <div className="card nacre" style={{marginBottom:16,display:'flex',alignItems:'flex-end',
+        justifyContent:'space-between',gap:14,flexWrap:'wrap',padding:'24px 26px'}}>
+      <h1 style={{fontFamily:'var(--serif)',fontSize:28,fontWeight:600,
+          letterSpacing:'-.02em',margin:0,lineHeight:1.1}}>{имя}</h1>
+      <div style={{display:'flex',alignItems:'baseline',gap:12,flexWrap:'wrap'}}>
+        {справа}
+        <span style={{fontSize:12,color:'var(--ink-2)'}}>{дата}</span>
+        <span className="tag" style={{color:'var(--acc-ink)'}}>{langSelf(lang)}</span>
+      </div>
+    </div>
+  );
+}
+
 // ── КВИЗ-БРИФ ────────────────────────────────────────────────────────────────
 // Бриф в платформе — не анкета на семнадцать полей, а путь (решение владелицы,
 // давнее и повторённое 14.09): сайт → разбор → система сама говорит, чего не
@@ -7252,10 +7273,8 @@ function App() {
   // Прогоне» — так и было: без проекта каждый шаг проваливался в форму.
   if (embedded && !proj && (шагИзАдреса === 'niches' || шагИзАдреса === 'run')) return (
     <div>
-      <div className="card nacre cover rview" style={{marginBottom:14}}
-        dangerouslySetInnerHTML={{__html:
-          buildCoverHTML({ ...brief, name: brief.name || 'Новый проект' }, [], lang,
-            шагИзАдреса === 'niches' ? 'Ниши' : 'Прогон')}}/>
+      <StageHeader имя={шагИзАдреса === 'niches' ? 'Ниши' : 'Прогон'} lang={lang}/>
+      <div className="worksurface">
       <div className="card">
         <p style={{fontSize:16,fontWeight:600,marginBottom:6}}>
           {шагИзАдреса === 'niches' ? 'Ниш пока нет' : 'Прогона ещё не было'}</p>
@@ -7264,6 +7283,7 @@ function App() {
             ? 'Ниши находит разведка — первый модуль прогона. Заполните бриф на вкладке «Бриф» и запустите: здесь появится веер ниш с оценками, и прогон остановится, чтобы вы выбрали.'
             : 'Сначала бриф, затем запуск. После разведки прогон остановится на выборе ниш, а сюда лягут модули по каждой выбранной нише.'}
         </p>
+      </div>
       </div>
     </div>
   );
@@ -7378,16 +7398,15 @@ function App() {
   // Квиз вместо анкеты — только в платформе и только для нового брифа.
   if (embedded && !proj && sc === 'form') return (
     <div>
-      <div className="card nacre cover rview" style={{marginBottom:14}}
-        dangerouslySetInnerHTML={{__html:
-          buildCoverHTML(brief.name ? brief : { ...brief, name: 'Новый проект' },
-            proj?.results, lang, 'Бриф')}}/>
+      <StageHeader имя="Бриф" lang={lang}/>
+      <div className="worksurface">
       <QuizBrief brief={brief} setBrief={setBrief}
         siteUrl={siteUrl} setSiteUrl={setSiteUrl}
         parseSite={parseSite} parsing={parsing} pMsg={pMsg}
         mods={mods}
         настройка={<>{картаМодельКлюч}{картаЯзыка}{картаМодулей}</>}
         запуск={()=>run()}/>
+      </div>
     </div>
   );
 
@@ -7754,64 +7773,8 @@ function App() {
           их здесь — навал (замечание владелицы 14.09). Внутри платформы
           остаётся только строка действий; вне платформы — прежняя шапка. */}
       {embedded ? (
-        <>
-        {/* Жемчужная плашка — одна, сверху, и УПРАВЛЕНИЕ ВНУТРИ НЕЁ (владелица,
-            14.09). Нутро обложки — тем же кодом, что отчёт; кнопки — React,
-            строкой под полями брифа, на той же плашке. */}
-        <div className="card nacre cover rview" style={{marginBottom:'1rem'}}>
-          <div dangerouslySetInnerHTML={{__html:
-            buildCoverHTML(brief, proj?.results, lang, шагИзАдреса === 'niches' ? 'Ниши' : 'Прогон')}}/>
-          <div style={{display:'flex',gap:8,flexWrap:'wrap',alignItems:'center',marginTop:16,paddingTop:14,borderTop:'1px solid var(--line)'}}>
-            {!isRun && pending.length > 0 && (
-              <button className="btn-primary" onClick={()=>run()}>▶ Прогнать: {pending.map(m=>m.id).join(', ')}</button>
-            )}
-            {!isRun && pending.length === 0 && doneCount > 0 && (
-              <button className="btn-primary" onClick={()=>setSc('form')}>＋ Добавить модули</button>
-            )}
-            {!isRun && modDone('M2') && (
-              <button onClick={openNichePicker} style={{fontSize:12,padding:'7px 12px'}}
-                title="Добавить ещё ниши — прогонятся только новые, готовые не тронутся">
-                ＋ Добавить ниши
-              </button>
-            )}
-            {!isRun && doneCount > 0 && (
-              <button onClick={()=>dlMd(buildFullMd())} style={{fontSize:12,padding:'7px 12px'}}
-                title="Полный отчёт по всем пройденным нишам, файлом">
-                ⤓ Выгрузить отчёт
-              </button>
-            )}
-            <span className="tag" style={{marginLeft:'auto'}}>{lang} · {MODEL}</span>
-          </div>
-        </div>
-        {embedded && шагИзАдреса === 'niches' && (() => {
-          // Список ниш: на стоп-точке — кандидаты выбора; после — все ниши
-          // разведки, чтобы можно было листать и смотреть данные каждой.
-          const m2r = (proj?.results || []).find(r2 => r2.id === 'M2');
-          const nd = m2r && (m2r.nicheData || extractNicheData(m2r.content || ''));
-          const все = (showNiches && nicheOpts.length) ? nicheOpts
-            : (nd && Array.isArray(nd.niches) ? nd.niches : []);
-          if (!все.length) return (
-            <div className="card"><p className="lede" style={{fontSize:13,color:'var(--ink-2)'}}>
-              Ниши появятся после разведки — она идёт первым модулем прогона.</p></div>
-          );
-          const выбр = showNiches
-            ? selNiches.map(ix => (nicheOpts[ix] || {}).name).filter(Boolean)
-            : String(brief.selectedNiche || '').split(',').map(x2 => x2.trim()).filter(Boolean);
-          const статус = имя => {
-            const свои = (proj?.results || []).filter(r2 => (r2.niche || '') === имя && r2.content && !r2.failed);
-            if (!выбр.includes(имя)) return 'не в работе';
-            const ждут = MODULES.filter(m2 => !m2.disabled && !m2.offChain && m2.id !== 'CONTENT'
-              && CAContract.isPerNiche(m2.id)).length;
-            return свои.length >= ждут ? 'готова' : (свои.length ? свои.length + ' из ' + ждут : 'выбрана');
-          };
-          return <NicheHero list={все} canPick={showNiches}
-            selected={выбр}
-            statusOf={статус}
-            onToggle={имя => { const ix = nicheOpts.findIndex(x2 => x2.name === имя);
-              if (ix >= 0) setSelNiches(p2 => p2.includes(ix) ? p2.filter(z => z !== ix) : [...p2, ix]); }}
-            onContinue={continueAfterNiche} />;
-        })()}
-        </>
+        <StageHeader имя={шагИзАдреса === 'niches' ? 'Ниши' : 'Прогон'} lang={lang}
+          справа={<span className="tag">{MODEL}</span>}/>
       ) : (
       <div className="card nacre" style={{marginBottom:'1rem'}}>
         <div style={{display:'flex',alignItems:'flex-start',justifyContent:'space-between',gap:14,flexWrap:'wrap'}}>
@@ -7846,6 +7809,27 @@ function App() {
           </div>
         </div>
       </div>
+      )}
+
+      {/* Рабочая поверхность: подложка того же цвета, что панель бокового
+          меню (владелица сверила — совпадают), шапка-плашка отдельно выше.
+          Действия — на поверхности, не в шапке. */}
+      <div className={embedded ? 'worksurface' : undefined}>
+      {embedded && (
+        <div style={{display:'flex',gap:8,flexWrap:'wrap',alignItems:'center',marginBottom:14}}>
+          {!isRun && pending.length > 0 && (
+            <button className="btn-primary" onClick={()=>run()}>▶ Прогнать: {pending.map(m=>m.id).join(', ')}</button>
+          )}
+          {!isRun && pending.length === 0 && doneCount > 0 && (
+            <button className="btn-primary" onClick={()=>setSc('form')}>＋ Добавить модули</button>
+          )}
+          {!isRun && modDone('M2') && (
+            <button onClick={openNichePicker} style={{fontSize:12,padding:'7px 12px'}}>＋ Добавить ниши</button>
+          )}
+          {!isRun && doneCount > 0 && (
+            <button onClick={()=>dlMd(buildFullMd())} style={{fontSize:12,padding:'7px 12px'}}>⤓ Выгрузить отчёт</button>
+          )}
+        </div>
       )}
 
       <div style={{marginBottom:'1.25rem'}}>
@@ -8205,6 +8189,7 @@ function App() {
           {(()=>{const rs=proj.results||[];const tot=rs.reduce((s,r)=>s+(r.usage?r.usage.total:0),0);const sc=rs.reduce((s,r)=>s+(r.searchCalls||0),0);const kc=rs.reduce((s,r)=>s+(r.keywordCalls||0),0);return (tot>0||sc||kc)?(<p style={{fontSize:11,color:'var(--ink-3)',textAlign:'center',marginTop:2}}>За прогон: ≈{(tot/1000).toFixed(1)}k токенов OpenAI · поиск Tavily {sc} {plural(sc,'запрос','запроса','запросов')} · частотность {kc} {plural(kc,'запрос','запроса','запросов')} <span style={{color:'var(--ink-3)'}}>(три отдельные платные статьи, считаются каждая своим счётчиком)</span></p>):null;})()}
         </div>
       )}
+    </div>
     </div>
   );
 }

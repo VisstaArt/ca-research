@@ -97,6 +97,15 @@ tr:nth-child(even) td { background: none; }
    своим кеглем 12.5 — единственные на всю платформу. */
 .field-label { font-size: var(--fs-label); font-weight: 700; letter-spacing: .07em;
   text-transform: uppercase; color: var(--ink-3); }
+/* Рабочая поверхность этапа: тот же материал, что панель бокового меню
+   платформы — владелица сверила цвета, они обязаны совпадать. Шапка-плашка
+   стоит отдельно НАД поверхностью, карточки данных лежат на ней. */
+.worksurface { background: color-mix(in srgb, var(--card-solid) 88%, transparent);
+  border: 1px solid rgba(255,255,255,.7); border-radius: 24px;
+  padding: 20px 18px;
+  box-shadow: 0 20px 44px -26px rgba(45,36,22,.3), inset 0 1px 0 rgba(255,255,255,.8); }
+.worksurface .card { box-shadow: inset 0 1px 0 var(--hi); }
+
 .field-opt { font-size: var(--fs-caption); color: var(--ink-3); text-transform: none; letter-spacing: 0; }
 </style>
 </head>
@@ -107,6 +116,6 @@ tr:nth-child(even) td { background: none; }
      без сборки — как и весь остальной проект. -->
 <script src="lib/contract.js?v=c5d82d20"></script>
 <script src="lib/auth.js?v=c0e4610f"></script>
-<script src="app.js?v=959e1240"></script>
+<script src="app.js?v=ee049d02"></script>
 </body>
 </html>
