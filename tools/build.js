@@ -75,6 +75,26 @@ TARGETS.forEach(function (t) {
   built++;
 });
 
+// Эталон отдельным файлом для оболочки. До 13.09 оболочка несла СВОЮ копию
+// правил: она отстала, и половина классов согласованного меню (navgrid,
+// navtile, navlist, grp) в ней просто отсутствовала — меню рисовалось голыми
+// кнопками. Источник теперь один, как у контент-машины.
+(function () {
+  var src = rd(BASE + 'app.jsx');
+  var i = src.indexOf('const REPORT_CSS = "');
+  if (i < 0) { console.log('  REPORT_CSS не найден — пропускаю'); return; }
+  var j = src.indexOf('"', i + 'const REPORT_CSS = '.length), end = -1;
+  for (var k = j + 1; k < src.length; k++) {
+    if (src[k] === '\\') { k++; continue; }
+    if (src[k] === '"') { end = k; break; }
+  }
+  if (end < 0) throw new Error('литерал REPORT_CSS не закрыт');
+  var css = JSON.parse(src.slice(j, end + 1));
+  wr(BASE + 'lib/report.css',
+    '/* Собрано из REPORT_CSS в app.jsx. Не править руками. */\n' + css + '\n');
+  console.log('  app.jsx → lib/report.css  (' + Math.round(css.length / 1024) + ' КБ)');
+})();
+
 // Стили платформы отдельным файлом. Источник один — константа PLATFORM_CSS в
 // app.jsx: оболочка и контент-машина берут ОДНО И ТО ЖЕ, а не две копии,
 // которые разъедутся в первый же день. Отчёт этот файл не тянет — в выгрузку

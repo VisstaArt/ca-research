@@ -53,4 +53,22 @@ check('вкладки в эталоне под обоими именами', /\.
 ['--fs-label','--fs-caption','--fs-small','--fs-body','--fs-block','--fs-module','--fs-hero']
   .forEach(function(t){ check('токен '+t+' объявлен', rep.indexOf(t+':')>=0, true); });
 
+// Оболочка берёт эталон файлом, а не своей копией. Копия отставала молча:
+// половины классов согласованного меню в ней не было вовсе, и меню рисовалось
+// голыми кнопками — владелица увидела это как «всё сломано».
+var SHELL = readFile(ROOT + '/shell.html');
+check('оболочка подключает эталон', /href="lib\/report\.css"/.test(SHELL), true);
+check('оболочка подключает стили платформы', /href="lib\/platform\.css"/.test(SHELL), true);
+check('оболочка подключает перламутр', /href="lib\/nacre\.css"/.test(SHELL), true);
+// Токены объявляет только эталон. Копия в оболочке ломала тёмную тему: обычный
+// :root стоит после блоков темы и молча их перебивал.
+var inline = (SHELL.match(/<style>([\s\S]*?)<\/style>/) || [,''])[1];
+var repCss = readFile(ROOT + '/lib/report.css');
+var есть = {};
+(repCss.match(/--[\w-]+\s*:/g) || []).forEach(function (t) { есть[t.replace(/\s*:$/, '')] = 1; });
+var дубли = (inline.match(/--[\w-]+\s*:/g) || [])
+  .map(function (t) { return t.replace(/\s*:$/, ''); })
+  .filter(function (t) { return есть[t]; });
+check('токены эталона в оболочке не переобъявлены', дубли, []);
+
 console.log(fails? '\nПРОВАЛОВ: '+fails : '\nвсё сошлось');
