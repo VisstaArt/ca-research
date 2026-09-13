@@ -189,7 +189,7 @@ const SECTIONS = [
   // контент-машины, какие пусты, чего не хватает для генерации. Именно здесь
   // человек поймёт, почему контент-машина отказалась писать (их просьба).
   { id:'research',  name:'Исследование', parts:[
-      ['brief','Бриф'], ['niches','Ниши'], ['run','Прогон'], ['report','Отчёт'],
+      ['report','Отчёт'], ['brief','Бриф'], ['niches','Ниши'], ['run','Прогон'],
       ['handoff','Что ушло в контент']] },
   { id:'funnel',    name:'Воронка', parts:[
       ['goal','Цель'], ['parts','Из чего состоит'], ['page','Целевая страница'],
@@ -237,7 +237,8 @@ function Platform({ client, market, clients, bar, onPick, onAddClient, onAddMark
   // Раздел и часть внутри него. Список частей меняется вместе с плиткой —
   // это и было решением владелицы: у каждого раздела свои части.
   const [section, setSection] = useState('research');
-  const [part, setPart] = useState('brief');
+  // Открываем на отчёте: это результат, ради которого сюда заходят.
+  const [part, setPart] = useState('report');
   const [drop, setDrop] = useState(false);
   useEffect(() => {
     if (!drop) return;
@@ -529,19 +530,23 @@ function Slot({ section, part, client, market, onAddClient, onAddMarket }) {
     return <NewProject client={part === 'new' ? null : client}
       onAddClient={onAddClient} onAddMarket={onAddMarket} />;
   if (section === 'research') {
-    const q = 'index.html?embed=1&client=' + encodeURIComponent(client.id)
+    // «Отчёт» — это ГОТОВАЯ работа: все модули с графиками, картами и
+    // выводами, ровно то, что выгружается файлом. Она уже собрана, и
+    // показывать вместо неё рабочий экран инструмента было ошибкой.
+    const общее = 'client=' + encodeURIComponent(client.id)
       + '&market=' + encodeURIComponent(market.id || '')
       + '&country=' + encodeURIComponent(market.countryName || '')
-      + '&lang=' + encodeURIComponent(market.lang || '')
-      + (part ? '&step=' + encodeURIComponent(part) : '');
+      + '&lang=' + encodeURIComponent(market.lang || '');
+    const отчёт = part === 'report' || !part;
+    const q = 'index.html?embed=1&' + общее + (отчёт ? '&view=report' : '&step=' + encodeURIComponent(part));
     return (
       <>
-        <div className="hdr">
-          <h1>Исследование целевой аудитории</h1>
-          <p>{client.name} · {market.countryName}</p>
-        </div>
-        {/* Инструмент стоит ВНУТРИ оболочки, а не по ссылке рядом: ссылка
-            означала выход из платформы — терялись клиент, рынок и обратный путь. */}
+        {!отчёт && (
+          <div className="hdr">
+            <h1>Исследование целевой аудитории</h1>
+            <p>{client.name} · {market.countryName}</p>
+          </div>
+        )}
         <iframe className="modframe" title="Исследование целевой аудитории" src={q}></iframe>
       </>
     );
@@ -569,9 +574,8 @@ function Slot({ section, part, client, market, onAddClient, onAddMarket }) {
 // поддержка, профиль. Поэтому стоит на КАЖДОМ экране, включая список клиентов:
 // раньше человек входил и видел голый список без единого признака платформы.
 // ─────────────────────────────────────────────────────────────────────────────
-function Top({ email, onOut, theme, setTheme }) {
+function Top({ email, usage, clients, onOut }) {
   const [open, setOpen] = useState('');
-  // Один список открыт за раз, клик мимо закрывает — правило оболочки.
   useEffect(() => {
     if (!open) return;
     const off = e => { if (!e.target.closest('.cm-drop')) setOpen(''); };
@@ -584,6 +588,8 @@ function Top({ email, onOut, theme, setTheme }) {
   const час = now.getHours();
   const привет = час < 5 ? 'Доброй ночи' : час < 12 ? 'Доброе утро' : час < 18 ? 'Добрый день' : 'Добрый вечер';
   const имя = (email || '').split('@')[0];
+  const центы = (clients || []).reduce((a, c) => a + ((c.usage && c.usage.cost_cents) || 0), 0);
+  const деньги = центы ? (центы / 100).toFixed(2).replace('.', ',') + ' $' : '0 $';
   return (
     <div className="cm-top">
       <img className="cm-logo" src={LOGO} alt="bulbul lab" />
@@ -600,26 +606,90 @@ function Top({ email, onOut, theme, setTheme }) {
             <div className="cm-menu wide">
               <div className="cm-find">
                 <svg className="cm-ic" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6"/><path d="M20 20l-4.5-4.5"/></svg>
-                <input className="t" placeholder="Клиенты, рынки, ниши" />
+                <input className="t" placeholder="Проекты, рынки, ниши" />
               </div>
-              <p className="cm-hint">Поиск по клиентам и рынкам. По содержимому
-                исследования заработает, когда появится первый прогон.</p>
+              <p className="cm-hint">Ищет по проектам и рынкам. По содержимому
+                исследования заработает после первого прогона.</p>
             </div>
           )}
         </div>
+
         <div className="cm-drop">
-          <button className="cm-ico" {...ico('user')} aria-label="Профиль">
-            <svg viewBox="0 0 24 24"><circle cx="12" cy="8.5" r="3.5"/>
-              <path d="M5 19c1.2-3.2 4-4.8 7-4.8s5.8 1.6 7 4.8"/></svg>
-          </button>
-          {open === 'user' && (
+          <button className="cm-btn cm-btn-pri cm-new" {...ico('new')}>Создать</button>
+          {open === 'new' && (
             <div className="cm-menu">
-              <div className="cm-user"><b>{email || 'Вы вошли'}</b><span>аккаунт платформы</span></div>
+              <div className="cm-user"><b>Что создаём</b><span>пока доступно то, что умеет исследование</span></div>
+              <a onClick={()=>{ setOpen(''); location.hash = '#new-project'; }}>Проект<span>бренд и рынок</span></a>
+              <a onClick={()=>setOpen('')}>Рынок в этом проекте<span>страна и язык</span></a>
               <div className="cm-sep"></div>
-              <div className="cm-user"><b>Оформление</b><span>светлое, тёмное или как в системе</span></div>
-              {[['light','Светлая'],['dark','Тёмная'],['system','Как в системе']].map(([v,l]) => (
-                <a key={v} onClick={()=>setTheme(v)} aria-current={theme===v ? 'true' : undefined}>{l}</a>
+              <a onClick={()=>setOpen('')}>Прогон исследования<span>платный</span></a>
+            </div>
+          )}
+        </div>
+
+        <div className="cm-drop">
+          <button className="cm-money" {...ico('money')}>
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/>
+              <path d="M12 8v8"/><path d="M14.2 9.8c-.4-.6-1.2-1-2.2-1-1.2 0-2.2.7-2.2 1.6 0 2.2 4.4 1 4.4 3.2 0 .9-1 1.6-2.2 1.6-1 0-1.8-.4-2.2-1"/></svg>
+            <b>{деньги}</b>
+          </button>
+          {open === 'money' && (
+            <div className="cm-menu wide">
+              {/* Знаменателя нет: тариф не назначен, и «412 из 1000» в эталоне —
+                  заглушка. Показываем потраченное, оно настоящее. */}
+              <div className="cm-user"><b>Расход за месяц</b><span>по всем проектам, из общего счётчика</span></div>
+              {(clients || []).map(c => (
+                <a key={c.id}><span className="cm-mark">{MARK(c.name)}</span>
+                  <b>{c.domain || c.name}</b>
+                  <span>{((c.usage && c.usage.cost_cents) || 0) / 100} $</span></a>
               ))}
+              {!(clients || []).length && <a><span>Пока ни одного проекта</span></a>}
+            </div>
+          )}
+        </div>
+
+        <div className="cm-drop">
+          <button className="cm-ico" {...ico('help')} title="Поддержка">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/>
+              <path d="M9.5 9.5a2.5 2.5 0 1 1 3.2 2.4c-.8.3-1.2.9-1.2 1.7v.4"/>
+              <path d="M12 17.2v.1"/></svg>
+          </button>
+          {open === 'help' && (
+            <div className="cm-menu">
+              <div className="cm-user"><b>Поддержка</b><span>сначала ответы, потом человек</span></div>
+              <a>Алгоритм платформы</a>
+              <a>Как устроено исследование</a>
+              <a>Написать нам</a>
+            </div>
+          )}
+        </div>
+
+        <div className="cm-drop">
+          <button className="cm-ico" {...ico('bell')} aria-label="Уведомления">
+            <svg viewBox="0 0 24 24"><path d="M6 9a6 6 0 0 1 12 0c0 5 2 6 2 6H4s2-1 2-6"/>
+              <path d="M10 19a2 2 0 0 0 4 0"/></svg>
+          </button>
+          {open === 'bell' && (
+            <div className="cm-menu wide">
+              <div className="cm-user"><b>Уведомления</b><span>работа идёт в фоне, минутами</span></div>
+              <a><span>Пока ничего не происходило</span></a>
+            </div>
+          )}
+        </div>
+
+        <div className="cm-drop">
+          <button className="cm-ava" {...ico('me')} aria-haspopup="true">
+            {MARK(имя || 'Вы')}
+          </button>
+          {open === 'me' && (
+            <div className="cm-menu">
+              <div className="cm-user"><b>{имя || 'Вы'}</b><span>{email}</span></div>
+              <a>Все проекты<span>{(clients || []).length}</span></a>
+              <a>Расход<span>{деньги} за месяц</span></a>
+              <a>Тариф<span>не назначен</span></a>
+              <a>Доступы<span>1 человек</span></a>
+              <a>Язык интерфейса<span>Русский</span></a>
+              <a>Поддержка</a>
               <div className="cm-sep"></div>
               <a onClick={onOut}>Выйти</a>
             </div>
@@ -630,7 +700,6 @@ function Top({ email, onOut, theme, setTheme }) {
   );
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
 function App() {
   const [ready, setReady] = useState(false);
   // Почта вошедшего — для приветствия и меню профиля. Берём из токена: свой
@@ -743,7 +812,7 @@ function App() {
   // они сообщают о происходящем, а не заменяют оформление, как было раньше.
   const bar = (
     <>
-      <Top email={email} theme={theme} setTheme={setTheme}
+      <Top email={email} clients={data.clients}
            onOut={()=>{ clearTokens(); setInside(false); }} />
       {importing && <div className="cm-lane">Переношу проекты из инструмента…</div>}
       {saveErr && <div className="cm-lane">{saveErr}</div>}

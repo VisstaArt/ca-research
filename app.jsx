@@ -6875,6 +6875,10 @@ function App() {
   } catch { return false; } })();
   // Клиент, от имени которого идёт работа: его передаёт оболочка. По нему
   // ведётся счёт расхода — общий с контент-машиной, один на проект.
+  // Режим просмотра отчёта: оболочка открывает так раздел «Исследование».
+  const viewReport = (() => { try {
+    return new URLSearchParams(location.search).get('view') === 'report';
+  } catch { return false; } })();
   const embeddedClientId = (() => { try {
     return new URLSearchParams(location.search).get('client') || '';
   } catch { return ''; } })();
@@ -6896,6 +6900,32 @@ function App() {
     <div style={{minHeight:'100vh',display:'flex',alignItems:'center',justifyContent:'center',color:'#999',fontSize:13}}>…</div>
   );
   if (unlocked === false) return <LockScreen t={t} onUnlock={()=>setUnlocked(true)} />;
+
+  // ── ОТЧЁТ ВНУТРИ ПЛАТФОРМЫ ────────────────────────────────────────────────
+  // Оболочка открывает инструмент с view=report — и тогда показываем ИМЕННО
+  // отчёт: тот самый, что выгружается файлом, со всеми блоками, графиками и
+  // перламутром. Владелица: «мы это вылизывали две недели, я просила перенести
+  // ЭТО на сайт». Раньше в платформе стоял рабочий экран инструмента, и она
+  // видела старый серый интерфейс вместо готовой работы.
+  //
+  // Рисуем в рамке через srcdoc, а не вставкой в страницу: у отчёта свои
+  // стили и свой скрипт отрисовки блоков, и в общей странице они бы спорили
+  // с оболочкой. Внутри рамки он живёт ровно так же, как выгруженный файл.
+  if (viewReport) {
+    const п = proj || (projs && projs[0]) || null;
+    const готов = п && (п.results || []).some(r => r && r.content && !r.failed);
+    if (!готов) return (
+      <div className="card" style={{margin:'1.5rem'}}>
+        <p style={{fontSize:14,marginBottom:6}}>Отчёта пока нет.</p>
+        <p style={{fontSize:13,color:'#666'}}>Он появится после первого прогона:
+          здесь будут все модули с графиками, картами и выводами.</p>
+      </div>
+    );
+    const html = generateHTMLReport(п.brief || {}, п.results || [], п.lang || 'Russian',
+      priceLayers, selectedLayers, null);
+    return <iframe title="Отчёт исследования" srcDoc={html}
+      style={{display:'block',width:'100%',height:'100vh',border:0}} />;
+  }
 
   // ── LIST
   if (sc === 'list') return (

@@ -1,6 +1,6 @@
 // СОБРАНО АВТОМАТИЧЕСКИ из shell.jsx — не править руками.
 // Правки вносить в shell.jsx, затем: osascript -l JavaScript tools/build.js
-// отпечаток-исходника: fef0a803a83fa7fb
+// отпечаток-исходника: 9daa51ff2fd639c9
 function _extends() { return _extends = Object.assign ? Object.assign.bind() : function (n) { for (var e = 1; e < arguments.length; e++) { var t = arguments[e]; for (var r in t) ({}).hasOwnProperty.call(t, r) && (n[r] = t[r]); } return n; }, _extends.apply(null, arguments); }
 // Экраны «Клиенты» и «Рынки» удалены 13.09.2026: они были моей выдумкой.
 // В согласованной оболочке проект переключают выпадающим списком В МЕНЮ,
@@ -291,7 +291,7 @@ const SECTIONS = [
 {
   id: 'research',
   name: 'Исследование',
-  parts: [['brief', 'Бриф'], ['niches', 'Ниши'], ['run', 'Прогон'], ['report', 'Отчёт'], ['handoff', 'Что ушло в контент']]
+  parts: [['report', 'Отчёт'], ['brief', 'Бриф'], ['niches', 'Ниши'], ['run', 'Прогон'], ['handoff', 'Что ушло в контент']]
 }, {
   id: 'funnel',
   name: 'Воронка',
@@ -393,7 +393,8 @@ function Platform({
   // Раздел и часть внутри него. Список частей меняется вместе с плиткой —
   // это и было решением владелицы: у каждого раздела свои части.
   const [section, setSection] = useState('research');
-  const [part, setPart] = useState('brief');
+  // Открываем на отчёте: это результат, ради которого сюда заходят.
+  const [part, setPart] = useState('report');
   const [drop, setDrop] = useState(false);
   useEffect(() => {
     if (!drop) return;
@@ -805,8 +806,13 @@ function Slot({
     onAddMarket: onAddMarket
   });
   if (section === 'research') {
-    const q = 'index.html?embed=1&client=' + encodeURIComponent(client.id) + '&market=' + encodeURIComponent(market.id || '') + '&country=' + encodeURIComponent(market.countryName || '') + '&lang=' + encodeURIComponent(market.lang || '') + (part ? '&step=' + encodeURIComponent(part) : '');
-    return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
+    // «Отчёт» — это ГОТОВАЯ работа: все модули с графиками, картами и
+    // выводами, ровно то, что выгружается файлом. Она уже собрана, и
+    // показывать вместо неё рабочий экран инструмента было ошибкой.
+    const общее = 'client=' + encodeURIComponent(client.id) + '&market=' + encodeURIComponent(market.id || '') + '&country=' + encodeURIComponent(market.countryName || '') + '&lang=' + encodeURIComponent(market.lang || '');
+    const отчёт = part === 'report' || !part;
+    const q = 'index.html?embed=1&' + общее + (отчёт ? '&view=report' : '&step=' + encodeURIComponent(part));
+    return /*#__PURE__*/React.createElement(React.Fragment, null, !отчёт && /*#__PURE__*/React.createElement("div", {
       className: "hdr"
     }, /*#__PURE__*/React.createElement("h1", null, "\u0418\u0441\u0441\u043B\u0435\u0434\u043E\u0432\u0430\u043D\u0438\u0435 \u0446\u0435\u043B\u0435\u0432\u043E\u0439 \u0430\u0443\u0434\u0438\u0442\u043E\u0440\u0438\u0438"), /*#__PURE__*/React.createElement("p", null, client.name, " \xB7 ", market.countryName)), /*#__PURE__*/React.createElement("iframe", {
       className: "modframe",
@@ -837,12 +843,11 @@ function Slot({
 // ─────────────────────────────────────────────────────────────────────────────
 function Top({
   email,
-  onOut,
-  theme,
-  setTheme
+  usage,
+  clients,
+  onOut
 }) {
   const [open, setOpen] = useState('');
-  // Один список открыт за раз, клик мимо закрывает — правило оболочки.
   useEffect(() => {
     if (!open) return;
     const off = e => {
@@ -867,6 +872,8 @@ function Top({
   const час = now.getHours();
   const привет = час < 5 ? 'Доброй ночи' : час < 12 ? 'Доброе утро' : час < 18 ? 'Добрый день' : 'Добрый вечер';
   const имя = (email || '').split('@')[0];
+  const центы = (clients || []).reduce((a, c) => a + (c.usage && c.usage.cost_cents || 0), 0);
+  const деньги = центы ? (центы / 100).toFixed(2).replace('.', ',') + ' $' : '0 $';
   return /*#__PURE__*/React.createElement("div", {
     className: "cm-top"
   }, /*#__PURE__*/React.createElement("img", {
@@ -906,43 +913,102 @@ function Top({
     d: "M20 20l-4.5-4.5"
   })), /*#__PURE__*/React.createElement("input", {
     className: "t",
-    placeholder: "\u041A\u043B\u0438\u0435\u043D\u0442\u044B, \u0440\u044B\u043D\u043A\u0438, \u043D\u0438\u0448\u0438"
+    placeholder: "\u041F\u0440\u043E\u0435\u043A\u0442\u044B, \u0440\u044B\u043D\u043A\u0438, \u043D\u0438\u0448\u0438"
   })), /*#__PURE__*/React.createElement("p", {
     className: "cm-hint"
-  }, "\u041F\u043E\u0438\u0441\u043A \u043F\u043E \u043A\u043B\u0438\u0435\u043D\u0442\u0430\u043C \u0438 \u0440\u044B\u043D\u043A\u0430\u043C. \u041F\u043E \u0441\u043E\u0434\u0435\u0440\u0436\u0438\u043C\u043E\u043C\u0443 \u0438\u0441\u0441\u043B\u0435\u0434\u043E\u0432\u0430\u043D\u0438\u044F \u0437\u0430\u0440\u0430\u0431\u043E\u0442\u0430\u0435\u0442, \u043A\u043E\u0433\u0434\u0430 \u043F\u043E\u044F\u0432\u0438\u0442\u0441\u044F \u043F\u0435\u0440\u0432\u044B\u0439 \u043F\u0440\u043E\u0433\u043E\u043D."))), /*#__PURE__*/React.createElement("div", {
+  }, "\u0418\u0449\u0435\u0442 \u043F\u043E \u043F\u0440\u043E\u0435\u043A\u0442\u0430\u043C \u0438 \u0440\u044B\u043D\u043A\u0430\u043C. \u041F\u043E \u0441\u043E\u0434\u0435\u0440\u0436\u0438\u043C\u043E\u043C\u0443 \u0438\u0441\u0441\u043B\u0435\u0434\u043E\u0432\u0430\u043D\u0438\u044F \u0437\u0430\u0440\u0430\u0431\u043E\u0442\u0430\u0435\u0442 \u043F\u043E\u0441\u043B\u0435 \u043F\u0435\u0440\u0432\u043E\u0433\u043E \u043F\u0440\u043E\u0433\u043E\u043D\u0430."))), /*#__PURE__*/React.createElement("div", {
+    className: "cm-drop"
+  }, /*#__PURE__*/React.createElement("button", _extends({
+    className: "cm-btn cm-btn-pri cm-new"
+  }, ico('new')), "\u0421\u043E\u0437\u0434\u0430\u0442\u044C"), open === 'new' && /*#__PURE__*/React.createElement("div", {
+    className: "cm-menu"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "cm-user"
+  }, /*#__PURE__*/React.createElement("b", null, "\u0427\u0442\u043E \u0441\u043E\u0437\u0434\u0430\u0451\u043C"), /*#__PURE__*/React.createElement("span", null, "\u043F\u043E\u043A\u0430 \u0434\u043E\u0441\u0442\u0443\u043F\u043D\u043E \u0442\u043E, \u0447\u0442\u043E \u0443\u043C\u0435\u0435\u0442 \u0438\u0441\u0441\u043B\u0435\u0434\u043E\u0432\u0430\u043D\u0438\u0435")), /*#__PURE__*/React.createElement("a", {
+    onClick: () => {
+      setOpen('');
+      location.hash = '#new-project';
+    }
+  }, "\u041F\u0440\u043E\u0435\u043A\u0442", /*#__PURE__*/React.createElement("span", null, "\u0431\u0440\u0435\u043D\u0434 \u0438 \u0440\u044B\u043D\u043E\u043A")), /*#__PURE__*/React.createElement("a", {
+    onClick: () => setOpen('')
+  }, "\u0420\u044B\u043D\u043E\u043A \u0432 \u044D\u0442\u043E\u043C \u043F\u0440\u043E\u0435\u043A\u0442\u0435", /*#__PURE__*/React.createElement("span", null, "\u0441\u0442\u0440\u0430\u043D\u0430 \u0438 \u044F\u0437\u044B\u043A")), /*#__PURE__*/React.createElement("div", {
+    className: "cm-sep"
+  }), /*#__PURE__*/React.createElement("a", {
+    onClick: () => setOpen('')
+  }, "\u041F\u0440\u043E\u0433\u043E\u043D \u0438\u0441\u0441\u043B\u0435\u0434\u043E\u0432\u0430\u043D\u0438\u044F", /*#__PURE__*/React.createElement("span", null, "\u043F\u043B\u0430\u0442\u043D\u044B\u0439")))), /*#__PURE__*/React.createElement("div", {
+    className: "cm-drop"
+  }, /*#__PURE__*/React.createElement("button", _extends({
+    className: "cm-money"
+  }, ico('money')), /*#__PURE__*/React.createElement("svg", {
+    viewBox: "0 0 24 24"
+  }, /*#__PURE__*/React.createElement("circle", {
+    cx: "12",
+    cy: "12",
+    r: "8"
+  }), /*#__PURE__*/React.createElement("path", {
+    d: "M12 8v8"
+  }), /*#__PURE__*/React.createElement("path", {
+    d: "M14.2 9.8c-.4-.6-1.2-1-2.2-1-1.2 0-2.2.7-2.2 1.6 0 2.2 4.4 1 4.4 3.2 0 .9-1 1.6-2.2 1.6-1 0-1.8-.4-2.2-1"
+  })), /*#__PURE__*/React.createElement("b", null, деньги)), open === 'money' && /*#__PURE__*/React.createElement("div", {
+    className: "cm-menu wide"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "cm-user"
+  }, /*#__PURE__*/React.createElement("b", null, "\u0420\u0430\u0441\u0445\u043E\u0434 \u0437\u0430 \u043C\u0435\u0441\u044F\u0446"), /*#__PURE__*/React.createElement("span", null, "\u043F\u043E \u0432\u0441\u0435\u043C \u043F\u0440\u043E\u0435\u043A\u0442\u0430\u043C, \u0438\u0437 \u043E\u0431\u0449\u0435\u0433\u043E \u0441\u0447\u0451\u0442\u0447\u0438\u043A\u0430")), (clients || []).map(c => /*#__PURE__*/React.createElement("a", {
+    key: c.id
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "cm-mark"
+  }, MARK(c.name)), /*#__PURE__*/React.createElement("b", null, c.domain || c.name), /*#__PURE__*/React.createElement("span", null, (c.usage && c.usage.cost_cents || 0) / 100, " $"))), !(clients || []).length && /*#__PURE__*/React.createElement("a", null, /*#__PURE__*/React.createElement("span", null, "\u041F\u043E\u043A\u0430 \u043D\u0438 \u043E\u0434\u043D\u043E\u0433\u043E \u043F\u0440\u043E\u0435\u043A\u0442\u0430")))), /*#__PURE__*/React.createElement("div", {
     className: "cm-drop"
   }, /*#__PURE__*/React.createElement("button", _extends({
     className: "cm-ico"
-  }, ico('user'), {
-    "aria-label": "\u041F\u0440\u043E\u0444\u0438\u043B\u044C"
+  }, ico('help'), {
+    title: "\u041F\u043E\u0434\u0434\u0435\u0440\u0436\u043A\u0430"
   }), /*#__PURE__*/React.createElement("svg", {
     viewBox: "0 0 24 24"
   }, /*#__PURE__*/React.createElement("circle", {
     cx: "12",
-    cy: "8.5",
-    r: "3.5"
+    cy: "12",
+    r: "9"
   }), /*#__PURE__*/React.createElement("path", {
-    d: "M5 19c1.2-3.2 4-4.8 7-4.8s5.8 1.6 7 4.8"
-  }))), open === 'user' && /*#__PURE__*/React.createElement("div", {
+    d: "M9.5 9.5a2.5 2.5 0 1 1 3.2 2.4c-.8.3-1.2.9-1.2 1.7v.4"
+  }), /*#__PURE__*/React.createElement("path", {
+    d: "M12 17.2v.1"
+  }))), open === 'help' && /*#__PURE__*/React.createElement("div", {
     className: "cm-menu"
   }, /*#__PURE__*/React.createElement("div", {
     className: "cm-user"
-  }, /*#__PURE__*/React.createElement("b", null, email || 'Вы вошли'), /*#__PURE__*/React.createElement("span", null, "\u0430\u043A\u043A\u0430\u0443\u043D\u0442 \u043F\u043B\u0430\u0442\u0444\u043E\u0440\u043C\u044B")), /*#__PURE__*/React.createElement("div", {
-    className: "cm-sep"
-  }), /*#__PURE__*/React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("b", null, "\u041F\u043E\u0434\u0434\u0435\u0440\u0436\u043A\u0430"), /*#__PURE__*/React.createElement("span", null, "\u0441\u043D\u0430\u0447\u0430\u043B\u0430 \u043E\u0442\u0432\u0435\u0442\u044B, \u043F\u043E\u0442\u043E\u043C \u0447\u0435\u043B\u043E\u0432\u0435\u043A")), /*#__PURE__*/React.createElement("a", null, "\u0410\u043B\u0433\u043E\u0440\u0438\u0442\u043C \u043F\u043B\u0430\u0442\u0444\u043E\u0440\u043C\u044B"), /*#__PURE__*/React.createElement("a", null, "\u041A\u0430\u043A \u0443\u0441\u0442\u0440\u043E\u0435\u043D\u043E \u0438\u0441\u0441\u043B\u0435\u0434\u043E\u0432\u0430\u043D\u0438\u0435"), /*#__PURE__*/React.createElement("a", null, "\u041D\u0430\u043F\u0438\u0441\u0430\u0442\u044C \u043D\u0430\u043C"))), /*#__PURE__*/React.createElement("div", {
+    className: "cm-drop"
+  }, /*#__PURE__*/React.createElement("button", _extends({
+    className: "cm-ico"
+  }, ico('bell'), {
+    "aria-label": "\u0423\u0432\u0435\u0434\u043E\u043C\u043B\u0435\u043D\u0438\u044F"
+  }), /*#__PURE__*/React.createElement("svg", {
+    viewBox: "0 0 24 24"
+  }, /*#__PURE__*/React.createElement("path", {
+    d: "M6 9a6 6 0 0 1 12 0c0 5 2 6 2 6H4s2-1 2-6"
+  }), /*#__PURE__*/React.createElement("path", {
+    d: "M10 19a2 2 0 0 0 4 0"
+  }))), open === 'bell' && /*#__PURE__*/React.createElement("div", {
+    className: "cm-menu wide"
+  }, /*#__PURE__*/React.createElement("div", {
     className: "cm-user"
-  }, /*#__PURE__*/React.createElement("b", null, "\u041E\u0444\u043E\u0440\u043C\u043B\u0435\u043D\u0438\u0435"), /*#__PURE__*/React.createElement("span", null, "\u0441\u0432\u0435\u0442\u043B\u043E\u0435, \u0442\u0451\u043C\u043D\u043E\u0435 \u0438\u043B\u0438 \u043A\u0430\u043A \u0432 \u0441\u0438\u0441\u0442\u0435\u043C\u0435")), [['light', 'Светлая'], ['dark', 'Тёмная'], ['system', 'Как в системе']].map(([v, l]) => /*#__PURE__*/React.createElement("a", {
-    key: v,
-    onClick: () => setTheme(v),
-    "aria-current": theme === v ? 'true' : undefined
-  }, l)), /*#__PURE__*/React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("b", null, "\u0423\u0432\u0435\u0434\u043E\u043C\u043B\u0435\u043D\u0438\u044F"), /*#__PURE__*/React.createElement("span", null, "\u0440\u0430\u0431\u043E\u0442\u0430 \u0438\u0434\u0451\u0442 \u0432 \u0444\u043E\u043D\u0435, \u043C\u0438\u043D\u0443\u0442\u0430\u043C\u0438")), /*#__PURE__*/React.createElement("a", null, /*#__PURE__*/React.createElement("span", null, "\u041F\u043E\u043A\u0430 \u043D\u0438\u0447\u0435\u0433\u043E \u043D\u0435 \u043F\u0440\u043E\u0438\u0441\u0445\u043E\u0434\u0438\u043B\u043E")))), /*#__PURE__*/React.createElement("div", {
+    className: "cm-drop"
+  }, /*#__PURE__*/React.createElement("button", _extends({
+    className: "cm-ava"
+  }, ico('me'), {
+    "aria-haspopup": "true"
+  }), MARK(имя || 'Вы')), open === 'me' && /*#__PURE__*/React.createElement("div", {
+    className: "cm-menu"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "cm-user"
+  }, /*#__PURE__*/React.createElement("b", null, имя || 'Вы'), /*#__PURE__*/React.createElement("span", null, email)), /*#__PURE__*/React.createElement("a", null, "\u0412\u0441\u0435 \u043F\u0440\u043E\u0435\u043A\u0442\u044B", /*#__PURE__*/React.createElement("span", null, (clients || []).length)), /*#__PURE__*/React.createElement("a", null, "\u0420\u0430\u0441\u0445\u043E\u0434", /*#__PURE__*/React.createElement("span", null, деньги, " \u0437\u0430 \u043C\u0435\u0441\u044F\u0446")), /*#__PURE__*/React.createElement("a", null, "\u0422\u0430\u0440\u0438\u0444", /*#__PURE__*/React.createElement("span", null, "\u043D\u0435 \u043D\u0430\u0437\u043D\u0430\u0447\u0435\u043D")), /*#__PURE__*/React.createElement("a", null, "\u0414\u043E\u0441\u0442\u0443\u043F\u044B", /*#__PURE__*/React.createElement("span", null, "1 \u0447\u0435\u043B\u043E\u0432\u0435\u043A")), /*#__PURE__*/React.createElement("a", null, "\u042F\u0437\u044B\u043A \u0438\u043D\u0442\u0435\u0440\u0444\u0435\u0439\u0441\u0430", /*#__PURE__*/React.createElement("span", null, "\u0420\u0443\u0441\u0441\u043A\u0438\u0439")), /*#__PURE__*/React.createElement("a", null, "\u041F\u043E\u0434\u0434\u0435\u0440\u0436\u043A\u0430"), /*#__PURE__*/React.createElement("div", {
     className: "cm-sep"
   }), /*#__PURE__*/React.createElement("a", {
     onClick: onOut
   }, "\u0412\u044B\u0439\u0442\u0438")))));
 }
-
-// ─────────────────────────────────────────────────────────────────────────────
 function App() {
   const [ready, setReady] = useState(false);
   // Почта вошедшего — для приветствия и меню профиля. Берём из токена: свой
@@ -1122,8 +1188,7 @@ function App() {
   // они сообщают о происходящем, а не заменяют оформление, как было раньше.
   const bar = /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(Top, {
     email: email,
-    theme: theme,
-    setTheme: setTheme,
+    clients: data.clients,
     onOut: () => {
       clearTokens();
       setInside(false);
