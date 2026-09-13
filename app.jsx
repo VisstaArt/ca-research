@@ -3241,7 +3241,7 @@ function MD({ text }) {
   for (const line of lines) {
     if (line.trim().startsWith('|')) { tbl.push(line); continue; }
     if (tbl.length) ft();
-    if (line.startsWith('## ')) out.push(<h2 key={k++} style={{margin:'16px 0 5px',fontSize:15,fontWeight:500,borderBottom:'1px solid #eee',paddingBottom:3}}>{line.slice(3)}</h2>);
+    if (line.startsWith('## ')) out.push(<h2 key={k++} style={{margin:'16px 0 5px',fontSize:15,fontWeight:500,borderBottom:'1px solid var(--line)',paddingBottom:3}}>{line.slice(3)}</h2>);
     else if (line.startsWith('### ')) out.push(<h3 key={k++} style={{margin:'12px 0 4px',fontSize:14,fontWeight:500}}>{line.slice(4)}</h3>);
     else if (line.startsWith('#### ')) out.push(<h4 key={k++} style={{margin:'10px 0 3px',fontSize:13,fontWeight:500}}>{line.slice(5)}</h4>);
     else if (line.startsWith('**') && line.endsWith('**') && line.length>4) out.push(<p key={k++} style={{margin:'10px 0 3px',fontSize:13,fontWeight:500}}>{line.slice(2,-2)}</p>);
@@ -3297,7 +3297,7 @@ function PieChart({ data, title }) {
     return () => { if(chartRef.current) chartRef.current.destroy(); };
   }, [data]);
   return (
-    <div style={{background:'var(--card-solid)',border:'1px solid #eee',borderRadius:10,padding:'1rem',marginBottom:10}}>
+    <div style={{background:'var(--card-solid)',border:'1px solid var(--line)',borderRadius:10,padding:'1rem',marginBottom:10}}>
       <p style={{fontSize:13,fontWeight:500,marginBottom:8}}>{title}</p>
       <canvas ref={canvasRef} height={200}/>
     </div>
@@ -3318,7 +3318,7 @@ function BarChart({ labels, values, title, color='var(--mid)' }) {
     return () => { if(chartRef.current) chartRef.current.destroy(); };
   }, [labels, values]);
   return (
-    <div style={{background:'var(--card-solid)',border:'1px solid #eee',borderRadius:10,padding:'1rem',marginBottom:10}}>
+    <div style={{background:'var(--card-solid)',border:'1px solid var(--line)',borderRadius:10,padding:'1rem',marginBottom:10}}>
       <p style={{fontSize:13,fontWeight:500,marginBottom:8}}>{title}</p>
       <canvas ref={canvasRef} height={200}/>
     </div>
@@ -3344,7 +3344,7 @@ function NicheScoreChart({ niches }) {
   }, [niches]);
   const h = Math.max(160, (niches?.length||0) * 24);
   return (
-    <div style={{background:'var(--card-solid)',border:'1px solid #eee',borderRadius:10,padding:'1rem',marginBottom:14}}>
+    <div style={{background:'var(--card-solid)',border:'1px solid var(--line)',borderRadius:10,padding:'1rem',marginBottom:14}}>
       <p style={{fontSize:13,fontWeight:500,marginBottom:8}}>Ниши по эффективности (баллу): <span style={{color:'var(--acc-ink)'}}>Go</span> · <span style={{color:'var(--acc-quiet)'}}>Maybe</span> · <span style={{color:'var(--acc-quiet-ink)'}}>No-Go</span></p>
       <div style={{position:'relative',height:h}}><canvas ref={canvasRef}/></div>
     </div>
@@ -3378,7 +3378,7 @@ function ScatterChart({ data, title }) {
     return () => { if(chartRef.current) chartRef.current.destroy(); };
   }, [data]);
   return (
-    <div style={{background:'var(--card-solid)',border:'1px solid #eee',borderRadius:10,padding:'1rem',marginBottom:10}}>
+    <div style={{background:'var(--card-solid)',border:'1px solid var(--line)',borderRadius:10,padding:'1rem',marginBottom:10}}>
       <p style={{fontSize:13,fontWeight:500,marginBottom:4}}>{title}</p>
       <p style={{fontSize:11,color:'var(--ink-3)',marginBottom:8}}>Size = score. Green=Go, Orange=Hold, Red=Stop</p>
       <canvas ref={canvasRef} height={220}/>
@@ -3415,7 +3415,7 @@ function CompetitorMapChart({ data, title }) {
     return () => { if(chartRef.current) chartRef.current.destroy(); };
   }, [data]);
   return (
-    <div style={{background:'var(--card-solid)',border:'1px solid #eee',borderRadius:10,padding:'1rem',marginBottom:10}}>
+    <div style={{background:'var(--card-solid)',border:'1px solid var(--line)',borderRadius:10,padding:'1rem',marginBottom:10}}>
       <p style={{fontSize:13,fontWeight:500,marginBottom:4}}>{title}</p>
       <p style={{fontSize:11,color:'var(--ink-3)',marginBottom:8}}>Зелёная точка — мы. Пустые зоны на карте — свободное позиционирование.</p>
       <canvas ref={canvasRef} height={220}/>
@@ -3446,7 +3446,7 @@ function AwarenessChart({ data }) {
   }, [data]);
   const h = Math.max(160, (data?.length||0) * 40 + 50);
   return (
-    <div style={{background:'var(--card-solid)',border:'1px solid #eee',borderRadius:10,padding:'1rem',marginBottom:10}}>
+    <div style={{background:'var(--card-solid)',border:'1px solid var(--line)',borderRadius:10,padding:'1rem',marginBottom:10}}>
       <p style={{fontSize:13,fontWeight:500,marginBottom:8}}>Уровни осознанности по сегментам (%)</p>
       <div style={{position:'relative',height:h}}><canvas ref={canvasRef}/></div>
     </div>
@@ -5043,10 +5043,10 @@ function generateHTMLReport(brief, results, lang, priceLayers, selectedLayers, s
     const d = typeof m1r.chartData === 'string' ? JSON.parse(m1r.chartData) : m1r.chartData;
     if (d) {
       chartDivs = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:16px 0">'
-        +'<div style="background:#f8f8f8;border-radius:10px;padding:14px;border:1px solid #eee"><p style="font-size:11px;font-weight:600;color:#666;margin-bottom:8px;text-transform:uppercase;letter-spacing:0.04em">Доли сегментов в SOM</p><canvas id="rpt_pie" height="190"></canvas></div>'
-        +'<div style="background:#f8f8f8;border-radius:10px;padding:14px;border:1px solid #eee"><p style="font-size:11px;font-weight:600;color:#666;margin-bottom:8px;text-transform:uppercase;letter-spacing:0.04em">TAM → SAM → SOM</p><canvas id="rpt_bar" height="190"></canvas></div>'
+        +'<div style="background:#f8f8f8;border-radius:10px;padding:14px;border:1px solid var(--line)"><p style="font-size:11px;font-weight:600;color:#666;margin-bottom:8px;text-transform:uppercase;letter-spacing:0.04em">Доли сегментов в SOM</p><canvas id="rpt_pie" height="190"></canvas></div>'
+        +'<div style="background:#f8f8f8;border-radius:10px;padding:14px;border:1px solid var(--line)"><p style="font-size:11px;font-weight:600;color:#666;margin-bottom:8px;text-transform:uppercase;letter-spacing:0.04em">TAM → SAM → SOM</p><canvas id="rpt_bar" height="190"></canvas></div>'
         +'</div>'
-        +'<div style="background:#f8f8f8;border-radius:10px;padding:14px;border:1px solid #eee;margin-bottom:16px"><p style="font-size:11px;font-weight:600;color:#666;margin-bottom:8px;text-transform:uppercase;letter-spacing:0.04em">Матрица ниш: спрос vs конкуренция</p><canvas id="rpt_bubble" height="220"></canvas></div>';
+        +'<div style="background:#f8f8f8;border-radius:10px;padding:14px;border:1px solid var(--line);margin-bottom:16px"><p style="font-size:11px;font-weight:600;color:#666;margin-bottom:8px;text-transform:uppercase;letter-spacing:0.04em">Матрица ниш: спрос vs конкуренция</p><canvas id="rpt_bubble" height="220"></canvas></div>';
 
       const clients = parseInt(brief.currentClients||'0')||0;
       const dSafe = JSON.stringify(d).replace(/<\/script>/gi,'<\\/script>');
@@ -5056,7 +5056,7 @@ function generateHTMLReport(brief, results, lang, priceLayers, selectedLayers, s
         +'new Chart(document.getElementById("rpt_pie"),{type:"doughnut",data:{labels:d.marketShare.map(function(x){return x.label}),datasets:[{data:d.marketShare.map(function(x){return x.value}),backgroundColor:d.marketShare.map(function(x,i){return x.color||["#639922","#0F6E56","#1565A8","#633806","#72243E","#3C3489","#888780"][i%7]}),borderWidth:0}]},options:{plugins:{legend:{position:"bottom",labels:{font:{size:10},padding:8,boxWidth:12}}},cutout:"55%",responsive:true}});}'
         +'if(d.tamSamSom&&document.getElementById("rpt_bar")){'
         +'var you='+clients+';var som=d.tamSamSom.som||0;'
-        +'var labels=["TAM","SAM","SOM"];var vals=[d.tamSamSom.tam,d.tamSamSom.sam,som];var colors=["#ccc","#97C459","#639922"];'
+        +'var labels=["TAM","SAM","SOM"];var vals=[d.tamSamSom.tam,d.tamSamSom.sam,som];var colors=["var(--ink-3)","#97C459","#639922"];'
         +'if(you>0){labels.push("Вы");vals.push(you);colors.push("#378ADD");}'
         +'new Chart(document.getElementById("rpt_bar"),{type:"bar",data:{labels:labels,datasets:[{data:vals,backgroundColor:colors,borderRadius:5}]},options:{plugins:{legend:{display:false}},responsive:true,scales:{y:{beginAtZero:true,ticks:{font:{size:10}}},x:{ticks:{font:{size:11}}}}}});'
         +'if(som>0&&you>0){var pct=Math.min(100,Math.round(you/som*100));var bar=document.getElementById("rpt_pos_bar");if(bar){bar.style.width=Math.max(2,pct)+"%";}var lbl=document.getElementById("rpt_pos_lbl");if(lbl){lbl.textContent=you+" / "+som+" = "+pct+"%";}}}'
@@ -5074,7 +5074,7 @@ function generateHTMLReport(brief, results, lang, priceLayers, selectedLayers, s
     // chartKey = resKey() формата: 'M2' (глобальный) или 'M2@@Ниша' (по-нишевой) —
     // так у каждой (модуль,ниша) пары свой набор графиков, а не общий на весь отчёт.
     moduleChartDivs[chartKey] = (moduleChartDivs[chartKey]||'')
-      + '<div style="background:#f8f8f8;border-radius:10px;padding:14px;border:1px solid #eee;margin:8px 0 16px">'
+      + '<div style="background:#f8f8f8;border-radius:10px;padding:14px;border:1px solid var(--line);margin:8px 0 16px">'
       + '<p style="font-size:11px;font-weight:600;color:#666;margin-bottom:'+(subtitle?'4':'8')+'px;text-transform:uppercase;letter-spacing:0.04em">'+esc(title)+'</p>'
       + (subtitle?'<p style="font-size:11px;color:#888;margin-bottom:8px">'+esc(subtitle)+'</p>':'')
       + '<canvas id="'+canvasId+'" height="'+(height||220)+'"></canvas></div>';
@@ -5888,7 +5888,7 @@ function ModuleCard({ m, on, onToggle, uiLang }) {
     </div>
   );
   return (
-    <div onClick={onToggle} style={{border:on?'2px solid '+m.color:'1px solid #e5e5e5',borderRadius:12,overflow:'hidden',cursor:'pointer',marginBottom:8,background:'var(--card-solid)',transition:'border 0.15s'}}>
+    <div onClick={onToggle} style={{border:on?'2px solid '+m.color:'1px solid var(--line)',borderRadius:12,overflow:'hidden',cursor:'pointer',marginBottom:8,background:'var(--card-solid)',transition:'border 0.15s'}}>
       <div style={{display:'flex',alignItems:'center',gap:10,padding:'11px 14px'}}>
         <span style={{fontSize:11,fontWeight:500,padding:'3px 8px',borderRadius:4,background:m.bg,color:m.dark,flexShrink:0}}>{m.label||m.id}</span>
         <div style={{flex:1}}>
@@ -5896,7 +5896,7 @@ function ModuleCard({ m, on, onToggle, uiLang }) {
           <div style={{fontSize:11,color:'var(--ink-3)',marginTop:1}}>{tagline}</div>
         </div>
         <span style={{fontSize:10,color:'var(--ink-3)',flexShrink:0}}>{m.estimatedMin} min</span>
-        <div style={{width:18,height:18,borderRadius:4,border:on?'none':'1.5px solid #ccc',background:on?m.color:'transparent',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
+        <div style={{width:18,height:18,borderRadius:4,border:on?'none':'1.5px solid var(--line)',background:on?m.color:'transparent',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
           {on && <span style={{color:'var(--card-solid)',fontSize:11}}>✓</span>}
         </div>
       </div>
@@ -5933,13 +5933,13 @@ function PriceLayerScreen({ layers, selected, onToggle, onContinue, onBack, uiLa
           const darks = ['var(--acc-strong-ink)','var(--acc-strong-ink)','var(--acc-quiet-ink)'];
           return (
             <div key={i} onClick={()=>onToggle(i)}
-              style={{border:isOn?'2px solid '+colors[i]:'1px solid #e5e5e5',borderRadius:12,padding:'1rem 1.25rem',marginBottom:10,cursor:'pointer',background:isOn?bgs[i]:'var(--card-solid)'}}>
+              style={{border:isOn?'2px solid '+colors[i]:'1px solid var(--line)',borderRadius:12,padding:'1rem 1.25rem',marginBottom:10,cursor:'pointer',background:isOn?bgs[i]:'var(--card-solid)'}}>
               <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:isOn?10:0}}>
                 <div style={{flex:1}}>
                   <div style={{fontSize:14,fontWeight:500,color:isOn?darks[i]:'var(--ink)'}}>{layer.name}</div>
                   <div style={{fontSize:12,color:isOn?colors[i]:'var(--ink-3)',marginTop:2}}>{layer.priceRange}</div>
                 </div>
-                <div style={{width:18,height:18,borderRadius:50,border:isOn?'none':'1.5px solid #ccc',background:isOn?colors[i]:'transparent',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
+                <div style={{width:18,height:18,borderRadius:50,border:isOn?'none':'1.5px solid var(--line)',background:isOn?colors[i]:'transparent',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
                   {isOn && <span style={{color:'var(--card-solid)',fontSize:11}}>✓</span>}
                 </div>
               </div>
@@ -6016,7 +6016,7 @@ function GlossaryTip({ term, children }) {
         style={{borderBottom:'1px dashed #378ADD',cursor:'pointer',color:'inherit'}}
       >{children}</span>
       {show && (
-        <span style={{position:'absolute',bottom:'100%',left:0,zIndex:10,background:'var(--card-solid)',border:'1px solid #ddd',borderRadius:8,padding:'8px 10px',fontSize:11,color:'var(--ink)',lineHeight:1.5,whiteSpace:'normal',width:220,boxShadow:'0 2px 8px rgba(0,0,0,0.12)'}}>
+        <span style={{position:'absolute',bottom:'100%',left:0,zIndex:10,background:'var(--card-solid)',border:'1px solid var(--line)',borderRadius:8,padding:'8px 10px',fontSize:11,color:'var(--ink)',lineHeight:1.5,whiteSpace:'normal',width:220,boxShadow:'0 2px 8px rgba(0,0,0,0.12)'}}>
           <strong style={{color:'var(--acc-ink)'}}>{term}</strong><br/>{def}
         </span>
       )}
@@ -6180,7 +6180,7 @@ function LockScreen({ t, onUnlock }) {
   };
   return (
     <div style={{minHeight:'100vh',display:'flex',alignItems:'center',justifyContent:'center',background:'var(--line-2)'}}>
-      <form onSubmit={submit} style={{background:'var(--card-solid)',border:'1px solid #e5e5e5',borderRadius:14,padding:'32px 36px',width:340,textAlign:'center'}}>
+      <form onSubmit={submit} style={{background:'var(--card-solid)',border:'1px solid var(--line)',borderRadius:14,padding:'32px 36px',width:340,textAlign:'center'}}>
         <div style={{fontSize:26,marginBottom:6}}>🔒</div>
         <div style={{fontSize:17,fontWeight:600,color:'var(--ink)',marginBottom:4}}>{t.lockTitle}</div>
         <div style={{fontSize:12,color:'var(--ink-3)',marginBottom:18,lineHeight:1.5}}>{t.lockSub}</div>
@@ -6356,6 +6356,19 @@ function App() {
     } catch(e) { setPMsg('✗ ' + e.message); }
     setParsing(false);
   }, [siteUrl]);
+
+  // Внутри платформы инструмент открывается сразу на этапе, а не на своём
+  // списке проектов: список — приём отдельной страницы, в платформе клиент и
+  // рынок уже выбраны снаружи. Есть прогоны — продолжаем последний; нет —
+  // начинаем путь с брифа. Владелица проходит путь заказчика руками, и
+  // первый экран обязан быть началом пути, а не служебной таблицей.
+  const автовходСделан = React.useRef(false);
+  React.useEffect(() => {
+    if (!embedded || автовходСделан.current || sc !== 'list') return;
+    автовходСделан.current = true;
+    const свои = projs || [];
+    if (свои.length) openP(свои[0]); else goNew();
+  }, [projs, sc]);
 
   const openP = p => {
     const b={...(p.brief||{})};
@@ -6889,6 +6902,46 @@ function App() {
   const embeddedClientId = (() => { try {
     return new URLSearchParams(location.search).get('client') || '';
   } catch { return ''; } })();
+  // Этапы пути — как в старом варианте исследования, но в новом оформлении:
+  // Бриф → Ниши → Прогон → Отчёт. Вердикт по шагу считается от состояния, а
+  // не хранится отдельно: хранимое состояние шага разъезжается с настоящим.
+  const Steps = ({ current }) => {
+    if (!embedded) return null;
+    const готово = (proj && (proj.results || []).some(r => r && r.content && !r.failed));
+    const ШАГИ = [
+      ['бриф',  'Бриф'],
+      ['ниши',  'Ниши'],
+      ['прогон','Прогон'],
+      ['отчёт', 'Отчёт'],
+    ];
+    const идти = k => {
+      if (k === 'бриф') { if (proj) setSc('form'); else goNew(); }
+      if (k === 'отчёт' && готово) { setRepOpen(true); setSc('work'); }
+      if ((k === 'ниши' || k === 'прогон') && proj) setSc('work');
+    };
+    return (
+      <div style={{display:'flex',gap:8,alignItems:'center',flexWrap:'wrap',marginBottom:16}}>
+        {ШАГИ.map(([k, имя], i) => {
+          const активен = current === k;
+          return (
+            <React.Fragment key={k}>
+              {i > 0 && <span style={{color:'var(--ink-3)',fontSize:11}}>→</span>}
+              <button onClick={()=>идти(k)}
+                style={активен
+                  ? {padding:'7px 15px',borderRadius:999,border:'2px solid #0D0C0A',
+                     background:'linear-gradient(180deg,#262320,#171512)',color:'#FFFFFF',
+                     fontSize:12,fontWeight:700}
+                  : {padding:'7px 15px',borderRadius:999,border:'1px solid var(--line)',
+                     background:'var(--card-solid)',color:'var(--ink-2)',fontSize:12,fontWeight:600}}>
+                {имя}
+              </button>
+            </React.Fragment>
+          );
+        })}
+      </div>
+    );
+  };
+
   const Header = () => embedded ? null : (
     <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'1.5rem'}}>
       <div>
@@ -6979,6 +7032,7 @@ function App() {
   // ── FORM
   if (sc === 'form') return (
     <div>
+      <Steps current="бриф"/>
       <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:'1.5rem'}}>
         <button onClick={()=>proj ? setSc('work') : setSc('list')}>{proj ? '← Back to project' : t.backBtn}</button>
         <h2 style={{fontSize:20,fontWeight:500}}>{proj ? 'Edit brief: '+brief.name : 'New project'}</h2>
@@ -7019,7 +7073,7 @@ function App() {
 
         {(brief.services||[]).length > 0 && (
           <React.Fragment>
-            <div style={{borderTop:'1px solid #eee',margin:'1rem 0'}}/>
+            <div style={{borderTop:'1px solid var(--line)',margin:'1rem 0'}}/>
             <p style={{fontSize:12,fontWeight:500,color:'var(--ink-2)',marginBottom:4}}>{t.servicesTitle} <span style={{fontSize:11,fontWeight:400,color:'var(--ink-3)'}}>— {t.servicesSub}</span></p>
             <div style={{display:'flex',gap:6,flexWrap:'wrap',marginBottom:4}}>
               {(brief.services||[]).map((s,i) => {
@@ -7041,7 +7095,7 @@ function App() {
           <input value={brief.nicheCandidates} onChange={e=>setBrief(p=>({...p,nicheCandidates:e.target.value}))} placeholder={t.fNicheCandidatesPh}/>
         </Field>
 
-        <div style={{borderTop:'1px solid #eee',margin:'1rem 0'}}/>
+        <div style={{borderTop:'1px solid var(--line)',margin:'1rem 0'}}/>
         <p style={{fontSize:12,fontWeight:500,color:'var(--ink-2)',marginBottom:8}}>{t.companyDataTitle} <span style={{fontSize:11,fontWeight:400,color:'var(--ink-3)'}}>— {t.companyDataSub}</span></p>
         <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:8}}>
           <Field label={t.fRevenue} optional info={t.fRevenueInfo}><input value={brief.currentRevenue} onChange={e=>setBrief(p=>({...p,currentRevenue:e.target.value}))} placeholder={t.fRevenuePh}/></Field>
@@ -7049,7 +7103,7 @@ function App() {
           <Field label={t.fAvgCheck} optional info={t.fAvgCheckInfo}><input value={brief.currentAvgCheck} onChange={e=>setBrief(p=>({...p,currentAvgCheck:e.target.value}))} placeholder={t.fAvgCheckPh}/></Field>
         </div>
 
-        <div style={{borderTop:'1px solid #eee',margin:'1rem 0'}}/>
+        <div style={{borderTop:'1px solid var(--line)',margin:'1rem 0'}}/>
         <p style={{fontSize:12,fontWeight:500,color:'var(--ink-2)',marginBottom:8}}>{t.skipM1Title} <span style={{fontSize:11,fontWeight:400,color:'var(--ink-3)'}}>— {t.skipM1Sub}</span></p>
         <Field label={t.fTargetSegment} optional info={t.fTargetSegmentInfo}><input value={brief.targetSegment} onChange={e=>setBrief(p=>({...p,targetSegment:e.target.value}))} placeholder={t.fTargetSegmentPh}/></Field>
         <Field label={t.fPriceLayer} optional info={t.fPriceLayerInfo}>
@@ -7208,7 +7262,7 @@ function App() {
             <p style={{fontSize:13,fontWeight:500,marginBottom:10}}>Публикации ({publications.length})</p>
             {publications.length === 0 && <p style={{fontSize:12,color:'var(--ink-3)'}}>Пока пусто — добавьте первую публикацию выше.</p>}
             {publications.map(pub => (
-              <div key={pub.id} style={{border:'1px solid #e5e5e5',borderRadius:10,padding:'10px 14px',marginBottom:8}}>
+              <div key={pub.id} style={{border:'1px solid var(--line)',borderRadius:10,padding:'10px 14px',marginBottom:8}}>
                 <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',gap:10}}>
                   <div>
                     <p style={{fontSize:13,fontWeight:500}}>{pub.topic || '(без темы)'}</p>
@@ -7382,6 +7436,7 @@ function App() {
 
   return (
     <div>
+      <Steps current={isRun ? 'прогон' : (showNiches ? 'ниши' : 'отчёт')}/>
       <div style={{display:'flex',alignItems:'flex-start',justifyContent:'space-between',marginBottom:'1rem'}}>
         <div>
           <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:4}}>
@@ -7546,7 +7601,7 @@ function App() {
                       style={{padding:'5px 12px',fontSize:11,background:m.color,color:'var(--card-solid)',border:'none',borderRadius:6,cursor:'pointer'}}>
                       Перегенерировать
                     </button>
-                    <button onClick={()=>setRegenKey(null)} style={{padding:'5px 12px',fontSize:11,color:'var(--ink-2)',border:'1px solid #ddd',borderRadius:6,background:'var(--card-solid)',cursor:'pointer'}}>
+                    <button onClick={()=>setRegenKey(null)} style={{padding:'5px 12px',fontSize:11,color:'var(--ink-2)',border:'1px solid var(--line)',borderRadius:6,background:'var(--card-solid)',cursor:'pointer'}}>
                       Отмена
                     </button>
                   </div>
@@ -7567,7 +7622,7 @@ function App() {
                           style={{padding:'5px 12px',fontSize:11,background:m.color,color:'var(--card-solid)',border:'none',borderRadius:6,cursor:'pointer'}}>
                           Сохранить правки
                         </button>
-                        <button onClick={()=>setEditKey(null)} style={{padding:'5px 12px',fontSize:11,color:'var(--ink-2)',border:'1px solid #ddd',borderRadius:6,background:'var(--card-solid)',cursor:'pointer'}}>
+                        <button onClick={()=>setEditKey(null)} style={{padding:'5px 12px',fontSize:11,color:'var(--ink-2)',border:'1px solid var(--line)',borderRadius:6,background:'var(--card-solid)',cursor:'pointer'}}>
                           Отмена
                         </button>
                       </div>
@@ -7594,14 +7649,14 @@ function App() {
                     const c = 'var(--acc-ink)', bg = 'color-mix(in srgb, var(--mid) 8%, var(--card-solid))', dark = 'var(--acc-strong-ink)';
                     return (
                       <div key={i} onClick={()=>setSelNiches(p=>p.includes(i)?p.filter(x=>x!==i):[...p,i])}
-                        style={{border:isOn?'2px solid '+c:'1px solid #e5e5e5',borderRadius:12,padding:'1rem 1.25rem',marginBottom:8,cursor:'pointer',background:isOn?bg:'var(--card-solid)'}}>
+                        style={{border:isOn?'2px solid '+c:'1px solid var(--line)',borderRadius:12,padding:'1rem 1.25rem',marginBottom:8,cursor:'pointer',background:isOn?bg:'var(--card-solid)'}}>
                         <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:8}}>
                           <div style={{flex:1,display:'flex',alignItems:'center',gap:8,flexWrap:'wrap'}}>
                             <span style={{fontSize:14,fontWeight:500,color:isOn?dark:'var(--ink)'}}>{n.name}</span>
                             {n.recommended && <span style={{fontSize:10,fontWeight:600,padding:'2px 8px',borderRadius:10,background:isOn?'rgba(255,255,255,0.7)':'color-mix(in srgb, var(--mid) 12%, var(--card-solid))',color:'var(--acc-strong-ink)'}}>★ {t.nicheRecommended}</span>}
                             <span style={{fontSize:11,fontWeight:600,padding:'2px 8px',borderRadius:4,background:n.verdict==='Go'?'color-mix(in srgb, var(--mid) 12%, var(--card-solid))':n.verdict==='Maybe'?'color-mix(in srgb, var(--acc-quiet) 12%, var(--card-solid))':'color-mix(in srgb, var(--acc-quiet) 10%, var(--card-solid))',color:n.verdict==='Go'?'var(--acc-strong-ink)':n.verdict==='Maybe'?'var(--acc-quiet-ink)':'var(--acc-quiet-ink)'}}>{n.verdict}</span>
                           </div>
-                          <div style={{width:18,height:18,borderRadius:'50%',border:isOn?'none':'1.5px solid #ccc',background:isOn?c:'transparent',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
+                          <div style={{width:18,height:18,borderRadius:'50%',border:isOn?'none':'1.5px solid var(--line)',background:isOn?c:'transparent',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
                             {isOn && <span style={{color:'var(--card-solid)',fontSize:11}}>✓</span>}
                           </div>
                         </div>
@@ -7638,13 +7693,13 @@ function App() {
                     const darks = ['var(--acc-strong-ink)','var(--acc-strong-ink)','var(--acc-quiet-ink)'];
                     return (
                       <div key={i} onClick={()=>setSelectedLayers(s=>s.includes(i)?s.filter(x=>x!==i):[...s,i])}
-                        style={{border:isOn?'2px solid '+colors[i]:'1px solid #e5e5e5',borderRadius:12,padding:'1rem 1.25rem',marginBottom:8,cursor:'pointer',background:isOn?bgs[i]:'var(--card-solid)'}}>
+                        style={{border:isOn?'2px solid '+colors[i]:'1px solid var(--line)',borderRadius:12,padding:'1rem 1.25rem',marginBottom:8,cursor:'pointer',background:isOn?bgs[i]:'var(--card-solid)'}}>
                         <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:10}}>
                           <div style={{flex:1}}>
                             <div style={{fontSize:14,fontWeight:500,color:isOn?darks[i]:'var(--ink)'}}>{layer.name}</div>
                             <div style={{fontSize:12,color:isOn?colors[i]:'var(--ink-3)',marginTop:2}}>{layer.priceRange}</div>
                           </div>
-                          <div style={{width:18,height:18,borderRadius:'50%',border:isOn?'none':'1.5px solid #ccc',background:isOn?colors[i]:'transparent',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
+                          <div style={{width:18,height:18,borderRadius:'50%',border:isOn?'none':'1.5px solid var(--line)',background:isOn?colors[i]:'transparent',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
                             {isOn && <span style={{color:'var(--card-solid)',fontSize:11}}>✓</span>}
                           </div>
                         </div>
@@ -7688,13 +7743,13 @@ function App() {
                   {seedCandidates.map((s, i) => (
                     <div key={i} style={{display:'flex',gap:8,marginBottom:8}}>
                       <input value={s} onChange={e=>setSeedCandidates(p=>p.map((x,j)=>j===i?e.target.value:x))}
-                        style={{flex:1,padding:'8px 10px',fontSize:13,border:'1px solid #e5e5e5',borderRadius:8}}/>
+                        style={{flex:1,padding:'8px 10px',fontSize:13,border:'1px solid var(--line)',borderRadius:8}}/>
                       <button onClick={()=>setSeedCandidates(p=>p.filter((_,j)=>j!==i))}
-                        style={{padding:'0 12px',color:'var(--ink-3)',border:'1px solid #e5e5e5',borderRadius:8,background:'var(--card-solid)',cursor:'pointer'}}>✕</button>
+                        style={{padding:'0 12px',color:'var(--ink-3)',border:'1px solid var(--line)',borderRadius:8,background:'var(--card-solid)',cursor:'pointer'}}>✕</button>
                     </div>
                   ))}
                   <button onClick={()=>setSeedCandidates(p=>[...p,''])}
-                    style={{padding:'6px 12px',fontSize:12,color:'var(--ink-2)',border:'1px dashed #ccc',borderRadius:8,background:'var(--card-solid)',cursor:'pointer',marginBottom:14}}>
+                    style={{padding:'6px 12px',fontSize:12,color:'var(--ink-2)',border:'1px dashed var(--ink-3)',borderRadius:8,background:'var(--card-solid)',cursor:'pointer',marginBottom:14}}>
                     {t.seedAdd}
                   </button>
                   <div style={{display:'flex',gap:10}}>
@@ -7710,8 +7765,8 @@ function App() {
 
       {!isRun && (
         <div style={{marginTop:16}}>
-          <div style={{border:'1px solid #e5e5e5',borderRadius:12,overflow:'hidden',marginBottom:10}}>
-            <div style={{display:'flex',alignItems:'center',gap:10,padding:'12px 14px',background:'var(--line-2)',borderBottom:'1px solid #e5e5e5'}}>
+          <div style={{border:'1px solid var(--line)',borderRadius:12,overflow:'hidden',marginBottom:10}}>
+            <div style={{display:'flex',alignItems:'center',gap:10,padding:'12px 14px',background:'var(--line-2)',borderBottom:'1px solid var(--line)'}}>
               <span style={{flex:1,fontSize:14,fontWeight:500}}>Report <span style={{fontSize:11,fontWeight:400,color:'var(--ink-3)'}}>in {lang}</span></span>
               {!rep&&!repping&&<button className="btn-primary" onClick={genRep}>{t.generateReport}</button>}
               {rep&&!repping&&<button onClick={genRep}>{t.regenerate}</button>}
@@ -7721,7 +7776,7 @@ function App() {
             {rep && repOpen && (
               <>
                 <div style={{padding:'14px',maxHeight:600,overflowY:'auto'}}><MD text={rep}/></div>
-                <div style={{padding:'10px 14px',borderTop:'1px solid #e5e5e5',background:'var(--line-2)',display:'flex',gap:8,alignItems:'center',flexWrap:'wrap'}}>
+                <div style={{padding:'10px 14px',borderTop:'1px solid var(--line)',background:'var(--line-2)',display:'flex',gap:8,alignItems:'center',flexWrap:'wrap'}}>
                   <span style={{fontSize:12,color:'var(--ink-2)',flexShrink:0}}>{t.translateTo}</span>
                   <div style={{display:'flex',gap:5,flexWrap:'wrap',flex:1}}>
                     {['Russian','English','Turkish','Arabic','German'].filter(l=>l!==lang).map(l=>(
@@ -7732,7 +7787,7 @@ function App() {
                   <button className="btn-primary" onClick={doXl} disabled={!xl.trim()||xlating}>{xlating?t.translating:t.translate}</button>
                 </div>
                 {xled && (
-                  <div style={{padding:'14px',borderTop:'1px solid #e5e5e5',maxHeight:400,overflowY:'auto'}}>
+                  <div style={{padding:'14px',borderTop:'1px solid var(--line)',maxHeight:400,overflowY:'auto'}}>
                     <p style={{fontSize:11,fontWeight:500,color:'var(--ink-3)',marginBottom:8}}>TRANSLATION — {xl}</p>
                     <MD text={xled}/>
                   </div>
