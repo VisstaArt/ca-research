@@ -5863,7 +5863,7 @@ function Field({ label, optional, info, children }) {
     <div style={{marginBottom:10}}>
       <div className="field-label-row">
         <span className="field-label">{label}</span>
-        {optional && <span className="field-opt">optional</span>}
+        {optional && <span className="field-opt">{typeof t !== "undefined" && t.optional ? t.optional : "необязательно"}</span>}
         {info && <InfoTip text={info}/>}
       </div>
       {children}
@@ -7082,9 +7082,11 @@ function App() {
   // ── FORM
   if (sc === 'form') return (
     <div>
-      {embedded && proj && (
+      {embedded && (
         <div className="card nacre cover rview" style={{marginBottom:14}}
-          dangerouslySetInnerHTML={{__html: buildCoverHTML(brief, proj?.results, lang, 'Бриф')}}/>
+          dangerouslySetInnerHTML={{__html:
+            buildCoverHTML(brief.name ? brief : { ...brief, name: 'Новый проект' },
+              proj?.results, lang, 'Бриф')}}/>
       )}
       {!embedded && <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:'1.5rem'}}>
         <button onClick={()=>proj ? setSc('work') : setSc('list')}>{proj ? t.backToProject : t.backBtn}</button>
