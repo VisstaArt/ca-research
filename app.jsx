@@ -11,7 +11,25 @@ const buildAgentPackage = (brief, lang, results, report) =>
 const { useState, useCallback, useEffect, useRef } = React;
 
 // ── CONFIG
-const MODEL = 'gpt-4.1';
+// Модель по умолчанию. Именно по умолчанию: модели улучшаются, и выбор должен
+// меняться без правки кода — и для нас, и для клиента (замечание владелицы
+// 13.09.2026). Порядок такой: модель проекта из настроек → модель, выбранная
+// в этом браузере → эта. Список ниже — то, из чего выбирают; когда выйдет
+// новая, строка добавляется сюда, и она появляется у всех.
+const MODELS = [
+  ['gpt-4.1',      'GPT-4.1 — рабочая лошадь, дешевле и быстрее'],
+  ['gpt-4.1-mini', 'GPT-4.1 mini — для черновых прогонов, вчетверо дешевле'],
+  ['gpt-5',        'GPT-5 — когда нужна глубина, дороже'],
+  ['o3',           'o3 — рассуждающая, для сложных ниш'],
+];
+const MODEL_DEFAULT = 'gpt-4.1';
+const MODEL = (() => {
+  try {
+    const u = new URLSearchParams(location.search).get('model');
+    if (u) return u;
+    return localStorage.getItem('ca_model') || MODEL_DEFAULT;
+  } catch { return MODEL_DEFAULT; }
+})();
 const PROXY = 'https://red-wave-3f83.art-vissta-442.workers.dev';
 const SK = 'ca_v6';
 
@@ -498,11 +516,17 @@ const clientIdFromUrl = (() => {
   catch { return ''; }
 })();
 
+// Выбранная модель на момент вызова: её меняют в настройке прогона, и держать
+// её в замыкании старта значит игнорировать смену до перезагрузки страницы.
+const currentModel = () => {
+  try { return localStorage.getItem('ca_model') || MODEL; } catch { return MODEL; }
+};
+
 async function callGPT(system, user, temperature, maxTokens) {
   lastGptUsage = null;
   const res = await authFetch('/api/proxy', {
     method: 'POST', headers: {'Content-Type':'application/json'},
-    body: JSON.stringify({model:MODEL, max_tokens: maxTokens || 8000, stream:false,
+    body: JSON.stringify({model: currentModel(), max_tokens: maxTokens || 8000, stream:false,
       ...(clientIdFromUrl ? { client_id: clientIdFromUrl } : {}),
       ...(temperature != null ? { temperature } : {}),
       messages:[{role:'system',content:system},{role:'user',content:user}]}),
@@ -6201,6 +6225,49 @@ function App() {
   const empty = { siteUrl:'', name:'', niche:'', geoCompany:'', geoMarket:'', format:'', audience:'', result:'', price:'', competitors:'', extra:'', currentRevenue:'', currentClients:'', currentAvgCheck:'', targetSegment:'', priceLayer:'', services:[], selectedServices:[], selectedNiche:'', nicheCandidates:'' };
   const [brief, setBrief] = React.useState(empty);
   const [lang, setLang] = React.useState('Russian');
+  // Модель и ключ клиента — состояние настройки прогона. Ключ сюда НЕ
+  // возвращается никогда: из базы приходят только четыре последних знака,
+  // по которым человек узнаёт свой же ключ.
+  const [model, setModel] = React.useState(MODEL);
+  const [ownKey, setOwnKey] = React.useState(null);   // null — ещё не спросили
+  const [keyDraft, setKeyDraft] = React.useState('');
+  const [keyBusy, setKeyBusy] = React.useState(false);
+  const [keyMsg, setKeyMsg] = React.useState('');
+  React.useEffect(() => {
+    if (!clientIdFromUrl) { setOwnKey(''); return; }
+    const A = window.CAAuth;
+    fetch(A.SUPABASE_URL + '/rest/v1/provider_keys?select=hint,provider&client_id=eq.'
+          + encodeURIComponent(clientIdFromUrl) + '&provider=eq.openai',
+      { headers: { apikey: A.SUPABASE_ANON_KEY, Authorization: 'Bearer ' + A.getAccessToken() } })
+      .then(r => r.ok ? r.json() : [])
+      .then(d => setOwnKey(Array.isArray(d) && d[0] ? (d[0].hint || 'заведён') : ''))
+      .catch(() => setOwnKey(''));
+  }, []);
+  const saveOwnKey = async () => {
+    setKeyBusy(true); setKeyMsg('');
+    const A = window.CAAuth;
+    try {
+      const r = await fetch(A.SUPABASE_URL + '/rest/v1/rpc/set_provider_key', {
+        method: 'POST',
+        headers: { apikey: A.SUPABASE_ANON_KEY, Authorization: 'Bearer ' + A.getAccessToken(),
+                   'Content-Type': 'application/json' },
+        body: JSON.stringify({ p_client: clientIdFromUrl, p_name: 'OpenAI клиента',
+          p_provider: 'openai', p_secret: keyDraft.trim(), p_purpose: 'writing' }),
+      });
+      const d = await r.json().catch(() => null);
+      if (!r.ok) {
+        const m = (d && (d.message || d.hint)) || '';
+        // Функции нет — миграция не применена. Это недостающий шаг, а не
+        // поломка, и сказать надо именно так, а не «не получилось».
+        throw new Error(/does not exist|schema cache/i.test(m)
+          ? 'Хранилище ключей в базе ещё не заведено — нужна миграция, её применяет владелица.'
+          : (m || 'Не получилось сохранить'));
+      }
+      setOwnKey(typeof d === 'string' ? d : (keyDraft.trim().slice(-4)));
+      setKeyDraft(''); setKeyMsg('Ключ сохранён. Дальше работа идёт на нём.');
+    } catch (e) { setKeyMsg(e.message); }
+    setKeyBusy(false);
+  };
   const [mods, setMods] = React.useState(['M2','M3']);
   const [siteUrl, setSiteUrl] = React.useState('');
   const [parsing, setParsing] = React.useState(false);
@@ -6968,6 +7035,47 @@ function App() {
             </button>
           ))}
         </div>
+      </div>
+
+      {/* Настройка прогона — здесь, ПЕРЕД первой тратой, а не в дальних
+          настройках: и модель, и ключ спрашиваются в тот момент, когда человек
+          настраивает работу (замечание владелицы 13.09.2026). В личном кабинете
+          они потом видны и меняются, но первый раз их спрашивают тут. */}
+      <div className="card">
+        <p style={{fontSize:13,fontWeight:500,marginBottom:4}}>Модель и ключ</p>
+        <p style={{fontSize:12,color:'#666',marginBottom:10}}>
+          На чём считаем и за чей счёт. Меняется в любой момент — модели улучшаются,
+          и выбор не должен быть вшит навсегда.
+        </p>
+        <select value={model} onChange={e=>{ setModel(e.target.value);
+            try { localStorage.setItem('ca_model', e.target.value); } catch {} }}
+          style={{width:'100%',marginBottom:8}}>
+          {MODELS.map(([v,n2]) => <option key={v} value={v}>{n2}</option>)}
+        </select>
+        {clientIdFromUrl ? (
+          <>
+            <p style={{fontSize:12,color:'#666',marginBottom:6}}>
+              {ownKey === null ? 'Смотрю, заведён ли свой ключ…'
+                : ownKey ? 'Работаем на ключе клиента: …' + ownKey + '. Кредиты платформы не тратятся.'
+                : 'Свой ключ не заведён — работа идёт на ключе платформы и тратит кредиты.'}
+            </p>
+            {!ownKey && (
+              <div style={{display:'flex',gap:6}}>
+                <input type="password" value={keyDraft} autoComplete="new-password"
+                  onChange={e=>setKeyDraft(e.target.value)}
+                  placeholder="ключ OpenAI клиента — вставьте, если работаем на нём"
+                  style={{flex:1}} />
+                <button onClick={saveOwnKey} disabled={!keyDraft.trim()||keyBusy}>
+                  {keyBusy ? 'Сохраняю…' : 'Сохранить'}</button>
+              </div>
+            )}
+            {keyMsg && <p style={{fontSize:12,color:'#666',marginTop:6}}>{keyMsg}</p>}
+          </>
+        ) : (
+          <p style={{fontSize:12,color:'#666'}}>
+            Ключ клиента заводится из платформы — там известно, чей это проект.
+          </p>
+        )}
       </div>
 
       <div className="card">
