@@ -3390,7 +3390,7 @@ function ScatterChart({ data, title }) {
   }, [data]);
   return (
     <div style={{background:'var(--card-solid)',border:'1px solid var(--line)',borderRadius:10,padding:'1rem',marginBottom:10}}>
-      <p style={{fontSize:13,fontWeight:500,marginBottom:4}}>{title}</p>
+      <p style={{fontSize:16,fontWeight:600,marginBottom:4,letterSpacing:'-.01em'}}>{title}</p>
       <p style={{fontSize:11,color:'var(--ink-3)',marginBottom:8}}>Size = score. Green=Go, Orange=Hold, Red=Stop</p>
       <canvas ref={canvasRef} height={220}/>
     </div>
@@ -3427,7 +3427,7 @@ function CompetitorMapChart({ data, title }) {
   }, [data]);
   return (
     <div style={{background:'var(--card-solid)',border:'1px solid var(--line)',borderRadius:10,padding:'1rem',marginBottom:10}}>
-      <p style={{fontSize:13,fontWeight:500,marginBottom:4}}>{title}</p>
+      <p style={{fontSize:16,fontWeight:600,marginBottom:4,letterSpacing:'-.01em'}}>{title}</p>
       <p style={{fontSize:11,color:'var(--ink-3)',marginBottom:8}}>Зелёная точка — мы. Пустые зоны на карте — свободное позиционирование.</p>
       <canvas ref={canvasRef} height={220}/>
     </div>
@@ -4954,8 +4954,6 @@ function buildCoverHTML(brief, results, lang, mark) {
     const done = (results || []).find(r => r.id === m.id && r.content && !r.failed);
     return done ? '<a class="on">'+m.id+' ✓</a>' : '<span>'+m.id+'</span>';
   }).join('');
-  // Сводка ниш: какие отработаны, какие в работе, какие не начаты. Отработана —
-  // все выбранные по-нишевые модули на месте; частично — хоть один есть.
   const ниши = String(brief.selectedNiche || '').split(',').map(x => x.trim()).filter(Boolean);
   const поНишам = ниши.map(н => {
     const свои = (results || []).filter(r => (r.niche || '') === н && r.content && !r.failed);
@@ -4965,10 +4963,10 @@ function buildCoverHTML(brief, results, lang, mark) {
     const word = свои.length >= ждут ? 'готова' : (свои.length ? свои.length + ' из ' + ждут : 'не начата');
     return '<span class="kchip '+cls+'"><span class="d"></span>'+esc(н)+' · '+word+'</span>';
   }).join(' ');
-  return '<div class="card nacre cover">'
-    +'<div class="chead"><div>'
+  // Без слова «исследование»: раздел уже так называется в меню, повтор на
+  // плашке — навал (владелица, 14.09). Метка — имя этапа.
+  return '<div class="chead"><div>'
     +'<span class="kchip kchip-go rpt-mark"><span class="d"></span>'+esc(mark || 'Отчёт')+'</span>'
-    +'<span class="eyebrow">Исследование целевой аудитории</span>'
     +'<h1 class="covername">'+esc(brief.name||'—')+'</h1>'
     +'<p class="coversub">'+esc([brief.niche, brief.geoMarket||brief.geo].filter(Boolean).join(' · '))+'</p></div>'
     +'<div class="coveract"><span class="note">'+esc(date)+'</span></div></div>'
@@ -4979,8 +4977,7 @@ function buildCoverHTML(brief, results, lang, mark) {
     + coverRow('Формат', brief.format)
     +'</dl>'
     + (ниши.length ? '<div class="mods" style="gap:8px">'+поНишам+'</div>' : '')
-    +'<div class="mods">'+badges+'</div>'
-    +'</div>';
+    +'<div class="mods">'+badges+'</div>';
 }
 
 // Разметка внутри пункта итога: жирное и ссылки. Полный mdInline живёт
@@ -7086,8 +7083,8 @@ function App() {
   if (sc === 'form') return (
     <div>
       {embedded && proj && (
-        <div className="rview" style={{marginBottom:14}} dangerouslySetInnerHTML={{__html:
-          buildCoverHTML(brief, proj?.results, lang, 'Бриф')}}/>
+        <div className="card nacre cover rview" style={{marginBottom:14}}
+          dangerouslySetInnerHTML={{__html: buildCoverHTML(brief, proj?.results, lang, 'Бриф')}}/>
       )}
       {!embedded && <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:'1.5rem'}}>
         <button onClick={()=>proj ? setSc('work') : setSc('list')}>{proj ? t.backToProject : t.backBtn}</button>
@@ -7098,7 +7095,7 @@ function App() {
       </div>}
 
       <div className="card">
-        <p style={{fontSize:13,fontWeight:500,marginBottom:4}}>{t.autoFill}</p>
+        <p style={{fontSize:16,fontWeight:600,marginBottom:4,letterSpacing:'-.01em'}}>{t.autoFill}</p>
         <p style={{fontSize:12,color:'var(--ink-2)',marginBottom:10}}>{t.autoFillSub}</p>
         <div style={{display:'flex',gap:8,marginBottom:8}}>
           <input value={siteUrl} onChange={e=>setSiteUrl(e.target.value)} onKeyDown={e=>e.key==='Enter'&&parseSite()} placeholder="https://client-site.com" style={{flex:1}}/>
@@ -7173,7 +7170,7 @@ function App() {
       </div>
 
       <div className="card">
-        <p style={{fontSize:13,fontWeight:500,marginBottom:4}}>{t.researchLang}</p>
+        <p style={{fontSize:16,fontWeight:600,marginBottom:4,letterSpacing:'-.01em'}}>{t.researchLang}</p>
         <p style={{fontSize:12,color:'var(--ink-2)',marginBottom:10}}>{t.researchLangSub}</p>
         <div style={{display:'flex',gap:6,flexWrap:'wrap',marginBottom:8}}>
           {LANGS.map(l => (
@@ -7189,7 +7186,7 @@ function App() {
           настраивает работу (замечание владелицы 13.09.2026). В личном кабинете
           они потом видны и меняются, но первый раз их спрашивают тут. */}
       <div className="card">
-        <p style={{fontSize:13,fontWeight:500,marginBottom:4}}>Модель и ключ</p>
+        <p style={{fontSize:16,fontWeight:600,marginBottom:4,letterSpacing:'-.01em'}}>Модель и ключ</p>
         <p style={{fontSize:12,color:'var(--ink-2)',marginBottom:10}}>
           На чём считаем и за чей счёт. Меняется в любой момент — модели улучшаются,
           и выбор не должен быть вшит навсегда.
@@ -7228,7 +7225,7 @@ function App() {
       </div>
 
       <div className="card">
-        <p style={{fontSize:13,fontWeight:500,marginBottom:4}}>{t.selectModules}</p>
+        <p style={{fontSize:16,fontWeight:600,marginBottom:4,letterSpacing:'-.01em'}}>{t.selectModules}</p>
         <p style={{fontSize:12,color:'var(--ink-2)',marginBottom:10}}>{t.selectModulesSub}</p>
         {MODULES.map(m => (
           <ModuleCard key={m.id} m={m} on={mods.includes(m.id)} onToggle={()=>setMods(p=>p.includes(m.id)?p.filter(x=>x!==m.id):[...p,m.id])} uiLang={uiLang}/>
@@ -7498,31 +7495,33 @@ function App() {
           остаётся только строка действий; вне платформы — прежняя шапка. */}
       {embedded ? (
         <>
-        {/* Обложка — та же, что в отчёте: перламутр, поля брифа, сводка ниш
-            (какие готовы, какие в работе) и плашки модулей. Один код с
-            выгрузкой — стиль не разъедется. */}
-        <div className="rview" dangerouslySetInnerHTML={{__html:
-          buildCoverHTML(brief, proj?.results, lang, isRun ? 'Прогон' : 'Исследование')}}/>
-        <div style={{display:'flex',gap:8,flexWrap:'wrap',alignItems:'center',margin:'12px 0 1rem'}}>
-          {!isRun && pending.length > 0 && (
-            <button className="btn-primary" onClick={()=>run()}>▶ Прогнать: {pending.map(m=>m.id).join(', ')}</button>
-          )}
-          {!isRun && pending.length === 0 && doneCount > 0 && (
-            <button className="btn-primary" onClick={()=>setSc('form')}>＋ Добавить модули</button>
-          )}
-          {!isRun && modDone('M2') && (
-            <button onClick={openNichePicker} style={{fontSize:12,padding:'7px 12px'}}
-              title="Добавить ещё ниши — прогонятся только новые, готовые не тронутся">
-              ＋ Добавить ниши
-            </button>
-          )}
-          {!isRun && doneCount > 0 && (
-            <button onClick={()=>dlMd(buildFullMd())} style={{fontSize:12,padding:'7px 12px'}}
-              title="Полный отчёт по всем пройденным нишам, файлом">
-              ⤓ Выгрузить отчёт
-            </button>
-          )}
-          <span className="tag" style={{marginLeft:'auto'}}>{lang} · {MODEL}</span>
+        {/* Жемчужная плашка — одна, сверху, и УПРАВЛЕНИЕ ВНУТРИ НЕЁ (владелица,
+            14.09). Нутро обложки — тем же кодом, что отчёт; кнопки — React,
+            строкой под полями брифа, на той же плашке. */}
+        <div className="card nacre cover rview" style={{marginBottom:'1rem'}}>
+          <div dangerouslySetInnerHTML={{__html:
+            buildCoverHTML(brief, proj?.results, lang, шагИзАдреса === 'niches' ? 'Ниши' : 'Прогон')}}/>
+          <div style={{display:'flex',gap:8,flexWrap:'wrap',alignItems:'center',marginTop:16,paddingTop:14,borderTop:'1px solid var(--line)'}}>
+            {!isRun && pending.length > 0 && (
+              <button className="btn-primary" onClick={()=>run()}>▶ Прогнать: {pending.map(m=>m.id).join(', ')}</button>
+            )}
+            {!isRun && pending.length === 0 && doneCount > 0 && (
+              <button className="btn-primary" onClick={()=>setSc('form')}>＋ Добавить модули</button>
+            )}
+            {!isRun && modDone('M2') && (
+              <button onClick={openNichePicker} style={{fontSize:12,padding:'7px 12px'}}
+                title="Добавить ещё ниши — прогонятся только новые, готовые не тронутся">
+                ＋ Добавить ниши
+              </button>
+            )}
+            {!isRun && doneCount > 0 && (
+              <button onClick={()=>dlMd(buildFullMd())} style={{fontSize:12,padding:'7px 12px'}}
+                title="Полный отчёт по всем пройденным нишам, файлом">
+                ⤓ Выгрузить отчёт
+              </button>
+            )}
+            <span className="tag" style={{marginLeft:'auto'}}>{lang} · {MODEL}</span>
+          </div>
         </div>
         </>
       ) : (

@@ -80,9 +80,13 @@ tr:nth-child(even) td { background: none; }
 .info-btn { width: 18px; height: 18px; padding: 0; border-radius: 50%;
   font-size: var(--fs-label); line-height: 1; color: var(--ink-3); }
 .info-btn:hover { color: var(--ink); }
-.field-label-row { display: flex; align-items: baseline; gap: 8px; margin-bottom: 5px; }
-.field-label { font-size: var(--fs-small); font-weight: 600; color: var(--ink); }
-.field-opt { font-size: var(--fs-caption); color: var(--ink-3); }
+.field-label-row { display: flex; align-items: baseline; gap: 8px; margin-bottom: 6px; }
+/* Ярлык поля — как все прописные ярлыки эталона: 10px, 700, разрядка .07em.
+   Поля брифа выглядели «не в наших шрифтах» ровно потому, что ярлыки жили
+   своим кеглем 12.5 — единственные на всю платформу. */
+.field-label { font-size: var(--fs-label); font-weight: 700; letter-spacing: .07em;
+  text-transform: uppercase; color: var(--ink-3); }
+.field-opt { font-size: var(--fs-caption); color: var(--ink-3); text-transform: none; letter-spacing: 0; }
 </style>
 </head>
 <body>
@@ -92,6 +96,6 @@ tr:nth-child(even) td { background: none; }
      без сборки — как и весь остальной проект. -->
 <script src="lib/contract.js?v=c5d82d20"></script>
 <script src="lib/auth.js?v=c0e4610f"></script>
-<script src="app.js?v=0cc7ae49"></script>
+<script src="app.js?v=45e2d188"></script>
 </body>
 </html>
