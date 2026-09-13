@@ -90,8 +90,28 @@ TARGETS.forEach(function (t) {
   }
   if (end < 0) throw new Error('литерал REPORT_CSS не закрыт');
   var css = JSON.parse(src.slice(j, end + 1));
+  // Токены, которые выгрузка отчёта добавляет ПОСЛЕ константы (палитра,
+  // шкала кеглей, --raise): без них файл эталона неполный — инструмент,
+  // подключающий его, оставался без --mid и --fs-*. Достаём те же строки,
+  // что вшивает generateHTMLReport, — источник один, копий нет.
+  // Блоки :root разрезаны на несколько строковых кусков через «+» — по одному
+  // литералу их не собрать. Декодируем ВЕСЬ хвост сборки отчёта (от <style> до
+  // </style>), как для перламутра, и вынимаем цельные :root из готового CSS.
+  var a1 = src.indexOf("+'<style>'+REPORT_CSS");
+  var a2 = src.indexOf("+'</style>", a1);
+  var сборка = '';
+  if (a1 >= 0 && a2 > a1) {
+    var rf = /'((?:[^'\\]|\\.)*)'/g, fq;
+    var хвост = src.slice(a1, a2);
+    while ((fq = rf.exec(хвост)))
+      сборка += fq[1].replace(/\\n/g, '\n').replace(/\\'/g, "'").replace(/\\"/g, '"');
+  }
+  var токены = '';
+  var rt = /:root\{[^{}]*\}/g, tq;
+  while ((tq = rt.exec(сборка)))
+    if (tq[0].indexOf('--') >= 0 && tq[0].indexOf('--nacre-img') < 0) токены += tq[0] + '\n';
   wr(BASE + 'lib/report.css',
-    '/* Собрано из REPORT_CSS в app.jsx. Не править руками. */\n' + css + '\n');
+    '/* Собрано из REPORT_CSS в app.jsx. Не править руками. */\n' + css + '\n' + токены);
   console.log('  app.jsx → lib/report.css  (' + Math.round(css.length / 1024) + ' КБ)');
 })();
 
