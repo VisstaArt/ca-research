@@ -17,8 +17,10 @@ function fingerprint(s) {
   }
   return ('00000000' + h1.toString(16)).slice(-8) + ('00000000' + h2.toString(16)).slice(-8);
 }
-var TARGETS = [{ src: 'shell.jsx', out: 'shell.js' },
-               { src: 'app.jsx',   out: 'app.js'   }];
+// shell.jsx больше нет: страница платформы собрана из кусков эталона
+// (design/оболочка), а не написана заново. Живая часть — platform.js, он
+// обычный скрипт и сборки не требует.
+var TARGETS = [{ src: 'app.jsx', out: 'app.js' }];
 var stale = 0;
 TARGETS.forEach(function (t) {
   var src = rd(BASE + t.src), out = rd(BASE + t.out) || '';

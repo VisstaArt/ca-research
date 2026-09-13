@@ -48,7 +48,7 @@ eval(rd(BASE + 'tools/babel.min.js'));
 // html — страница, в которой надо проставить метку версии у <script src>.
 // Без метки браузер отдаёт из кэша вчерашний файл, и человек не видит правок:
 // владелица 08.09.2026 не нашла новый переключатель, хотя на сайте он уже был.
-var TARGETS = [{ src: 'shell.jsx', out: 'shell.js', html: 'shell.html' },
+var TARGETS = [,
                { src: 'app.jsx',   out: 'app.js',   html: 'index.html' }];
 
 var built = 0;

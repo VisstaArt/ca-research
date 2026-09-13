@@ -1,0 +1,311 @@
+
+/* ── Экран согласования ──────────────────────────────────────────────────────
+   Добавка к оформлению отчёта — только то, чего в нём нет, потому что нет и
+   таких экранов. Компоненты берутся готовые: `.kbtn` четырёх видов, `.kchip`
+   трёх состояний, `.card`, `.navtile`, `.navrow`. */
+
+/* ПЛИТКА ОТЗЫВАЕТСЯ НА КУРСОР — но БЕЗ `transform`.
+   Сдвиг и увеличение пришлось убрать: у плитки стеклянное размытие
+   (`backdrop-filter`), и вместе с трансформацией она уезжает в отдельный слой
+   отрисовки. В Safari при этом текст на ней пропадает на время анимации —
+   владелица это и увидела 12.09.2026: «в момент наведения название пропадает».
+
+   Отклик оставлен тот же по смыслу: фирменная обводка, свечение, чуть
+   светлее фон. Именно так отзываются плитки в самом эталоне — он анимирует
+   отступы и тень, а не положение. */
+.navtile{transition:background .16s ease, border-color .16s ease, box-shadow .16s ease}
+.navtile:hover:not(:disabled):not([aria-current="page"]){
+  border-color:color-mix(in srgb, var(--mid) 55%, var(--line));
+  background:color-mix(in srgb, var(--mid) 8%, var(--card-solid));
+  box-shadow:inset 0 1px 0 var(--hi), 0 10px 22px -16px rgba(23,21,18,.4)}
+.navtile:hover:not(:disabled) .ic{background:color-mix(in srgb, var(--mid) 18%, transparent)}
+.navrow{transition:background .14s ease, color .14s ease}
+.navrow:hover:not(:disabled):not([aria-current="page"]){
+  background:color-mix(in srgb, var(--ink) 5%, transparent);color:var(--ink)}
+@media (prefers-reduced-motion:reduce){.navtile, .navrow{transition:none}}
+
+/* ЕДИНСТВЕННОЕ, ЧТО ПРИШЛОСЬ ДОБАВИТЬ К СТАНДАРТУ. В отчёте строки списка
+   всегда неактивны — он выгружается статикой, и состояния «вы сейчас здесь»
+   для `.navrow` не существует. Беру ровно то оформление, которое уже
+   утверждено для активной плитки: тёмный графит, та же тень. Нового не
+   придумываю, но отметить надо — это моя строка, а не из стандарта. */
+.navrow[aria-current="page"]{color:var(--mist-1);font-weight:600;
+  background:linear-gradient(150deg, #262320, #171512);
+  box-shadow:0 14px 26px -14px rgba(23,21,18,.45), inset 0 1px 0 rgba(255,255,255,.14)}
+.navrow[aria-current="page"] .dot{background:var(--mid)}
+.navrow[aria-current="page"] .cnt{color:var(--mist-1);border-left-color:rgba(255,255,255,.2)}
+
+/* Материал — карточка отчёта, отличается только внутренним строем. */
+.item{margin-bottom:16px}
+.item > header{display:flex;gap:16px;align-items:flex-start;justify-content:space-between;
+  margin-bottom:14px}
+.item .kind{font-size:var(--fs-label);font-weight:700;letter-spacing:.09em;text-transform:uppercase;
+  color:var(--ink-3);margin:0 0 5px}
+.item h2{font-size:var(--fs-block);font-weight:600;letter-spacing:-.02em;margin:0}
+
+/* Карусель — лентой слайдов, а не списком полей: человек согласует то, что
+   увидит читатель. */
+.deck{display:flex;gap:12px;overflow-x:auto;padding:2px 2px 10px;margin-bottom:16px;
+  scroll-snap-type:x proximity}
+.slide{margin:0;flex:0 0 auto;width:186px;scroll-snap-align:start}
+.slide img{width:100%;display:block;border-radius:16px;border:1px solid var(--line);
+  box-shadow:inset 0 1px 0 var(--hi), 0 12px 26px -22px rgba(45,36,22,.35)}
+.slide figcaption{margin-top:6px;font-size:var(--fs-caption);color:var(--ink-3);text-align:center}
+
+/* Текст материала — тем же гротеском, что весь интерфейс. Антиква в отчёте
+   отведена цитатам, и пост целиком ею набирать нельзя. */
+.body{padding:15px 17px;border-radius:14px;background:var(--card-solid);
+  border:1px solid var(--line);max-width:66ch;font-size:var(--fs-sub);margin-bottom:16px}
+.body p{margin:0}
+.body p + p{margin-top:.8em}
+.body .spoil{background:color-mix(in srgb, var(--ink) 10%, transparent);border-radius:4px;padding:0 4px}
+
+/* Замечания. Три вида, и третий НЕ красится: слабый заголовок не поломка, а
+   красный рядом с ним обесценивает настоящие блокировки. Цвет — корешком,
+   текст обычный: цветная надпись не проходит по контрасту ни в одном
+   статусном цвете (правило отчёта). */
+.checks{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:9px}
+.check{display:flex;gap:12px;padding:13px 15px;border-radius:14px;font-size:var(--fs-base);
+  color:var(--ink);background:var(--card-solid);border:1px solid var(--line)}
+.check .rule{width:3px;border-radius:2px;flex:0 0 auto;background:var(--ink-3)}
+.check.stop{background:color-mix(in srgb, var(--acc-quiet) 10%, var(--card-solid))}
+.check.stop .rule{background:var(--acc-quiet)}
+.check.look{background:color-mix(in srgb, var(--acc-mid) 10%, var(--card-solid))}
+.check.look .rule{background:var(--acc-mid)}
+.check b{display:block;margin-bottom:2px}
+.check .src{margin:7px 0 0;font-family:var(--serif);font-size:var(--fs-base);color:var(--ink-2)}
+.check .why{margin:5px 0 0;font-size:var(--fs-caption);color:var(--ink-3)}
+.clean{font-size:var(--fs-base);color:var(--ink-2);margin:0}
+.checks-title{font-size:var(--fs-small);font-weight:600;color:var(--ink-2);margin:0 0 9px}
+
+/* Низ карточки: цена ДО действия, а не после. */
+.acts{display:flex;flex-wrap:wrap;gap:12px 18px;align-items:center;justify-content:space-between;
+  border-top:1px solid var(--line-2);margin-top:18px;padding-top:16px}
+.cost{font-size:var(--fs-ui);color:var(--ink-2);max-width:52ch;margin:0}
+.row{display:flex;gap:9px;flex-wrap:wrap;align-items:center}
+
+/* Сводка ушла в `.coverdl` эталона — своих правил под неё больше нет. */
+
+/* ── КНОПКИ И ПЕРЕКЛЮЧАТЕЛЬ: предложение на согласование ─────────────────────
+   Правки 12.09.2026 по замечаниям владелицы. Форма кнопок ей подошла, цвет —
+   нет: я углубила бирюзу ради белого текста и получила ЗЕЛЁНЫЙ, которого в
+   палитре нет. Палитра ровно из четырёх цветов: бирюза, серый, графит и синий
+   (синий — вместо красного, для отрицательных акцентов).
+
+   ИМЕНА С ПРЕФИКСОМ `cm-`. Первый заход назвал кнопки `.b`, а переключатель
+   `.seg` — оба имени в эталоне ЗАНЯТЫ (`.seg` там вообще сетка в две колонки).
+   Мои правила молча перебивали чужие. Всё своё теперь помечено.
+
+   ЦВЕТ ГЛАВНОЙ КНОПКИ — фирменная бирюза, градиент собран из неё же: светлее
+   сверху, глубже снизу, оттенок один. Текст чернилами: на бирюзе белый даёт
+   2.15–2.90 при норме 4.5, а чернила 8.82 и 6.56. Это не выбор вкуса — белым
+   на бирюзе просто не читается.  */
+
+/* ГЛАВНАЯ КНОПКА — ГРАФИТ, решение владелицы 12.09.2026: бирюзовая заливка не
+   понравилась ни с белым текстом, ни с чернилами. Графит с белым даёт 16.83 при
+   норме 4.5 — лучший контраст из всех, что мы перебрали, и он уже принятый язык
+   «здесь главное»: тем же графитом отмечен активный раздел меню.
+
+   Бирюза остаётся, но как отклик: под курсором появляется фирменная обводка и
+   мягкое свечение. Цвет работает на действие, а не на заливку.
+
+   Рамка два пикселя в обоих состояниях, чтобы кнопка не дёргалась. */
+
+/* Возврат на доработку — действие обратное. Синий, потому что красного в
+   палитре нет и заводить его ради одной кнопки не стоит; цвет несёт рамка,
+   текст остаётся чернилами (синий текст даёт 4.37 — впритык). */
+
+/* ── Переключатель показа ────────────────────────────────────────────────────
+   Третий заход. Метками `.mods` он читался как подписи — «непонятно, что тут
+   можно выбирать». Сегментами в общей рамке — «форма не нравится», и она
+   спорила с кнопками: два прямоугольных ряда подряд.
+
+   Здесь он вообще не кнопка: строка разделов с подчёркиванием активного и
+   числом рядом. Число и делает его переключателем — видно, что варианты
+   считаются, а не просто названы. */
+
+.krow{display:grid;grid-template-columns:200px 1fr;gap:18px;align-items:center;
+  padding:16px 0;border-bottom:1px solid var(--line-2)}
+.krow:last-child{border-bottom:0}
+.kname b{display:block;font-size:var(--fs-body)}
+.kname span{display:block;font-size:var(--fs-ui);color:var(--ink-3);margin-top:3px;line-height:1.45}
+.kstates{display:flex;gap:20px;flex-wrap:wrap}
+.cell{display:flex;flex-direction:column;align-items:flex-start;gap:6px}
+.cell .st{font-size:var(--fs-label);letter-spacing:.07em;text-transform:uppercase;color:var(--ink-3)}
+.lane{display:grid;grid-template-columns:132px 1fr;gap:16px;padding:14px 0;
+  border-bottom:1px solid var(--line-2)}
+.lane:last-child{border-bottom:0}
+/* Полоса «чья ступень» на схеме алгоритма описана в эталоне (`.cm-lane`).
+   Имя у неё с префиксом не для красоты: под прежним именем `.who` она
+   перебивала шапку выпадающих списков — там имя и почта вставали в строку и
+   почта переламывалась пополам. */
+.step b{display:block;font-size:var(--fs-item);margin-bottom:3px}
+.step span{display:block;font-size:var(--fs-base);color:var(--ink-2);line-height:1.5;max-width:78ch}
+.step .io{margin-top:7px;font-size:var(--fs-caption);color:var(--ink-3);
+  font-family:ui-monospace,SFMono-Regular,monospace}
+.fork{margin-top:9px;border-left:2px solid var(--acc-mid);padding-left:11px;
+  font-size:var(--fs-small);color:var(--ink-2)}
+.hole{margin-top:9px;border-left:2px solid var(--acc-quiet);padding-left:11px;
+  font-size:var(--fs-small);color:var(--ink-2)}
+.fork b, .hole b{font-size:var(--fs-ui);color:var(--ink);margin-bottom:2px}
+pre.mermaid{background:var(--card-solid);border:1px solid var(--line);
+  border-radius:14px;padding:16px;overflow-x:auto}
+
+/* ── Шапка ───────────────────────────────────────────────────────────────────
+   Личный кабинет живёт здесь, а не в боковом меню: боковое принадлежит
+   ПРОЕКТУ (бренд, голос, площадки), шапка — человеку, который вошёл.
+
+   Правки 12.09.2026 по замечаниям владелицы: проект и рынок одной строкой,
+   отдельного переключателя страны нет, показателя «в работе» нет, иконки
+   линейные и одноцветные, плашка проекта шире переносов.
+
+   В эталоне отчёта такой шапки нет — он выгружается файлом, входить в него
+   некому. Правила ниже наши и ждут переноса в эталон. */
+/* ВЫСОТА ВСЕХ ПОЛЕЙ ШАПКИ ОДНА. Разнобой был потому, что у кнопок высота
+   считалась из отступов, а у знака и колокольчика стояла жёстко. Теперь одна
+   переменная на всё: поле, плашка проекта, кнопка, иконка, знак. */
+:root{--шапка-поле:36px}
+.cm-top button, .cm-top .cm-find{height:var(--шапка-поле)}
+/* Знак не должен быть мельче кнопки: он якорь страницы, а «Создать» —
+   действие. Ровняем по высоте полей шапки, чуть уступая им по краям. */
+/* Знак крупнее полей шапки: он якорь страницы, а не кнопка в ряду. Шапка под
+   него подросла — иначе он упирался бы в края. */
+
+/* Переключатель проекта живёт в БОКОВОМ меню: он принадлежит проекту, как и
+   всё меню под ним, а шапка — человеку и платформе. Замечание владелицы
+   12.09.2026; так действительно логичнее. */
+/* В боковом меню 258 пикселей — строка «метка + домен + рынок + галочка» туда
+   не влезает и вылезала за край. Раскладываем сеткой: метка слева во всю
+   высоту, домен первой строкой, рынок второй, галочка справа. Высота при этом
+   уже не равна полям шапки — здесь это и не нужно, шапка своя. */
+/* Колонки под галочку нет: она висит в правом верхнем углу и не отъедает
+   ширину у названия. Название — главное в этом блоке, ему и место. */
+/* Строка рынка не переносится: узкая колонка заставляла её ломаться пополам,
+   и блок начинал распирать меню. Длинное название уйдёт в многоточие. */
+
+/* Плашка проекта: всё в одну строку, переносов быть не должно. */
+/* Метка проекта: пока инициалы, дальше — логотип клиента (грузится при
+   заведении проекта). Флаг рынка приклеивается автоматически после
+   исследования: у одного бренда бывает несколько стран, и различать их надо с
+   одного взгляда. Замысел владелицы 12.09.2026. */
+.cm-mark{position:relative;width:24px;height:24px;border-radius:8px;display:inline-flex;align-items:center;
+  justify-content:center;font-size:var(--fs-label);font-weight:700;flex:0 0 auto;
+  background:linear-gradient(150deg,#262320,#171512);color:var(--mist-1)}
+
+/* ВАРИАНТ НА ПРОСМОТР: флаг и код страны ПОД МЕТКОЙ, строки «Россия · русский»
+   нет. Блок в две строки вместо трёх, название во всю ширину. */
+
+/* Поиск свёрнут в иконку и стоит в правой группе: строка поиска занимала
+   треть шапки ради поля, которым пользуются редко. Разворачивается по нажатию. */
+
+/* Иконки шапки — линейные и одноцветные: цвет в интерфейсе несёт смысл, а
+   значок «поддержка» никакого смысла цветом не несёт. */
+/* Кредиты в шапке: число крупно, знаменатель мелко — «сколько осталось из
+   скольких» читается одним взглядом. */
+
+/* ── Выпадающие списки ── */
+/* Имя и почта — в столбик: в строку почта не влезала. */
+/* Шапка списка: имя строкой, под ним почта. Именно в таком порядке — почта
+   длиннее имени и в строку с ним не помещается. */
+/* Почта строчными: в эталоне все мелкие подписи идут прописными, а адрес от
+   этого читается хуже и выглядит криком. */
+/* Проекты и кредиты — одной сеткой: метка СЛЕВА (там же потом будет логотип
+   клиента), имя и рынок столбиком, расход справа. Раньше метка попадала в
+   автоматическую колонку и наезжала на текст. */
+[data-panel="proj"] a, [data-panel="money"] a{display:grid;
+  grid-template-columns:26px minmax(0,1fr) auto;gap:2px 10px;align-items:center}
+[data-panel="proj"] a .cm-mark, [data-panel="money"] a .cm-mark{grid-column:1;grid-row:1 / span 2;
+  align-self:center}
+[data-panel="proj"] a b, [data-panel="money"] a b{grid-column:2;grid-row:1;justify-self:start}
+[data-panel="proj"] a i, [data-panel="money"] a i{grid-column:2;grid-row:2;justify-self:start;
+  font-size:var(--fs-caption)}
+/* Число ниш — отдельной строкой и меткой, а не хвостом к рынку: это не часть
+   названия рынка, а состояние проекта, и читаться оно должно отдельно. */
+[data-panel="proj"] a em{grid-column:2;grid-row:2;justify-self:start;font-style:normal;
+  font-size:var(--fs-label);font-weight:600;letter-spacing:.04em;text-transform:uppercase;
+  color:var(--ink-3);margin-top:3px;padding:2px 7px;border-radius:6px;
+  background:color-mix(in srgb, var(--ink) 5%, transparent)}
+[data-panel="proj"] a.on em{background:color-mix(in srgb, var(--mid) 22%, transparent);
+  color:var(--ink)}
+
+[data-panel="proj"] a span{grid-row:1 / span 3}
+[data-panel="proj"] a span, [data-panel="money"] a span{grid-column:3;grid-row:1 / span 2;
+  margin-left:0;justify-self:end;align-self:center;font-variant-numeric:tabular-nums}
+[data-panel="proj"] a.cm-add, [data-panel="money"] a.cm-add{display:block;padding-left:11px}
+/* Строка «Осталось» без метки: пусть имя начинается там же, где у проектов. */
+[data-panel="money"] a:not(:has(.cm-mark)) b{grid-column:2}
+/* «Создать проект» и «Пополнить» — фирменным: это единственные действия в
+   списках, остальное переключает. */
+/* Уведомления: заголовок, время справа, пояснение со следующей строки. */
+
+/* Код страны с флагом — своей ячейкой под меткой, БЕЗ наложения: наложением он
+   ложился прямо на инициалы. Вариант на просмотр: строки «Россия · русский» при
+   нём нет, блок в две строки, название во всю ширину. */
+.cm-cc{display:flex;align-items:center;justify-content:center;gap:4px;font-size:var(--fs-caption);
+  font-weight:700;letter-spacing:.04em;color:var(--ink-2);text-decoration:none;
+  line-height:1;white-space:nowrap;margin-top:5px}
+/* Флаг крупнее буквенного кода: он и ловится глазом, код только подтверждает. */
+.cm-cc{font-variant-emoji:emoji}
+[data-panel="proj"] a .cm-mark{grid-column:1;grid-row:1;align-self:center}
+[data-panel="proj"] a .cm-cc{grid-column:1;grid-row:2}
+[data-panel="proj"] a span{grid-row:1 / span 2}
+
+/* Пояснение под полем поиска. Класс был в разметке без единого правила —
+   абзац шёл системным кеглем вплотную к полю; поймал сторож классов, а не
+   глаз. Кегль берём токеном эталона, а не числом. */
+.cm-hint{margin:9px 11px 3px;font-size:var(--fs-caption);line-height:1.45;
+  color:var(--ink-3)}
+
+/* Выпадающий список. В эталоне правил под `select` нет ни одного, а рядом с
+   полем ввода он обязан выглядеть так же — иначе форма выглядит собранной из
+   двух разных страниц. Имя своё, с префиксом: голый `select` дотянулся бы до
+   чужих списков на общей странице. */
+.cm-pick{width:100%;padding:9px 12px;border:1px solid var(--line);border-radius:10px;
+  background:var(--card-solid);color:var(--ink);font:inherit;
+  font-size:var(--fs-body);appearance:none;cursor:pointer;
+  background-image:linear-gradient(45deg,transparent 50%,var(--ink-3) 50%),
+    linear-gradient(135deg,var(--ink-3) 50%,transparent 50%);
+  background-position:calc(100% - 17px) 51%, calc(100% - 12px) 51%;
+  background-size:5px 5px, 5px 5px;background-repeat:no-repeat;padding-right:34px}
+.cm-pick:focus{outline:2px solid var(--mid);outline-offset:1px}
+
+
+/* Своё — только то, чего в эталоне нет. Префикс не нужен там, где имя уникально
+   для этой страницы, но проверено: ни одно из этих имён в эталоне не занято. */
+.screen{display:none}
+.screen.on{display:block}
+/* В эталоне у карточки нет внешнего отступа: там между ними встают заголовки
+   разделов. У нас карточки идут подряд, и без зазора шапка склеивается со
+   следующей плашкой. */
+.screen .card{margin-bottom:14px}
+.screen .card:last-child{margin-bottom:0}
+.navrow{cursor:pointer}
+.navlist[hidden]{display:none}
+.navlist.always{border-top:1px solid var(--line-2);margin-top:10px;padding-top:4px}
+/* Отклик плиток описан в свои-стили.css — БЕЗ transform: он ломает текст
+   на стеклянных панелях в Safari. */
+.navrow[aria-current="page"]{color:var(--mist-1);font-weight:600;
+  background:linear-gradient(150deg,#262320,#171512)}
+.navrow[aria-current="page"] .dot{background:var(--mid)}
+
+/* Плитки комплектов карусели: превью и имя. Выбранный — тем же графитом, что
+   активный раздел меню. */
+.kits{display:grid;gap:12px;grid-template-columns:repeat(auto-fill,minmax(150px,1fr))}
+.kit-tile{margin:0;border:1px solid var(--line);border-radius:14px;overflow:hidden;
+  background:var(--card-solid);cursor:pointer;
+  transition:transform .16s cubic-bezier(.2,.8,.2,1), box-shadow .16s ease, border-color .16s ease}
+.kit-tile:hover{border-color:color-mix(in srgb, var(--mid) 55%, var(--line));
+  box-shadow:0 16px 28px -20px rgba(45,36,22,.45)}
+.kit-tile img{width:100%;display:block;aspect-ratio:4/5;object-fit:cover}
+.kit-tile figcaption{padding:9px 11px;font-size:12px}
+.kit-tile figcaption b{display:block}
+.kit-tile figcaption span{color:var(--ink-3);font-size:11px}
+.kit-tile.on{border-color:#171512;box-shadow:0 0 0 2px #171512}
+.kit-tile.on figcaption{background:linear-gradient(150deg,#262320,#171512);color:var(--mist-1)}
+.kit-tile.on figcaption span{color:rgba(255,255,255,.65)}
+
+.pill.no{color:var(--acc-quiet);border-color:var(--acc-quiet);
+  background:color-mix(in srgb, var(--acc-quiet) 12%, var(--card-solid))}
+.pill.ok{color:var(--acc-strong-ink);border-color:var(--acc-strong);
+  background:color-mix(in srgb, var(--mid) 12%, var(--card-solid))}
+@media (prefers-reduced-motion:reduce){.kit-tile{transition:none}}
