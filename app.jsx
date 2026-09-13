@@ -216,7 +216,7 @@ const T = {
 // ── MODULES CONFIG
 const MODULES = [
   {
-    id: 'M1', label: 'M1.1', color: '#639922', bg: '#EAF3DE', border: '#97C459', dark: '#27500A',
+    id: 'M1', color: '#639922', bg: '#EAF3DE', border: '#97C459', dark: '#27500A',
     disabled: true, // временно отключён: ждёт подключения реальных данных гос. статистики
     title: 'Market Capacity',
     titleRu: 'Ёмкость рынка (TAM/SAM/SOM)',
@@ -230,7 +230,7 @@ const MODULES = [
     steps: ['Collecting geo & demographic statistics (Block 01)…','Mapping open data sources (Block 02)…','Building TAM→SAM→SOM model (Block 03)…'],
   },
   {
-    id: 'M1_2', label: 'M1.2', color: '#4A7C1F', bg: '#EFF6E4', border: '#A8CE6E', dark: '#2E4F0C',
+    id: 'M2', color: '#4A7C1F', bg: '#EFF6E4', border: '#A8CE6E', dark: '#2E4F0C',
     title: 'Niche Scouting',
     titleRu: 'Разведка ниш',
     taglineEn: 'Map of services and niches with scoring — pick one to research deeply',
@@ -243,7 +243,7 @@ const MODULES = [
     steps: ['Searching real market signals (web search)…','Describing target audience segments (Block 04)…','Evaluating service effectiveness per niche (Block 04_1)…','Prioritizing niches with scoring (Block 04_2)…','Preparing niche cards…'],
   },
   {
-    id: 'M2', color: '#0F6E56', bg: '#E1F5EE', border: '#5DCAA5', dark: '#085041',
+    id: 'M3', color: '#0F6E56', bg: '#E1F5EE', border: '#5DCAA5', dark: '#085041',
     title: 'Competitors & Gap Analysis',
     titleRu: 'Конкуренты и гэп-анализ',
     taglineEn: 'Who you compete with, how they position, and where the gaps are',
@@ -256,9 +256,26 @@ const MODULES = [
     steps: ['Building open sources index (Block 05)…','Mapping competitors — offers, pricing, positioning (Block 06)…','Running Win/Parity/Lose gap analysis (Block 06_1)…','Generating competitor positioning chart…'],
   },
   {
-    id: 'M3', color: '#1565A8', bg: '#E3EFFE', border: '#7EB3F0', dark: '#0D3E6E',
-    // VoC ищет жалобы на конкурентов, которых находит M2 — без M2 сбор деградирует
-    requires: ['M2'],
+    // Контент-радар. Место в цепочке — по зависимостям, а не по номеру: нужен
+    // список конкурентов из M2, а урожай его каналов кормит M3.
+    id: 'M4', color: '#7A3E9D', bg: '#F1E8F8', border: '#C09BDC', dark: '#4E2467',
+    requires: ['M3'],
+    title: 'Content Radar',
+    titleRu: 'Контент-радар',
+    taglineEn: 'Competitors as media: what they publish and what actually works',
+    taglineRu: 'Конкуренты как медиа: что публикуют и что у них залетает',
+    whatEn: 'Answers: Which formats, hooks and lengths actually work in this niche? Looks at the same companies M2 found, but as publishers: channels, top content, patterns and niche benchmarks. Public page data only — no logged-in sources.',
+    whatRu: 'Отвечает: Какие форматы, хуки и длительности реально работают в нише? Смотрит на тех же конкурентов, что нашёл M2, но как на медиа: каналы, топ-контент, паттерны и бенчмарки ниши. Только публично видимые числа — ничего из закрытых источников.',
+    outputsEn: ['Radar sources','Competitor channels','Top content breakdown','Working patterns','Niche benchmarks'],
+    outputsRu: ['Источники радара','Каналы конкурентов','Разбор того, что залетает','Работающие паттерны','Бенчмарки ниши'],
+    estimatedMin: 7,
+    steps: ['Collecting competitor channels (Block 24_0)…','Measuring channel size and cadence (Block 24)…','Breaking down top content (Block 24A)…','Deriving what works (Block 24B)…','Computing niche benchmarks (Block 24C)…'],
+  },
+  {
+    id: 'M5', color: '#1565A8', bg: '#E3EFFE', border: '#7EB3F0', dark: '#0D3E6E',
+    // VoC ищет жалобы на конкурентов, которых находит M2 — без M2 сбор деградирует.
+    // M9 идёт перед ним: его каналы и комментарии — то же сырьё, собранное один раз.
+    requires: ['M3'],
     title: 'Voice of Customer',
     titleRu: 'Голос клиента',
     taglineEn: 'Real words your customers use — pain, desire, doubt',
@@ -271,9 +288,9 @@ const MODULES = [
     steps: ['Collecting VoC quotes from reviews, forums, social media (Block 07)…','Clustering search intents by awareness stage (Block 08)…','Mapping funnel roles and headline formulas…'],
   },
   {
-    id: 'M4', color: '#3C3489', bg: '#EEEDFE', border: '#AFA9EC', dark: '#26215C',
+    id: 'M6', color: '#3C3489', bg: '#EEEDFE', border: '#AFA9EC', dark: '#26215C',
     // Персоны строятся на дословных цитатах из M3 — без VoC это выдумка
-    requires: ['M3'],
+    requires: ['M5'],
     title: 'Customer Psychology',
     titleRu: 'Психология покупки и путь клиента',
     taglineEn: 'How customers think, decide, and what stops them from buying',
@@ -286,18 +303,15 @@ const MODULES = [
     steps: ['Building LPR personas with real language (Block 09)…','Mapping Jobs-to-be-Done per segment (Block 10)…','Assessing awareness levels by Schwartz (Block 11)…','Cataloguing fears and doubts (Block 12)…','Mapping decision criteria and trust triggers (Block 13)…','Building customer journey map CJM (Block 14)…','Identifying cognitive tactics and influence patterns (Block 15)…'],
   },
   {
-    id: 'M5', color: '#633806', bg: '#FAEEDA', border: '#EF9F27', dark: '#412402',
+    id: 'M7', color: '#633806', bg: '#FAEEDA', border: '#EF9F27', dark: '#412402',
     // Офферы и гипотезы опираются на персоны и их боли из M4
-    requires: ['M4'],
-    // offChain (решение владелицы 26.08.2026, задача 4 от контент-машины): M5 не
-    // нужен для генерации постов и статей — контракт брал из него только
-    // hypotheses, и то справочно. Офферы работают на этапе воронки и лендинга, а
-    // не при написании поста, поэтому гонять их в каждом исследовании — тратить
-    // деньги клиента заранее. Модуль НЕ удалён и не disabled: он рабочий и
-    // остаётся доступным по явному выбору, просто больше не подхватывается
-    // автоматически перегенерацией соседей (вопрос «оставлять ли по запросу»
-    // в задаче помечен открытым — это самый обратимый вариант).
-    offChain: true,
+    requires: ['M6'],
+    // Возвращён в цепочку 12.09.2026 (владелица: «если считаешь что нужно, давай
+    // вернём»). Отключали 26.08, когда контракт брал отсюда только гипотезы, и
+    // справочно: платить за модуль в каждом прогоне было не за что. Теперь из
+    // него идут офферы, мастерская и главная ставка — четыре поля контракта,
+    // и без него исследование заканчивается на «что узнали», не доходя до
+    // «что продавать». Это разные вещи, и вторую заказчик как раз покупает.
     title: 'Offers & Hypotheses',
     titleRu: 'Офферы и гипотезы',
     taglineEn: 'What to sell, how to position it, and which offers to test first',
@@ -310,9 +324,33 @@ const MODULES = [
     steps: ['Generating marketing hypotheses (Block 16)…','Collecting offer input data (Block 17A)…','Running offer workbench — draft options (Block 17B)…','Finalising offers per segment (Block 17 Final)…'],
   },
   {
-    id: 'M6', color: '#712B13', bg: '#FAECE7', border: '#F0997B', dark: '#4A1B0C',
+    id: 'M8', color: '#72243E', bg: '#FBEAF0', border: '#ED93B1', dark: '#4B1528',
+    title: 'SEO Strategy',
+    titleRu: 'SEO-стратегия',
+    // Описание правится вместе с промптом: 10.09.2026 из M7 убраны SEO-04
+    // (структура сайта), SEO-05 (ссылочный профиль) и SEO-07 (контент-план), а
+    // карточка модуля продолжала их обещать — клиент читал её, ждал эти разделы
+    // и не находил в отчёте. Шаги прогона врали так же: показывали «Designing
+    // site structure (SEO-04)», пока считалось совсем другое.
+    taglineEn: 'Semantic core, search competitors, and real search volumes',
+    taglineRu: 'Семантическое ядро, поисковые конкуренты и реальная частотность',
+    whatEn: 'Answers: What keywords does your audience search for, with real volumes? Which pages already rank for them? What do competitors publish and how often?',
+    whatRu: 'Отвечает: По каким запросам ищет ваша аудитория и сколько их на самом деле? Какие страницы уже находятся по этим запросам? Что и как часто публикуют конкуренты?',
+    outputsEn: ['Search competitor analysis','Semantic core by clusters with real volumes','Competitor content audit','Full keyword export as returned by the source'],
+    outputsRu: ['Анализ поисковых конкурентов','Семантическое ядро по кластерам с реальной частотностью','Контент-аудит конкурентов','Полная выгрузка запросов как её вернул источник'],
+    estimatedMin: 7,
+    steps: ['Collecting sources (SEO-00)…','Analysing search competitors (SEO-01)…','Building semantic core by clusters (SEO-02)…','Auditing competitor content (SEO-03)…'],
+  },
+  {
+    // Это НЕ модуль исследования. Контент-план и лендинг — отдельные разделы
+    // платформы, со своими блоками; исследование заканчивается на M8 (SEO).
+    // Номер у него убран нарочно, чтобы он не читался как «девятый шаг».
+    // Пока живёт здесь и продолжает работать: блоки 18–22 кормят четыре поля
+    // контракта, и выключать его можно только ПОСЛЕ того, как контент-завод
+    // начнёт делать их сам, — иначе поля обнулятся, а делать будет некому.
+    id: 'CONTENT', color: '#712B13', bg: '#FAECE7', border: '#F0997B', dark: '#4A1B0C',
     // Контент-система и креативы строятся на архетипах персон из M4
-    requires: ['M4'],
+    requires: ['M6'],
     title: 'Content & Creatives',
     titleRu: 'Контент-система и лендинг',
     taglineEn: 'Content system, ad creatives, and landing page structure',
@@ -324,24 +362,22 @@ const MODULES = [
     estimatedMin: 10,
     steps: ['Building persona archetypes and archetype map (Blocks 18–19A)…','Designing content system by channel (Block 20)…','Writing creative briefs (Block 21)…','Creating landing page TZ with screen structure (Block 22)…'],
   },
-  {
-    id: 'M7', color: '#72243E', bg: '#FBEAF0', border: '#ED93B1', dark: '#4B1528',
-    title: 'SEO Strategy',
-    titleRu: 'SEO-стратегия',
-    taglineEn: 'Semantic core, site structure, and organic content plan',
-    taglineRu: 'Семантическое ядро, структура сайта и план органического контента',
-    whatEn: 'Answers: What keywords does your audience search for? Who are the SEO competitors? What site structure and content plan will bring organic traffic?',
-    whatRu: 'Отвечает: По каким запросам ищет ваша аудитория? Кто SEO-конкуренты? Какая структура сайта и контент-план приведут органический трафик?',
-    outputsEn: ['Search competitor analysis','Semantic core by clusters','Site structure for organic','SEO content plan'],
-    outputsRu: ['Анализ поисковых конкурентов','Семантическое ядро по кластерам','Структура сайта для органики','SEO контент-план'],
-    estimatedMin: 7,
-    steps: ['Analysing search competitors (SEO-01)…','Building semantic core by clusters (SEO-02)…','Auditing competitor content (SEO-03)…','Designing site structure for organic (SEO-04)…','Creating SEO content plan (SEO-07)…'],
-  },
 ];
 
 // ── Модель «по нишам»
 
 const LANGS = ['Russian','Turkish','English','Arabic','Kazakh','Ukrainian','Uzbek','German','Spanish','French'];
+
+// Как язык называет сам себя. В отчёте нельзя печатать «Russian» — правило
+// владелицы: отчёт на русском весь на русском, на турецком — весь на турецком.
+// Английские ярлыки LANGS остаются внутренними: они уходят в промпт модели,
+// где именно английское название работает надёжнее всего.
+const LANG_SELF = {
+  Russian:'Русский', Turkish:'Türkçe', English:'English', Arabic:'العربية',
+  Kazakh:'Қазақша', Ukrainian:'Українська', Uzbek:'Oʻzbekcha',
+  German:'Deutsch', Spanish:'Español', French:'Français',
+};
+const langSelf = l => LANG_SELF[l] || l;
 
 // ── STORAGE
 const loadAll = () => { try { return JSON.parse(localStorage.getItem(SK)||'[]'); } catch { return []; } };
@@ -433,6 +469,26 @@ let lastGptUsage = null;
 // сбором evidence, читает после. Не меняет сигнатуру gatherEvidence/callSearch,
 // которые сейчас вызываются во многих местах.
 let searchCallCount = 0;
+// Счётчик обращений к Wordstat / Google Ads Keyword Planner. Заведён 11.09.2026
+// после сверки с контент-агентом: выяснилось, что эти вызовы НЕ считались нигде
+// вообще — searchCallCount считает только Tavily. То есть вторая платная статья
+// прогона была невидимой: в интерфейсе её нет, в результат она не пишется, и
+// сколько прогон стоил на самом деле, узнать было неоткуда.
+// Стало это заметно после правок 11.09: раньше на нишу уходило до 20 обращений,
+// теперь до 81 — добавились замер известности конкурентов (до 40) и география
+// спроса (до 21). Владелица рост одобрила, но он обязан быть виден.
+let keywordCallCount = 0;
+// Склонение числительных. Вынесено в функцию после провала теста 11.09: я
+// написала условие «n<10 || n>20» — и оно врало на 21 («21 запросов») и на 81
+// («81 запросов»). Правило на самом деле такое: 11–14 в пределах СОТНИ всегда
+// множественное, дальше смотрим последнюю цифру.
+function plural(n, one, few, many) {
+  const h = Math.abs(n) % 100, t = h % 10;
+  if (h > 10 && h < 20) return many;
+  if (t === 1) return one;
+  if (t >= 2 && t <= 4) return few;
+  return many;
+}
 async function callGPT(system, user, temperature, maxTokens) {
   lastGptUsage = null;
   const res = await authFetch('/api/proxy', {
@@ -484,6 +540,7 @@ async function callSearch(query, opts) {
 // настроенном API — вызывающий код (fetchKeywordFrequencyData) трактует
 // это как «данных нет», не падает.
 async function callWordstat(phrase, opts) {
+  keywordCallCount++; // платится за вызов, а не за число возвращённых строк
   try {
     const res = await authFetch('/api/wordstat', {
       method: 'POST', headers: {'Content-Type':'application/json'},
@@ -499,6 +556,7 @@ async function callWordstat(phrase, opts) {
 // переиспользует один код для обоих источников. null при недоступности/не
 // настроенном API — трактуется как «данных нет», не падает.
 async function callGoogleAds(phrase, market, lang, siteUrl) {
+  keywordCallCount++; // та же статья расходов, что Wordstat — считаем вместе
   try {
     const res = await authFetch('/api/google-ads', {
       method: 'POST', headers: {'Content-Type':'application/json'},
@@ -525,7 +583,7 @@ async function callSitemap(url) {
 
 // M3 VoC — программная верификация цитат (ТЗ-M3-VOC.md, п.1). null при полном
 // отказе эндпоинта (не путать с «страница не открылась» — это per-item verified:false
-// внутри results, см. api/verify-quotes.js) — processM3Voc различает эти два случая.
+// внутри results, см. api/verify-quotes.js) — processM5Voc различает эти два случая.
 async function callVerifyQuotes(items) {
   try {
     const res = await authFetch('/api/verify-quotes', {
@@ -797,7 +855,7 @@ function lintForeignInsertions(text, lang) {
 // Extract chart data — flexible parser (handles markdown code blocks too)
 // Модель выдаёт маркеры по-разному: <<<CHART_DATA_START>>> ИЛИ ### CHART_DATA_START.
 // Принимаем оба; JSON достаём по первой { и последней } — так не мешают обёртки в тройных кавычках.
-// Уровень модуля (не внутри компонента) — нужен и run()'у, и processM3Voc (M3 VoC гигиена).
+// Уровень модуля (не внутри компонента) — нужен и run()'у, и processM5Voc (M3 VoC гигиена).
 const extractJsonBlock = (content, kind) => {
   const startRe = new RegExp(kind+'_START(?:>>>)?([\\s\\S]*?)(?:#{1,6}\\s*|<<<)?'+kind+'_END');
   const m = content.match(startRe);
@@ -859,10 +917,19 @@ function spliceMdTableRows(fullText, tableInfo, newRows) {
   const newLines = newRows.map(row => '| ' + tableInfo.headers.map(h => String(row[h] ?? '').replace(/\|/g, '/')).join(' | ') + ' |');
   return [...lines.slice(0, tableInfo.dataStart), ...newLines, ...lines.slice(tableInfo.dataEnd)].join('\n');
 }
+// То же, но с ПЕРЕЗАПИСЬЮ ШАПКИ — нужно, когда в таблицу добавляется колонка.
+// Шапка лежит на строке dataStart-2, разделитель на dataStart-1.
+function spliceMdTableWithHeaders(fullText, tableInfo, headers, newRows) {
+  const lines = String(fullText || '').split('\n');
+  const head = '| ' + headers.join(' | ') + ' |';
+  const sep = '|' + headers.map(() => '---').join('|') + '|';
+  const body = newRows.map(row => '| ' + headers.map(h => String(row[h] ?? '').replace(/\|/g, '/')).join(' | ') + ' |');
+  return [...lines.slice(0, tableInfo.dataStart - 2), head, sep, ...body, ...lines.slice(tableInfo.dataEnd)].join('\n');
+}
 // Секция (не таблица) по заголовку — тем же приёмом, но границы «от заголовка до
 // следующего заголовка/конца текста». Нужно для VoC Coverage: он не таблица M3,
 // а отдельный итоговый блок, и должен доехать до M4 целиком, а не быть обрезанным
-// вместе с остальным контентом (см. buildM4Prompt — режет prev.slice(0,16000)).
+// вместе с остальным контентом (см. buildM6Prompt — режет prev.slice(0,16000)).
 function extractSection(fullText, headingRe) {
   const lines = String(fullText || '').split('\n');
   let start = -1;
@@ -918,11 +985,35 @@ function competitorsFromM2(m2Result, brief) {
     const v = String(n).toLowerCase();
     return ourName && (v.includes(ourName) || ourName.includes(v));
   };
+  // Имена сопоставимых конкурентов из таблицы BLOCK 06 (решение владелицы
+  // 10.09.2026). Список нужен обоим путям ниже: chartData колонку
+  // «Сопоставимость» не несёт, поэтому фильтруем по именам из таблицы.
+  // Колонки нет — множество пустое, и фильтр не применяется: старые прогоны
+  // должны работать как раньше.
+  const comparable = (() => {
+    if (!m2Result || !m2Result.content) return null;
+    const t06 = (parseMdTables(m2Result.content) || [])
+      .find(t => /BLOCK\s*06(?!_1|_2|_3|B)\b/i.test(t.heading || ''));
+    if (!t06 || !t06.rows.length) return null;
+    const keys = Object.keys(t06.rows[0]);
+    const cmpKey = keys.find(k => k.toLowerCase().includes('сопостав'));
+    const nameKey = keys.find(k => k.toLowerCase().includes('назван'));
+    if (!cmpKey || !nameKey) return null;
+    const set = new Set();
+    for (const r of t06.rows) {
+      if (/сравним/i.test(String(r[cmpKey] || ''))) {
+        const nm = String(r[nameKey] || '').replace(/\*\*|\[|\]/g, '').trim().toLowerCase();
+        if (nm) set.add(nm);
+      }
+    }
+    return set.size ? set : null;
+  })();
+  const isComparable = n => !comparable || comparable.has(String(n).trim().toLowerCase());
   // Путь 1 — машиночитаемая карта конкурентов из CHART DATA, надёжнее разбора таблицы
   const matrix = m2Result && m2Result.chartData && m2Result.chartData.competitorMatrix;
   if (Array.isArray(matrix)) {
     for (const c of matrix) {
-      if (c && c.name && !c.isUs && !isOurs(c.name)) out.push(String(c.name).trim());
+      if (c && c.name && !c.isUs && !isOurs(c.name) && isComparable(c.name)) out.push(String(c.name).trim());
     }
   }
   // Путь 2 — запасной: строки таблицы BLOCK 06 вида | C001 | Название | …
@@ -931,7 +1022,7 @@ function competitorsFromM2(m2Result, brief) {
       const m = line.match(/^\s*\|\s*C\d+\s*\|\s*([^|]+)\|/);
       if (!m) continue;
       const name = m[1].replace(/\(\*\)|\*\*|\[|\]/g, '').trim();
-      if (name && !isOurs(name)) out.push(name);
+      if (name && !isOurs(name) && isComparable(name)) out.push(name);
     }
   }
   const seen = new Set();
@@ -947,6 +1038,19 @@ function competitorDomainsFromM2(m2Result) {
   if (!t06 || !t06.rows.length) return [];
   const urlKey = Object.keys(t06.rows[0]).find(k => k.toLowerCase().includes('сайт'));
   if (!urlKey) return [];
+  // ФИЛЬТР СОПОСТАВИМОСТИ (решение владелицы 10.09.2026). Берём домены только
+  // тех конкурентов, у кого в BLOCK 06 стоит «сравнимы». Причина не в чистоте
+  // списка: M3 ищет по этим доменам ОТЗЫВЫ ОБ ИХ КЛИЕНТАХ. Отзывы о клиентах
+  // федерального лидера — это голос ДРУГОЙ аудитории: тот, кто покупает у
+  // лидера рынка, и тот, кто ищет местного подрядчика, приходят с разными
+  // болями и разными деньгами. Собрав первых, мы построим персон, которых у
+  // заказчика никогда не будет.
+  // Колонки нет (старый прогон) — не фильтруем: лучше прежнее поведение, чем
+  // пустой список.
+  const cmpKey = Object.keys(t06.rows[0]).find(k => k.toLowerCase().includes('сопостав'));
+  const rows06 = cmpKey
+    ? t06.rows.filter(r => /сравним/i.test(String(r[cmpKey] || '')))
+    : t06.rows;
   // Проверка формы хоста ОБЯЗАТЕЛЬНА: URL() не бросает исключение на кривом
   // вводе (пробел/мусор в ячейке таблицы вместо реального URL) — молча
   // percent-encode'ит и IDNA-кодирует что попало, живой прогон 25.08 поймал
@@ -954,7 +1058,7 @@ function competitorDomainsFromM2(m2Result) {
   // после punycode — только ascii буквы/цифры/дефисы/точки.
   const validHost = /^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)+$/i;
   const domains = new Set();
-  for (const row of t06.rows) {
+  for (const row of rows06) {
     const raw = (row[urlKey] || '').trim();
     if (!raw || raw === '—' || /по запросу/i.test(raw)) continue;
     try {
@@ -1057,7 +1161,7 @@ async function gatherVoCEvidence(brief, discoveredCompetitors, m2Result) {
 // markdown. Верифицирует цитаты BLOCK 07/07A программно (fetch страницы + проверка
 // точной подстроки), дедуплицирует, считает покрытие по сегментам. Модель ничего
 // из этого не видит и не пишет — тот же приём, что wordstatFullListBlock для M7.
-async function processM3Voc(full, niche) {
+async function processM5Voc(full, niche) {
   const t07 = extractMdTableByHeading(full, /^BLOCK\s*07(?!A|B)\b/i);
   const t07a = extractMdTableByHeading(full, /^BLOCK\s*07A\b/i);
   const t07b = extractMdTableByHeading(full, /^BLOCK\s*07B\b/i);
@@ -1126,6 +1230,344 @@ async function processM3Voc(full, niche) {
   const threshold = 3;
   result += vocCoverageBlock(rows07, segKey07 || 'Сегмент/ниша', threshold, coverageNote);
   return result;
+}
+
+// ── M1.2: СПРОС ПО НИШАМ — ЗАМЕР РЯДОМ С БАЛЛОМ (11.09.2026) ────────────────
+// Решение владелицы: «делать конечно». Колонка «Спрос (1-5)» в BLOCK 04_2 —
+// балл, который ставит модель по сигналам из выдачи. По сумме баллов ниши
+// сортируются, и владелица выбирает ОДНУ, в которую уходит весь остальной
+// прогон. Это единственное число в инструменте, ошибка в котором обесценивает
+// не блок, а всё исследование. И ровно это Wordstat меряет напрямую:
+// 10-20 ниш × одно обращение ≈ 20 копеек на прогон.
+//
+// БАЛЛ НЕ ЗАМЕНЯЕТСЯ, замер встаёт РЯДОМ. Причина: превратить название ниши в
+// поисковую фразу — та самая задача, на которой мы обожглись в M7 («инструмент
+// для захвата лидов» обрезалось до «инструмент»). Для одной ниши это лечится
+// паузой с подтверждением, для двадцати пауза не годится. При добавочной
+// колонке плохая фраза видна, при замене она спряталась бы внутрь суммы.
+//
+// ДВЕ ПОМЕТКИ (уточнение контент-агента, оба верные):
+// 1. «спорят» — балл и замер расходятся. Без пометки человек сверяет двадцать
+//    строк ради одного расхождения: сделает трижды и перестанет.
+// 2. «проверьте фразу» — на нуле и околонулевых ОТДЕЛЬНО. Абсурдно большое
+//    число видно сразу, абсурдно маленькое выглядит как честный ответ про
+//    мёртвую нишу. Действия у человека противоположные: вычеркнуть нишу или
+//    исправить запрос, поэтому и текст пометки разный.
+const NICHE_DEMAND_MAX = 25;   // потолок обращений: ниш обычно 10-20
+const NICHE_DEMAND_FLOOR = 50; // ниже — не «мёртвая ниша», а подозрение на фразу
+
+async function processM2Demand(full, brief) {
+  const t = extractMdTableByHeading(full, /^BLOCK\s*04_2\b/i);
+  if (!t || !t.rows.length) return full;
+  const nameKey = t.headers.find(h => h.toLowerCase().includes('ниша'));
+  const scoreKey = t.headers.find(h => h.toLowerCase().includes('спрос'));
+  if (!nameKey) return full;
+  if (t.headers.some(h => h.toLowerCase().includes('запросов в месяц'))) return full; // уже мерили
+
+  const clean = v => String(v || '').replace(/\[([^\]]*)\]\([^)]*\)/g, '$1')
+    .replace(/\*\*|`/g, '').replace(/\s+/g, ' ').trim();
+  const measured = new Map();
+  let calls = 0;
+  for (const r of t.rows) {
+    const nm = clean(r[nameKey]);
+    if (!nm || measured.has(nm) || calls >= NICHE_DEMAND_MAX) continue;
+    calls++;
+    measured.set(nm, await callBrandDemand(nm, brief)); // тот же маршрут по рынку, что у известности
+  }
+  const nums = [...measured.values()].filter(v => v != null && v > 0);
+  if (!nums.length) {
+    return full + '\n\n> **Спрос по нишам не замерен в этом прогоне** — источник частотности не ответил. ' +
+      'Баллы в колонке «' + (scoreKey || 'Спрос') + '» поставила модель, это оценка, а не измерение.\n';
+  }
+
+  // Расхождение считаем по МЕСТУ в списке, а не по абсолютным порогам: они
+  // зависят от ниши («200 в месяц» — много в узком B2B и ничто в массовом).
+  const byDemand = [...measured.entries()].filter(([, v]) => v != null)
+    .sort((a, b) => b[1] - a[1]).map(([n]) => n);
+  const scoreOf = r => { const m = String(r[scoreKey] || '').match(/\d+/); return m ? +m[0] : null; };
+  const byScore = [...t.rows].filter(r => scoreOf(r) != null)
+    .sort((a, b) => scoreOf(b) - scoreOf(a)).map(r => clean(r[nameKey]));
+  const third = Math.max(1, Math.round(byDemand.length / 3));
+  const fmt = n => String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, '\u00A0');
+
+  const DEMAND_COL = 'Запросов в месяц';
+  const NOTE_COL = 'Сверка';
+  const headers = [...t.headers, DEMAND_COL, NOTE_COL];
+  let disputes = 0, suspect = 0, unmeasured = 0;
+  const rows = t.rows.map(r => {
+    const nm = clean(r[nameKey]);
+    const d = measured.has(nm) ? measured.get(nm) : null;
+    let cell, note = '';
+    if (d == null) { cell = 'не замерено'; unmeasured++; }
+    else if (d < NICHE_DEMAND_FLOOR) { cell = fmt(d); note = '**проверьте фразу** — замеряли по «' + nm + '»'; suspect++; }
+    else {
+      cell = fmt(d);
+      const di = byDemand.indexOf(nm), si = byScore.indexOf(nm);
+      if (di >= 0 && si >= 0) {
+        if (si < third && di >= byDemand.length - third) { note = '**спорят** — балл высокий, спрос низкий'; disputes++; }
+        else if (si >= byScore.length - third && di < third) { note = '**спорят** — балл низкий, спрос высокий'; disputes++; }
+      }
+    }
+    return { ...r, [DEMAND_COL]: cell, [NOTE_COL]: note || '—' };
+  });
+
+  const src = keywordSourceForMarket(brief.geoMarket || brief.geoCompany || '') === 'yandex'
+    ? 'Яндекс Wordstat' : 'Google Ads Keyword Planner';
+  const note = '\n\n### Спрос по нишам — замер рядом с баллом\n\n' +
+    'Колонка «' + DEMAND_COL + '» — **не оценка модели, а замер**: сколько раз за месяц ищут название ниши (' + src + '). ' +
+    'Замерено ниш: **' + measured.size + '**. Балл в колонке «' + (scoreKey || 'Спрос') + '» оставлен как есть — ' +
+    'он оценивает не только объём, но и качество спроса.\n\n' +
+    'Колонка «' + NOTE_COL + '» помечает только то, на что стоит посмотреть, — читать все строки не нужно:\n\n' +
+    '- **спорят** (' + disputes + ') — балл и замер расходятся: ниша в верхней трети по одному и в нижней по другому. ' +
+    'Это не значит, что балл неверен: модель могла учесть маржу или лёгкость входа. Но объяснение должно найтись.\n' +
+    '- **проверьте фразу** (' + suspect + ') — меньше ' + NICHE_DEMAND_FLOOR + ' запросов в месяц. ' +
+    'Это может быть мёртвая ниша, а может быть неудачная фраза замера: название ниши не всегда совпадает с тем, ' +
+    'как её ищут. Прежде чем вычёркивать нишу — посмотрите на саму фразу.\n' +
+    (unmeasured ? '- **не замерено** (' + unmeasured + ') — источник не ответил по этой строке.\n' : '') +
+    '\nЗамер идёт по названию ниши как есть, без подбора синонимов: подбор потребовал бы подтверждения от человека ' +
+    'по каждой из ' + measured.size + ' строк, а это дороже той точности, которую даёт.\n';
+
+  return spliceMdTableWithHeaders(full, t, headers, rows) + note;
+}
+
+// ── M2: ИЗВЕСТНОСТЬ КОНКУРЕНТОВ — ЗАМЕР, А НЕ ОЦЕНКА (10.09.2026) ───────────
+// Решение владелицы: «я хочу, чтобы были реальные замеры». До этого уровень
+// известности в BLOCK 06 проставляла сама модель — то есть ось, на которой
+// строится вся карта рынка, была догадкой, и подкрутить её ничего не стоило.
+// Меряем брендовым спросом: сколько раз за месяц ищут САМО НАЗВАНИЕ компании.
+// Это ровно то, что значит «известность», и единственная величина здесь,
+// которую можно перепроверить руками в самой Wordstat.
+//
+// Приём тот же, что у M3 VoC и полного списка Wordstat: модель уже ответила,
+// дальше правит только КОД — переписать замер формулировкой промпта нельзя.
+//
+// Уровень считается ОТНОСИТЕЛЬНО лидера этого рынка, а не по абсолютной шкале:
+// 10 000 запросов в месяц — это лидерство в узкой B2B-нише и статист в
+// потребительской. Абсолютное число остаётся в ячейке, чтобы порог можно было
+// перепроверить, а не принимать на веру.
+const FAME_LEADER_SHARE = 0.25;  // ≥ 25% спроса лидера — «лидер»
+const FAME_NOTABLE_SHARE = 0.05; // 5–25% — «заметный»
+const FAME_FLOOR = 100;          // ниже 100/мес — «нишевый-малый» при любой доле: это шум
+const FAME_MAX_CALLS = 40;       // потолок обращений за прогон, по верхней границе таблицы
+
+// Брендовый спрос по одному названию. Тот же маршрут по рынку, что у M7
+// (keywordSourceForMarket): Россия — Wordstat, остальные — Google Ads.
+// null = не замерено (нет данных/источник не ответил) — НЕ ноль.
+async function callBrandDemand(name, brief) {
+  const market = brief.geoMarket || brief.geoCompany || '';
+  if (keywordSourceForMarket(market) === 'yandex') {
+    // numPhrases: 1 — нужен только totalCount самой фразы, левая колонка тут не нужна.
+    // На цену это не влияет (вызов один в любом случае), но ответ короче.
+    const d = await callWordstat(name, { numPhrases: 1 });
+    return d && d.totalCount ? d.totalCount : null;
+  }
+  // У Google Ads нет totalCount — сама фраза приходит внутри results, ровно так же
+  // её узнаёт fetchKeywordFrequencyData, когда проставляет confirmed.
+  const d = await callGoogleAds(name, market, brief.lang);
+  if (!d) return null;
+  const hit = (d.results || []).find(r =>
+    String(r.phrase||'').toLowerCase().trim() === String(name).toLowerCase().trim());
+  return hit && hit.count ? hit.count : null;
+}
+
+// Название из ячейки: снимаем markdown-обвес (**жирный**, [ссылка](url)) — иначе
+// в Wordstat уедет строка со скобками и звёздочками и вернётся ноль.
+const cleanCompName = v => String(v || '')
+  .replace(/\[([^\]]*)\]\([^)]*\)/g, '$1')
+  .replace(/\*\*|`/g, '')
+  .replace(/\s+/g, ' ')
+  .trim();
+
+async function processM3Fame(full, brief) {
+  const t06 = extractMdTableByHeading(full, /^BLOCK\s*06(?!_1|_2|_3|B)\b/i);
+  if (!t06 || !t06.rows.length) return full;
+  const nameKey = t06.headers.find(h => h.toLowerCase().includes('назван'));
+  const fameKey = t06.headers.find(h => h.toLowerCase().includes('известн'));
+  const urlKey  = t06.headers.find(h => /сайт|url/i.test(h));
+  if (!nameKey || !fameKey) return full;
+
+  // Меряем только тех, у кого в строке есть сайт. «Формы CMS», «делают сами»,
+  // «внутренний отдел» — не бренды: брендового спроса у них нет, и число по ним
+  // было бы не измерением, а совпадением со случайным общим запросом.
+  const hasSite = r => !urlKey || /[a-z0-9-]+\.[a-z]{2,}/i.test(String(r[urlKey] || ''));
+  const measured = new Map();
+  let calls = 0, skippedNoSite = 0;
+  for (const r of t06.rows) {
+    const nm = cleanCompName(r[nameKey]);
+    if (!nm || measured.has(nm)) continue;
+    if (!hasSite(r)) { skippedNoSite++; continue; }
+    if (calls >= FAME_MAX_CALLS) break;
+    calls++;
+    const n = await callBrandDemand(nm, brief);
+    if (n != null) measured.set(nm, n);
+  }
+
+  // Источник не ответил ни разу — это инфраструктурный сбой, а не «известности нет».
+  // Оценки модели в этом случае НЕ затираем (она могла быть права), но и за замер
+  // их не выдаём: честно помечаем, что в этом прогоне замера не было.
+  if (!measured.size) {
+    return full + '\n\n### Известность — не замерена в этом прогоне\n\n' +
+      'Источник частотности не ответил, поэтому уровни в колонке «' + fameKey + '» ' +
+      'проставила модель по косвенным признакам. Это **оценка, а не измерение** — ' +
+      'на карте рынка вертикальную ось в этом прогоне читать как приблизительную.\n';
+  }
+
+  const top = Math.max(...measured.values());
+  const level = n => (n < FAME_FLOOR || n < top * FAME_NOTABLE_SHARE) ? 'нишевый-малый'
+    : (n >= top * FAME_LEADER_SHARE ? 'лидер' : 'заметный');
+  // Не toLocaleString: он зависит от локальных данных движка и в разных средах
+  // даёт то обычный пробел, то узкий неразрывный — числа в отчёте начинают
+  // отличаться между сборками. Разряды ставим сами, неразрывным пробелом.
+  const fmt = n => String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, '\u00A0');
+  let unmeasured = 0;
+  const rows = t06.rows.map(r => {
+    const nm = cleanCompName(r[nameKey]);
+    if (!measured.has(nm)) { unmeasured++; return { ...r, [fameKey]: 'не замерено' }; }
+    const n = measured.get(nm);
+    return { ...r, [fameKey]: level(n) + ' · ' + fmt(n) + '/мес' };
+  });
+  const leader = [...measured.entries()].sort((a,b) => b[1]-a[1])[0];
+  const src = keywordSourceForMarket(brief.geoMarket || brief.geoCompany || '') === 'yandex'
+    ? 'Яндекс Wordstat' : 'Google Ads Keyword Planner';
+
+  const note = '\n\n### Известность — как замерена\n\n' +
+    'Уровень в колонке «' + fameKey + '» — **не оценка модели, а замер**: сколько раз ' +
+    'за месяц ищут само название компании (брендовый спрос, ' + src + '). ' +
+    'Замерено названий: **' + measured.size + '**. Лидер спроса — ' + leader[0] +
+    ', ' + fmt(leader[1]) + ' запросов в месяц.\n\n' +
+    'Порог — **доля от лидера этого рынка**, а не абсолютное число: 10 000 запросов ' +
+    'это лидерство в узкой B2B-нише и статист в потребительской.\n\n' +
+    '| Уровень | Порог | В запросах в месяц |\n|---|---|---|\n' +
+    '| лидер | от ' + Math.round(FAME_LEADER_SHARE*100) + '% спроса лидера | от ' + fmt(top*FAME_LEADER_SHARE) + ' |\n' +
+    '| заметный | от ' + Math.round(FAME_NOTABLE_SHARE*100) + '% | от ' + fmt(top*FAME_NOTABLE_SHARE) + ' |\n' +
+    '| нишевый-малый | ниже, либо меньше ' + FAME_FLOOR + '/мес | до ' + fmt(top*FAME_NOTABLE_SHARE) + ' |\n\n' +
+    (unmeasured ? 'Не замерено строк: **' + unmeasured + '**' +
+      (skippedNoSite ? ' (из них ' + skippedNoSite + ' без сайта — у них нет бренда, который можно искать)' : '') +
+      '. Они помечены «не замерено», а не нулём: отсутствие числа и ноль спроса — разные вещи.\n\n' : '') +
+    'Где замер завышает: если название состоит из обычных слов, спрос по нему ' +
+    'складывается из брендового и общего. Такие строки стоит смотреть глазами.\n';
+
+  // Доля внимания. Числа уже замерены выше — считаем их же в долях, и это
+  // отдельный вопрос: не «кто известен», а «сколько внимания рынка занимает
+  // каждый». Разница видна на цифрах: лидер может держать больше половины
+  // категории, и тогда бороться за место рядом с ним бессмысленно.
+  // Считает КОД, а не модель: доля — арифметика от замеров, выдумывать нечего.
+  const totalDemand = [...measured.values()].reduce((a, b) => a + b, 0);
+  const shareRows = [...measured.entries()]
+    .sort((a, b) => b[1] - a[1])
+    .map(([nm, n]) => '| ' + nm + ' | ' + fmt(n) + ' | '
+      + (totalDemand ? (n / totalDemand * 100).toFixed(1).replace('.', ',') : '0') + '% |');
+  const shareNote = shareRows.length > 1
+    ? '\n\n### BLOCK 06_4 — Доля внимания\n\n'
+      + 'Сколько брендового спроса категории забирает каждый. Считается от суммы '
+      + 'замеренных названий (**' + fmt(totalDemand) + '** запросов в месяц на '
+      + measured.size + ' компаний), поэтому это доля ВНУТРИ замеренных, а не доля рынка: '
+      + 'компании без сайта и те, кого источник не отдал, в сумму не входят.\n\n'
+      + '| Компания | Запросов в месяц | Доля внимания |\n|---|---|---|\n'
+      + shareRows.join('\n') + '\n'
+    : '';
+
+  return spliceMdTableRows(full, t06, rows) + note + shareNote;
+}
+
+// ── ГЕОГРАФИЯ СПРОСА (SEO-06) ───────────────────────────────────────────────
+// Блок SEO-06 в промпте уже был, а данных под него не было — модель осталась бы
+// с заданием построить таблицу регионов и без единого числа. Это хуже, чем
+// отсутствие блока: пустая таблица заметна, а правдоподобная выдумка нет.
+// Поэтому числа собирает КОД и приклеивает отдельным блоком, как полный список
+// Wordstat: модель их не считает и не может подправить.
+//
+// Регионы — константа, а не находка модели: набор регионов это решение методики.
+// Не все 85: это умножило бы стоимость прогона на 85 и утонуло бы в шуме.
+// Крупные рынки плюс страна целиком как база для долей.
+//
+// pop — доля региона в населении России, Росстат, оценка на 2024 год. Нужна для
+// плотности: «во сколько раз спрос выше, чем положено по числу людей». Меняется
+// раз в несколько лет, обновлять вместе со следующей переписью.
+//
+// ВНИМАНИЕ: коды регионов — стандартные идентификаторы геобазы Яндекса. Я НЕ
+// смогла проверить их офлайн, поэтому ниже стоит защита geoLooksWrong(): если
+// регион вернул больше запросов, чем вся страна, или сумма регионов превысила
+// страну — коды не те, и блок честно помечается непроверенным вместо того,
+// чтобы отдать неверные числа за верные. Первый живой прогон это снимет.
+// ПРОВЕРЕНО ЖИВЫМ ВЫЗОВОМ 11.09.2026, и проверка нашла ошибку: id обязан быть
+// СТРОКОЙ. С числом API отвечает «regions[0]: invalid value 225 for type
+// TYPE_STRING», то есть до этой правки география не собралась бы НИ РАЗУ —
+// каждый вызов падал бы с 400, callWordstat вернул бы null, и блок честно
+// написал бы «не замерена». Отказ безопасный, но молчаливый: снаружи выглядел
+// бы как «источник не отвечает», а не как наша ошибка.
+// Сами коды после исправления сошлись: по фразе «попап для сайта» Россия 122,
+// шесть регионов в сумме 80 — меньше страны, как и должно быть.
+const GEO_REGIONS = [
+  { id: '225',   name: 'Россия целиком',        pop: 1.000 },
+  { id: '1',     name: 'Москва и область',      pop: 0.149 },
+  { id: '10174', name: 'Санкт-Петербург и область', pop: 0.051 },
+  { id: '11162', name: 'Свердловская область',  pop: 0.029 },
+  { id: '11316', name: 'Новосибирская область', pop: 0.019 },
+  { id: '10995', name: 'Краснодарский край',    pop: 0.040 },
+  { id: '11119', name: 'Татарстан',             pop: 0.027 },
+];
+
+// Спрос по регионам для подтверждённых владелицей фраз. Берём не все фразы, а
+// первые три: каждая фраза умножается на число регионов, а география отвечает на
+// вопрос «где», а не «по каким словам» — для этого хватает опорных.
+async function fetchGeoDemand(brief, seeds) {
+  const market = brief.geoMarket || brief.geoCompany || '';
+  // Только Россия: у Wordstat есть регионы, у Google Ads разрез другой и
+  // смешивать их нельзя (см. keywordSourceForMarket).
+  if (keywordSourceForMarket(market) !== 'yandex') return null;
+  const phrases = [...new Set(seeds || [])].filter(Boolean).slice(0, 3);
+  if (!phrases.length) return null;
+  const rows = [];
+  for (const r of GEO_REGIONS) {
+    let total = 0, got = false;
+    for (const ph of phrases) {
+      const d = await callWordstat(ph, { numPhrases: 1, regions: [r.id] });
+      if (d && d.totalCount) { total += d.totalCount; got = true; }
+    }
+    rows.push({ ...r, count: got ? total : null });
+  }
+  return rows.some(x => x.count != null) ? { rows, phrases } : null;
+}
+
+// Проверка вменяемости кодов регионов. Регион не может искать больше, чем вся
+// страна, и семь регионов не могут в сумме дать больше страны — если это так,
+// значит id указывают не туда, куда мы думаем.
+function geoLooksWrong(rows) {
+  const ru = rows.find(x => x.pop === 1);
+  if (!ru || !ru.count) return 'база по стране не получена';
+  const parts = rows.filter(x => x.pop !== 1 && x.count != null);
+  if (!parts.length) return 'ни один регион не ответил';
+  const over = parts.find(x => x.count > ru.count);
+  if (over) return 'регион «' + over.name + '» дал больше запросов, чем вся страна';
+  const sum = parts.reduce((a, x) => a + x.count, 0);
+  if (sum > ru.count) return 'сумма регионов больше, чем по стране целиком';
+  return null;
+}
+
+// Блок для промпта. Приклеивается к userPrompt M7 так же, как выгрузка частотности,
+// и так же не проходит через модель до этого момента.
+function geoDemandBlock(geo) {
+  if (!geo) return '';
+  const problem = geoLooksWrong(geo.rows);
+  const ru = geo.rows.find(x => x.pop === 1);
+  const fmt = n => String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, '\u00A0');
+  let out = '\n═══════════════════════════════════════════════\nREAL GEO DATA — спрос по регионам (замер, Яндекс Wordstat)\n═══════════════════════════════════════════════\n';
+  out += 'Фразы замера: ' + (geo.phrases || []).join(', ') + '\n';
+  if (problem) {
+    out += 'ЗАМЕР НЕ ПРОШЁЛ ПРОВЕРКУ: ' + problem + '. Числа ниже использовать НЕЛЬЗЯ.\n';
+    out += 'В SEO-06 напиши одной строкой: «География спроса не замерена в этом прогоне» — и не строй таблицу.\n';
+    return out;
+  }
+  out += '| Регион | Запросов в месяц | Доля от России | Доля в населении | Плотность |\n|---|---|---|---|---|\n';
+  for (const r of geo.rows) {
+    if (r.count == null) { out += `| ${r.name} | не замерено | — | ${(r.pop*100).toFixed(1)}% | — |\n`; continue; }
+    const share = ru && ru.count ? r.count / ru.count : null;
+    const dens = share != null && r.pop ? share / r.pop : null;
+    out += `| ${r.name} | ${fmt(r.count)} | ${share != null ? (share*100).toFixed(1)+'%' : '—'} | ${(r.pop*100).toFixed(1)}% | ${dens != null ? dens.toFixed(2) : '—'} |\n`;
+  }
+  out += 'Плотность посчитана кодом: доля региона в запросах ÷ доля в населении. Единица = ровно по населению.\n';
+  return out;
 }
 
 // Досье для M7 (SEO). Важно понимать границы инструмента: веб-поиск НЕ измеряет Wordstat.
@@ -1241,7 +1683,7 @@ async function extractWordstatSeeds(brief) {
 // корень» подсчётом слов нельзя, нужен смысл. Поэтому: сиды подтверждает
 // человек (пауза перед M7), сырой список отдаётся ПОЛНОСТЬЮ — как при ручной
 // работе в Wordstat, — а отсев по смыслу для итоговой таблицы делает модель,
-// которая смысл понимает (правила в buildM7Prompt).
+// которая смысл понимает (правила в buildTrendPrompt).
 
 // Минус-слова (стоп-слова) — стандартный приём сборщиков семантики. Важное
 // отличие от моих прошлых, неудачных фильтров: это ЧЁРНЫЙ список (убрать
@@ -1380,7 +1822,7 @@ async function fetchKeywordFrequencyData(brief, seeds, competitorDomains) {
   // обратного звонка». Итог прогона 28.08: 8 фраз в списке вместо сотен,
   // причём с мусором во главе. Владелице нужен полный список, как при ручной
   // работе в самом Wordstat, — она выбирает из него сама. Отсев мусора из
-  // ИТОГОВОЙ таблицы — задача модели (правила в buildM7Prompt), не кода.
+  // ИТОГОВОЙ таблицы — задача модели (правила в buildTrendPrompt), не кода.
   const filtered = frequencies;
 
   const seasonality = [];
@@ -1474,6 +1916,34 @@ async function gatherCompetitorEvidence(brief) {
     queries.push(c+' '+Q.officialPrices+' -топ -рейтинг -обзор -сравнение');
   }
   return gatherEvidence(queries, 15, 4);
+}
+
+// M9 (контент-радар): конкуренты как МЕДИА, а не как бизнесы. M2 уже нашёл,
+// кто они и почём продают; здесь ищем, что они публикуют и что у них залетает.
+// Берём только то, что видно на публичной странице без входа в чужой аккаунт
+// (ТЗ-M9-ОТКУДА-ДАННЫЕ, разд. 2): YouTube, Telegram через t.me/s/, VK, Дзен,
+// vc.ru и Хабр. Instagram и TikTok не запрашиваем вовсе — они отдают страницу
+// только авторизованным, и любое число оттуда было бы выдумкой.
+async function gatherContentRadarEvidence(brief, competitors) {
+  const market = brief.geoMarket || brief.geoCompany || '';
+  const product = brief.niche || brief.name || '';
+  const topic = brief.selectedNiche || product;
+  const comps = (competitors || []).filter(Boolean).slice(0, 5);
+  const queries = [
+    topic+' '+market+' youtube канал обзор',
+    topic+' '+market+' telegram канал',
+    topic+' '+market+' vc.ru habr статья разбор',
+    topic+' '+market+' дзен статья',
+  ];
+  for (const c of comps) {
+    // Канал самого конкурента, а не статьи о нём: у площадок в адресе
+    // стоят их же домены, по ним и ищем.
+    queries.push(c+' youtube.com канал');
+    queries.push(c+' t.me канал');
+    queries.push(c+' vk.com сообщество');
+    queries.push(c+' блог статьи');
+  }
+  return gatherEvidence(queries, 14, 4);
 }
 
 // M8 (тренд-монитор): в отличие от остальных gather-функций явно ограничена
@@ -1589,6 +2059,19 @@ function buildSystem(brief, lang) {
     '4. Markdown pipe tables only.\n'+
     '5. Explain abbreviations (TAM/SAM/SOM/JTBD/CJM/LPR/VoC) below tables.\n'+
     '6. End each block with "Итог / Следующие шаги" (3-5 steps).\n'+
+    // Итог МОДУЛЯ, а не блока. Владелица: «не хватает выводов по каждому
+    // модулю — в чём польза, что узнали и чем нам это полезно». Три части, а
+    // не свободный абзац: «что узнали» без «что это значит» превращается в
+    // пересказ таблиц, а «что делаем» без основания — в общие советы.
+    '6a. В САМОМ КОНЦЕ модуля (после последнего блока) — раздел «## ИТОГ МОДУЛЯ» ровно из трёх частей, каждая с подзаголовком «### »:\n'+
+    '   «### Что узнали» — 3-5 пунктов, самое важное ИМЕННО ИЗ ЭТОГО модуля, каждый со ссылкой на блок или строку, откуда вывод. Без общих слов: не «рынок конкурентный», а что именно увидели и где.\n'+
+    '   «### Что это значит» — 2-4 пункта: какой вывод для бизнеса следует из находок выше. Здесь связь, а не пересказ.\n'+
+    '   «### Что делаем дальше» — 2-4 пункта, конкретные действия с указанием, кто или какой модуль это подхватывает.\n'+
+    // Владелица просила подавать итог СЛОВАМИ. Телеграфный пункт («медиана 9 800»)
+    // она уже видела в таблице выше — в итоге он ничего не добавляет. Ценность
+    // итога в связке: что увидели, почему это важно и что из этого следует.
+    '   КАЖДЫЙ ПУНКТ — законченная фраза на 1-2 предложения, как объясняют человеку вслух, а не обрывок из таблицы. «Медиана просмотров 9 800» — плохо, это уже есть в таблице. «Ролики в нише собирают около 9 800 просмотров, и два лидера обогнали медиану в пять раз только за счёт первой фразы» — хорошо. Никаких назывных предложений и перечислений через запятую вместо объяснения.\n'+
+    '   Если данных не хватило — так и напиши в «Что узнали», это честный итог. Раздел обязателен, даже если модуль получился скудным.\n'+
     '7. Confidence scale — use consistently and print this legend ONCE at the top of the module output: 5 = 3+ независимых свежих источника; 4 = 2 источника; 3 = 1 источник; 2 = косвенные данные/эвристика; 1 = нет публичных данных.\n'+
     '8. Never mix scripts: no Latin or Greek words inside '+lang+' sentences (brand names and accepted abbreviations like TAM, CJM are fine). If a paragraph comes out garbled or mixed-script — rewrite it before finishing.\n'+
     glossaryRule(lang)+
@@ -1598,7 +2081,7 @@ function buildSystem(brief, lang) {
 
 
 // M1.2 «Разведка ниш» — блоки 04, 04_1, 04_2 методологии. Заземление: реальные выдержки из веб-поиска.
-function buildM12Prompt(brief, lang, prev, evidence) {
+function buildM2Prompt(brief, lang, prev, evidence) {
   const services = (brief.selectedServices && brief.selectedServices.length ? brief.selectedServices : (brief.services||[]));
   const manualNiches = (brief.nicheCandidates||'').split(',').map(s=>s.trim()).filter(Boolean);
   const nicheDef = `
@@ -1636,7 +2119,9 @@ Rules:
 
 BLOCK 04 — Target Audience Segments (methodology block 04)
 Before the table: 2-3 sentences why we map segments.
-Table (6-10 rows max): Segment_ID | Сегмент | Кто это (1 строка) | Ключевая потребность | Платёжеспособность (H/M/L) | Confidence (1-5)
+Table (6-10 rows max): Segment_ID | Сегмент | Кто это (1 строка) | Ключевая потребность | Доля сегмента (%) | Платёжеспособность (H/M/L) | Confidence (1-5)
+
+ДОЛЯ СЕГМЕНТА — новая обязательная колонка. Сумма по всем сегментам ровно 100%. Округляй так, чтобы сходилось (по наибольшему остатку). Если данных на долю нет — пиши «нет данных» и НЕ оценивай: по этому числу заказчик решает, на кого тратить бюджет, и выдуманная доля дороже пустой.
 After: "CONCLUSION (in ${lang}):" — which segments look strongest for THIS business.
 
 BLOCK 04_1 — Service Effectiveness per Niche (methodology block 04_1)
@@ -1646,13 +2131,18 @@ After: "CONCLUSION (in ${lang}):"
 
 BLOCK 04_2 — Niche Prioritization Matrix (methodology block 04_2)
 Before: 1-2 sentences.
-Table (ONE ROW PER VERTICAL from 04_1 — list ALL, sorted by ИТОГО descending so max→min effectiveness is visible): Ниша | Спрос (1-5) | Конкуренция (1-5, где 5 = низкая) | Экономика (1-5) | Соответствие бизнесу (1-5) | ИТОГО (сумма) | Источники [n] | Вердикт (Go / Maybe / No-Go)
+Table (ONE ROW PER VERTICAL from 04_1 — list ALL, sorted by ИТОГО descending so max→min effectiveness is visible): Ниша | Спрос (1-5) | Конкуренция (1-5, где 5 = низкая) | Экономика (1-5) | Соответствие бизнесу (1-5) | ИТОГО (сумма) | Источники [n] | Вердикт | Почему не идём
+
+ВЕРДИКТ ПИШЕТСЯ НА ЯЗЫКЕ ОТЧЁТА (${lang}), а не по-английски. Для русского: «Идём» / «Под вопросом» / «Не идём». Слова Go / Maybe / No-Go в русском отчёте не ставь.
 
 GROUNDING RULE — вердикт обязан опираться на источники:
 - «Go» разрешён ТОЛЬКО если спрос И конкуренция ниши опираются минимум на 2 источника [n] из блока 04_0.
 - Ниша с одним источником — максимум «Maybe».
 - Ниша без источников — «Maybe» с пометкой «нет данных, нужна проверка» и Confidence ≤2; вердикт «Go» для неё ЗАПРЕЩЁН.
 - Колонка «Источники [n]» заполняется всегда; прочерк в ней при вердикте «Go» — ОШИБКА.
+- ПРАВИЛО ДЕЙСТВУЕТ И НА ОТКАЗ. «No-Go» разрешён ТОЛЬКО если причина отказа опирается на источник [n] или на конкретную строку другого блока этого отчёта (тогда пометка «вывод: из <блок, строка>»). Ниша с необоснованной причиной отказа получает «Maybe · нет данных», а НЕ «No-Go».
+- НОВАЯ ОБЯЗАТЕЛЬНАЯ КОЛОНКА «Почему не идём» — одна фраза, что именно закрывает нишу. Заполняется только для отказов, у остальных прочерк.
+ПОЧЕМУ ТАК СТРОГО: ошибочное «идём» обнаружится — туда пойдут, попробуют и увидят. Ошибочное «не идём» не обнаружится НИКОГДА, потому что проверять его никто не пойдёт. Отказ надо обосновывать не слабее входа.
 Не выдавай эвристику и общие рассуждения за сигнал рынка: если данных нет, так и напиши.
 
 After: "CONCLUSION (in ${lang}):" — which ONE niche you recommend to enter first and why (2-3 sentences, plain language for a business owner). Если у рекомендованной ниши меньше 2 источников — прямо предупреди, что выбор предварительный и требует проверки.
@@ -1803,7 +2293,7 @@ After all tables, output JSON between <<<CHART_DATA_START>>> and <<<CHART_DATA_E
 }`;
 }
 
-function buildM2Prompt(brief, lang, prev, evidence) {
+function buildM3Prompt(brief, lang, prev, evidence) {
   const ctx = prev ? `\nCONTEXT FROM PREVIOUS MODULES:\n${prev.slice(0,1500)}\n` : '';
   return `${ctx}${evidenceSection(evidence)}
 Fill the following research blocks for module M2. ALL output in ${lang}. Use only verifiable open sources.
@@ -1819,12 +2309,47 @@ Format (evidence-backed rows first):
 ═══════════════════════════════════════════════
 BLOCK 06 — Competitor Map (06_Конкуренты)
 ═══════════════════════════════════════════════
-Task: Analyse 8–15 ПРЯМЫХ конкурентов (тот же продукт/категория, что у нас — не заменители, не смежные решения; смежные и заменители идут отдельно в BLOCK 06B ниже). Only open sources.
+Task: Показать, ИЗ ЧЕГО СОСТОИТ РЫНОК, а потом разобрать наш слой вглубь. Две таблицы с разной детальностью — это сознательное решение, не забывчивость.
+
+ЗАЧЕМ ДВЕ. Заказчику нужно и то и другое: увидеть рынок целиком (кто вообще есть, кто задаёт планку, куда можно расти) и сравнить себя с теми, с кем сравнение честно. Отсеивать крупных игроков нельзя — маленький проект имеет право видеть, к чему идти. Но и мерить себя с ними по функциям бессмысленно.
+
+ДВЕ ОСИ, КОТОРЫЕ НЕЛЬЗЯ ПУТАТЬ. Это разные вещи, и игрок может быть любым сочетанием:
+- ЦЕНОВОЙ УРОВЕНЬ — на какие деньги ориентируется: масс-маркет / средний / дорогой / VIP. Определяется по опубликованным ценам и по тому, как описан продукт.
+- ИЗВЕСТНОСТЬ И МАСШТАБ — насколько заметен: лидер / заметный / нишевый-малый. Определяется по охвату, базе клиентов, году основания, числу упоминаний.
+Маленькая студия может работать в VIP-сегменте, а федеральный гигант — в масс-маркете. Не сводить одно к другому: «крупный» НЕ значит «дорогой».
+
+ТАБЛИЦА 1 — КАРТА РЫНКА. ШИРОКО: 25–40 игроков, если их столько есть в evidence. Лёгкие колонки, по строке на игрока:
+| Comp_ID | Название | Сайт/URL | Ценовой уровень | Известность и масштаб | География | Чем известен (одна строка) | Источники [n] |
+Ценовой уровень: масс-маркет / средний / дорогой / VIP / не определён (цен нет в открытом доступе).
+Известность и масштаб: лидер / заметный / нишевый-малый / неизвестно.
+География: федеральный / региональный (какой) / международный.
+ПРАВИЛО ШИРИНЫ: не ограничивайся известными брендами. Список обязан включать игроков ВСЕХ слоёв, которые встретились в evidence, — и нишевых тоже. Если evidence дал меньше 15 игроков, так и напиши: «в собранном материале найдено N игроков» — не добирай выдумкой.
+
+ТАБЛИЦА 2 — НАШ ЦЕНОВОЙ УРОВЕНЬ, ВГЛУБЬ. 5–8 игроков С ТЕМ ЖЕ ЦЕНОВЫМ УРОВНЕМ, что и мы — независимо от их известности. Полные колонки, формат ниже.
+ПОЧЕМУ ОТБОР ПО ЦЕНЕ, А НЕ ПО ИЗВЕСТНОСТИ: ценовой уровень определяет, КТО покупает и какими словами с ним говорят. Известность определяет, чего от игрока ждать по доказательствам и охвату, но сравнивать оффер с офертой корректно внутри одной цены. Лидер и нишевый игрок одного ценового уровня решают одну и ту же задачу для одного и того же кошелька.
+Наш ценовой уровень берётся из брифа (поле «ценовой слой» или цена); не задан — определи по нашей цене и напиши, как определил.
+
+ПОЧЕМУ ГЛУБИНА ТОЛЬКО У СВОЕГО СЛОЯ: разобрать сорок игроков по шестнадцати колонкам невозможно честно — половина ячеек будет выдумана. Широкий список отвечает «из чего состоит рынок», глубокий — «с кем мы соревнуемся».
+
+ТАБЛИЦА 3 — КУДА РАСТИ. Две строки минимум: рост по цене и рост по известности — это разные пути, и путать их нельзя.
+| Направление роста | Что отличает следующий уровень | Чем подтверждено [n] | Что нужно, чтобы туда перейти |
+Направление: «выше по цене» (в дорогой или VIP) и «выше по известности» (из нишевых в заметные). Если мы уже на верхнем уровне по какой-то из осей — так и напиши, строку не выдумывай.
+Это НЕ список функций конкурентов, а ответ на «что меняется при переходе»: по цене — другой клиент, другой чек, другие доказательства, длиннее цикл сделки; по известности — другой объём контента, другие площадки, другая узнаваемость бренда в поиске. Стартующему проекту это нужнее сравнения с равными.
+
+Формат таблицы 2 (полный разбор нашего слоя):
 
 Format:
-| Comp_ID | Название | Масштаб (крупный/средний/нишевый-малый) | Сайт/URL | Ниша/продукт | Оффер (обещание/пакеты) | Модель ценообразования | Позиционирование (ключевая идея) | Сильные стороны | Слабые стороны | CTA (формулировка/расположение) | Доказательства (кейсы/рейтинги) | Барьеры клиента (по отзывам) | Ответ конкурента на барьеры | Триггеры дефицита/якоря | URL блока/скрина | Gap/Возможность для нас | Заметки |
+| Comp_ID | Название | Масштаб (крупный/средний/нишевый-малый) | Сопоставимость | Сайт/URL | Ниша/продукт | Оффер (обещание/пакеты) | Модель ценообразования | Позиционирование (ключевая идея) | Сильные стороны | Слабые стороны | CTA (формулировка/расположение) | Доказательства (кейсы/рейтинги) | Барьеры клиента (по отзывам) | Ответ конкурента на барьеры | Gap/Возможность для нас |
+
+СОПОСТАВИМОСТЬ — ОБЯЗАТЕЛЬНАЯ КОЛОНКА таблицы 2. Формат ячейки:
+<масштаб> · <ценовой слой> · <география> · <зрелость> → <вердикт>
+Вердикт: «сравнимы» — совпадает минимум ТРИ признака из четырёх; «ориентир, не эталон» — два и меньше.
+Признаки: ценовой уровень и известность — из карты рынка, ДВЕ РАЗНЫЕ оси, «не определён» совпадением не считается; география — сравнить с гео нашей компании и исследуемым рынком из брифа; зрелость — по году основания или числу кейсов, не видно — «не определена».
+Ценовой уровень весит больше остальных: если он не совпал, вердикт «ориентир, не эталон» даже при совпадении трёх других признаков.
+ЗАЧЕМ: гэп-анализ строится только по «сравнимым», иначе он превращается в список того, чего у нас нет и не будет. Но игроки других слоёв из ОТЧЁТА не исчезают — они в карте рынка и в таблице «куда расти».
 
 Rules: C001, C002… IDs. If price not public — "по запросу". No invented URLs.
+Колонки «Триггеры дефицита/якоря», «URL блока/скрина» и «Заметки» УБРАНЫ (решение владелицы 10.09.2026): первая почти всегда пустовала, вторая дублировала «Сайт/URL», третья превращалась в свалку. Не возвращай их и не дописывай сбоку.
 Колонка «Gap/Возможность для нас» подчиняется тому же правилу, что статусы в блоке 06_1: это возможность ТОЛЬКО если слабость конкурента видна из evidence [n]. Без ссылки — формулируй как гипотезу («вероятно…, нужно проверить»), а не как установленный факт. Не приписывай нашему продукту возможностей, которых нет в брифе.
 
 ИСТОЧНИК ЦЕН/ПОЗИЦИОНИРОВАНИЯ — ПРИОРИТЕТ САЙТУ САМОГО КОНКУРЕНТА: если в evidence есть и страница с ЕГО СОБСТВЕННОГО домена (URL совпадает с брендом конкурента), и статья-рейтинг/сравнение со стороннего сайта про этого же конкурента — бери цену/оффер/позиционирование С ЕГО САЙТА, сторонняя статья годится только как доп. контекст (например для «Барьеры клиента» из отзывов) или когда собственного сайта в evidence вообще нет. Причина: рейтинги и сравнения часто устаревшие или искажают позиционирование под свою подачу.
@@ -1844,12 +2369,71 @@ Format:
 Rules: A001, A002… IDs (отдельная последовательность от C-конкурентов в BLOCK 06). Если evidence не даёт ни одного смежного игрока — таблица может быть короче или пустой с пометкой «в собранном материале смежных решений не нашлось», не выдумывай для заполнения.
 
 ═══════════════════════════════════════════════
+BLOCK 06_2 — SWOT (06_2_SWOT)
+═══════════════════════════════════════════════
+Task: Свести уже собранное в четыре поля так, чтобы стала видна связка «наша слабость + внешняя угроза». Ничего нового здесь не находится — всё берётся из блоков выше и из брифа.
+
+Format — четыре таблицы, у каждой три колонки:
+Сильные стороны:  | Что именно | Чем подтверждено | Что с этим делаем |
+Слабые стороны:   | Что именно | Чем подтверждено | Что с этим делаем |
+Возможности:      | Что именно | Откуда следует | Что с этим делаем |
+Угрозы:           | Что именно | Откуда следует | Как готовимся |
+
+ГЛАВНОЕ ПРАВИЛО РАЗДЕЛЕНИЯ, проверяй по каждой строке: сильные и слабые стороны — ТОЛЬКО то, на что мы влияем сами (наш продукт, цена, команда, материалы). Возможности и угрозы — ТОЛЬКО внешнее (рынок, конкуренты, правила, спрос).
+Типичная ошибка: «у конкурента больше узнаваемость» кладут в слабые стороны. Это внешнее, это УГРОЗА. Наша слабая сторона в той же ситуации звучит иначе: «у нас нет публичных кейсов с цифрами» — вот на это мы влияем. Спроси себя: могу ли я это изменить своим решением? Да — верхний ряд, нет — нижний.
+Третья колонка обязательна во всех четырёх полях: глагол и конкретный артефакт. SWOT без неё — список наблюдений, который не открывают второй раз.
+По 3–4 строки на поле. Длинный SWOT не читают.
+
+═══════════════════════════════════════════════
+BLOCK 06_3 — Позиционирование по сегментам (06_3_Positioning)
+═══════════════════════════════════════════════
+Task: Как продукт звучит против конкурентов ОТДЕЛЬНО для каждого приоритетного сегмента. Одно и то же отличие разным людям продаётся разными словами.
+
+Format (таблица 1 — по сегментам, только приоритетные сегменты из 04_2, обычно 2–3):
+| Сегмент | Категория, в которой нас понимают | Ключевая выгода | Доказательство | Против какой альтернативы | Отличие | Источники [n] |
+«Категория, в которой нас понимают» — с чем нас сравнивают В ГОЛОВЕ у этого сегмента, а не чем мы являемся технически. От полки зависит, какие слова вообще будут поняты.
+«Доказательство» — конкретная функция или факт, не прилагательное. Не «удобство», а «установка за 5 минут без разработчика».
+«Против какой альтернативы» — ссылка на конкретную строку BLOCK 06 или 07C, включая «ничего не делать».
+«Отличие» — то, чего у названной альтернативы нет. Не нашлось — пиши «отличия по этому сегменту не найдено»: это ценный результат, значит сегмент придётся брать не продуктом, а ценой или каналом.
+
+Format (таблица 2 — главное обещание):
+| Элемент | Формулировка |
+Элементы ровно пять: обещание одной фразой; обещание для приоритетного сегмента; что доказывает обещание; какое возражение оно вызывает; чем это возражение снимается.
+Последние два обязательны. Обещание без пары «возражение → ответ» — лозунг, с ним генератор ничего не сделает.
+
+═══════════════════════════════════════════════
+BLOCK 18B — Архетип бренда (18B_Brand_Archetype)
+═══════════════════════════════════════════════
+Task: Определить характер речи бренда — кто говорит с аудиторией. Это НЕ архетипы персон: там кто покупает, здесь кто продаёт. Блок задаёт тон всем будущим текстам.
+
+Format (таблица 1 — выбор):
+| Роль | Архетип | Почему подходит нам | Какой архетип занят соперниками | Чем рискуем | Источники [n] |
+Роли ровно две: «Основной» и «Поддерживающий». Больше двух бренд не удерживает — речь начинает плавать.
+ГЛАВНОЕ ПРАВИЛО ВЫБОРА: архетип берётся по СВОБОДНОЙ ЗОНЕ, а не по симпатии. Пройди по карте конкурентов из BLOCK 06 и определи, как говорит каждый — по их заголовкам, обещаниям и тону в evidence. Колонка «занят соперниками» заполняется именами: «Правитель занят компанией X, Мудрец — компанией Y». Если выбранный нами архетип уже занят сильным конкурентом — так и напиши в рисках.
+
+Format (таблица 2 — как проявляется):
+| Элемент | Как проявляется | Пример формулировки | Чего избегаем |
+Элементы фиксированные: тон речи; герой в кадре; темы материалов; отношение к аудитории; визуальный ряд; реакция на возражения.
+«Пример формулировки» — живая фраза в кавычках, готовая к употреблению, а не описание фразы.
+«Чего избегаем» — конкретный запрет, проверяемый глазами в готовом тексте.
+
+РАЗВИЛКА «КТО ГОВОРИТ» — обязательна, берётся из брифа (личный бренд или компания):
+- КОМПАНИЯ: речь от «мы»; герой в кадре — продукт и результат; лица основателя как главного героя избегаем.
+- ЛИЧНЫЙ БРЕНД: речь от «я»; герой в кадре — сам человек, его опыт и есть продукт; прятать автора за «мы» — ошибка, аудитория пришла к нему.
+Строки «тон речи», «герой в кадре» и «отношение к аудитории» разворачиваются по этой развилке ПОЛНОСТЬЮ. Не давай совет для компании личному бренду и наоборот. Если признак в брифе не указан — определи по сайту и напиши, что определил сам.
+
+═══════════════════════════════════════════════
 BLOCK 06_1 — Gap Analysis (06_1_Конкуренты_Гэп-анализ)
 ═══════════════════════════════════════════════
 Task: Compare our offer vs competitors on key criteria. Assign Win/Parity/Lose.
 
 Format (15–25 rows):
-| Критерий | Наше текущее состояние (источник) | Лучшее у конкурентов (Название) | URL примера | Статус (Win/Parity/Lose) | Основание статуса | В чём гэп | Действие (что делаем) | Приоритет (1–3) | KPI | Срок | Ответственный | Примечание |
+| Критерий | Наше текущее состояние (источник) | Лучшее у конкурентов (Название) | URL примера | Статус (Win/Parity/Lose) | Основание статуса | В чём гэп | Действие (что делаем) | Приоритет (1–3) | По чему поймём, что сработало | Примечание |
+
+ГРАНИЦА СРАВНЕНИЯ — обязательна. В колонку «Лучшее у конкурентов» бери ТОЛЬКО тех, у кого в BLOCK 06 стоит «сравнимы». Игроки с пометкой «ориентир, не эталон» идут ОТДЕЛЬНОЙ таблицей после основной, с заголовком «Ориентиры рынка» и одной строкой пояснения: это игроки другого масштаба или слоя, их решения показывают направление, но сравнивать себя с ними по функциям некорректно. Если сопоставимых конкурентов не нашлось ни одного — напиши это прямым текстом, НЕ подставляй лидеров: отсутствие сопоставимых игроков само по себе вывод.
+
+КОЛОНКИ «Ответственный» и «Срок» УБРАНЫ (решение владелицы 10.09.2026): ты не знаешь ни команды заказчика, ни его сроков — значит, выдумаешь, а выглядеть будет как готовый план, за который кто-то отвечает. Это поля плана работ, их заполняет человек после чтения отчёта. Не возвращай их.
+КОЛОНКА «KPI» переименована в «По чему поймём, что сработало». Пиши обычными словами. Если метрики у бизнеса нет — «не задан», это честный ответ.
 
 СТАТУС ОБЯЗАН БЫТЬ ОБОСНОВАН — критично:
 Ты НЕ знаешь, что реально есть в нашем продукте: у тебя есть только бриф. Поэтому:
@@ -1878,7 +2462,7 @@ Include 6-12 key competitors AND our company as one point with "isUs": true. П�
 // результат на нишу) — модель явно видит предыдущий снапшот (если есть) и обязана
 // сравнить, а не пересказать рынок с нуля. m2Context — best-effort: если для этой
 // ниши есть готовый M2, добавляется как справка о конкурентах; если нет — не блокирует.
-function buildM8Prompt(brief, lang, prevSnapshotText, m2Context, evidence) {
+function buildTrendPrompt(brief, lang, prevSnapshotText, m2Context, evidence) {
   const prevBlock = prevSnapshotText
     ? `\nPREVIOUS SNAPSHOT (compare against this — do NOT just restate the market from scratch):\n${prevSnapshotText.slice(0,2000)}\n`
     : '\nNO PREVIOUS SNAPSHOT — this is the first scan for this niche, "delta" should say so honestly (нет базы для сравнения).\n';
@@ -1909,11 +2493,115 @@ Output JSON between <<<CHART_DATA_START>>> and <<<CHART_DATA_END>>>:
 Только пункты, подтверждённые evidence выше — не выдумывай темы, которых нет в источниках.`;
 }
 
-function buildM3Prompt(brief, lang, prev, evidence, competitors) {
+// M9 «Контент-радар». Стоит между M2 и M3 не для порядка, а по зависимостям:
+// ему нужен список конкурентов (даёт M2), а его урожай комментариев — сырьё для
+// цитат M3. Раньше поставить нельзя — некого смотреть; позже — M3 и M9 дважды
+// обойдут одни и те же каналы (ТЗ-ИССЛЕДОВАНИЕ-ПОД-КОНТЕНТ, разд. 5А).
+// Разовая версия: периодический скан — отдельная задача.
+function buildM4Prompt(brief, lang, prev, evidence, competitors) {
+  const ctx = prev ? `\nCONTEXT FROM PREVIOUS MODULES:\n${prev.slice(0,1500)}\n` : '';
+  const comps = (competitors||[]).length
+    ? `\nCOMPETITORS FOUND IN M2 (look at their channels, not at articles about them):\n- `
+      + competitors.slice(0,8).join('\n- ') + '\n'
+    : '';
+  return `${ctx}${comps}${evidenceSection(evidence)}
+Fill the following research blocks for module M9 «Контент-радар». ALL output in ${lang}.
+
+ЧТО ЭТО ЗА МОДУЛЬ. M2 смотрел на конкурентов как на БИЗНЕСЫ — цены, офферы,
+позиционирование. Здесь те же компании рассматриваются как МЕДИА: что они
+публикуют, где, как часто и что у них залетает. Вывод модуля — не «они молодцы»,
+а конкретные форматы, хуки и длительности, которые в этой нише работают.
+
+ГРАНИЦА ДАННЫХ — ЖЁСТКАЯ. Берём только числа, ВИДНЫЕ НА ПУБЛИЧНОЙ СТРАНИЦЕ без
+авторизации: просмотры ролика, число комментариев, просмотры поста в веб-версии
+Telegram, реакции в открытом сообществе VK, просмотры на карточке Дзена,
+просмотры и комментарии на vc.ru и Хабре. Instagram и TikTok в замер НЕ входят —
+они отдают страницу только авторизованным; так и напиши в примечании, вместо
+того чтобы оценивать «примерно». Любое число без ссылки [n] на конкретную
+страницу — запрещено: пиши «не замерено».
+
+═══════════════════════════════════════════════
+BLOCK 24_0 — Источники радара (24_0_Radar_Sources) — ОБЯЗАТЕЛЬНЫЙ, ИДЁТ ПЕРВЫМ
+═══════════════════════════════════════════════
+Task: Перечисли каналы, которые реально открывались, — по одному на строку.
+Только те, что есть в доказательствах выше.
+
+Format:
+| Канал | Площадка | Чей (конкурент/смежная ниша/медиа) | URL | Что видно публично | Дата |
+
+═══════════════════════════════════════════════
+BLOCK 24 — Каналы конкурентов (24_Channels)
+═══════════════════════════════════════════════
+Task: Срез по каналам: у кого сколько аудитории и как часто выходит контент.
+Подписчики и частота — только если видны на странице; иначе «не замерено».
+
+Format:
+| Канал | Площадка | Чей | Подписчики | Как часто выходит | Основной формат | Источник [n] |
+
+═══════════════════════════════════════════════
+BLOCK 24A — Что залетает (24A_Top_Content)
+═══════════════════════════════════════════════
+Task: 8–15 единиц контента с НАИБОЛЬШИМ откликом относительно канала. Именно
+относительно: ролик на 50 тысяч у канала-миллионника — провал, а у канала на
+три тысячи — событие. Для каждой единицы разбери, ИЗ ЧЕГО она сделана: тема,
+формат, хук первых секунд (дословно, если видно), длительность, призыв в конце.
+
+Format:
+| Единица (заголовок) | Площадка | Просмотры | Отклик (лайки/комменты) | Тема | Формат | Хук первых секунд | Длительность | Призыв (CTA) | URL [n] |
+
+═══════════════════════════════════════════════
+BLOCK 24B — Что работает в нише (24B_Patterns)
+═══════════════════════════════════════════════
+Task: Обобщения, а не пересказ таблицы выше. Каждый паттерн обязан опираться на
+конкретные строки 24A — назови их. Паттерн без опоры не пиши.
+
+Format:
+| Паттерн (что работает) | На чём основан (строки 24A) | Почему срабатывает | Что делать нам |
+
+═══════════════════════════════════════════════
+BLOCK 24C — Бенчмарки ниши (24C_Benchmarks)
+═══════════════════════════════════════════════
+Task: Медианные показатели ниши — чтобы потом было с чем сравнивать свой
+контент. Медиана, а не среднее: один вирусный ролик среднее ломает. Обязательно
+укажи, на скольких единицах посчитано — на трёх бенчмарка не бывает.
+
+Format:
+| Показатель | Медиана по нише | Разброс (мин–макс) | На скольких единицах | Примечание |
+
+Итог / Следующие шаги — 3–5 пунктов: какие форматы брать первыми и почему.`;
+}
+
+function buildM5Prompt(brief, lang, prev, evidence, competitors) {
   const compList = (competitors && competitors.length) ? competitors.join(', ') : (brief.competitors || '—');
   const ctx = prev ? `\nCONTEXT:\n${prev.slice(0,1500)}\n` : '';
   return `${ctx}${evidenceSection(evidence)}
 Fill module M3 blocks. ALL output in ${lang}. Only open sources, no invented data.
+
+═══════════════════════════════════════════════
+ПРАВИЛО ДЛЯ КОЛОНКИ «ЧТО ИЗ ЭТОГО СЛЕДУЕТ»
+═══════════════════════════════════════════════
+Колонка есть не у всех таблиц — она стоит последней там, где прописана в Format:. Где её в Format: нет — НЕ добавляй, число колонок должно совпадать с форматом.
+Там, где она есть, она отвечает не на «что мы узнали», а на «что заказчику с этим делать». Это не пересказ строки другими словами — это распоряжение.
+Требования к формулировке:
+- начинается с глагола в неопределённой форме: «ставить», «вынести», «убрать», «использовать дословно»;
+- называет конкретный артефакт: заголовок, первый экран, тема письма, сцена видео, раздел лендинга, формулировка оффера;
+- умещается в одну строку.
+ГОДИТСЯ: «Ставить сцену „клики есть, заявок нет“ первым экраном»
+ГОДИТСЯ: «Использовать фразу дословно как заголовок статьи»
+НЕ ГОДИТСЯ: «Учитывать при написании текстов» — нет артефакта
+НЕ ГОДИТСЯ: «Аудитория боится спама» — это пересказ строки, а не действие
+НЕ ГОДИТСЯ: «Важно для позиционирования» — ничего не называет
+Если из строки НЕ следует никакого действия — это признак, что строка в отчёте лишняя. Тогда пиши «действия не следует» и не выдумывай его. Три строки с настоящими выводами полезнее пятнадцати с формальными.
+
+═══════════════════════════════════════════════
+СКВОЗНОЕ ПРАВИЛО — ОТКУДА ВЗЯЛАСЬ СТРОКА
+═══════════════════════════════════════════════
+У каждой строки любой таблицы в колонке источников должно стоять одно из трёх:
+  [n]        — НАЙДЕНО. В evidence есть подтверждение, номер ссылки обязателен.
+  вывод: …   — ВЫВЕДЕНО. Прямого подтверждения нет, но строка логически следует из другой строки этого же отчёта. После двоеточия — из какой именно («вывод: из BLOCK 07, строка про страх спама»).
+  нет данных — не нашлось и вывести не из чего.
+Третий вариант — нормальный результат, а не провал. «Нет данных» в отчёте честнее правдоподобного числа: заказчик принимает по этим таблицам решения о деньгах.
+ЗАПРЕЩЕНО оставлять строку без одной из трёх пометок. Число, доля, возраст, объём рынка без пометки — грубая ошибка, даже если значение выглядит разумным.
 
 ═══════════════════════════════════════════════
 QUALIFICATION GATE — CRITICAL (применяется ко ВСЕМ цитатам ниже)
@@ -1932,7 +2620,7 @@ BLOCK 07 — Voice of Customer (07_VoiceOfCustomer_Public)
 Task: Collect real client language. QUOTES COME ONLY FROM THE EVIDENCE ABOVE — verbatim fragments with the evidence URL. Apply the QUALIFICATION GATE. If evidence yields few on-target quotes, output fewer rows honestly (Confidence=2, note «нужен доп. сбор VoC») — NEVER invent or "smooth" quotes, and NEVER pad with off-target quotes.
 
 Format:
-| Тема боли/мотива | Сегмент/ниша | Цитата (дословно, обезличено) | Частотность (упоминаний) | Интенсивность (высокая/средняя/низкая) | Единица частоты | Источник (площадка) | URL | Дата | Формула ответа (оффер/LP) | Микро-KPI (CTR/CR) | Комментарий |
+| Тема боли/мотива | Сегмент/ниша | Цитата (дословно, обезличено) | Частотность (упоминаний) | Интенсивность (высокая/средняя/низкая) | Единица частоты | Источник (площадка) | URL | Дата | Формула ответа (оффер/LP) | Микро-KPI (CTR/CR) | Комментарий Что из этого следует |
 
 Rules: Verbatim anonymised quotes only, in the ORIGINAL language of the source (do not translate quotes). URLs only from evidence. No personal data. Каждая строка помечена сегментом/нишей, откуда цитата. Отзывы о конкурентах помечай источником «отзыв о конкуренте: <название>».
 
@@ -1948,7 +2636,7 @@ BLOCK 07A — Как говорит ЦА (raw language bank)
 Task: 20–30 RAW verbatim quotes from evidence — the audience's living language for copywriters: their words, slang, emotions, phrasing. No paraphrase, no polishing. Group by theme.
 
 Format:
-| # | Дословная цитата (как написано, с ошибками/сленгом) | Тема | Эмоция | Площадка | URL |
+| # | Дословная цитата (как написано, с ошибками/сленгом) | Тема | Эмоция | Площадка | URL Что из этого следует |
 
 If evidence contains fewer real quotes — output what exists and state the gap.
 
@@ -1965,7 +2653,7 @@ Schwartz stages: Unaware / Problem Aware / Solution Aware / Product Aware / Most
 ═══════════════════════════════════════════════
 BLOCK 07C — Альтернативы: что делают ВМЕСТО покупки (07C_Alternatives)
 ═══════════════════════════════════════════════
-Task: С чем на самом деле конкурирует продукт в голове у клиента. Это НЕ список конкурентов из M2 — там компании, продающие похожее. Здесь ответ на вопрос «что человек делает сейчас, не купив ничего».
+Task: С чем на самом деле конкурирует продукт в голове у клиента. Это НЕ список конкурентов из модуля «Конкуренты» — там компании, продающие похожее. Здесь ответ на вопрос «что человек делает сейчас, не купив ничего».
 
 Format:
 | Альтернатива | Тип | Почему её выбирают (в словах аудитории) | Чем она их не устраивает | Что мы говорим против неё | Источники [n] |
@@ -1975,11 +2663,30 @@ Format:
 2. **Сделать своими силами** — вручную, на коленке, в таблице, силами штатного программиста.
 3. **Нанять человека** — подрядчика, фрилансера, сотрудника вместо инструмента.
 4. **Соседняя категория продуктов** — решают ту же боль другим классом инструмента.
-5. **Прямой конкурент** — упоминай коротко, подробности в M2, здесь только если аудитория сама объясняет ПОЧЕМУ выбрала его.
+5. **Прямой конкурент** — упоминай коротко, подробности в модуле «Конкуренты», здесь только если аудитория сама объясняет ПОЧЕМУ выбрала его.
 
 Правило источников то же: строка существует, только если в evidence есть подтверждение — цитата или прямое упоминание со ссылкой [n]. Не нашлось подтверждения по какому-то типу — пиши «в собранном материале не встретилось», а не додумывай. Пункт 1 («ничего не делать») ищи специально: он редко называется прямо, но виден по фразам вида «да мы и так справляемся», «руки не доходят», «не до этого сейчас» — такие формулировки и есть отказ от покупки.
 
 Зачем это заказчику: против «ничего не делать» и против конкурента работают РАЗНЫЕ аргументы. Если весь контент написан против конкурентов, а реальная альтернатива — бездействие, контент бьёт мимо.
+
+═══════════════════════════════════════════════
+BLOCK 07D — Кому не продаём (07D_Not_Our_Client)
+═══════════════════════════════════════════════
+Task: Кого отсеивать ДО сделки. Обратная сторона портрета клиента: без неё продажи тратят время на заведомо мёртвые лиды, а контент бьёт по людям, которым продукт не подходит физически.
+
+Format:
+| Кто | Почему невыгоден | По какому признаку узнать заранее | Источники [n] |
+
+Колонка «по какому признаку узнать заранее» — рабочая, ради неё блок и существует. Признак должен проверяться ДО разговора или в первые его минуты: наличие сайта, объём трафика по словам клиента, тематика бизнеса, прямо высказанное требование. Если признак нельзя проверить заранее — строка бесполезна, не бери её.
+
+Ищи четыре типа, по каждому строка, если есть хоть намёк:
+1. Кому продукт физически не подойдёт — нет условия, без которого он не работает вовсе.
+2. Кому он не даст эффекта — условие есть, но масштаб такой, что выгода не возникает.
+3. Кто создаёт риск — репутационный, юридический, по персональным данным.
+4. Кто против самого способа решения — принципиальный отказ от формата.
+
+Типы 1 и 2 выводи из достоинств продукта: у каждого достоинства есть условие, при котором оно не срабатывает. Тип 4 ищи в VoC — это люди, которые ругают не конкретный продукт, а сам класс решений.
+Строки этого блока чаще всего имеют пометку «вывод», а не [n] — это нормально, здесь мы рассуждаем от свойств продукта. Но вывод обязан ссылаться на строку, из которой сделан.
 
 ═══════════════════════════════════════════════
 BLOCK 08A — Где сидит аудитория (08A_Audience_Channels)
@@ -2016,7 +2723,7 @@ Output JSON between <<<CHART_DATA_START>>> and <<<CHART_DATA_END>>>:
 Only quotes ALSO present verbatim in BLOCK 07/07A above — this is curation of existing quotes, not new content. If BLOCK 07B is empty, return "hookBank": [].`;
 }
 
-function buildM4Prompt(brief, lang, prev, coverage) {
+function buildM6Prompt(brief, lang, prev, coverage) {
   // Полный M3: персоны обязаны брать ДОСЛОВНЫЕ цитаты и URL из VoC.
   // При обрезке до 1500 символов модуль видел только легенду Confidence и выдумывал цитаты.
   const ctx = prev ? `\nCONTEXT — РЕЗУЛЬТАТ M3 (VoC), ИСТОЧНИК ЦИТАТ ДЛЯ ПЕРСОН:\n${prev.slice(0,16000)}\n` : '';
@@ -2028,6 +2735,32 @@ function buildM4Prompt(brief, lang, prev, coverage) {
 Fill module M4 blocks. ALL output in ${lang}. Only open sources.
 
 ═══════════════════════════════════════════════
+ПРАВИЛО ДЛЯ КОЛОНКИ «ЧТО ИЗ ЭТОГО СЛЕДУЕТ»
+═══════════════════════════════════════════════
+Колонка есть не у всех таблиц — она стоит последней там, где прописана в Format:. Где её в Format: нет — НЕ добавляй, число колонок должно совпадать с форматом.
+Там, где она есть, она отвечает не на «что мы узнали», а на «что заказчику с этим делать». Это не пересказ строки другими словами — это распоряжение.
+Требования к формулировке:
+- начинается с глагола в неопределённой форме: «ставить», «вынести», «убрать», «использовать дословно»;
+- называет конкретный артефакт: заголовок, первый экран, тема письма, сцена видео, раздел лендинга, формулировка оффера;
+- умещается в одну строку.
+ГОДИТСЯ: «Ставить сцену „клики есть, заявок нет“ первым экраном»
+ГОДИТСЯ: «Использовать фразу дословно как заголовок статьи»
+НЕ ГОДИТСЯ: «Учитывать при написании текстов» — нет артефакта
+НЕ ГОДИТСЯ: «Аудитория боится спама» — это пересказ строки, а не действие
+НЕ ГОДИТСЯ: «Важно для позиционирования» — ничего не называет
+Если из строки НЕ следует никакого действия — это признак, что строка в отчёте лишняя. Тогда пиши «действия не следует» и не выдумывай его. Три строки с настоящими выводами полезнее пятнадцати с формальными.
+
+═══════════════════════════════════════════════
+СКВОЗНОЕ ПРАВИЛО — ОТКУДА ВЗЯЛАСЬ СТРОКА
+═══════════════════════════════════════════════
+У каждой строки любой таблицы в колонке источников должно стоять одно из трёх:
+  [n]        — НАЙДЕНО. В evidence есть подтверждение, номер ссылки обязателен.
+  вывод: …   — ВЫВЕДЕНО. Прямого подтверждения нет, но строка логически следует из другой строки этого же отчёта. После двоеточия — из какой именно («вывод: из BLOCK 07, строка про страх спама»).
+  нет данных — не нашлось и вывести не из чего.
+Третий вариант — нормальный результат, а не провал. «Нет данных» в отчёте честнее правдоподобного числа: заказчик принимает по этим таблицам решения о деньгах.
+ЗАПРЕЩЕНО оставлять строку без одной из трёх пометок. Число, доля, возраст, объём рынка без пометки — грубая ошибка, даже если значение выглядит разумным.
+
+═══════════════════════════════════════════════
 BLOCK 09 — LPR Personas (09_Образ_LPR)
 ═══════════════════════════════════════════════
 Task: Build 3–4 decision-maker personas PER SELECTED NICHE based on real VoC and segment data.
@@ -2036,17 +2769,44 @@ PERSONA RULES:
 - 3–4 personas per niche, NO role overlap: each persona must have a distinct JTBD set and distinct top pains. If two roles share pains and JTBD (e.g. владелец и ритейл-менеджер) — merge them into one persona.
 - Business-size split INSIDE qualified segments matters: микро-бизнес ≠ средний бизнес (разные боли, бюджет, язык) — reflect size in Компания/ниша.
 - «Цитаты/язык клиента» — only verbatim quotes from M3 VoC (BLOCK 07/07A) with their URLs. A persona without at least 2 real quotes gets Confidence ≤2 and a note «персона-гипотеза, нужен сбор VoC».
-- ИСТОЧНИКИ ТОЛЬКО ИЗ M3: и сама цитата, и её URL обязаны дословно присутствовать в блоках 07/07A результата M3, приведённого выше. Придумать URL или подставить «похожий» из памяти — ГРУБАЯ ОШИБКА: заказчик открывает ссылки и проверяет. Если подходящей цитаты в M3 нет — пиши «нет своих цитат», НЕ подбирай правдоподобную.
+- ИСТОЧНИКИ ТОЛЬКО ИЗ M3: и сама цитата, и её URL обязаны дословно присутствовать в блоках 07/07A результата M3, приведённого выше. Придумать URL или подставить «похожий» из памяти — ГРУБАЯ ОШИБКА: заказчик открывает ссылки и проверяет. Если подходящей цитаты в «Голосе клиента» нет — пиши «нет своих цитат», НЕ подбирай правдоподобную.
 - ЗАПРЕТ ДУБЛЕЙ ЦИТАТ: у каждой персоны СВОИ цитаты. Одна и та же дословная цитата (или один и тот же URL) НЕ может стоять под двумя персонами. Если своих реальных цитат для персоны нет — в ячейку цитат пиши «нет своих цитат» и ставь Confidence ≤2; НЕ копируй цитату другой персоны.
 - УВЕРЕННОСТЬ ВНИЗ ПО НИШЕ: Confidence персоны не выше покрытия VoC её ниши. Если по нише нет релевантного VoC — помечай всю персону «гипотеза: VoC по нише не собран» и Confidence=1, не оформляй её так же уверенно, как персоны ниш с данными.
 - ГЕЙТ ПО БЛОКУ «VoC Coverage» ВЫШЕ (посчитан кодом, не моделью): для сегментов, помеченных там «insufficient» — Confidence персоны этого сегмента ≤2 и примечание «предварительно: VoC не собран», НЕЗАВИСИМО от твоей собственной оценки качества цитат. Число из этого блока — факт, не рекомендация к пересмотру.
 
 Format:
-| Persona_ID | Роль/должность | Компания/ниша (+размер бизнеса) | Уровень осведомлённости | Контекст/ситуация | JTBD_1 | JTBD_2 | JTBD_3 | Боли (топ-5) | Возражения (топ-5) | Триггеры (топ-5) | Каналы (топ-3) | Форматы коммуникации | Тон/Дизайн | Цитаты/язык клиента (из M3, дословно) | Источники (URL) | Confidence (1-5) | Примечание |
+| Persona_ID | Роль/должность | Компания/ниша (+размер бизнеса) | Уровень осведомлённости | Контекст/ситуация | JTBD_1 | JTBD_2 | JTBD_3 | Боли (топ-5) | Возражения (топ-5) | Триггеры (топ-5) | Каналы (топ-3) | Форматы коммуникации | Тон/Дизайн | Цитаты/язык клиента (из «Голоса клиента», дословно) | Источники (URL) | Confidence (1-5) | Примечание Что из этого следует |
 
 JTBD format: "Когда… я хочу… чтобы…"
 
+JTBD_1–3 НЕ СОЧИНЯЮТСЯ ЗДЕСЬ. Они обязаны ДОСЛОВНО повторять строки BLOCK 10 (JTBD) для этой же персоны — тот же текст, не пересказ. Причина: сейчас один и тот же список задач печатается дважды, в 09 и в 10, и совпадение между ними ничем не проверяется — персона может получить в одном месте одни задачи, в другом другие, и это пройдёт незамеченным. Колонки НЕ убираем (их читает контент-машина), но источник у них один — BLOCK 10.
+
 After table: note persona overlaps, top-2–3 priority personas (by SOM/Revenue), hypotheses to A/B test.
+
+═══════════════════════════════════════════════
+BLOCK 09B — Демография сегмента (09B_B2C_Demography)
+═══════════════════════════════════════════════
+КОГДА ЗАПОЛНЯТЬ: только если аудитория проекта — ЧАСТНЫЕ ЛИЦА (B2C). Если аудитория — бизнесы (B2B), напиши одну строку «аудитория B2B — блок не применим» и НЕ строй таблицу: роль в компании, размер бизнеса и согласование уже описаны в BLOCK 09, а возраст и достаток к ним не применимы. Сводить оба случая в одну таблицу нельзя — половина полей окажется пустой в каждой строке.
+
+Task: Опиши частное лицо теми полями, которые для него действительно решают: возраст, достаток, интересы и обстоятельства жизни вместо роли и согласования.
+
+Format:
+| Поле | Значение | Откуда взято | Что из этого следует |
+Поля ровно эти шесть и в этом порядке:
+1. Пол, доли
+2. Возраст, распределение
+3. Достаток
+4. Интересы и образ жизни
+5. Кто принимает решение
+6. Когда возникает потребность
+
+ПРАВИЛО ПО ПЕРВЫМ ДВУМ ПОЛЯМ — ЧИТАЙ ВНИМАТЕЛЬНО. Пол и возраст в числах нашими средствами НЕ добываются: поисковая частотность отвечает на «что ищут» и «откуда ищут», но не на «кто ищет». Поэтому:
+- если в evidence нет прямого источника с демографией — в колонке «Значение» пиши «нужны данные рекламного кабинета или Метрики заказчика»;
+- НЕ выводи возраст из ниши («репетиторы — значит, мамы 35–45»): это догадка, которая выглядит как факт, и потому опаснее пустой ячейки;
+- если источник всё же нашёлся (отраслевое исследование, открытый отчёт) — ставь [n] и называй его.
+Поле «Достаток» допускает вывод — но именно как вывод, со ссылкой на строку, из которой он сделан: цена решения, которую аудитория обсуждает как приемлемую, или прямые формулировки в отзывах. Помечай «вывод: …».
+Поле «Интересы и образ жизни» заполняется из BLOCK 08A (где сидит аудитория) и из языка отзывов — это наблюдаемые вещи, здесь [n] обязателен.
+Зачем это заказчику: для частного лица возраст и достаток определяют не только язык текста, но и цену, которую вообще можно назвать. Пустая честная ячейка здесь полезнее заполненной наугад — по этим полям выбирают рекламные настройки, и ошибка стоит прямых денег.
 
 ═══════════════════════════════════════════════
 BLOCK 10 — JTBD (10_JTBD)
@@ -2061,13 +2821,13 @@ CRITICAL: awareness is a DISTRIBUTION, not a single value. Assigning the same le
 For EACH persona give the estimated distribution in % across all 5 levels (e.g. «L2: 60%, L3: 30%, L4: 10%») with reasoning from VoC/intent data, then one row per DOMINANT level with content guidance.
 
 Format:
-| Персона | Распределение по уровням (L1–L5, %) | Доминирующий уровень | Как думает (внутренний монолог) | Примеры запросов | Что важно услышать | Рекомендуемые форматы и каналы |
+| Персона | Распределение по уровням (L1–L5, %) | Доминирующий уровень | Как думает (внутренний монолог) | Примеры запросов | Что важно услышать | Рекомендуемые форматы и каналы Что из этого следует |
 
 ═══════════════════════════════════════════════
 BLOCK 12 — Fears & Doubts (12_Страхи)
 ═══════════════════════════════════════════════
 Format (15–25 rows):
-| Персона | Страх/сомнение | Глубинная причина | Артефакт для снятия страха | Паттерн копирайта | Где размещаем (лендинг/реклама/FAQ/скрипт) | Источники [n] |
+| Персона | Страх/сомнение | Глубинная причина | Артефакт для снятия страха | Паттерн копирайта | Где размещаем (лендинг/реклама/FAQ/скрипт) | Источники [n] Что из этого следует |
 
 ═══════════════════════════════════════════════
 BLOCK 12B — Ограничения для контента (12B_Гвардрейлы)
@@ -2112,7 +2872,7 @@ Output JSON between <<<CHART_DATA_START>>> and <<<CHART_DATA_END>>>:
 }`;
 }
 
-function buildM5Prompt(brief, lang, prev) {
+function buildM7Prompt(brief, lang, prev) {
   // Полный M4: офферы и гипотезы строятся на персонах, их болях и возражениях
   const ctx = prev ? `\nCONTEXT — РЕЗУЛЬТАТ M4 (ПЕРСОНЫ И ИХ БОЛИ):\n${prev.slice(0,16000)}\n` : '';
   return `${ctx}
@@ -2123,8 +2883,8 @@ BLOCK 16 — Hypotheses (16_Гипотезы)
 ═══════════════════════════════════════════════
 Format (10–15 rows):
 | Hypo_ID | Ниша | Persona_ID | Уровень осведомлённости | Источник инсайта | Формулировка гипотезы | Что тестируем | Для кого/где в CJM | Ожидаемый эффект | Метрика | MDE | Дизайн теста | Артефакты | Риски | Статус | Confidence (1-5) |
-ВАЖНО: Persona_ID — это ID персоны из M4 (P1, P2, P3…), а НЕ номер сегмента. Бери ровно те ID, что стоят в блоке 09 (LPR Personas) переданного M4. Не выдумывай новые.
-Если персона в M4 помечена «гипотеза: VoC не собран»/Confidence≤2 — Confidence гипотезы для неё не выше Confidence самой персоны, плюс то же примечание «предварительно: VoC не собран».
+ВАЖНО: Persona_ID — это ID персоны из модуля «Психология покупки» (P1, P2, P3…), а НЕ номер сегмента. Бери ровно те ID, что стоят в блоке 09 (LPR Personas) переданного M4. Не выдумывай новые.
+Если персона помечена «гипотеза: VoC не собран»/Confidence≤2 — Confidence гипотезы для неё не выше Confidence самой персоны, плюс то же примечание «предварительно: VoC не собран».
 
 ═══════════════════════════════════════════════
 BLOCK 17A — Offer Input (17A_Оффер_Input)
@@ -2132,21 +2892,47 @@ BLOCK 17A — Offer Input (17A_Оффер_Input)
 Format:
 | Seller_ID | Бренд/название | Компетенции | Отличия/УТП | Доказательства | Кейсы | Форматы продукта | Гео/расписание | Ограничения | Гарантии | Прайс/пакеты | Способы оплаты | Тон коммуникации | Запрещённые формулировки |
 
+ЭТА ТАБЛИЦА — НЕ ИССЛЕДОВАНИЕ, А ОТРАЖЕНИЕ ВВОДНЫХ. Всё в ней — данные о ЗАКАЗЧИКЕ, а не находки о рынке. Взяться им неоткуда, кроме брифа и сайта заказчика.
+ЖЁСТКОЕ ПРАВИЛО: каждая ячейка — либо дословно из брифа/с сайта, либо «не задано». Третьего варианта нет. Не «примерно так обычно бывает», не «логично предположить», не отраслевой стандарт.
+Особенно это касается ГАРАНТИЙ, ПРАЙСА, СПОСОБОВ ОПЛАТЫ и ДОКАЗАТЕЛЬСТВ. Это обязательства перед покупателем. Придуманная гарантия («возврат 14 дней») выглядит в таблице точно так же, как настоящая, дальше уходит в финальные офферы, оттуда в лендинг и в рекламу — и заказчик узнаёт о ней от клиента, который её потребовал. Пустая ячейка «не задано» — это не брак отчёта, а вопрос заказчику, и он стоит дешевле любой правдоподобной выдумки.
+Если не задано больше половины полей — напиши это одной строкой после таблицы: «Вход для офферов заполнен на N из 14 полей — офферы ниже настолько же предварительны».
+
 ═══════════════════════════════════════════════
 BLOCK 17B — Offer Workbench (17B_Оффер_Workbench)
 ═══════════════════════════════════════════════
 Format (5–8 draft offers):
 | Offer_ID | Ниша | Persona_ID | Уровень осведомлённости | Hook-кандидаты (3 варианта) | Боль | Желаемый результат | Механизм/почему работает | Доказательства | Источники |
-(Persona_ID — ID персоны из M4, напр. P1/P2, не номер сегмента.)
+(Persona_ID — ID персоны из модуля «Психология покупки», напр. P1/P2, не номер сегмента.)
 
 ═══════════════════════════════════════════════
 BLOCK 17 FINAL — Final Offers (17_Оффер_Final)
 ═══════════════════════════════════════════════
 Format (2–3 final offers):
-| Offer_ID | Сегмент | Уровень осведомлённости | Заголовок | Подзаголовок | Проблема | Результат | Формула оффера | Состав/пакет | Формат | Цена | Доказательства | Снятие риска | Призыв к действию | Куда ведёт |`;
+| Offer_ID | Сегмент | Уровень осведомлённости | Заголовок | Подзаголовок | Проблема | Результат | Формула оффера | Состав/пакет | Формат | Цена | Доказательства | Снятие риска | Призыв к действию | Куда ведёт |
+
+═══════════════════════════════════════════════
+BLOCK 23 — Главная ставка и цели (23_Goals)
+═══════════════════════════════════════════════
+Task: Свяжи выводы исследования с тем, чего бизнес добивается, и с тем, как он поймёт, что получилось. Без этого блока исследование заканчивается выводами, а между выводами и работой остаётся разрыв.
+
+Format (таблица 1 — главная ставка):
+| Элемент | Формулировка |
+Элементы ровно эти пять, в этом порядке:
+1. Ставка одной фразой
+2. На чём она стоит — ссылка на конкретный вывод исследования
+3. Что произойдёт, если ставка верна
+4. Что произойдёт, если ставка неверна
+5. Какая гипотеза её проверяет — Hypo_ID из BLOCK 16 выше
+СТАВКА — ЭТО ОДНО утверждение, от которого зависит остальное. Не список намерений. Если кажется, что ставок несколько, выбери ту, без которой остальные не имеют смысла.
+
+Format (таблица 2 — цели):
+| Цель | Метрика | Текущее значение | Целевое значение | Какие гипотезы ведут к цели |
+ПРО «ТЕКУЩЕЕ ЗНАЧЕНИЕ» — ПРАВИЛО ЖЁСТКОЕ: если числа нет в брифе заказчика и нет в evidence, пиши «нет данных». НЕ оценивай, НЕ прикидывай, НЕ бери среднее по отрасли. У нового проекта эта колонка будет заполнена «нет данных» целиком — и это сам по себе результат: он показывает, что бизнес работает вслепую, и первая задача не в маркетинге, а в том, чтобы начать мерить.
+«ЦЕЛЕВОЕ ЗНАЧЕНИЕ» берётся из брифа заказчика. Если цели там нет — пиши «цель задать после N недель замера», где N обоснован временем до вывода соответствующей гипотезы.
+Зачем это заказчику: без этой таблицы через три месяца невозможно ответить, сработало исследование или нет.`;
 }
 
-function buildM6Prompt(brief, lang, prev) {
+function buildContentPrompt(brief, lang, prev) {
   // Полный M4: архетипы и креативы опираются на персон, их язык и триггеры
   const ctx = prev ? `\nCONTEXT — РЕЗУЛЬТАТ M4 (ПЕРСОНЫ, ЯЗЫК, ТРИГГЕРЫ):\n${prev.slice(0,16000)}\n` : '';
   return `${ctx}
@@ -2157,7 +2943,7 @@ BLOCK 18 — Persona Archetypes (18_Persona_Archetypes)
 ═══════════════════════════════════════════════
 Format:
 | Persona_ID | Роль | Сегмент | Архетип/ценностный уровень | Уровень осведомлённости | Эмоциональные драйверы | Триггеры покупки | Барьеры | Тон и визуальный стиль | Фразы-якоря | Каналы/форматы | Ключевой оффер | Источники |
-Если персона в M4 помечена «гипотеза: VoC не собран» — добавь то же примечание к её архетипу здесь, не оформляй увереннее, чем сама персона.
+Если персона помечена «гипотеза: VoC не собран» — добавь то же примечание к её архетипу здесь, не оформляй увереннее, чем сама персона.
 
 BLOCK 19 — Visual Strategy:
 | Segment_ID | Уровень осведомлённости | Ключевое сообщение | Визуальные элементы | Доказательства | Тактики | Каналы | Целевая метрика | Референсы |
@@ -2202,7 +2988,7 @@ H1, subheadline, bullet points, CTA text
 // библиотеки goose-skills: не начинать контент-план с чистого листа. Без этого
 // модуль спокойно предлагает тему, которая на сайте давно есть, и новая статья
 // начинает конкурировать со старой в выдаче — ровно то, чего просили избежать.
-function buildM7Prompt(brief, lang, prev, evidence, wordstatData, siteMaps) {
+function buildM8Prompt(brief, lang, prev, evidence, wordstatData, siteMaps, geo) {
   const ctx = prev ? `\nCONTEXT:\n${prev.slice(0,1500)}\n` : '';
   // Реальная частотность (Yandex Wordstat ИЛИ Google Ads — источник зависит от
   // рынка, см. keywordSourceForMarket, REQ-025) — если API не настроен или
@@ -2210,6 +2996,7 @@ function buildM7Prompt(brief, lang, prev, evidence, wordstatData, siteMaps) {
   const freq = (wordstatData && wordstatData.frequencies) || [];
   const seas = (wordstatData && wordstatData.seasonality) || [];
   const srcLabel = (wordstatData && wordstatData.source) || 'Wordstat';
+  const geoBlock = geoDemandBlock(geo);
   const wordstatBlock = freq.length
     ? '\n═══════════════════════════════════════════════\nREAL FREQUENCY DATA ('+srcLabel+', measured just now)\n═══════════════════════════════════════════════\n'
       + freq.map(w=>w.phrase+': '+w.count+'/мес'
@@ -2237,7 +3024,7 @@ function buildM7Prompt(brief, lang, prev, evidence, wordstatData, siteMaps) {
       + rivals.map(r => 'КОНКУРЕНТ (' + r.origin + '), страниц: ' + r.urls.length + (r.truncated ? '+ (обрезан)' : '') + '\n' + listUrls(r.urls)).join('\n\n')
       + '\n\nЭто реальные адреса опубликованных страниц, не догадки. Тема страницы читается из адреса.\n'
     : '';
-  return `${ctx}${evidenceSection(evidence)}${wordstatBlock}${seasonBlock}${sitemapBlock}
+  return `${ctx}${evidenceSection(evidence)}${wordstatBlock}${seasonBlock}${geoBlock}${sitemapBlock}
 Fill module M7 SEO blocks. ALL output in ${lang}.
 
 SEO-00 — Источники (ОБЯЗАТЕЛЬНЫЙ, идёт ПЕРВЫМ)
@@ -2262,6 +3049,11 @@ SEO-02 — Semantic Core:
 ГЛАВНОЕ ПРАВИЛО ЭТОЙ ТАБЛИЦЫ: **каждая строка обязана иметь ЧИСЛО частотности** — из блока ${srcLabel} выше либо из evidence со ссылкой [n]. Кластер без числа в эту таблицу НЕ ПОПАДАЕТ вообще. Причина: таблица — рабочий инструмент SEO-специалиста, он по ней распределяет статьи и бюджет; строка без числа не даёт ни приоритета, ни оценки трафика — она занимает место и создаёт ложное впечатление проработанности. Если кластер кажется важным, но замера нет — ему место ТОЛЬКО в строке «Замерить вручную» под таблицей, не в самой таблице.
 Исключение ровно одно: если блок ${srcLabel} пуст или отсутствует целиком (замер не настроен/не сработал) — тогда собери таблицу из evidence как раньше, пометив частотность «не замерено», и явно напиши перед таблицей: «Частотность не замерена — источник замера недоступен, цифры требуют проверки».
 
+КОЛОНКА «КОНКУРЕНЦИЯ» — ОБЯЗАТЕЛЬНО С ПОМЕТКОЙ ПРОИСХОЖДЕНИЯ, первым словом ячейки:
+- «замерено: <значение>» — если в блоке ${srcLabel} у этой фразы стоит строка «конкуренция:» с числом. Это данные инструмента, а не твоё суждение.
+- «оценка: <значение> — <обоснование>» — во всех остальных случаях. Обоснование обязательно и должно опираться на evidence (кто стоит в выдаче, агрегаторы это или блоги), а не на общие соображения.
+Почему это важно: у части источников замера конкуренции нет вообще, и тогда всё, что стоит в этой колонке, — твоя догадка. В отчёте догадка и замер выглядят одинаково убедительно, и заказчик распределяет по ним бюджет. Одно слово в начале ячейки снимает эту подмену. Так же помечена известность конкурентов в модуле «Конкуренты» — держи единый приём.
+
 Сезонность заполняй ТОЛЬКО для кластеров, чья фраза (или близкий вариант) есть в блоке REAL SEASONALITY DATA — для остальных честно «не замерено», не додумывай по общим соображениям о нише. После таблицы обязательной строкой: «Замерить вручную в ${srcLabel}: <перечисли кластеры, которые ты счёл важными, но замера по ним нет>» — это рабочее задание специалисту, а не отговорка.
 
 ОТБОР КЛАСТЕРОВ В ЭТУ ТАБЛИЦУ — не менее важно, чем сами числа. Блок ${srcLabel} выше — это СЫРАЯ выгрузка инструмента замера, там сотни строк вперемешку. Таблица — не копия этого списка, а осмысленная выжимка. Правила:
@@ -2274,20 +3066,16 @@ SEO-03 — Content Audit (по сайтам из evidence И по картам �
 | Конкурент | Тип контента | Темы | Частота публикаций | Что работает | Как сделать лучше | Источники [n] |
 Если частота публикаций из источника не видна — пиши «не проверено», не прикидывай по ощущению.
 
-SEO-04 — Site Structure (наша будущая структура — это проектирование, источники не нужны):
-| Раздел | URL-шаблон | Тип страницы | Кластер запросов | Приоритет | Комментарий |
+SEO-06 — География спроса:
+| Регион | Запросов в месяц | Доля от России | Плотность (во сколько раз выше среднего на человека) | Что из этого следует | Источники [n] |
 
-SEO-05 — Link Profile:
-| Конкурент | Типы доноров | Площадки | Контекст упоминаний | Возможности для нас | Статус данных |
-CRITICAL: ссылочные данные (доноры, беклинки) через переданный поиск НЕ проверяются — сервисы вроде ahrefs/semrush сюда не подключены. Поэтому в колонке «Статус данных» пиши «гипотеза, не проверено» везде, где нет прямой выдержки [n]. НЕ ссылайся на ahrefs/semrush как на источник, если их данных нет в evidence — это выдача предположения за факт.
+ОТКУДА БЕРУТСЯ ЧИСЛА — ЕДИНСТВЕННЫЙ ДОПУСТИМЫЙ ИСТОЧНИК: блок REAL GEO DATA выше. Регионы, запросы, доли и плотность уже посчитаны кодом — ПЕРЕНЕСИ их в таблицу как есть, не пересчитывай и не округляй по-своему.
+ЕСЛИ БЛОКА REAL GEO DATA ВЫШЕ НЕТ или в нём написано, что замер не прошёл проверку — НЕ СТРОЙ ЭТУ ТАБЛИЦУ ВООБЩЕ. Напиши одной строкой: «География спроса не замерена в этом прогоне». Придумать распределение по регионам нельзя: оно выглядит правдоподобно при любых числах, и проверить его заказчику нечем.
+Единственное, что ты добавляешь от себя, — колонка «Что из этого следует»: глагол и конкретное действие, например «начинать рекламу с Екатеринбурга: спрос вдвое выше ожидаемого, конкуренция ниже московской».
+ЗАЧЕМ ПЛОТНОСТЬ, А НЕ ОБЪЁМ: в Москве запросов больше ВСЕГДА, просто потому что там больше людей — это ничего не говорит о том, где выгодно рекламироваться. Дешёвый лид даёт регион, который перевешивает свой размер.
+Если плотность у всех регионов около единицы — так и напиши: спрос равномерный, географию можно не учитывать. Это тоже ответ.
 
-SEO-07 — SEO Content Plan:
-| Приоритет | Тип страницы | H1 | Кластер запросов | Объём (знаки) | Этап воронки | Ожидаемый трафик |
-Колонка «Ожидаемый трафик» — это всегда ПРОГНОЗ, а не замер: помечай это словом «прогноз» в самой ячейке.
-
-ПРАВИЛО «НЕ ПОВТОРЯТЬСЯ» — если выше есть блок УЖЕ ОПУБЛИКОВАННЫЕ СТРАНИЦЫ с нашим сайтом: прежде чем предложить страницу, сверься с этим списком. Тема, которая там уже есть, в план НЕ идёт как новая. Вместо неё либо строка с пометкой «обновить существующую: <адрес>», либо другой кластер. Причина не формальная: две наши страницы под один кластер конкурируют между собой в выдаче, и обе проседают. Если нашего сайта в блоке нет — правило не применяется, пиши план с нуля.
-
-ПРАВИЛО H1: заголовки НЕ должны содержать выдуманных цифр и несуществующих кейсов. Запрещено «увеличил конверсию на 120% (кейсы клиентов)», «+250 заявок» и т.п. — таких замеров у нас нет. H1 строй вокруг запроса кластера («Умный AI-попап для интернет-магазина»), а не вокруг выдуманного результата. Число в H1 допустимо только с пометкой «(гипотеза)».
+УБРАНЫ 10.09.2026 решением владелицы: SEO-04 (структура сайта), SEO-05 (ссылочный профиль), SEO-07 (контент-план). Первые два — работа SEO-специалиста и разработчика, третий делает контент-завод. Граница модуля: ключи для статей, а не инструмент SEO-специалиста. Не восстанавливай их.
 
 ═══════════════════════════════════════════════
 CHART DATA
@@ -2351,7 +3139,7 @@ function buildReportPrompt(brief, results, lang) {
     '# Decision Brief\n'+
     '## Цель исследования\n'+
     '## Ключевые инсайты (5-7 пунктов — конкретные цифры, не общие слова)\n'+
-    (completedIds.includes('M1_2')
+    (completedIds.includes('M2')
       ? '## Сравнение ниш\n[ОДНА сводная таблица по ВСЕМ оценённым нишам из блока 04_2 модуля M1.2: '
         + 'Ниша | Спрос | Платёжеспособность | Конкуренция | Экономика | ИТОГО | Источники [n] | Вердикт. '
         + 'Строки — все ниши (Go, Maybe и No-Go), отсортированные по ИТОГО. Ничего не придумывай: '
@@ -2646,17 +3434,17 @@ function ModuleCharts({ moduleId, chartData }) {
         {d.niches?.length > 0 && <div style={{gridColumn:'1/-1'}}><ScatterChart data={d.niches} title="Niche Prioritization Matrix"/></div>}
       </div>
     );
-    if (moduleId === 'M2') return (
+    if (moduleId === 'M3') return (
       <div style={{marginTop:12}}>
         {d.competitorMatrix?.length > 0 && <CompetitorMapChart data={d.competitorMatrix} title="Карта позиционирования: цена × качество"/>}
       </div>
     );
-    if (moduleId === 'M4' && d.awarenessLevels?.length > 0) return (
+    if (moduleId === 'M6' && d.awarenessLevels?.length > 0) return (
       <div style={{marginTop:12}}>
         <AwarenessChart data={d.awarenessLevels}/>
       </div>
     );
-    if (moduleId === 'M7' && d.semanticClusters?.length > 0) {
+    if (moduleId === 'M8' && d.semanticClusters?.length > 0) {
       // Только ИЗМЕРЕННЫЕ кластеры, по убыванию, не больше 15. Раньше рисовались
       // все подряд: «не замерено» превращалось в нулевой столбик (читается как
       // «спроса нет», хотя значит «не измеряли»), и график из 9 столбиков был
@@ -2685,35 +3473,1367 @@ function ModuleCharts({ moduleId, chartData }) {
 
 
 // ── HTML REPORT GENERATOR
-function generateHTMLReport(brief, results, lang, priceLayers, selectedLayers, singleModId) {
-  const targetResults = dropOrphans(singleModId ? results.filter(r=>r.id===singleModId) : results);
-  const completedMods = MODULES.filter(m => targetResults.find(r=>r.id===m.id));
-  const date = new Date().toLocaleDateString('ru-RU');
-  const hasCompany = brief.currentRevenue || brief.currentClients || brief.currentAvgCheck;
-  const chosenLayer = selectedLayers && selectedLayers.length > 0 && priceLayers && priceLayers.length > 0
-    ? selectedLayers.map(i => priceLayers[i]&&priceLayers[i].name).filter(Boolean).join(', ')
-    : null;
+// ── ОФОРМЛЕНИЕ ОТЧЁТА ────────────────────────────────────────────────────────
+// 11.09.2026. Первый заход я написала СВОЙ стиль с нуля — и это была ошибка,
+// за которую владелица справедливо разнесла: согласованный макет платформы
+// лежал рядом (design/МАКЕТ-ПЛАТФОРМЫ.html), вылизанный по каждому блоку, а я
+// построила рядом второй. Здесь макет взят ЦЕЛИКОМ, дословно: его стиль, его
+// боковое меню с логотипом, его карточки. Ничего не переписано «по мотивам».
+//
+// Правило на будущее: оформление отчёта берётся из макета и библиотеки. Если
+// нужного блока там нет — сначала он появляется там и утверждается, потом
+// попадает сюда. Обратный порядок означает второй дизайн в проекте.
+/* ── Стили платформы ─────────────────────────────────────────────────────────
+   Второй лист рядом с REPORT_CSS. Здесь живёт то, чего в отчёте нет и быть не
+   может: шапка с профилем, переключатель проекта, выпадающие списки, дорожки.
+   Отчёт выгружается файлом, входить в него некому — эти правила в выгрузке
+   были бы мёртвым весом, а он и так за полмегабайта.
 
-  const moduleColors = { M1:'#639922', M2:'#0F6E56', M3:'#1565A8', M4:'#3C3489', M5:'#633806', M6:'#712B13', M7:'#72243E' };
-  const moduleBgs = { M1:'#EAF3DE', M2:'#E1F5EE', M3:'#E3EFFE', M4:'#EEEDFE', M5:'#FAEEDA', M6:'#FAECE7', M7:'#FBEAF0' };
-  const moduleDarks = { M1:'#27500A', M2:'#085041', M3:'#0C447C', M4:'#26215C', M5:'#412402', M6:'#4A1B0C', M7:'#4B1528' };
+   ПРАВИЛО ЛИСТА (договорённость с контент-машиной 12.09.2026): токены —
+   цвета, кегли, линии, радиусы — объявляются ТОЛЬКО в REPORT_CSS. Здесь их
+   можно использовать и нельзя переопределять. Иначе оболочка, которая тянет
+   оба листа, и отчёт, который тянет один, разъедутся по цвету молча.
+   Проверка на это стоит в tests/platform-css.test.js.
 
-  function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+   Разметка пришла из оболочки (scripts/свои-стили.css контент-машины),
+   перенесена дословно: каждое правило владелица утверждала по ходу. Кнопки и
+   вкладки сюда НЕ входят — они переехали в сам эталон, потому что нужны и
+   отчёту тоже.
 
-  function mdToHtml(text) {
+   .cmark → .cm-mark (12.09.2026): имя было занято в эталоне светлой
+   стеклянной плашкой, а здесь это тёмная метка проекта. Листы грузятся
+   «отчёт → платформа», и второй молча перекрашивал первый. Третий случай
+   за день после .seg и .who — отсюда и правило про префикс.
+   Заодно .cc → .cm-cc: столкновения сегодня нет, но имя из двух букв
+   займётся первым же, кто напишет что-нибудь про колонки. */
+const PLATFORM_CSS = "\n.cm-lane{font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase; color:var(--ink-3);padding-top:3px}\n.cm-lane.ica{color:var(--acc-mid-ink)}\n.cm-lane.km{color:var(--acc-strong-ink)}\n.cm-top{display:flex;align-items:center;gap:10px;padding:16px 26px;position:relative; max-width:1500px;margin:0 auto}\n.cm-top button, .cm-top .cm-find{height:var(--шапка-поле)}\n.cm-logo{height:42px;width:auto;display:block;flex:0 0 auto;margin-right:6px}\n.cm-hello{display:flex;flex-direction:column;justify-content:center;margin-left:2px}\n.cm-hello b{font-size:15px;font-weight:600;letter-spacing:-.01em;line-height:1.2}\n.cm-hello i{font-style:normal;font-size:12px;color:var(--ink-3);margin-top:2px}\n.cm-rt{margin-left:auto;display:flex;align-items:center;gap:9px}\n.cm-side-proj{margin:0 4px 18px}\n.cm-side-proj .cm-proj{width:100%;height:auto;display:grid;position:relative; grid-template-columns:28px minmax(0,1fr);gap:6px 11px;align-items:center; padding:13px 12px 20px;white-space:normal}\n.cm-side-proj .cm-proj .cm-mark{grid-column:1;grid-row:1 / span 2;align-self:center}\n.cm-side-proj .cm-proj b{grid-column:2;grid-row:1;justify-self:start;font-size:14px; padding-right:18px;overflow:hidden;text-overflow:ellipsis;max-width:100%}\n.cm-side-proj .cm-proj i{grid-column:2;grid-row:2;justify-self:start;font-size:11.5px; white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}\n.cm-side-proj .cm-proj em{grid-column:2;grid-row:2;justify-self:start;font-style:normal; font-size:10.5px;font-weight:600;letter-spacing:.04em;text-transform:uppercase; color:var(--ink-3);margin-top:2px;padding:3px 8px;border-radius:6px; background:color-mix(in srgb, var(--mid) 18%, transparent)}\n.cm-side-proj .cm-proj .cm-mark{width:28px;height:28px;font-size:10.5px}\n.cm-side-proj .cm-proj .cm-chev{position:absolute;right:10px;top:13px}\n.cm-side-proj .cm-menu{width:264px;left:0;right:auto}\n.cm-proj{display:flex;align-items:center;gap:9px;padding:0 10px 0 6px;border-radius:12px; border:1px solid var(--line);background:var(--card-solid);cursor:pointer; white-space:nowrap;max-width:none}\n.cm-proj:hover{border-color:var(--ink-3)}\n.cm-proj b{font-size:13px;font-weight:600}\n.cm-proj i{font-style:normal;font-size:12px;color:var(--ink-3)}\n.cm-chev{width:14px;height:14px;stroke:var(--ink-3);fill:none;stroke-width:1.8; stroke-linecap:round;stroke-linejoin:round;flex:0 0 auto}\n.cm-find{display:flex;align-items:center;gap:8px;padding:0 12px;height:36px; border:1px solid var(--line);border-radius:12px;background:var(--card-solid)}\n.cm-find input{border:0;background:none;padding:0;font-size:13px;width:100%;height:100%}\n.cm-find input:focus{outline:none}\n.cm-ic{width:15px;height:15px;stroke:var(--ink-3);fill:none;stroke-width:1.8; stroke-linecap:round;flex:0 0 auto}\n.cm-ico{position:relative;width:var(--шапка-поле);border-radius:12px; border:1px solid var(--line);background:var(--card-solid);cursor:pointer; display:inline-flex;align-items:center;justify-content:center}\n.cm-ico:hover{border-color:var(--ink-3)}\n.cm-ico svg{width:18px;height:18px;stroke:var(--ink-2);fill:none;stroke-width:1.6; stroke-linecap:round;stroke-linejoin:round}\n.cm-ico b{position:absolute;top:-5px;right:-5px;min-width:17px;height:17px;border-radius:9px; background:var(--acc-mid);color:#fff;font-size:10px;line-height:17px;font-weight:700}\n.cm-new{padding:0 16px}\n.cm-money{display:inline-flex;align-items:center;gap:7px;padding:0 12px;border-radius:12px; border:1px solid var(--line);background:var(--card-solid);cursor:pointer}\n.cm-money:hover{border-color:var(--ink-3)}\n.cm-money svg{width:17px;height:17px;stroke:var(--ink-3);fill:none;stroke-width:1.6; stroke-linecap:round}\n.cm-money b{font-size:13.5px;font-variant-numeric:tabular-nums}\n.cm-money i{font-style:normal;font-size:11.5px;color:var(--ink-3)}\n.cm-ava{width:var(--шапка-поле);border-radius:50%;border:1px solid var(--line); background:linear-gradient(150deg,#262320,#171512);color:var(--mist-1); font-size:12px;font-weight:700;cursor:pointer}\n.cm-drop{position:relative}\n.cm-menu{position:absolute;right:0;top:calc(100% + 8px);z-index:30;width:270px;padding:8px; border-radius:16px;border:1px solid var(--line);background:var(--raise); box-shadow:0 24px 48px -28px rgba(45,36,22,.45)}\n.cm-menu.wide{width:340px}\n.cm-menu[hidden]{display:none}\n.cm-top > .cm-drop .cm-menu{right:auto;left:0}\n.cm-user{display:block;padding:9px 11px 11px;border-bottom:1px solid var(--line-2); margin-bottom:6px}\n.cm-user b{display:block;font-size:13.5px;font-weight:600;white-space:nowrap; text-transform:none;letter-spacing:0;color:var(--ink)}\n.cm-user span{display:block;font-size:11.5px;color:var(--ink-3);margin-top:3px; white-space:normal;word-break:break-word;text-transform:none;letter-spacing:0; font-weight:400}\n.cm-menu a{display:flex;align-items:center;gap:8px;padding:8px 11px;border-radius:10px; font-size:13px;color:var(--ink-2);cursor:pointer;white-space:nowrap}\n.cm-menu a:hover{background:color-mix(in srgb, var(--ink) 5%, transparent);color:var(--ink)}\n.cm-menu a b{font-size:13px;color:var(--ink);font-weight:600}\n.cm-menu a i{font-style:normal;font-size:12px;color:var(--ink-3)}\n.cm-menu a span{margin-left:auto;color:var(--ink-3);font-size:11.5px}\n.cm-menu a.on{background:color-mix(in srgb, var(--mid) 12%, transparent);color:var(--ink)}\n.cm-menu a.cm-add{color:var(--ink);font-weight:600; background:color-mix(in srgb, var(--mid) 14%, transparent)}\n.cm-menu a.cm-add:hover{background:color-mix(in srgb, var(--mid) 22%, transparent)}\n.cm-menu.wide a{flex-wrap:wrap}\n.cm-menu.wide a i{width:100%;font-size:11.5px;line-height:1.4;margin-top:2px}\n.cm-sep{height:1px;background:var(--line-2);margin:6px 4px}\n.cm-side-proj .cm-proj .cm-cc{font-size:12px}\n.cm-side-proj .cm-proj .cm-mark{grid-column:1;grid-row:1}\n.cm-side-proj .cm-proj .cm-cc{grid-column:1;grid-row:2}\n";
+
+const REPORT_CSS = "\n/* ── Референс: ZIXO (Behance, скрины владелицы 08.09.2026), второй заход ─────\n   Первый заход взял общую идею (туман, монохром, веер карт) слишком грубо —\n   владелица: «мало дизайнерских решений». Пересмотрела все восемь скринов\n   заново и выписала конкретные приёмы, которых не было:\n   1. Навигация — не список, а СЕТКА иконок-плиток 2×N для основных разделов,\n      обычный список только для второстепенных пунктов (скрин 1).\n   2. Веер карт — ПЯТЬ карт, не три, дальние размыты (blur), это и даёт\n      ощущение глубины, а не только поворот (скрин 1, 4).\n   3. Волнистая лента — их «Monthly Overview» рисует две переплетённые\n      синусоиды вместо обычной линии; здесь — декоративный слой за геройной\n      зоной, не выдаю за данные (скрин 1).\n   4. Дуга-индикатор (полукруг) вместо полного пончика для одной ключевой\n      величины плюс два числа под ней (скрин 1, «Weekly Spending»).\n   5. Точечный спарклайн (dot-matrix) как альтернатива линии — используют для\n      «Card Usage» (скрин 4).\n   6. Тёмная плашка-подсказка, пришпиленная к пиковой точке графика пунктирной\n      линией (скрин 1, «+8.2%»).\n   7. Круглые цветные иконки-аватары в строках таблицы вместо текстовых меток\n      (скрин 1, Starbucks/Netflix).\n   8. Живая подпись под героем и точки-пагинация (скрин 4, «Choose the color\n      of your card!»).\n   9. У карточек — мягкий внутренний блик сверху (световой блик по границе),\n      не только внешняя тень.\n\n   СТАТУСЫ (идём/под вопросом/не идём, рост/падение) владелица попросила\n   09.09.2026 брать ИЗ ПАЛИТРЫ, не зелёный/красный со стороны. У каждой из\n   четырёх палитр — своя тройка, выведенная из её же трёх цветов (тёмный →\n   «идём», тёплый → «под вопросом», самый глубокий/тревожный → «не идём»),\n   продавлена по контрасту 4.5 именно под фон карточки этой страницы (он\n   светлее прежнего макета, старые значения не проходили) и разведена по\n   различимости при дальтонизме (порог 8.0 в OKLab), как и везде в проекте.\n\n   Шрифт «Roobert» кириллицы не имеет — Montserrat, проверен на три языка. */\n/* ── Второй дизайн-бриф того же дня ──────────────────────────────────────────\n   Владелица прислала разбор стиля ZIXO от ChatGPT и попросила «переодеть»\n   уже собранную панель, не строить отдельный сайт. Ключевая правка брифа —\n   фон должен быть тёплой слоновой костью, а не холодным серым туманом, и\n   акцент — тонким светом (линия, точка, свечение), а не плотной заливкой.\n   Из-за смены фона ВСЕ производные цвета текста (приглушённый, безопасный\n   акцентный, три статуса) пересчитаны заново — они были продавлены именно\n   под старый холодный фон #FCFCFB и на тёплом #FBF9F2 часть не проходила\n   (приглушённый текст держал 2.95 при норме 4.5). */\n:root{\n  /* Фон страницы заметно ГЛУБЖЕ карточек — это и есть причина, по которой в\n     референсе стекло видно, а у меня раньше нет. Замерила по скриншоту ZIXO:\n     фон там ~#C9C7C4, карта ~#F2F0EC, отношение светлот 1.48. У меня было\n     1.07 — белое стекло на почти белом фоне просто исчезало. Новый фон даёт\n     1.42, практически как в оригинале.\n     Правка того же дня: первый вариант фона был «слишком коричневым» —\n     мера теплоты (насколько красный канал превышает синий) была 28. Сейчас 10:\n     жемчужно-серый с лёгкой тёплой ноткой, не бежевый.\n     Вторая правка: «слишком серый, надо светлее» — фон поднят с #D6D4CE до\n     #DEDBD4. Контраст к стеклу упал с 1.42 до 1.33 (в референсе 1.48) — это\n     нижняя граница, при которой карточки ещё читаются как стекло; светлее\n     уже нельзя, они начнут растворяться.\n     Следствие: боковое меню больше не может лежать прямо на фоне (текст на\n     нём переставал проходить контраст) — в референсе оно и есть отдельная\n     светлая панель, сделала так же. */\n  --mist-1:#F6F4EE; --mist-2:#D2CFCA; --card:#FBF9F2cc; --card-solid:#FBF9F2;\n  --bloom:rgba(255,255,255,.95); --tint-a:rgba(230,228,215,.55); --tint-b:rgba(210,207,202,.5);\n  --ink:#171512; --ink-2:#6B6862; --ink-3:#63615B;\n  --line:rgba(23,21,18,.09); --line-2:rgba(23,21,18,.05);\n  --hi:rgba(255,255,255,.55);\n  --acc-ink:#0B807D; /* умолчание — «Тиффани», перезаписывается apply() сразу же */\n  --acc-strong:#078282; --acc-mid:#0ABAB5; --acc-quiet:#BA970A;\n  --acc-strong-ink:#077E7E; --acc-mid-ink:#0B7C79; --acc-quiet-ink:#876E0B;\n  --sans:Montserrat,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;\n  --serif:'Source Serif 4',Georgia,'Times New Roman',serif;\n}\n@media (prefers-color-scheme:dark){\n  :root:not([data-theme=\"light\"]){\n    --mist-1:#141210; --mist-2:#0E0C0A; --card:#252119cc; --card-solid:#252119;\n    --ink:#F4F1E8; --ink-2:#A6A29A; --ink-3:#A8A49D;\n    --line:rgba(255,255,255,.09); --line-2:rgba(255,255,255,.05);\n    --hi:rgba(255,255,255,.06);\n    --acc-ink:#0ABAB5;\n    --acc-strong:#078282; --acc-mid:#0ABAB5; --acc-quiet:#BA970A;\n    --acc-strong-ink:#078282; --acc-mid-ink:#0ABAB5; --acc-quiet-ink:#BA970A;\n  }\n}\n:root[data-theme=\"dark\"]{\n  --mist-1:#141210; --mist-2:#0E0C0A; --card:#252119cc; --card-solid:#252119;\n  --ink:#F4F1E8; --ink-2:#A6A29A; --ink-3:#A8A49D;\n  --line:rgba(255,255,255,.09); --line-2:rgba(255,255,255,.05);\n  --hi:rgba(255,255,255,.06);\n  --acc-ink:#0ABAB5;\n  --acc-strong:#078282; --acc-mid:#0ABAB5; --acc-quiet:#BA970A;\n  --acc-strong-ink:#078282; --acc-mid-ink:#0ABAB5; --acc-quiet-ink:#BA970A;\n}\n\n/* ── Фон ─────────────────────────────────────────────────────────────────────\n   Решение владелицы 09.09.2026: «Жемчужный светлый оставляем».\n   Выбран рисунок «Серебра» (мягкие световые лучи), перекрашенный в жемчуг.\n   Переключатель фонов удалён — выбор сделан.\n   Перекрасила не подбором фильтра, а по-честному: взяла ЯРКОСТЬ исходника —\n   в ней и живёт весь световой рисунок — и раскрасила её заново тёплой\n   жемчужной гаммой.\n   Понадобился отдельный шаг: вся картинка лежала в узком диапазоне яркости\n   187–248, и раскраска «в лоб» вышла почти белой, стекло карточек на ней\n   пропадало. Растянула этот диапазон на полный 0–255, и глубина вернулась:\n   от #F9F7F1 в свету до #CAC5BA в тени, контраст к карточке 1.03–1.65 при\n   1.48 в референсе ZIXO.\n   Фирменный цвет вернулся к точному цвету логотипа: тёплый фон и холодная\n   бирюза лежат на противоположных сторонах круга, и это не спор, а контраст\n   температур — то, что и делает акцент заметным. */\n:root{ --bgimg:url(\"data:image/jpeg;base64,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qpFjM1kk0MzQzNDM1IixQAEoiwASkiwSiKMtQQAWKIESiLAAACLAAAAFSiKIAACLAAESiAAiiAiiAiiAiwSiCkogIsAAPbFJRFgAIAABAACWAAAAAEUSgAKRRKAAAACy1q4ox1ic50i4upDWbQyahEiFiBIWBCxlRm6iwABKRRlYgACUQEUQCUsCARYAAARRFEURRAAoEWAAEURYAAkWACUQCURRJRAASURZSUQEWAHtiwAFAiwiiKIIAiwAAAIKgqCpQABYKAtMtKy2MrCpDVwNsjbGkqKRIUVKMtDE6w5TpI5tQksIIEKhagoRLTLRcNQgEsQBKIACASlgQACLAAoiiAASiAABUoiwAASiLAESiASiAASiAiwSiASykogAPapZFEAACgRRJqEUQQlEUQCUSgKRRKpFUshpkVlFQAFEtCSFSlJVuaWKREbZtSaGbJGrgbmQlGJ0hzbhhUsABUqEtVABJpGZsYahlRARYAqUkURRFEURRAAQACURYAAAsURYAARYAiURYARYAARYJRJRFElElVAe4NRKIsiLAAAFAAgAIogAAgAAAAACUCCpQQsgWUFEQWDRC51C3GhNZKyLLTDWSEKgqQsCKjKiWFAAqCoSwUAAQAQQBAASwABYEAiwAAASiLAAFAiwAAiwABIsAEogAIsEogEsEogr2xqAAJRFkRRFgACgRRFglEURRFgEAAQABRKhYgAAKLkWIVBoE1kFydM52TNGahu86azqnObyQEAERYARRFigAAJYVAIVCAJYAAEAKBAgAEURYAAAARRFgAlLFgAlEWACUkWACUQCUQCWCWAHtDcAAAAAiiLIiiKIFAAiwqBLTKiKIqIqosBIAgAAAAIAg1c6IQqCag1nUIgAWDd50ueg5TeSCIKCAoIAAixQEoijKkgIogAIogAUCKSAAAASiKIAAACLABKWKIBKIogSKIBKIogIsIsAPYGpUoFAAAAAAJRFGWkZahFEURRFEUslEBFgERYJRFEAAgJYAXWaJYCFgXfOibwSwWAA1kdZjRM9Ycp0wQQFAAABAEUsABJoZUSUkURYARRAAAqURSRYAAAJRFEWACURRFgCxRFglEWAJFEAlEWCUQHrWNSgWCpQKAAAAAAAAAIioACFAILASwASyAEoiwSiAiiWUAQAANM6MNZAAAAG+dOsxsxO2TlNwyAAAAAAISiL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QlSTTu546w/4tg/yxx//AP8A/DDDDDDDDDDDD3//AP8A8sP/APDfD7D/AI3YQXYVfffffQz/AP8A/gAAAAEM88884EYyEqr/AAaZei7VRou2306wjrml98888wwwwwwwwwwwwww//wD/APDD/jD/AB6w/wAP0F2lX333333/AP8A8gAAADPPPMAAAAFPHKHhlyVVTThVS4j2yp5wqgnstrhnvsssvvjj3jjywww0/wD/APDD/wA0/wAO8P8ADpB9Bd999999AAAAAAAE8wAAEc88s8+u0oaL/VZ9KJJlB6vXHnniiS+W22uCCe6GKS62++uLDDD3/wD6w/7w/wAv+v8AL9B1p9999999AAAAAAM84AAc8888+8+q2iGGTpp9x+NpJTqTbv3Tqy+KW++uOy//AKkohgkvvrgww/8A+8Nf8vete9etcFWlX333330AAAATzzgATzz77Lb776pbxgKbM1FWavWVPsoN9tutc98988IIIIJJb8rLYpL64sPPf89PP8vcPeudO1G1H333330AAQzzjABzz77oII4oJKJL5zjJY/V3sRmG1M5asvteM8s9PPPPP/8APOf/APzktjktriw0/wC8NP8ATvL3LvxtRp199999A088gAEc8++qCe++++OCCW+8MGGnBzkLJlnT6m2T3DrTDPzzzzPPPzz3/wD6gkvjktvjy8/70/29y9w707dSdffffUPPKABPPPvognvuggguvrgsviBDMjQ77s4eVU88wrg5w96w/wDvMc/P88NPf+8IJLY4rLK4PO8vevMedudOXknX330BTwBDzz7qIZ76III5oL76oK7qgygYuvwofnklcYr5KZbuNOPc87K9v+8sPf8A/vCSy+OC2+PTvLzP3PzPvTtZN199MY0IE88+qCW+qCCCyiGayiO++OIO3QmQkCeBt5rvmKCOS/vPTPzvavD3/LDzzzzvKC2uKy2OD3PTvbzbvD/1ZJ19/vMAk4w+C2+qCOOOKS2uCCcQcEgaTl/g+8g7hFrHOujbCy+XvTvDvSvDD3vDz/LT/vKS2OKS2LTvT/LTvnbvVZJBrz//AAAMFILmsjnrilqmBALqvponivNNDhKKokp8Yeqtm6cZb0x+y9wk9/z387w/z09/7wstrgti09y9zy522422fTXR9/7wAAPDOPPPvvgghgoiisiqurththksjpxTTfY+7vvij3vuhtn4361/wv69/wAsNPf84Lb4ra4Pe9P8Pds9dM1HX10/Oc8gDCRzzzT7qL65KZaMbo4c/a4N5OUMJGn0OMfPb74pY7a/NfsM+oL+8vPf88sPPc9La5LYpPctO9s9dc8EFHHW20fuMgADQzjzS5jS6r7776Os0q+/Hu3kEMN0ukcEMMPa5qL8/O8vO84LP88sNPO888Pc9rI5LIvO9vM+ec/MsEUHH33103uc8sPPJgzSqZ7L6t9X2NcV08W1321McV8EEEEMPK45Lp/Oc/P+8pLPf88tPPc9vOc7IZ6Y/P8AfnbPnTjbVNJx99995xPDzOwMYU8W+amTJx5/dBBL199pBpijZdNNNBBDTmO2jLTrDDz/ALzgu9/zz2//AM//AL3/AN84534+z6HMio88TUcaUcdXbw5yFKFPPLjspuyySdRTWeYQQQQWaahwSw885zQ9rsjow0zz489/zwgsst9/94y9707y0306v8pHBMD8xwQQQQSQ04bVxMBGMMMOKrqm50bZfaeaddbfVbaZlvRTTQwyQ8zsvtz28/zy088889y49mtrk/y9707888rmsmBGJy5zwwwQwww85a5xCMMJOLjpor9eXdbXUa08cTScZZnoRccT4Rw8jsst/wA89PPPPe8sP85qYrI7M9PdOc8Y47pboyhhAfPc8sMMMMMHX13vu9Czj4oqcX0lHWmUPl/H200mHcM/EXV0csPY4ZbJ7/oLsvvOc8vM7bZqZOcPcvN77657ob6RwQyM+Kc8MMEFH33311soiCxZIvHm0EFWvesPPP30120lW8+llG+ctNPPP+W8OKKs8Net/crarK7e9PP7oMNPMa5KrKxgRjI8M8MMFHH333322NjhobeVG0EG1OMMMMNPONMMNNEHUlVU1GWEkH+9PMc99Kc/P9uevZ7Zvc/7qMN/+8/IbK7qQygTAd/K88HX3320nEddxIq+Vn2lU0MMGGEHEMOEEEEMfrJK47+8sPPPPc889vM/O9uds9qZqY7qMMP/AP8A+9z2xionsjvJGNyk6w0ffffbW7214Er9SdQdeSwQQQQQQQQww3vohvvvuv8A/v8Af/vvPPLzP7HTnfnfzaiODDDf/wD+wQUd7w/itmtrGDML85wwffffeSSk031p6SdSQfWyQQQQwwww3voggsuttqigsktotgjjrp24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\") }\n*{box-sizing:border-box}\nhtml{-webkit-font-smoothing:antialiased}\n/* Свет вместо заливки: в брифе прямо сказано «edges should feel like light\n   reflected through glass, not obvious gradient blobs» — прошлые пятна на\n   16–18% непрозрачности были заметны как цветные кляксы. Снизила до 6–9% и\n   растянула пятна шире — теперь это скорее ощущение, чем форма. */\nbody{margin:0;color:var(--ink);font-family:var(--sans);font-size:14.5px;\n  line-height:1.5;font-variant-numeric:tabular-nums;position:relative;overflow-x:hidden;\n  /* Главное, чего не хватало фону: в референсе сверху по центру стоит крупный\n     мягкий СВЕТОВОЙ ИСТОЧНИК — почти белое пятно, от которого фон темнеет к\n     краям. Именно он даёт ощущение освещённой сцены, а не просто заливки.\n     Раньше у меня были только слабые цветные пятна на ровном фоне.\n     Порядок слоёв: белое свечение сверху → цветные рефлексы → базовый\n     градиент, темнеющий книзу. */\n  background:\n    radial-gradient(900px 620px at 46% 60%, color-mix(in srgb, var(--mid) 7%, transparent), transparent 62%),\n    var(--bgimg) center/cover no-repeat fixed,\n    linear-gradient(168deg, #F2F0EA, #DCD9D2);\n  transition:background-color .3s}\nbutton{font:inherit;color:inherit;cursor:pointer}\n:focus-visible{outline:2px solid var(--mid);outline-offset:2px}\nh1,h2,h3{margin:0;font-weight:600;letter-spacing:-.02em;text-wrap:balance}\n/* Заголовок — тем же гротеском, что и весь интерфейс. Раньше стоял антиквой,\n   и владелица заметила: «написано не так, как везде». Проверила референс —\n   там «Good Morning, Alvie» набран той же гарнитурой, что и остальное. Для\n   рабочей панели это правильно: антиква здесь была бы единственным\n   исключением без причины.\n   Антиква остаётся только у ЦИТАТ — там она оправдана, это чужая прямая речь,\n   другой род содержимого. */\n.top h1{font-weight:600;font-size:30px;letter-spacing:-.02em}\na{color:inherit}\n\n/* ── панель сравнения палитр ── */\n.compare{position:sticky;top:0;z-index:30;display:flex;align-items:center;\n  gap:8px;padding:12px 28px;background:var(--card);backdrop-filter:blur(16px);\n  border-bottom:1px solid var(--line);flex-wrap:wrap}\n.compare .sp{flex:1}\n.tbtn{border:1px solid var(--line);background:var(--card-solid);color:var(--ink-2);\n  border-radius:999px;padding:6px 13px;font-size:12.5px;font-weight:500}\n.tbtn[aria-pressed=\"true\"]{background:var(--ink);color:var(--mist-1);border-color:var(--ink)}\n\n/* ── оболочка ── */\n.app{display:grid;grid-template-columns:258px 1fr;max-width:1500px;margin:0 auto;\n  position:relative}\n/* Боковое меню — отдельная светлая панель, а не прозрачная зона на фоне.\n   В референсе оно именно такое; и это единственный способ углубить фон\n   страницы, не роняя читаемость текста меню. */\n.side{padding:22px 14px;position:relative;z-index:2;margin:14px 0 14px 14px;\n  border-radius:24px;background:color-mix(in srgb, var(--card-solid) 88%, transparent);\n  backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);\n  border:1px solid rgba(255,255,255,.7);\n  box-shadow:0 20px 44px -26px rgba(45,36,22,.3), inset 0 1px 0 rgba(255,255,255,.8);\n  align-self:start}\n/* ── Шапка меню ──────────────────────────────────────────────────────────────\n   Логотип bulbullab — это ПЛАТФОРМА, а «Ловец Лидов» — клиент, с которым\n   сейчас работают. Раньше в этом месте стоял только клиент, и у платформы не\n   было своего знака вовсе. Теперь два уровня: сверху продукт, под ним\n   контекст текущего клиента. */\n.brand{display:flex;align-items:center;padding:2px 8px 14px}\n.logo{height:34px;width:auto;display:block}\n.client{display:flex;align-items:center;gap:9px;padding:0 8px 16px;\n  margin-bottom:14px;border-bottom:1px solid var(--line-2)}\n.client span{display:flex;flex-direction:column;min-width:0}\n.client b{font-size:13px;font-weight:700;letter-spacing:-.01em}\n.client i{font-style:normal;font-size:11px;color:var(--ink-3);margin-top:1px}\n.cmark{width:26px;height:26px;border-radius:8px;flex:0 0 auto;\n  display:flex;align-items:center;justify-content:center;\n  font-size:10.5px;font-weight:700;color:var(--ink);\n  background:linear-gradient(150deg, rgba(255,255,255,.9), rgba(255,255,255,.5));\n  border:1px solid rgba(255,255,255,.9);\n  box-shadow:inset 0 1px 0 rgba(255,255,255,1)}\n.search{display:flex;align-items:center;gap:9px;padding:10px 16px;margin-bottom:16px;\n  background:var(--card);backdrop-filter:blur(10px);border:1px solid var(--line);\n  border-radius:999px;color:var(--ink-3);font-size:13px}\n\n/* Сетка-плитки — эхо экрана 1 ZIXO: основные разделы не список, а иконки 2×N. */\n.navgrid{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:16px}\n.navtile{display:flex;flex-direction:column;align-items:flex-start;gap:12px;\n  padding:14px 13px;border-radius:16px;background:var(--card);backdrop-filter:blur(10px);\n  border:1px solid var(--line);color:var(--ink-2);font-size:12px;font-weight:600;\n  text-align:left;box-shadow:inset 0 1px 0 var(--hi)}\n.navtile .ic{width:32px;height:32px;border-radius:10px;background:var(--line-2);\n  display:flex;align-items:center;justify-content:center}\n.navtile .ic svg{width:16px;height:16px;stroke:var(--ink-2);fill:none;stroke-width:1.7}\n/* Активный раздел — тёмный графит, ровно как в референсе. Я уже делала его\n   тёмным, владелица справедливо сказала, что он выбивается — но выбивался он\n   потому, что ВОКРУГ было много цвета. После перевода графиков в монохром\n   тёмный активный пункт становится самым сильным элементом страницы, а не\n   случайным пятном: он единственный тёмный, и взгляд идёт к нему. Так же\n   устроен и оригинал. */\n.navtile[aria-current=\"page\"]{position:relative;color:var(--mist-1);\n  background:linear-gradient(150deg, #262320, #171512);\n  border-color:rgba(23,21,18,.9);\n  box-shadow:0 14px 26px -14px rgba(23,21,18,.45), inset 0 1px 0 rgba(255,255,255,.14)}\n.navtile[aria-current=\"page\"] .ic{background:rgba(255,255,255,.12)}\n.navtile[aria-current=\"page\"] .ic svg{stroke:var(--mist-1)}\n.navtile:disabled{opacity:.42;cursor:default}\n\n.navlist{display:flex;flex-direction:column;gap:1px}\n.grp{font-size:10px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;\n  color:var(--ink-3);padding:14px 12px 6px}\n.navrow{display:flex;align-items:center;gap:10px;width:100%;text-align:left;\n  border:0;background:none;padding:8px 12px;border-radius:12px;color:var(--ink-2);\n  font-size:13px;font-weight:500}\n.navrow .dot{width:6px;height:6px;border-radius:50%;background:var(--line);flex:0 0 auto}\n.navrow:hover:not(:disabled){background:var(--card)}\n.navrow:disabled{opacity:.42}\n/* ── Счётчики в меню ─────────────────────────────────────────────────────────\n   Были цветными кружками с цифрой — владелица 09.09.2026: «примитивненько».\n   Кружок-бейдж и правда самое очевидное решение, и он спорит с фирменным\n   цветом: заливка притягивает взгляд к числу «3», хотя важнее сам раздел.\n   Здесь другое: число набрано табличными цифрами в чернилах, а бирюза сведена\n   к точке в 5 пикселей — она отмечает, что раздел ЖДЁТ решения, и не более\n   того. Тонкая линия слева отделяет счётчик от названия, не рисуя коробку. */\n.navrow .cnt{margin-left:auto;display:inline-flex;align-items:center;gap:6px;\n  font-size:11.5px;font-weight:700;color:var(--ink);\n  font-variant-numeric:tabular-nums;letter-spacing:.02em;\n  padding-left:9px;border-left:1px solid var(--line);line-height:1}\n.navrow .cnt::before{content:\"\";width:5px;height:5px;border-radius:50%;\n  background:var(--mid);flex:0 0 auto}\n.navrow:disabled .cnt{color:var(--ink-3)}\n.navrow:disabled .cnt::before{background:var(--ink-3);opacity:.5}\n\n/* Блок кредитов — тот же перламутр, что у карт: раньше здесь стояло одно\n   пятно цвета --front на 50%, и на фоне жемчужных поверхностей вокруг оно\n   выглядело чужеродной цветной плашкой. */\n.upsell{margin-top:18px;padding:16px;border-radius:20px;position:relative;overflow:hidden;\n  color:var(--ink);\n  background:\n    radial-gradient(130% 95% at 22% 6%, rgba(255,255,255,.92), rgba(255,255,255,0) 62%),\n    radial-gradient(85% 75% at 22% 12%, color-mix(in srgb, var(--mid) 26%, transparent), transparent 78%),\n    linear-gradient(118deg,\n      rgba(248,242,226,.62) 0%, rgba(253,252,248,.5) 26%,\n      rgba(220,234,238,.55) 52%, rgba(238,236,246,.5) 78%,\n      rgba(250,244,230,.58) 100%),\n    #FCFBF6;\n  backdrop-filter:blur(10px) saturate(150%);\n  -webkit-backdrop-filter:blur(10px) saturate(150%);\n  border:1px solid rgba(255,255,255,.9);\n  box-shadow:0 12px 26px -18px rgba(30,42,48,.3), inset 0 1px 0 rgba(255,255,255,.95)}\n/* Число кредитов — главное здесь, поэтому оно крупное и табличными цифрами;\n   подпись под ним объясняет, на сколько этого хватит. */\n.upsell b{display:block;font-size:20px;font-weight:700;letter-spacing:-.02em;\n  margin-bottom:2px;font-variant-numeric:tabular-nums}\n.upsell b i{font-style:normal;font-size:11px;font-weight:600;color:var(--ink-3);\n  letter-spacing:.06em;text-transform:uppercase;display:block;margin-bottom:3px}\n.upsell span{display:block;font-size:11.5px;color:var(--ink-2);line-height:1.5}\n\n.main{padding:26px 28px 70px;min-width:0;position:relative;z-index:2}\n.top{display:flex;align-items:flex-end;justify-content:space-between;\n  margin-bottom:22px;flex-wrap:wrap;gap:14px}\n.top .date{color:var(--ink-3);font-size:13px;margin-top:3px}\n.top-actions{display:flex;gap:8px;align-items:center}\n.btn{padding:9px 18px;border-radius:999px;border:1px solid var(--line);\n  background:var(--card);backdrop-filter:blur(10px);font-size:13px;font-weight:600}\n.btn-dark{background:var(--ink);color:var(--mist-1);border-color:var(--ink)}\n.avatar{width:36px;height:36px;border-radius:50%;color:var(--ink);\n  background:\n    linear-gradient(155deg, rgba(255,255,255,.75), rgba(255,255,255,.4));\n  backdrop-filter:blur(6px);border:1px solid rgba(255,255,255,.7);\n  display:flex;align-items:center;justify-content:center;\n  font-weight:700;font-size:13px}\n\n/* ── геройная зона ───────────────────────────────────────────────────────\n   Третий заход — на этот раз меняю не цвет, а РАСКЛАДКУ, потому что дело\n   было в ней. Владелица 09.09.2026 показала на примере ещё раз: «вокруг\n   куча пустого места». Пересмотрела скрин заново по пикселям — карты там\n   растянуты на всю ширину экрана и ОБРЕЗАНЫ рамкой по краям (это и держит\n   плотность, не даёт пустоте появиться), почти не повёрнуты (пара градусов,\n   не пятнадцать) и перекрывают друг друга сильно, внахлёст на две трети\n   ширины. Мой прежний узкий пучок по центру с крутым поворотом — это была\n   верная идея не в тот геометрии. Ни подписи, ни точек под картами в\n   примере нет вовсе — убираю. Отступ до статов в примере почти нулевой —\n   тоже убираю. */\n.hero{position:relative;margin-bottom:0;height:244px;overflow:hidden}\n.wave-bg{position:absolute;inset:-24px -20px auto;height:270px;z-index:0;\n  opacity:.5;pointer-events:none}\n\n.fan{position:absolute;inset:0;z-index:1}\n/* ── Карты: перламутровое стекло, не цветные плашки и не «tech UI» ───────────\n   Два уточнения того же дня от владелицы поверх первого стеклянного захода:\n   1) свечение одним пятном акцентного цвета читалось как «плоско и\n      технологично», не как перламутр — жемчуг сам по себе почти белый, а по\n      поверхности едва заметно бегут тёплый шампань, холодное серебро и\n      бледная лавандовая голубизна, БЕЗ видимых границ между пятнами;\n   2) фирменный цвет (бирюза и т.д.) не должен красить стекло целиком — он\n      входит в смесь на 20–24%, той же силы, что и нейтральные переливы, а не\n      главной нотой, как было раньше (50%).\n   Тёплый и холодный слой смешаны не поровну: у передней карты (f3) тёплый\n   шампань сильнее — «центральная карта чуть теплее», у боковых — холоднее,\n   серебро и голубизна сильнее. Это и даёт «одна карта, но грани ловят свет\n   по-разному», как просил бриф, а не пять одинаковых карт.\n   Текст фиксированно тёмный: стекло на любой смеси остаётся близко к белому,\n   пересчитывать под палитру не нужно (см. проверку ниже, в правке дока). */\n/* ── Карты: перламутровое стекло ────────────────────────────────────────────\n   Четвёртая правка того же дня. Владелица: «прошу жемчужные переливы — делает\n   пятнышки», «половины карточек не видно», «задние должны подниматься на\n   уровень первой».\n\n   1. ПЕРЕЛИВЫ, А НЕ ПЯТНА. Раньше перламутр складывался из четырёх круглых\n      пятен в разных углах — каждое читалось отдельной кляксой, ровно то, на\n      что жалоба. Настоящая перламутровая поверхность даёт НЕПРЕРЫВНЫЙ сдвиг\n      тона по всей грани, без границ. Заменила на одну диагональную ленту с\n      шестью остановками (шампань → молочный → серебро → молочный → лаванда →\n      шампань): переход идёт через всю карту сразу, отдельных пятен не видно.\n      Сверху только один широкий световой блик — источник света, как в\n      референсе.\n   2. ВИДНО ЦЕЛИКОМ. Карты подняты: разница по высоте 0/22/44 вместо 0/30/60,\n      и панель маскирует меньше. Передняя видна на 96%, средние на 82%,\n      крайние на 68% — низы по-прежнему уходят за панель (бриф это требует),\n      но карта читается целиком.\n   3. ПОДЪЁМ ДО УРОВНЯ ПЕРЕДНЕЙ. При наведении на группу все карты\n      выравниваются по верхнему краю передней (--rise у каждой равен её\n      собственному смещению вниз) — колода «собирается». Отдельная карта под\n      курсором дополнительно выходит вперёд.\n   4. Фон страницы стал глубже (см. правку :root) — именно поэтому стекло\n      теперь читается, раньше белое лежало на почти белом. */\n.fcard{position:absolute;top:0;width:296px;height:176px;border-radius:22px;\n  padding:17px;color:var(--ink);cursor:default;\n  display:flex;flex-direction:column;justify-content:space-between;\n  background:\n    /* световой блик — один, широкий, сверху слева */\n    radial-gradient(130% 95% at 24% 4%, rgba(255,255,255,.92), rgba(255,255,255,0) 62%),\n    /* фирменный цвет — едва заметной нотой, не главным тоном */\n    radial-gradient(90% 80% at var(--gx,25%) var(--gy,14%), color-mix(in srgb, var(--glow) 30%, transparent), transparent 78%),\n    /* непрерывная перламутровая лента через всю карту — без видимых границ */\n    linear-gradient(115deg,\n      rgba(246,236,214,.62) 0%,\n      rgba(253,251,247,.55) 20%,\n      color-mix(in srgb, var(--mid) 26%, rgba(213,227,238,.58)) 40%,\n      rgba(252,250,246,.5) 58%,\n      rgba(223,221,243,.55) 78%,\n      rgba(247,239,222,.6) 100%),\n    #FCFAF5;\n  backdrop-filter:blur(12px) saturate(155%);\n  -webkit-backdrop-filter:blur(12px) saturate(155%);\n  border:1px solid rgba(255,255,255,.9);\n  box-shadow:0 24px 42px -18px rgba(45,36,22,.34), 0 0 0 1px rgba(23,21,18,.06),\n    inset 0 1px 0 rgba(255,255,255,.95);\n  transition:transform .45s cubic-bezier(.2,.8,.2,1), box-shadow .45s ease}\n.fcard .tag{font-size:10px;font-weight:600;letter-spacing:.03em;color:var(--ink-3)}\n.fcard .name{font-size:14.5px;font-weight:700;letter-spacing:-.01em;line-height:1.25}\n.fcard .foot{display:flex;justify-content:space-between;align-items:flex-end;\n  font-size:10.5px;color:var(--ink-3)}\n.fcard .foot b{display:block;font-size:13px;font-weight:700;color:var(--ink)}\n\n/* Передняя карта — теплее: шампань сильнее, холодные ноты слабее.\n   «Центральная карта чуть теплее, боковые холоднее» — прямо из брифа. */\n.f3{background:\n    radial-gradient(130% 95% at 26% 4%, rgba(255,255,255,.95), rgba(255,255,255,0) 62%),\n    radial-gradient(90% 80% at var(--gx,25%) var(--gy,14%), color-mix(in srgb, var(--glow) 34%, transparent), transparent 78%),\n    linear-gradient(115deg,\n      rgba(248,236,208,.72) 0%,\n      rgba(254,252,248,.6) 24%,\n      color-mix(in srgb, var(--mid) 22%, rgba(226,233,240,.42)) 46%,\n      rgba(253,251,247,.55) 64%,\n      rgba(235,230,244,.4) 82%,\n      rgba(249,240,220,.68) 100%),\n    #FDFBF6}\n\n/* Наведение на группу — колода собирается: каждая карта поднимается ровно на\n   своё смещение и все выравниваются по верхнему краю передней. */\n.fan:hover .fcard{transform:translateY(var(--rise,0px))}\n/* Карта под курсором дополнительно выходит вперёд. */\n.fan .fcard:hover{transform:translateY(calc(var(--rise,0px) - 14px)) scale(1.04);\n  z-index:9;\n  box-shadow:0 34px 54px -16px rgba(45,36,22,.4), 0 0 0 1px rgba(23,21,18,.08),\n    inset 0 1px 0 rgba(255,255,255,1)}\n\n/* Геометрия карт. Две правки того же дня по жалобам владелицы:\n   «обрезаются сверху при подъёме» и «обрезаются по бокам на 13-дюймовом».\n\n   ПО БОКАМ. Раньше позиции были в процентах от контейнера (left:-4%…81%) при\n   фиксированной ширине карты 262px — на узком экране крайние карты просто\n   вылезали за край и обрезались. Теперь позиция считается ОТ ЦЕНТРА: каждая\n   карта смещена на min(11%, 88px) от соседней. На широком экране шаг\n   упирается в 88px (карты не расползаются), на узком — сжимается, карты\n   сильнее находят друг на друга, но всегда остаются внутри. Проверено\n   расчётом: влезает начиная с ширины области 520px.\n\n   СВЕРХУ. Карты поднимаются при наведении на 44px (выравнивание в уровень)\n   плюс 14px (карта под курсором) = 58px, и подъём уводил верхнюю карту за\n   край .hero, где её срезал overflow:hidden. Нужен запас.\n   Правка того же дня: запас был 60px — владелица «слишком много пространства\n   наверху», справедливо. Уменьшен до 30px: при полном подъёме самая верхняя\n   карта доходит до 16px от края, то есть ещё внутри, но пустоты вдвое\n   меньше. Заодно карты расширены с 262 до 296px — по той же просьбе. */\n.fcard{--step:min(11%, 92px)}\n.f1{left:calc(50% - 148px - 2 * var(--step));top:74px;z-index:1;--glow:var(--back);--gx:18%;--gy:18%;--rise:-44px}\n.f2{left:calc(50% - 148px - 1 * var(--step));top:52px;z-index:2;--glow:var(--mid);--gx:22%;--gy:14%;--rise:-22px}\n.f3{left:calc(50% - 148px);top:30px;z-index:4;--glow:var(--front);--gx:26%;--gy:12%;--rise:0px}\n.f4{left:calc(50% - 148px + 1 * var(--step));top:52px;z-index:2;--glow:var(--mid);--gx:78%;--gy:14%;--rise:-22px}\n.f5{left:calc(50% - 148px + 2 * var(--step));top:74px;z-index:1;--glow:var(--front);--gx:82%;--gy:18%;--rise:-44px}\n\n/* ── Рабочая панель, из-за которой «выступают» карты ─────────────────────────\n   Бриф «layered data card composition»: карты не висят отдельным облаком —\n   их низ прячется ЗА панелью, панель служит маской. Маскировка ослаблена\n   против прошлого захода (было видно 61%/34%/7% — «почти не видно»).\n   Сейчас: передняя ~96%, средние ~82%, крайние ~68%. */\n.dock{position:relative;z-index:5;margin-top:-52px;padding:26px 24px 6px;\n  border-radius:28px;background:color-mix(in srgb, var(--card-solid) 94%, transparent);\n  backdrop-filter:blur(22px);-webkit-backdrop-filter:blur(22px);\n  border:1px solid rgba(255,255,255,.75);\n  box-shadow:0 -2px 30px -10px rgba(45,36,22,.14), 0 30px 60px -30px rgba(45,36,22,.32),\n    inset 0 1px 0 rgba(255,255,255,.85)}\n/* ── статы ── */\n.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:16px}\n.stat{background:var(--card);backdrop-filter:blur(14px);border:1px solid var(--line);\n  border-radius:20px;padding:18px 20px;box-shadow:inset 0 1px 0 var(--hi)}\n.stat .k{font-size:12px;color:var(--ink-3);margin-bottom:8px}\n.stat .row{display:flex;align-items:center;justify-content:space-between;gap:8px}\n.stat .v{font-size:25px;font-weight:700;letter-spacing:-.02em}\n.stat svg{display:block;flex:0 0 auto}\n.delta{display:inline-flex;align-items:baseline;gap:5px;font-size:11px;margin-top:7px}\n.delta b{font-weight:700;letter-spacing:.01em}\n.delta b.up{color:var(--acc-ink)}      /* рост — фирменная бирюза */\n.delta b.down{color:var(--acc-mid-ink)} /* падение — фиолетовый. Берём ЕГО\n   текстовую версию, а не --acc-quiet: тот теперь серый, он отвечает за «не\n   идём» среди статусов, а падение и «не идём» — разные вещи. */\n.delta b.flat{color:var(--ink-2)}      /* без изменений — тёмно-серый */\n.delta span{color:var(--ink-2);font-weight:700}\n/* Рост — акцентом, падение — просто приглушённым текстом. Двух разных\n   цветов здесь не нужно: смысл несёт стрелка, а бриф просит один акцент. */\n\n\n.grid2{display:grid;grid-template-columns:1.35fr 1fr;gap:14px;margin-bottom:14px}\n.card{background:var(--card);backdrop-filter:blur(14px);border:1px solid var(--line);\n  border-radius:22px;padding:22px 24px;box-shadow:inset 0 1px 0 var(--hi)}\n.chead{display:flex;align-items:baseline;justify-content:space-between;\n  margin-bottom:16px;gap:10px;flex-wrap:wrap}\n.chead h2{font-size:16px}\n.chead .note{font-size:12px;color:var(--ink-3)}\n\nsvg{display:block}\n.axis{fill:var(--ink-3);font-size:10.5px;font-family:var(--sans)}\n.lbl{fill:var(--ink-2);font-size:12.5px;font-family:var(--sans)}\n.val{fill:var(--ink);font-size:12px;font-weight:600;font-family:var(--sans)}\n.bar{transition:opacity .12s}\n.bar:hover{opacity:.75}\n.tip-pill{fill:var(--ink)}\n.tip-txt{fill:var(--mist-1);font-size:11px;font-weight:700;font-family:var(--sans)}\n.guide{stroke:var(--ink-3);stroke-width:1;stroke-dasharray:2 3}\n\n/* ── дуга-индикатор ── */\n.arc-wrap{display:flex;flex-direction:column;align-items:center}\n.arc-nums{display:flex;gap:22px;margin-top:14px}\n.arc-nums div{text-align:center}\n.arc-nums b{display:block;font-size:16px;font-weight:700}\n.arc-nums span{font-size:11px;color:var(--ink-3)}\n\n.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--ink-2);margin-top:12px}\n.legend i{width:11px;height:8px;display:inline-block;margin-right:6px}\n\n/* Блок этапов шёл сразу за рабочей панелью и визуально «заходил под неё»:\n   у .dock тень уходит вниз на 30px (0 30px 60px -30px) и накрывала верх\n   этапов, а собственного отступа у блока не было. Даю отступ больше глубины\n   тени и поднимаю над ней слоем. */\n.flow{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;\n  margin:34px 0 14px;position:relative;z-index:6}\n.stage{background:var(--card);backdrop-filter:blur(14px);border:1px solid var(--line);\n  border-radius:18px;padding:16px 18px;position:relative;box-shadow:inset 0 1px 0 var(--hi)}\n.stage .dot{width:9px;height:9px;border-radius:50%;margin-bottom:10px}\n.stage .n{font-size:10.5px;color:var(--ink-3);letter-spacing:.05em;text-transform:uppercase}\n.stage h3{font-size:14px;margin:5px 0 3px}\n.stage .r{font-size:11.5px;color:var(--ink-2)}\n\n.tbl{overflow-x:auto;background:var(--card);backdrop-filter:blur(14px);\n  border:1px solid var(--line);border-radius:22px;margin-bottom:14px}\ntable{width:100%;border-collapse:collapse;font-size:13px;min-width:600px}\nth{text-align:left;font-weight:600;color:var(--ink-3);font-size:10.5px;\n  letter-spacing:.05em;text-transform:uppercase;padding:16px 18px 10px;white-space:nowrap}\ntd{padding:10px 18px;border-top:1px solid var(--line-2);color:var(--ink-2);vertical-align:middle}\ntd b{color:var(--ink);font-weight:600}\n.who{display:flex;align-items:center;gap:10px}\n.circ{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;\n  justify-content:center;font-size:11px;font-weight:700;flex:0 0 auto;\n  background:var(--line-2);color:var(--ink-2);border:1px solid var(--line)}\n.scale-pill{display:inline-block;padding:3px 11px;border-radius:999px;font-size:11.5px;\n  font-weight:600;background:var(--line-2);color:var(--ink-2)}\n\n.quote{background:var(--card);backdrop-filter:blur(14px);border:1px solid var(--line);\n  border-radius:22px;padding:26px 28px;margin-bottom:14px;box-shadow:inset 0 1px 0 var(--hi)}\n.quote p{margin:0;font-family:var(--serif);font-style:italic;font-size:18px;\n  line-height:1.55;color:var(--ink)}\n.quote cite{display:block;margin-top:12px;font-style:normal;font-size:12px;color:var(--ink-3)}\n\n/* Ссылка на сайт конкурента — акцентный, но контраст-безопасный цвет текста,\n   не сама заливка кнопки: mid как есть на карточке часто не проходит 4.5. */\n/* ПРАВКА 10.09: ссылки переведены с бирюзы на синий по решению владелицы —\n   «прийти к одному знаменателю, лучше синим: если всё бирюзовым, оно\n   сливается». Замер подтверждает: синий 4.79, бирюза 2.27 при норме 4.5.\n   Бирюза остаётся цветом ЗАЛИВОК, синий — цветом кликабельного.\n   Подчёркивание постоянное: оно отличает ссылку от просто цветного слова. */\n.cname{color:var(--acc-mid-ink);font-weight:700;text-decoration:none;\n  border-bottom:1px solid color-mix(in srgb, var(--acc-mid-ink) 45%, transparent)}\n.cname:hover{border-bottom-color:var(--acc-mid-ink)}\n\n/* ── Правила для контента ───────────────────────────────────────────────────\n   Владелица 09.09.2026: «слишком простовато, хочется чего-то более\n   дизайнерского». Было: карточка + маленький цветной кружок с цифрой — то же\n   самое, что у соседних блоков, ничем не выделяется.\n   Стало: крупная «водяная» цифра, набранная тем же редакционным serif, что и\n   главный заголовок — она уходит в фон карточки как типографский элемент, а\n   не как значок. Плюс тонкая акцентная линия, которая при наведении\n   прочерчивается по верхнему краю: это единственная анимация в блоке, ровно\n   в духе брифа («micro-interactions, slow and restrained»). */\n.rules{background:none;backdrop-filter:none;border:0;border-radius:0;overflow:visible;\n  display:grid;grid-template-columns:repeat(2,1fr);gap:14px}\n.rule-card{position:relative;overflow:hidden;\n  background:var(--card);backdrop-filter:blur(14px);border:1px solid var(--line);\n  border-radius:20px;padding:22px 24px 22px 26px;\n  font-size:13.6px;line-height:1.6;color:var(--ink-2);\n  box-shadow:inset 0 1px 0 var(--hi), 0 10px 26px -20px rgba(45,36,22,.3);\n  transition:box-shadow .4s ease, transform .4s cubic-bezier(.2,.8,.2,1)}\n.rule-card:hover{transform:translateY(-2px);\n  box-shadow:inset 0 1px 0 var(--hi), 0 18px 34px -20px rgba(45,36,22,.4)}\n/* Крупная цифра-«водяной знак» в углу — типографика, а не значок. */\n.rule-card b{position:absolute;right:16px;bottom:-14px;\n  font-size:74px;font-weight:700;line-height:1;\n  color:color-mix(in srgb, var(--ink) 12%, transparent);\n  pointer-events:none;user-select:none}\n/* Акцентная линия по верхнему краю — прочерчивается при наведении. */\n.rule-card::before{content:\"\";position:absolute;left:0;top:0;height:2px;width:0;\n  background:linear-gradient(90deg, var(--mid), transparent);\n  transition:width .55s cubic-bezier(.2,.8,.2,1)}\n.rule-card:hover::before{width:100%}\n.rule-card span{position:relative;z-index:1;display:block;max-width:34ch}\n\n/* ── цитаты: компактные плашки в строку, а не одна на весь экран ─────────────\n   Владелица 09.09.2026: цитата «размазана почти на экран», нужны плашки,\n   которые можно листать — предполагая, что их может быть с десяток. Строка\n   со скроллом и защёлкиванием (scroll-snap) плюс стрелки: работает и с тремя\n   цитатами, и с тридцатью — не переделывать разметку, когда их станет больше. */\n.qhead{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}\n.qhead h2{font-size:16px}\n.qarrows{display:flex;gap:6px}\n.qarrow{width:30px;height:30px;border-radius:50%;border:1px solid var(--line);\n  background:var(--card-solid);display:flex;align-items:center;justify-content:center;\n  color:var(--ink-2);flex:0 0 auto}\n.qarrow:hover{color:var(--ink);border-color:var(--ink-3)}\n.qstrip{display:flex;gap:12px;overflow-x:auto;scroll-snap-type:x mandatory;\n  scrollbar-width:none;padding-bottom:2px}\n.qstrip::-webkit-scrollbar{display:none}\n.qtile{flex:0 0 auto;width:236px;scroll-snap-align:start;background:var(--card);\n  backdrop-filter:blur(14px);border:1px solid var(--line);border-radius:16px;\n  padding:15px 17px;box-shadow:inset 0 1px 0 var(--hi)}\n.qtile p{margin:0 0 9px;font-family:var(--serif);font-style:italic;font-size:13.5px;\n  line-height:1.45;color:var(--ink);\n  display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden}\n.qtile cite{font-style:normal;font-size:11px;color:var(--ink-3)}\n\n/* ── ВРЕМЕННО: конструктор элементов интерфейса ────────────────────────────\n   Владелица 09.09.2026 попросила посмотреть, как выглядят кнопки, ссылки,\n   выделения и т.д. во всех палитрах разом — «пока для примера, потом уберём».\n   Секция помечена явно, чтобы её было легко найти и удалить целиком. */\n.kit-mark{margin:40px 0 14px;padding:10px 16px;border-radius:12px;background:var(--maybe-bg,var(--line-2));\n  border:1px dashed var(--line);font-size:12px;color:var(--ink-2)}\n.kit{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(260px,1fr))}\n.kit .card h3{font-size:12.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;\n  color:var(--ink-3);margin:0 0 14px}\n.kit .row{display:flex;gap:9px;flex-wrap:wrap;align-items:center;margin-bottom:10px}\n/* Плоские кнопки с мягким градиентом — одна конструкция у всех, различаются\n   только насыщенностью. Первый заход был выпуклым (блик + тень), и главная\n   выбивалась из общего плоского строя. */\n.kbtn{padding:9px 18px;border-radius:999px;border:1px solid var(--line);\n  font-size:13px;font-weight:600;color:var(--ink);\n  background:linear-gradient(180deg,\n    color-mix(in srgb, var(--card-solid) 50%, white),\n    color-mix(in srgb, var(--card-solid) 96%, black));\n  transition:transform .09s ease, filter .18s ease, border-color .18s ease}\n.kbtn:hover:not(:disabled){border-color:var(--ink-3);filter:brightness(.985)}\n.kbtn:active:not(:disabled){transform:translateY(1px);filter:brightness(.96)}\n.kbtn-pri{color:#12100D;border-color:color-mix(in srgb, var(--mid) 55%, black);\n  background:linear-gradient(180deg,\n    color-mix(in srgb, var(--mid) 90%, white),\n    color-mix(in srgb, var(--mid) 90%, black))}\n.kbtn-pri:hover{border-color:color-mix(in srgb, var(--mid) 65%, black);filter:brightness(1.04)}\n.kbtn-acc{color:var(--ink);border-color:var(--mid);\n  background:linear-gradient(180deg,\n    color-mix(in srgb, var(--mid) 6%, var(--card-solid)),\n    color-mix(in srgb, var(--mid) 16%, var(--card-solid)))}\n.kbtn-acc:hover{filter:brightness(.97)}\n.kbtn-dark{color:var(--mist-1);border-color:#141210;\n  background:linear-gradient(180deg,#242019,#141210)}\n.kbtn-dark:hover{filter:brightness(1.25)}\n.kbtn-quiet{background:none;border-color:transparent;color:var(--ink-2)}\n.kbtn-quiet:hover{background:color-mix(in srgb, var(--ink) 6%, transparent);filter:none}\n.kbtn:disabled{opacity:.45}\n/* Состояние наведения показываем статично, рядом с обычным — иначе их не\n   сравнить, не наводя мышь на каждую по очереди. */\n.kbtn-pri.force-hover{filter:brightness(1.04);border-color:color-mix(in srgb, var(--mid) 65%, black)}\n.kbtn-acc.force-hover{filter:brightness(.97)}\n.kbtn-dark.force-hover{filter:brightness(1.25)}\n.kchip{display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:999px;\n  font-size:12px;font-weight:600}\n.kchip .d{width:7px;height:7px;border-radius:50%}\n.kchip-go{background:color-mix(in srgb, var(--acc-strong) 12%, var(--card-solid));color:var(--ink)}\n.kchip-go .d{background:var(--acc-strong)}\n.kchip-mb{background:color-mix(in srgb, var(--acc-mid) 22%, var(--card-solid));color:var(--ink)}\n.kchip-mb .d{background:var(--acc-mid)}\n.kchip-no{background:color-mix(in srgb, var(--acc-quiet) 30%, var(--card-solid));color:var(--ink)}\n.kchip-no .d{background:var(--acc-quiet)}\n.kfield{display:block;margin-bottom:12px}\n.kfield span{display:block;font-size:12px;color:var(--ink-2);margin-bottom:5px;font-weight:500}\n.kfield input{width:100%;padding:9px 12px;border:1px solid var(--line);border-radius:10px;\n  background:var(--card-solid);color:var(--ink);font:inherit;font-size:13.5px}\n.kfield input:focus{outline:2px solid var(--mid);outline-offset:1px}\n.klink{color:var(--acc-mid-ink);font-weight:600;text-decoration:none;font-size:13.5px;\n  border-bottom:1px solid color-mix(in srgb, var(--acc-mid-ink) 45%, transparent)}\n.klink:hover{border-bottom-color:var(--acc-mid-ink)}\n\n/* ── Свод правил цвета ───────────────────────────────────────────────────────\n   Владелица 09.09.2026: «не складывается, что чем выделять, чтобы это было\n   гармонично». Причина не в подборе оттенков, а в отсутствии РОЛЕЙ: пока не\n   сказано, за что отвечает каждый цвет, каждый новый элемент решается заново\n   и по-разному — отсюда ощущение случайности.\n   Здесь роли зафиксированы явно, и раздел показывает их живыми образцами\n   текущей палитры, а не словами. */\n.rulebook{margin-top:20px;padding:26px 28px;border-radius:22px;\n  background:var(--card);backdrop-filter:blur(14px);\n  border:1px solid var(--line);box-shadow:inset 0 1px 0 var(--hi)}\n.rulebook h3{font-size:18px;font-weight:700;\n  letter-spacing:-.01em;margin:0 0 8px}\n.rb-lead{margin:0 0 22px;font-size:13.5px;line-height:1.6;color:var(--ink-2);max-width:62ch}\n.rb-grid{display:grid;gap:18px;grid-template-columns:repeat(auto-fit,minmax(230px,1fr))}\n.rb-item{display:flex;flex-direction:column;gap:7px;padding-top:14px;\n  border-top:1px solid var(--line-2)}\n.rb-item b{font-size:13.5px;font-weight:700}\n.rb-item span:last-child{font-size:12.5px;line-height:1.55;color:var(--ink-2)}\n.rb-chip{width:34px;height:8px;border-radius:999px;display:block}\n.rb-three{display:flex;gap:3px;background:none!important;width:auto}\n.rb-three i{width:14px;height:8px;border-radius:999px;display:block}\n.rb-muted b,.rb-muted span:last-child{color:var(--ink-3)}\n\n@media (max-width:1080px){\n  .app{grid-template-columns:1fr}\n  .side{display:none}\n  .stats{grid-template-columns:repeat(2,1fr)}\n  .grid2,.flow,.rules{grid-template-columns:1fr}\n}\n/* Ниже 720px даже сжатая колода карт (шаг упирается в 11% ширины) начинает\n   вылезать — карта 262px просто шире, чем остаётся места. Сжимаем сами карты,\n   не позиции: пропорции композиции сохраняются. */\n@media (max-width:720px){\n  .fcard{width:236px;height:150px;padding:15px;--step:min(12%, 66px)}\n  .f1,.f5{top:56px} .f2,.f4{top:40px} .f3{top:24px}\n  .hero{height:200px}\n  .dock{margin-top:-42px}\n  .f1{left:calc(50% - 118px - 2 * var(--step))}\n  .f2{left:calc(50% - 118px - 1 * var(--step))}\n  .f3{left:calc(50% - 118px)}\n  .f4{left:calc(50% - 118px + 1 * var(--step))}\n  .f5{left:calc(50% - 118px + 2 * var(--step))}\n}\n/* Телефон: расчётом видно, что и 210px не влезают уже с 440px и ниже\n   (крайняя карта уходит за край на 14px при ширине 380). Ещё сжимаем. */\n@media (max-width:460px){\n  .fcard{width:184px;height:126px;padding:13px;border-radius:18px;--step:min(10%, 50px)}\n  .fcard .name{font-size:13px} .fcard .foot b{font-size:12px}\n  .f1,.f5{top:44px} .f2,.f4{top:32px} .f3{top:20px}\n  .hero{height:164px}\n  .dock{margin-top:-32px;padding:20px 16px 6px;border-radius:22px}\n  .f1{left:calc(50% - 92px - 2 * var(--step))}\n  .f2{left:calc(50% - 92px - 1 * var(--step))}\n  .f3{left:calc(50% - 92px)}\n  .f4{left:calc(50% - 92px + 1 * var(--step))}\n  .f5{left:calc(50% - 92px + 2 * var(--step))}\n}\n@media (prefers-reduced-motion:reduce){*{transition:none!important}}\n";
+// Блоки — из библиотеки визуализаций, дословно. Каждый формат там утверждён
+// владелицей поштучно; собирать их заново в отчёте означало бы третий дизайн.
+const REPORT_BLOCK_CSS = "\n.page{max-width:1180px;margin:0 auto;padding:30px 24px 60px}\n.lede{max-width:66ch;margin-bottom:24px}\n.lede h1{font-size:29px;margin-bottom:10px}\n/* Вступление лежит ПРЯМО НА ФОТОГРАФИИ фона, а у неё яркость гуляет от 0.58\n   до 0.95. На тёмных участках вторичные чернила давали 3.35 при норме 4.5 —\n   вот это и читалось бледным. Текст поверх фона идёт основными чернилами:\n   на самом тёмном участке 11.0, на самом светлом ещё выше. Правило общее:\n   на фон-фотографию вторичный цвет не кладём, только основной. */\n.lede p{margin:0 0 10px;color:var(--ink);font-size:15px;line-height:1.65}\n.lede b{color:var(--ink)}\n\n/* ПРАВКА 10.09, владелица: «таблички бледно читаются на этом фоне».\n   Замерила: панель была полупрозрачной (80%), и фон просвечивал сквозь неё —\n   отделение панели от фона падало до 1.25 при задуманных 1.33 (в референсе\n   ZIXO 1.48). То есть стекло съедало ровно тот запас светлоты, который был\n   заложен, когда мы подбирали фон.\n   Панель с данными теперь СПЛОШНАЯ. Это то же правило, что с перламутром:\n   стекло и переливы — материал объектов, а под данными поверхность должна\n   быть ровной и не спорить с ними. Размытие убрано — под непрозрачной\n   заливкой оно всё равно ничего не делало, только грузило отрисовку. */\n.viz{background:var(--raise);\n  border:1px solid var(--line);border-radius:22px;padding:20px 22px;margin-bottom:12px;\n  box-shadow:inset 0 1px 0 var(--hi), 0 14px 30px -24px rgba(45,36,22,.3)}\n.vh{display:flex;align-items:baseline;justify-content:space-between;gap:12px;\n  flex-wrap:wrap;margin-bottom:6px}\n.vh h2{font-size:19px}\n.vh .src{font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;\n  color:var(--acc-ink)}\n.vn{margin:0 0 14px;font-size:12.5px;color:var(--ink-3);max-width:70ch;line-height:1.55}\n.two{display:grid;gap:12px;grid-template-columns:1fr 1fr}\n.axis{fill:var(--ink-3);font-size:10.5px;font-family:var(--sans)}\n.lbl{fill:var(--ink-2);font-size:12px;font-family:var(--sans)}\n.val{fill:var(--ink);font-size:11.5px;font-weight:700;font-family:var(--sans)}\n.gridln{stroke:var(--line-2);stroke-width:1}\n\n/* ── SWOT: четыре поля, различаются не цветом, а положением и весом ── */\n.swot{display:grid;grid-template-columns:1fr 1fr;gap:12px}\n.sw{border:1px solid var(--line);border-radius:16px;padding:16px 18px;\n  background:color-mix(in srgb, var(--ink) 2%, transparent)}\n.sw h3{font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;\n  color:var(--ink-3);margin-bottom:10px;display:flex;align-items:center;gap:8px}\n.sw h3 i{width:16px;height:3px;border-radius:2px;display:block}\n.sw ul{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:7px}\n.sw li{font-size:13px;color:var(--ink-2);padding-left:14px;position:relative;line-height:1.5}\n.sw li::before{content:\"\";position:absolute;left:0;top:8px;width:5px;height:5px;\n  border-radius:50%;background:var(--ink-3)}\n\n/* ── Половозрастная пирамида ──────────────────────────────────────────────\n   Из присланного дашборда. Ценна тем, что показывает возраст и пол ОДНОЙ\n   картинкой: у нас это были две отдельные шкалы, и связь «кто именно в этом\n   возрасте» терялась. Столбцы расходятся от общей оси возрастов, поэтому\n   перекос между полами виден по форме, без чтения чисел. */\n/* ЭТАЛОН МЕРЫ — блок «Приоритет ниш», выбран владелицей 10.09.\n   Оттуда сняты три величины, и они теперь действуют на всей странице:\n   полоса 14px, между строками 13px, и под каждой полосой светлая ДОРОЖКА\n   во всю ширину. Дорожка тут не украшение — она показывает шкалу: без неё\n   короткая полоса висит в пустоте и не с чем сравнивать. */\n.pyr{display:flex;flex-direction:column;gap:13px}\n.pyr-head{display:grid;grid-template-columns:1fr 78px 1fr;align-items:center;\n  margin-bottom:14px;padding-bottom:11px;border-bottom:1px solid var(--line);gap:8px}\n/* ПРАВКА: значки стояли на ярких заливках — такого на странице больше нигде\n   нет, и они лезли вперёд содержания. Плашка теперь нейтральная, как у всех\n   остальных значков. Цвет ничего не теряет: сторону и так называют положение,\n   фигура и подпись, а сам цвет живёт в полосах, где он и кодирует пол.\n   И рисунок сменён с условного знака (♂/♀) на ФИГУРУ человека — значок\n   уместен там, где им нарисован образ, а не подставлен символ. */\n.pyr-head .t{font-size:16px;font-weight:700;letter-spacing:-.02em;color:var(--ink);\n  display:flex;align-items:center;gap:9px}\n.pyr-head .t.r{justify-content:flex-end}\n.pyr-head .t .sx{width:26px;height:26px;border-radius:8px;display:flex;\n  align-items:center;justify-content:center;flex:0 0 auto}\n.pyr-head .t .sx{background:var(--line-2)}\n.pyr-head .t .sx svg{width:17px;height:17px;fill:none;stroke:var(--ink-2);\n  stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;display:block}\n.pyr-head .c{text-align:center;font-size:10px;font-weight:700;letter-spacing:.07em;\n  text-transform:uppercase;color:var(--ink-3)}\n.pyrow{display:grid;grid-template-columns:1fr 78px 1fr;align-items:center;gap:8px}\n.pyrow .s{display:flex;align-items:center}\n.pyrow .s.l{justify-content:flex-end}\n/* ПРАВКА: столбцы были толстыми плашками с числом ВНУТРИ — на нашей странице\n   так не сделано больше нигде, оттого блок и выбивался. Приведено к тому же\n   строю, что «боли по частоте» и «достаток»: тонкая полоса, число снаружи\n   чернилами. Цвет остался только заливкой полосы — он тут кодирует пол. */\n.pyrow .rail{flex:1;height:14px;background:var(--line-2);display:flex}\n.pyrow .s.l .rail{justify-content:flex-end}\n.pyrow .bar{height:14px;flex:0 0 auto;min-width:3px}\n.pyrow .l .bar{background:var(--mid)}\n.pyrow .r .bar{background:var(--sw-violet)}\n.pyrow .s .v{font-size:11.5px;font-weight:700;color:var(--ink);\n  font-variant-numeric:tabular-nums;min-width:38px}\n.pyrow .s.l .v{text-align:right;margin-right:9px}\n.pyrow .s.r .v{text-align:left;margin-left:9px}\n.pyrow .age{text-align:center;font-size:11.5px;color:var(--ink-2);font-weight:600;\n  font-variant-numeric:tabular-nums}\n\n/* ── Тепловая карта активности: дни × часы ───────────────────────────────── */\n.hm{display:grid;grid-template-columns:38px repeat(8,1fr);gap:3px;\n  font-size:10.5px;font-variant-numeric:tabular-nums}\n.hm .hh{color:var(--ink-3);text-align:center;padding-bottom:3px}\n.hm .hl{color:var(--ink-3);display:flex;align-items:center;font-weight:600}\n.hm .hc{height:26px;border-radius:4px}\n.hm .hc.peak{box-shadow:inset 0 0 0 2px var(--ink)}\n.hmleg{display:flex;align-items:center;gap:7px;margin-top:12px;font-size:11px;\n  color:var(--ink-3)}\n.hmleg .sc{display:flex;gap:2px}\n.hmleg .sc i{width:22px;height:9px;border-radius:2px;display:block}\n\n/* ── География спроса ─────────────────────────────────────────────────────\n   Две величины в одной строке, но НЕ на одной шкале — это разные вопросы.\n   Слева объём: где людей больше. Справа плотность: где спрос выше, чем\n   положено по населению. Второе и решает бюджет — в Москве запросов больше\n   всегда, просто потому что там больше людей, а дешёвый лид даёт регион,\n   который перевешивает свой размер.\n   Плотность — расходящаяся шкала: у неё есть осмысленный ноль (единица,\n   «ровно по населению»), поэтому два тона и нейтральная середина, а не\n   светлота одного тона. */\n.geo{display:flex;flex-direction:column;gap:13px}\n.geohead,.grow{display:grid;grid-template-columns:196px 1fr 150px 52px;\n  align-items:center;gap:14px}\n.geohead{font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;\n  color:var(--ink-3);padding-bottom:8px;margin-bottom:3px;border-bottom:1px solid var(--line)}\n.geohead .r{text-align:right}\n.grow{padding:0}\n.grow .nm{font-size:12.5px;color:var(--ink-2);line-height:1.3}\n.grow.base .nm{font-weight:700;color:var(--ink)}\n.gvol{display:flex;align-items:center;gap:9px}\n.gvol .rail{flex:1;height:14px;background:var(--line-2);display:flex}\n.gvol .b{height:14px;background:var(--mid);flex:0 0 auto}\n.grow.base .gvol .b{background:color-mix(in srgb, var(--mid) 38%, var(--line-2))}\n.gvol .v{font-size:12px;font-weight:700;font-variant-numeric:tabular-nums}\n/* Расходящаяся полоса: середина — «ровно по населению» */\n.gden{position:relative;height:14px;background:var(--line-2)}\n.gden .mid0{position:absolute;left:50%;top:0;bottom:0;width:1px;\n  background:color-mix(in srgb, var(--ink) 28%, transparent)}\n.gden .d{position:absolute;top:0;height:14px}\n.gden .d.up{left:50%;background:var(--mid)}\n.gden .d.dn{right:50%;background:var(--sw-violet)}\n.gx{font-size:12px;font-weight:700;text-align:right;font-variant-numeric:tabular-nums}\n.gvol .v{min-width:52px;text-align:right}\n.gx.up{color:var(--acc-ink)} .gx.dn{color:var(--acc-mid-ink)} .gx.eq{color:var(--ink-3)}\n.geoleg{display:flex;gap:18px;flex-wrap:wrap;margin-top:14px;font-size:11.5px;\n  color:var(--ink-3)}\n.geoleg span{display:flex;align-items:center;gap:7px}\n.geoleg i{width:11px;height:9px;border-radius:2px;display:block}\n@media (max-width:760px){\n  .geohead{display:none}\n  .grow{grid-template-columns:1fr 52px;grid-template-areas:'nm x' 'vol vol' 'den den';gap:5px}\n  .grow .nm{grid-area:nm} .gvol{grid-area:vol} .gden{grid-area:den} .gx{grid-area:x}\n}\n\n/* ── Портрет B2B, вариант 2: то, что меряется, — измерить ──────────────────\n   Владелица: «можно ещё вариант, чтобы с графиками, а не просто текстом».\n   Разбор показал: из семи строк портрета четыре по своей природе ЧИСЛОВЫЕ —\n   сколько человек участвует в решении, сколько длится сделка, какой бюджет\n   без согласования, на каком уровне осведомлённости сегмент. Текстом они\n   выглядят как мнение, а шкалой — как замер.\n   Три остальные (боль, тормоз, свои слова) остаются словами: их числом не\n   выразить, и попытка была бы враньём. Поэтому вариант 2 — не «то же самое\n   с картинками», а разделение по природе данных. */\n.bmet{display:grid;grid-template-columns:repeat(4,1fr);gap:20px;padding:20px 22px;\n  border-bottom:1px solid var(--line)}\n.bmet h4{font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;\n  color:var(--ink-3);margin:0 0 11px}\n.bmet .big{font-size:19px;font-weight:700;letter-spacing:-.02em;line-height:1.15;\n  margin-bottom:3px}\n.bmet .sm{font-size:11.5px;color:var(--ink-3);line-height:1.45}\n/* фигурки: закрашенные = участвуют в решении */\n.ppl{display:flex;gap:5px;margin-bottom:9px}\n.ppl svg{width:17px;height:19px;display:block}\n/* дорожка со значением: диапазон заливкой, наша отметка штрихом */\n.trk{position:relative;height:14px;background:var(--line-2);margin:6px 0 8px}\n.trk .rg{position:absolute;top:0;bottom:0;background:var(--mid)}\n.trk .mk{position:absolute;top:-4px;bottom:-4px;width:2px;background:var(--ink)}\n.trk-ax{display:flex;justify-content:space-between;font-size:10px;color:var(--ink-3)}\n.mklbl{font-size:11px;color:var(--ink-2);margin-top:7px}\n.mklbl b{color:var(--ink)}\n/* пять ступеней осведомлённости */\n.aw5{display:flex;align-items:flex-end;gap:4px;height:46px;margin-bottom:8px}\n.aw5 div{flex:1;background:var(--mid);position:relative}\n.aw5 div span{position:absolute;left:-2px;right:-2px;bottom:-16px;text-align:center;\n  font-size:9px;color:var(--ink-3);white-space:nowrap}\n.bpain{padding:20px 22px;border-bottom:1px solid var(--line)}\n.bpain h4{font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;\n  color:var(--ink-3);margin:0 0 12px}\n.bpain .dbar{grid-template-columns:1fr 190px 58px}\n.chnside .dbar{grid-template-columns:1fr 84px 34px}\n.bpain .dbar .t{color:var(--ink-2)}\n.bpain .dbar .n{font-variant-numeric:tabular-nums}\n@media (max-width:820px){ .bmet{grid-template-columns:1fr 1fr} }\n\n/* ── Голос клиента: цитата как объект, а не ячейка таблицы ────────────────\n   У конкурента это таблица на тридцать строк, и её никто не дочитывает.\n   Цитата работает иначе: она должна ПРОЗВУЧАТЬ. Поэтому карточка, дословный\n   текст засечным шрифтом — единственное место на странице, где он уместен:\n   так видно, что это чужая речь, а не наш пересказ. Под цитатой — откуда\n   она и сколько раз эта боль встретилась во всём материале.\n\n   ПРАВКА: в макете платформы этот блок уже был сделан КАРУСЕЛЬЮ, а я собрала\n   его заново решёткой. Возвращено к макету — прокрутка вбок со стрелками и\n   привязкой к плашке. Так и правильнее по существу: цитат в отчёте бывает\n   сорок, решётка на сорок карточек занимает экран целиком и обесценивает\n   каждую; лента показывает несколько и не мешает читать дальше. */\n.vochead{display:flex;align-items:center;justify-content:space-between;gap:14px;\n  margin-bottom:12px}\n.vocnav{display:flex;gap:8px}\n/* Стрелки без кружков: кружок — кнопка, а тут не действие, а листание. */\n.qarrow{width:26px;height:26px;border:0;background:none;padding:0;\n  display:flex;align-items:center;justify-content:center;\n  color:var(--ink-3);flex:0 0 auto;cursor:pointer}\n.qarrow:hover{color:var(--ink)}\n.qarrow:disabled{opacity:.3;cursor:default}\n.qarrow svg{width:19px;height:19px;fill:none;stroke:currentColor;stroke-width:1.7;\n  stroke-linecap:round;stroke-linejoin:round}\n.voc{display:flex;gap:12px;overflow-x:auto;scroll-snap-type:x mandatory;\n  scrollbar-width:none;padding-bottom:2px}\n.voc::-webkit-scrollbar{display:none}\n.vq{flex:0 0 auto;width:268px;scroll-snap-align:start;\n  border:1px solid var(--line);background:var(--card-solid);padding:17px 19px;\n  border-radius:16px;display:flex;flex-direction:column;gap:12px;\n  justify-content:space-between}\n.vq blockquote{margin:0;font-family:var(--serif);font-style:italic;\n  font-size:14px;line-height:1.5;color:var(--ink)}\n/* Состояние цитаты приходит ОТ контент-машины, исследование его не хранит.\n   Три состояния различаются формой метки, а не только цветом: пустой кружок,\n   закрашенный фирменный, закрашенный серый. */\n.vq .vst{display:flex;align-items:center;gap:7px;font-size:10px;font-weight:700;\n  letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3)}\n.vq .vst i{width:9px;height:9px;border-radius:50%;display:block;flex:0 0 auto}\n.vq .vst.wait i{border:1.5px solid var(--ink-3)}\n.vq .vst.work i{background:var(--mid)}\n.vq .vst.done i{background:var(--ink-3)}\n.vq .vst.work{color:var(--ink)}\n.vq .vf{display:flex;justify-content:space-between;align-items:center;gap:12px;\n  padding-top:12px;border-top:1px solid var(--line-2)}\n.vq .vsrc{font-size:11px;color:var(--ink-3);line-height:1.4}\n.vq .vsrc b{display:block;color:var(--ink-2);font-weight:600;font-size:11.5px}\n.vq .vcnt{font-size:11px;font-weight:700;color:var(--ink);white-space:nowrap;\n  display:flex;align-items:center;gap:7px}\n.vq .vcnt i{width:8px;height:8px;background:var(--mid);display:block}\n\n/* ── Возражение и ответ ───────────────────────────────────────────────────\n   Страх и то, чем он снимается, ценны только вместе: по отдельности первое —\n   жалоба, второе — лозунг. Поэтому одна строка на пару.\n   ПРАВКА: подписи «что говорит клиент» и «чем снимаем» повторялись в каждой\n   строке. Приведено к тому же виду, что альтернативы, — шапка один раз.\n   Стрелка и заливки половин тоже убраны: направление задаёт порядок колонок,\n   а цвет здесь ничего не кодировал. */\n.obj{border:1px solid var(--line);border-radius:16px;overflow:hidden;max-width:940px}\n.ohead,.orow{display:grid;grid-template-columns:.92fr 1.08fr;gap:18px}\n.ohead{padding:11px 18px;font-size:10px;font-weight:700;letter-spacing:.07em;\n  text-transform:uppercase;color:var(--ink-3);\n  background:color-mix(in srgb, var(--ink) 3%, transparent)}\n.orow{padding:14px 18px;border-top:1px solid var(--line-2);align-items:start}\n.orow .of{font-family:var(--serif);font-style:italic;font-size:13.5px;\n  line-height:1.5;color:var(--ink)}\n.orow .oa{font-size:12.5px;color:var(--ink-2);line-height:1.5}\n\n/* ── Альтернативы: против чего мы на самом деле конкурируем ────────────────\n   Главный конкурент почти всегда «ничего не делать», и его надо выделить\n   графически, иначе его снова прочитают как строку в списке. */\n/* ПРАВКА: подписи «почему её выбирают» и «что мы говорим против» повторялись\n   в каждой строке — это и есть определение таблицы, только вывернутое\n   наизнанку. Написаны один раз в шапке, как в портрете сегмента. */\n.alt{border:1px solid var(--line);border-radius:16px;overflow:hidden}\n.ahead,.arow{display:grid;grid-template-columns:184px 1fr 1fr;gap:16px}\n.ahead{padding:11px 18px;font-size:10px;font-weight:700;letter-spacing:.07em;\n  text-transform:uppercase;color:var(--ink-3);\n  background:color-mix(in srgb, var(--ink) 3%, transparent)}\n.arow{align-items:start;padding:14px 18px;border-top:1px solid var(--line-2)}\n.arow .an{font-size:13.5px;font-weight:700;line-height:1.3}\n.arow .aty{display:inline-block;font-size:10px;font-weight:700;letter-spacing:.05em;\n  text-transform:uppercase;color:var(--ink-3);margin-top:5px}\n.arow .atx{font-size:12.5px;color:var(--ink-2);line-height:1.5}\n/* ПРАВКА: плашка «главный» стояла сразу за названием — толкала строку и\n   выглядела грубо. Выделение ушло вбок: полоса фирменного цвета по левому\n   краю плюс тихая надпись НАД названием. Строка читается ровно, а особый\n   статус виден раньше, чем начинаешь читать. */\n.arow.main{background:color-mix(in srgb, var(--mid) 6%, transparent);\n  border-top:0;padding-left:15px;box-shadow:inset 3px 0 0 var(--mid)}\n.arow .aeb{font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;\n  color:var(--ink-3);margin-bottom:5px}\n\n/* ── Где сидит аудитория ──────────────────────────────────────────────────\n   ПРАВКА: было пять колонок во всю ширину. В каждой ячейке две-три строки\n   текста, между ними метры пустоты — таблица выглядела растянутой и пустой,\n   хотя данных в ней достаточно. Причина в форме, а не в количестве: пять\n   узких колонок с разной длиной текста никогда не выровняются. Пересобрано\n   карточками — площадка тут ОБЪЕКТ, а не строка сравнения: их не читают\n   по колонкам сверху вниз, каждую рассматривают отдельно. */\n/* Сбоку — доли по площадкам. Важно, ЧТО именно тут измерено: это доля\n   собранного материала, а не доля аудитории. Второго числа у нас нет и\n   честно взять его неоткуда — «34% аудитории сидит на vc.ru» было бы\n   выдумкой. Зато первое число само по себе ценно: оно показывает перекос\n   выборки, о котором предупреждает приписка внизу. */\n.chnwrap{display:grid;grid-template-columns:1fr 268px;gap:22px;align-items:start}\n.chnside h4{font-size:10px;font-weight:700;letter-spacing:.07em;\n  text-transform:uppercase;color:var(--ink-3);margin:0 0 4px}\n.chnside .sub{font-size:11.5px;color:var(--ink-3);line-height:1.45;margin:0 0 14px}\n.chn{display:grid;grid-template-columns:repeat(auto-fit,minmax(296px,1fr));gap:12px}\n.ccard{border:1px solid var(--line);background:var(--card-solid);border-radius:16px;\n  padding:16px 18px;display:flex;flex-direction:column;gap:11px}\n.ccard .ch{display:flex;align-items:center;gap:11px}\n.ccard .ci{width:34px;height:34px;border-radius:11px;background:var(--line-2);\n  display:flex;align-items:center;justify-content:center;flex:0 0 auto}\n.ccard .ci svg{width:19px;height:19px;fill:none;stroke:var(--ink-2);stroke-width:1.6;\n  stroke-linecap:round;stroke-linejoin:round;display:block}\n.ccard .cn{font-size:14px;font-weight:700;line-height:1.25}\n.ccard .cn span{display:block;font-size:11px;font-weight:600;color:var(--ink-3);\n  margin-top:3px}\n.ccard .cd{font-size:12.5px;color:var(--ink-2);line-height:1.5}\n.ccard .cf{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;\n  padding-top:11px;border-top:1px solid var(--line-2);margin-top:auto}\n.ccard .cf div span{display:block;font-size:10px;font-weight:700;letter-spacing:.07em;\n  text-transform:uppercase;color:var(--ink-3);margin-bottom:3px}\n.ccard .cf div b{font-size:12px;font-weight:700;color:var(--ink)}\n.ccard .cf .r{text-align:right}\n@media (max-width:1000px){ .chnwrap{grid-template-columns:1fr} }\n@media (max-width:900px){\n  .ohead{display:none}\n  .orow{grid-template-columns:1fr;gap:8px}\n  .ahead{display:none}\n  .arow{grid-template-columns:1fr;gap:8px}\n  .ccard .cf{flex-direction:column;align-items:flex-start;gap:9px}\n  .ccard .cf .r{text-align:left}\n}\n\n/* ── Общая таблица отчёта ─────────────────────────────────────────────────\n   Владелица 10.09: подписи колонок пишутся ОДИН раз в шапке, а не повторяются\n   в каждой строке. Здесь это вынесено в один класс, чтобы все оставшиеся\n   блоки отчёта строились по одному образцу, а не расходились каждый по-своему.\n   Число колонок задаётся переменной --cols на месте. */\n.dtbl{border:1px solid var(--line);border-radius:16px;overflow:hidden}\n.dtbl .th,.dtbl .tr{display:grid;grid-template-columns:var(--cols);gap:18px}\n.dtbl .th{padding:11px 18px;font-size:10px;font-weight:700;letter-spacing:.07em;\n  text-transform:uppercase;color:var(--ink-3);\n  background:color-mix(in srgb, var(--ink) 3%, transparent)}\n.dtbl .tr{padding:14px 18px;border-top:1px solid var(--line-2);align-items:start;\n  font-size:12.5px;line-height:1.5;color:var(--ink-2)}\n/* ПРАВКА: перенос рвал слово где попало, вплоть до одной буквы. Виноват был\n   overflow-wrap:anywhere — он ломает строку в любом месте, не глядя на слоги.\n   Убран. Оставлен hyphens:auto, но он работает только когда браузер знает\n   язык — поэтому на .page стоит lang=\"ru\", иначе словаря переносов нет и\n   ничего не переносится вовсе. И задан минимум: слово от 6 букв, не меньше\n   трёх до переноса и трёх после — одна буква на строке больше невозможна. */\n.dtbl .nm{font-size:13.5px;font-weight:700;color:var(--ink);line-height:1.3;display:block}\n.dtbl .tr>div{min-width:0}\n.page{hyphens:auto;-webkit-hyphens:auto;\n  hyphenate-limit-chars:6 3 3;-webkit-hyphenate-limit-before:3;-webkit-hyphenate-limit-after:3}\n/* Числа, коды и подписи осей не переносим никогда. */\n.val,.axis,.lbl,.gx,.dbar .n,.kpi .n,.pyrow .s .v,.gvol .v{hyphens:none;-webkit-hyphens:none}\n.dtbl .tag{display:inline-block;font-size:10px;font-weight:700;letter-spacing:.05em;\n  text-transform:uppercase;color:var(--ink-3);margin-top:5px}\n.dtbl .q{font-family:var(--serif);font-style:italic;font-size:13px;color:var(--ink);\n  line-height:1.5}\n.dtbl .no{color:var(--ink-3);font-style:italic}\n.dtbl .lead{box-shadow:inset 3px 0 0 var(--mid);padding-left:15px;\n  background:color-mix(in srgb, var(--mid) 5%, transparent)}\n.dtbl .eb{font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;\n  color:var(--ink-3);margin-bottom:5px}\n.dtbl .strong{color:var(--ink);font-weight:600}\n.dt2{margin-top:12px}\n@media (max-width:900px){\n  .dtbl .th{display:none}\n  .dtbl .tr{grid-template-columns:1fr!important;gap:8px}\n}\n\n/* ── Банк хуков ───────────────────────────────────────────────────────────\n   Это не цитаты заново: цитата описывает боль, хук — готовая ПЕРВАЯ СТРОКА.\n   Отбираются из уже собранных цитат, не сочиняются. Поэтому крупно и подряд,\n   как их и будут читать в ленте, а рядом — куда каждый годится. */\n.hooks{display:flex;flex-direction:column;gap:0}\n.hrow{display:grid;grid-template-columns:26px 1fr 190px;gap:16px;align-items:baseline;\n  padding:13px 0;border-top:1px solid var(--line-2)}\n.hrow:first-child{border-top:0}\n.hrow .hn{font-size:12px;font-weight:700;color:var(--ink-3);\n  font-variant-numeric:tabular-nums}\n.hrow .ht{font-family:var(--serif);font-size:15px;line-height:1.45;color:var(--ink)}\n.hrow .hu{font-size:11.5px;color:var(--ink-3);line-height:1.4;text-align:right}\n.hrow .hu b{display:block;color:var(--ink-2);font-weight:600;font-size:12px}\n\n/* ── Контент-система: рубрики и ритм ──────────────────────────────────────── */\n.rub{display:grid;grid-template-columns:repeat(auto-fit,minmax(238px,1fr));gap:12px}\n.rcard{border:1px solid var(--line);background:var(--card-solid);border-radius:16px;\n  padding:16px 18px;display:flex;flex-direction:column;gap:9px}\n.rcard .rn{font-size:14px;font-weight:700;line-height:1.25}\n.rcard .rj{font-size:12.5px;color:var(--ink-2);line-height:1.5}\n.rcard .rf{display:flex;justify-content:space-between;gap:10px;padding-top:10px;\n  border-top:1px solid var(--line-2);margin-top:auto;font-size:11.5px}\n.rcard .rf span{color:var(--ink-3)}\n.rcard .rf b{color:var(--ink);font-weight:700}\n.rhy{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-top:14px}\n.rhy .rd{border:1px solid var(--line);border-radius:12px;padding:11px 10px;\n  background:var(--card-solid);min-height:78px}\n.rhy .rd .dw{font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;\n  color:var(--ink-3);margin-bottom:7px}\n.rhy .rd .dt{font-size:11.5px;color:var(--ink);line-height:1.35;font-weight:600}\n.rhy .rd.off .dt{color:var(--ink-3);font-weight:400}\n.rhy .rd .dbar2{height:5px;margin-top:8px}\n\n/* ── ТЗ на лендинг: экраны по порядку ─────────────────────────────────────\n   Порядок здесь несёт смысл — это последовательность, в которой человек\n   читает страницу, а не список разделов. Поэтому нумерация и вертикальная\n   нить, а не решётка карточек. */\n.lnd{display:flex;flex-direction:column;gap:0;position:relative}\n.lstep{display:grid;grid-template-columns:52px 1fr 1fr;gap:18px;padding:15px 0;\n  border-top:1px solid var(--line-2);align-items:start}\n.lstep:first-child{border-top:0}\n.lstep .ln{font-size:19px;font-weight:700;color:var(--ink-3);letter-spacing:-.02em;\n  font-variant-numeric:tabular-nums;line-height:1.1}\n.lstep .lt{font-size:13.5px;font-weight:700;line-height:1.3}\n.lstep .lj{font-size:12px;color:var(--ink-3);line-height:1.45;margin-top:4px}\n.lstep .lc{font-size:12.5px;color:var(--ink-2);line-height:1.5}\n.lstep .lc b{display:block;font-size:10px;font-weight:700;letter-spacing:.07em;\n  text-transform:uppercase;color:var(--ink-3);margin-bottom:4px}\n@media (max-width:820px){\n  .hrow{grid-template-columns:26px 1fr}\n  .hrow .hu{grid-column:2;text-align:left}\n  .rhy{grid-template-columns:repeat(2,1fr)}\n  .lstep{grid-template-columns:40px 1fr}\n  .lstep .lc{grid-column:2}\n}\n\n/* ── Карта отчёта: что оформлено, чего не хватает ─────────────────────────\n   Тот же приём, что у проверки по 13 вопросам: не рассказывать словами,\n   а показать покрытие. Три состояния различаются и цветом, и формой метки. */\n.mapg{display:grid;grid-template-columns:repeat(auto-fill,minmax(232px,1fr));gap:8px}\n.mcell{display:flex;gap:10px;align-items:flex-start;padding:11px 13px;border-radius:12px;\n  border:1px solid var(--line);background:var(--card-solid);font-size:12.5px;\n  line-height:1.4}\n.mcell i{width:9px;height:9px;border-radius:50%;flex:0 0 auto;margin-top:4px;display:block}\n.mcell span{flex:1}\n.mcell span b{display:block;font-size:10px;font-weight:700;letter-spacing:.07em;\n  text-transform:uppercase;color:var(--ink-3);margin-top:3px}\n.mcell.have{background:color-mix(in srgb, var(--mid) 8%, var(--card-solid));\n  border-color:color-mix(in srgb, var(--mid) 30%, var(--line))}\n.mcell.have i{background:var(--mid)}\n.mcell.add i{border:1.5px solid var(--sw-violet)}\n.mcell.none i{background:var(--sw-grey)}\n.mcell.out{opacity:.72}\n.mcell.out i{background:var(--card-solid);border:1.5px solid var(--sw-grey)}\n.mlegend{display:flex;gap:18px;flex-wrap:wrap;margin-top:14px;font-size:11.5px;\n  color:var(--ink-3)}\n.mlegend span{display:flex;align-items:center;gap:8px}\n.mlegend i{width:9px;height:9px;border-radius:50%;display:block}\n\n/* ── Визуальная стратегия ─────────────────────────────────────────────────── */\n.vis{display:grid;grid-template-columns:1fr 1fr;gap:20px}\n.vis h4{font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;\n  color:var(--ink-3);margin:0 0 12px}\n.sw2{display:flex;gap:0;margin-bottom:8px}\n.sw2 div{flex:1;height:52px;display:flex;align-items:flex-end;padding:7px 9px;\n  font-size:10px;font-weight:700;font-variant-numeric:tabular-nums}\n.sw2 div small{font-size:9px;font-weight:600;opacity:.75;display:block}\n.visnote{font-size:12px;color:var(--ink-3);line-height:1.5;margin:0}\n.typo{border:1px solid var(--line);border-radius:14px;padding:16px 18px;\n  background:var(--card-solid)}\n.typo .t1{font-size:22px;font-weight:700;letter-spacing:-.02em;line-height:1.2}\n.typo .t2{font-family:var(--serif);font-size:14px;line-height:1.5;color:var(--ink-2);\n  margin-top:8px}\n.typo .t3{font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;\n  color:var(--ink-3);margin-top:12px}\n.rules{display:flex;flex-direction:column;gap:0}\n.rr{display:grid;grid-template-columns:1fr 1fr;gap:16px;padding:11px 0;\n  border-top:1px solid var(--line-2);font-size:12.5px;line-height:1.45}\n.rr:first-child{border-top:0}\n.rr .y{color:var(--ink)}\n.rr .n2{color:var(--ink-3)}\n.rr .lb2{display:block;font-size:10px;font-weight:700;letter-spacing:.07em;\n  text-transform:uppercase;color:var(--ink-3);margin-bottom:4px}\n@media (max-width:900px){ .vis,.acard .ag,.rr{grid-template-columns:1fr} }\n\n/* ── Ссылка на источник ───────────────────────────────────────────────────\n   Владелица 10.09: «нам надо всё давать, особенно голос клиента, конкурентов,\n   со ссылками, чтобы всё это можно было проверять».\n   Справедливо и это не мелочь: исследование без возможности проверить строку\n   превращается в мнение. Номер [n] ведёт в блок «Источники» внизу — та же\n   сквозная нумерация, что уже принята в отчёте. */\n/* Номера источников — те же ссылки, значит тот же вид: фирменный цвет плюс\n   постоянное подчёркивание. Размер поднят с 10.5 до 11.5: на бирюзе мелкий\n   кегль читается тяжелее всего, а уменьшать контраст здесь нечем. */\n.rn2{display:inline-block;font-size:11.5px;font-weight:700;color:var(--acc-mid-ink);\n  text-decoration:none;vertical-align:0;white-space:nowrap;hyphens:none;\n  border-bottom:1px solid color-mix(in srgb, var(--acc-mid-ink) 45%, transparent)}\n.rn2:hover{border-bottom-color:var(--acc-mid-ink)}\n\n/* ── Источники разведки ───────────────────────────────────────────────────\n   ПРАВКА 10.09, владелица: «после сайта сразу слеплена оценка — непонятно, что\n   это такое; и надо активные ссылки прямо на название сайта».\n   Обе правки по делу. Домен — настоящая ссылка: колонка URL в исходной таблице\n   есть, а кликнуть было нельзя, то есть проверить источник всё равно не\n   получалось. И «что взяли» отделено подписью — без неё строка читалась как\n   продолжение названия сайта.\n   Подчёркивание фирменным цветом, а сами буквы чернилами: бирюза текстом на\n   слоновой кости даёт 2.17 при норме 4.5. */\n.srcs{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:0 28px}\n.srow{display:grid;grid-template-columns:32px 1fr;gap:12px;padding:13px 0;\n  border-top:1px solid var(--line-2);align-items:baseline}\n.srow .sn{font-size:11.5px;font-weight:700;color:var(--acc-mid-ink);\n  font-variant-numeric:tabular-nums;hyphens:none}\n.srow .sd{font-size:12.5px;line-height:1.45;min-width:0}\n.srow .sd .dom{display:flex;align-items:baseline;justify-content:space-between;gap:12px}\n/* ССЫЛКИ — ОДИН вид на всё: синий плюс постоянное подчёркивание.\n   Решение владелицы 10.09: «прийти к одному знаменателю, лучше синим —\n   виднее; если всё бирюзовым, оно будет сливаться».\n   Так и есть, и цифры это подтверждают: синий на подложке даёт 4.79 при норме\n   4.5, бирюза — 2.27. Бирюза остаётся фирменным цветом ЗАЛИВОК (плашки, полосы,\n   секторы), синий — цветом всего кликабельного. Два цвета, две разные работы,\n   ни один не мешает другому.\n   Подчёркивание оставлено постоянным: оно отличает ссылку от просто цветного\n   слова, а на цвет одного этого мало. */\n.srow .sd .dom a{font-size:13.5px;font-weight:700;color:var(--acc-mid-ink);\n  text-decoration:none;border-bottom:1px solid color-mix(in srgb, var(--acc-mid-ink) 45%, transparent);\n  overflow-wrap:break-word;hyphens:none}\n.srow .sd .dom a:hover{border-bottom-color:var(--acc-mid-ink)}\n.srow .sd .dom a svg{width:10px;height:10px;display:inline-block;vertical-align:1px;\n  margin-left:5px;fill:none;stroke:currentColor;stroke-width:2}\n.srow .sd .dt{font-size:11px;color:var(--ink-3);white-space:nowrap;flex:0 0 auto;\n  hyphens:none}\n.srow .sd .took{margin-top:8px}\n.srow .sd .took span{display:block;font-size:10px;font-weight:700;letter-spacing:.07em;\n  text-transform:uppercase;color:var(--ink-3);margin-bottom:3px}\n.srow .sd .took em{font-style:normal;color:var(--ink-2);font-size:12.5px;line-height:1.45}\n\n/* ── Доля внимания ────────────────────────────────────────────────────────── */\n.att .dbar{grid-template-columns:172px 1fr 104px}\n.att .dbar .n{white-space:nowrap}\n\n/* ── Тепловая матрица ── */\n.heat{width:100%;border-collapse:separate;border-spacing:3px;font-size:12px}\n.heat th{font-weight:600;color:var(--ink-3);font-size:10.5px;letter-spacing:.05em;\n  text-transform:uppercase;padding:0 6px 6px;text-align:center;vertical-align:bottom}\n.heat th:first-child{text-align:left}\n.heat td{text-align:center;padding:9px 6px;border-radius:8px;font-weight:700;color:var(--ink)}\n.heat td:first-child{text-align:left;font-weight:600;color:var(--ink-2);\n  background:none;padding-left:0;white-space:nowrap}\n\n\n/* ── Канбан гипотез ── */\n.kan{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}\n.kcol h3{font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;\n  color:var(--ink-3);margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid var(--line)}\n.kcard{border:1px solid var(--line);border-radius:14px;padding:13px 15px;margin-bottom:9px;\n  background:var(--card-solid)}\n.kcard b{display:block;font-size:12.5px;margin-bottom:4px}\n.kcard span{display:block;font-size:11.5px;color:var(--ink-3);line-height:1.5}\n.kcard .met{margin-top:8px;padding-top:8px;border-top:1px solid var(--line-2);\n  font-size:11px;color:var(--ink-2);font-weight:600}\n/* Критерий успеха — единственное, что в карточке фирменного цвета: карточка\n   существует ради него, а всё остальное в ней справочное. */\n.kcard .met u{text-decoration:none;color:var(--acc-ink);font-weight:700}\n\n/* ── Дерево ниш ── */\n.tree{display:flex;flex-direction:column;gap:5px}\n.tnode{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:12px;\n  background:color-mix(in srgb, var(--ink) 2.5%, transparent);font-size:13px}\n.tnode .bar{height:6px;border-radius:0;flex:0 0 auto}\n.tnode .nm{flex:1;color:var(--ink-2)}\n.tnode .sc{font-weight:700;font-size:12.5px;color:var(--ink)}\n.tnode.lead{background:color-mix(in srgb, var(--mid) 10%, transparent)}\n.tnode.lead .nm{color:var(--ink);font-weight:600}\n\n/* ── Плитки-числа ── */\n/* Плитки собраны так же, как в первом шаблоне: отдельные карточки с полями,\n   подпись сверху, число и график в одной строке, изменение снизу. Раньше они\n   были склеены в одну полосу и стояли иначе — это и было «сделано не так». */\n.kpi{display:grid;grid-template-columns:repeat(5,1fr);gap:14px}\n.kpi > div{background:var(--card-solid);border:1px solid var(--line);\n  border-radius:20px;padding:18px 20px}\n.kpi .k{font-size:12px;color:var(--ink-3);margin-bottom:8px}\n.kpi .row{display:flex;align-items:center;justify-content:space-between;gap:8px}\n.kpi .n{font-size:25px;font-weight:700;letter-spacing:-.02em;line-height:1.1}\n.kpi svg{display:block;flex:0 0 auto}\n.kpi .d{font-size:11px;margin-top:7px;display:inline-flex;gap:5px;align-items:baseline}\n.kpi .d b{font-weight:700}\n.kpi .d b.up{color:var(--acc-ink)}       /* рост — фирменная бирюза */\n.kpi .d b.down{color:var(--acc-mid-ink)} /* падение — фиолетовый */\n.kpi .d b.flat{color:var(--ink-2)}       /* без изменений — тёмно-серый */\n.kpi .d span{color:var(--ink-2);font-weight:700}\n\n.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--ink-2);margin-top:14px}\n.legend i{width:11px;height:8px;display:inline-block;margin-right:6px}\n@media (max-width:1000px){ .kpi{grid-template-columns:repeat(2,1fr)} }\n@media (max-width:820px){ .two,.swot,.kan{grid-template-columns:1fr} }\n@media (prefers-reduced-motion:reduce){*{transition:none!important}}\n\n/* ── Портрет сегмента ─────────────────────────────────────────────────────────\n   Владелица: «дала простую графику, не сильно яркую и не сильно красивую».\n   Справедливо — но лечится это не количеством цветов. В присланном колесе на\n   13 сегментов цвет ничего не кодирует, а 13 оттенков подряд глаз всё равно\n   не различает. Красоту там делают МАСШТАБ, форма и типографика.\n   Поэтому здесь: крупный знак сегмента, крупные числа, широкие поля, заметное\n   присутствие фирменного цвета — но по-прежнему один акцент, а не радуга.\n   Портрет ветвится по типу аудитории: у B2B решает роль и размер компании,\n   у B2C — возраст, пол, интересы. Это разные наборы полей, и сводить их в\n   одну таблицу нельзя. */\n.pers{display:grid;grid-template-columns:230px 1fr;gap:0;\n  border:1px solid var(--line);border-radius:20px;overflow:hidden;margin-bottom:14px}\n.pers-side{padding:24px;display:flex;flex-direction:column;gap:14px;\n  background:linear-gradient(165deg,\n    color-mix(in srgb, var(--mid) 22%, var(--card-solid)),\n    color-mix(in srgb, var(--mid) 6%, var(--card-solid)))}\n.pers-av{width:74px;height:74px;border-radius:22px;display:flex;align-items:center;\n  justify-content:center;font-size:25px;font-weight:800;letter-spacing:-.02em;\n  color:#12100D;background:linear-gradient(160deg,\n    color-mix(in srgb, var(--mid) 92%, white), color-mix(in srgb, var(--mid) 92%, black))}\n.pers-side .rl{font-size:10px;font-weight:700;letter-spacing:.07em;\n  text-transform:uppercase;color:var(--ink-3)}\n.pers-side h3{font-size:18px;line-height:1.25;letter-spacing:-.02em}\n.pers-side .one{font-size:12.5px;color:var(--ink-2);line-height:1.55}\n.pers-share{margin-top:auto;padding-top:14px;border-top:1px solid rgba(23,21,18,.1)}\n.pers-share b{display:block;font-size:32px;font-weight:700;letter-spacing:-.03em;line-height:1}\n.pers-share span{font-size:11.5px;color:var(--ink-3)}\n.pers-main{background:var(--card-solid)}\n.prow{display:grid;grid-template-columns:150px 1fr 1fr;gap:16px;\n  padding:12px 22px;border-top:1px solid var(--line-2);font-size:13px;line-height:1.5}\n.prow:first-child{border-top:0}\n.prow .p{color:var(--ink-3);font-size:11.5px;font-weight:600;padding-top:1px}\n.prow .v{color:var(--ink)}\n.prow .a{color:var(--acc-ink);font-weight:600}\n.prow-head{display:grid;grid-template-columns:150px 1fr 1fr;gap:16px;padding:11px 22px;\n  font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;\n  color:var(--ink-3);background:color-mix(in srgb, var(--ink) 3%, transparent)}\n\n/* B2C: демография полосами вместо круговых диаграмм */\n.demo{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;padding:18px 22px;\n  border-top:1px solid var(--line-2)}\n.demo h4{font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;\n  color:var(--ink-3);margin:0 0 10px}\n.dsplit{display:flex;height:26px;border-radius:0;overflow:hidden;margin-bottom:7px}\n.dsplit span{display:flex;align-items:center;justify-content:center;font-size:11px;\n  font-weight:700;color:#12100D}\n.dbars{display:flex;flex-direction:column;gap:13px}\n.dbar{display:grid;grid-template-columns:46px 1fr 30px;gap:8px;align-items:center;font-size:11.5px}\n.dbar .t{color:var(--ink-3)}\n.dbar .g{height:14px;background:var(--line-2)}\n.dbar .g i{display:block;height:100%;background:var(--mid)}\n.dbar .n{text-align:right;font-weight:700;color:var(--ink)}\n/* ── Интересы: иконка рисует ОБРАЗ, а не приклеена к подписи ───────────────\n   Владелица: иконка уместна там, где ею нарисована вещь, — так красивее, чем\n   одними словами; и неуместна как значок рядом с заголовком таблицы.\n   Здесь как раз первый случай: «маркетплейсы», «онлайн-курсы», «вечерний\n   Telegram» — это предметы и занятия, у каждого есть узнаваемый рисунок.\n   Поэтому не чипы-таблетки со словами, а плитка: рисунок сверху, слово под ним.\n\n   ПРАВКА: первый заход был бирюзовым — плитка в тон, кружок в тон, шесть\n   цветных пятен подряд. Владелица: «иконки это хорошо, но оформлены\n   неправильно, выбиваются из общей стилистики». Справедливо, и причина\n   считается: интересы НИЧЕГО не кодируют — это перечень, а не величина.\n   Цвет здесь был чистым украшением, а вокруг вся страница держит цвет только\n   там, где он что-то значит. Взяла рисунок иконки прямо из макета платформы\n   (.navtile .ic): нейтральный квадратик со скруглением, штрих графитом.\n\n   ПРАВКА 2: убраны рамки и подложка — «обводки лишние». Так и есть: рамка\n   очерчивает объект, а здесь объектов нет, есть перечень.\n   ПРАВКА 3: не плитки, а список — значок и текст в строку. Плитками короткие\n   подписи разбегались по центрам и читались вразнобой; списком глаз идёт по\n   одной левой кромке, как в остальных таблицах страницы. Два списка стоят\n   рядом и разделены вертикальной линией — это два разных вопроса. */\n.chips{display:flex;flex-direction:column;gap:11px}\n.chips figure{margin:0;display:flex;flex-direction:row;align-items:center;gap:11px;\n  text-align:left}\n.chips figure .disc{width:34px;height:34px;border-radius:11px;display:flex;\n  align-items:center;justify-content:center;background:var(--line-2)}\n.chips figure svg{width:19px;height:19px;fill:none;stroke:var(--ink-2);\n  stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;display:block}\n.chips figcaption{font-size:12.5px;font-weight:600;color:var(--ink-2);line-height:1.35}\n/* Два списка рядом: линия по середине показывает, что вопросы разные. */\n.demo.split{grid-template-columns:1fr 1fr;gap:0}\n.demo.split > div + div{border-left:1px solid var(--line);padding-left:24px}\n.demo.split > div:first-child{padding-right:24px}\n@media (max-width:820px){\n  .demo.split > div + div{border-left:0;border-top:1px solid var(--line);\n    padding-left:0;padding-top:18px}\n  .demo.split > div:first-child{padding-right:0}\n}\n\n/* Покрытие вопросов — вместо радужного колеса */\n.cov{display:grid;grid-template-columns:repeat(auto-fill,minmax(215px,1fr));gap:9px}\n.cq{display:flex;gap:11px;align-items:flex-start;padding:12px 14px;border-radius:13px;\n  border:1px solid var(--line);background:var(--card-solid);font-size:12.5px;line-height:1.45}\n.cq b{font-size:11px;font-weight:800;color:var(--ink-3);min-width:17px;letter-spacing:-.02em}\n.cq.yes{background:color-mix(in srgb, var(--mid) 9%, var(--card-solid));\n  border-color:color-mix(in srgb, var(--mid) 35%, var(--line))}\n.cq.yes b{color:var(--acc-ink)}\n.cq .src2{display:block;margin-top:4px;font-size:10.5px;font-weight:700;\n  letter-spacing:.05em;text-transform:uppercase;color:var(--acc-ink)}\n.cq.no .src2{color:var(--ink-3)}\n@media (max-width:820px){ .pers{grid-template-columns:1fr} .demo{grid-template-columns:1fr}\n  .prow,.prow-head{grid-template-columns:1fr} .prow .p{font-weight:700} }\n\n/* ── Плитки сводки: спарклайн заполняет пустоту справа ───────────────────────\n   Владелица: «слишком большие пробелы». Причина не в отступах, а в том, что\n   плитка широкая, а содержимого мало: число и две строки. В макете там же стоял\n   спарклайн — он и держал правую половину. Возвращаю. */\n\n\n/* ── Доли сегментов: кольцо с иконками ── */\n.seg{display:grid;grid-template-columns:230px 1fr;gap:26px;align-items:center}\n.seg-leg{display:flex;flex-direction:column;gap:9px}\n.sl{display:flex;align-items:center;gap:12px}\n.sl .ic{width:38px;height:38px;border-radius:12px;flex:0 0 auto;display:flex;\n  align-items:center;justify-content:center;border:1px solid var(--line)}\n.sl .ic svg{width:19px;height:19px;fill:none;stroke-width:1.6}\n.sl .nm{flex:1;font-size:12.5px;color:var(--ink-3);line-height:1.35}\n.sl .nm b{display:block;color:var(--ink);font-weight:700;font-size:13.5px}\n.sl .pc{font-size:17px;font-weight:700;letter-spacing:-.02em;min-width:44px;text-align:right}\n\n/* ── SWOT: четыре поля — четыре цвета ────────────────────────────────────────\n   Владелица попросила просто четыре разных цвета вместо кодировки оттенком.\n   Полоска сверху убрана: она спорила со скруглением, и одно из двух должно\n   было уйти. Цвет теперь несёт рамка, подложка, иконка и точки списка —\n   углы остаются круглыми. */\n.sw{position:relative}\n.sw-s{--c:var(--sw-green)}\n.sw-w{--c:var(--sw-violet)}\n.sw-o{--c:var(--sw-blue)}\n.sw-t{--c:var(--sw-grey)}\n.sw-s,.sw-w,.sw-o,.sw-t{\n  background:color-mix(in srgb, var(--c) 9%, transparent);\n  border-color:color-mix(in srgb, var(--c) 34%, var(--line))}\n.sw-s li::before,.sw-w li::before,.sw-o li::before,.sw-t li::before{background:var(--c)}\n.sw-note{grid-column:1/-1;font-size:11.5px;color:var(--ink-3);margin-top:2px;line-height:1.5}\n@media (max-width:820px){ .seg{grid-template-columns:1fr} }\n\n/* ── Путь клиента лесенкой ───────────────────────────────────────────────────\n   Формат из примера владелицы. Хорош он не видом, а устройством: каждый этап\n   сразу спарен с ДЕЙСТВИЕМ — «что делаем на этом этапе». Это тот же приём,\n   что и третья колонка в портрете сегмента: справка превращается в инструкцию.\n   Что взято: ступени полосами, крупный номер, стрелка вперёд, сужение слева.\n\n   ПРАВКА 10.09, владелица: «грубовато, выглядит сильно тяжело». Причин три.\n   1. Пять НАСЫЩЕННЫХ заливок подряд с белым текстом — самый контрастный из\n      возможных приёмов, отсюда тяжесть. Теперь одна бирюза по светлоте от\n      бледной к плотной, текст тёмный. Смысл тот же и даже точнее: продвижение\n      по пути — ОДНА величина, ей и положена одна шкала, а не пять тонов.\n   2. Три из пяти прежних цветов (#8E8C87, #6E76C9, #3FA9C9) вообще не из\n      палитры — остались с раннего захода. Их больше нет.\n   3. Острые углы и глубокий вырез. Углы скруглены, подписи мельче и без\n      разрядки — «техническая» жёсткость уходит.\n\n   ПРАВКА 2, тот же день: стрелка на конце убрана совсем — теперь просто косой\n   срез, и цветная часть придвинута к тексту. Владелица: «эта площадь у нас\n   очень большая закрашена». Так и было: полосы шли до 340px, и на пять рядов\n   набиралась заметная плашка цвета. Сузила до 250–175. Сужение к низу при этом\n   сохранилось — оно показывает, сколько людей доходит, — просто разница теперь\n   мягче, а точный процент всё равно стоит числом справа. */\n.lad{display:flex;flex-direction:column;gap:8px}\n.lrow{display:grid;grid-template-columns:var(--lw,300px) 1fr;gap:0;align-items:stretch}\n.lleft{position:relative;display:flex;align-items:center;gap:13px;\n  padding:14px 26px 14px 18px;color:var(--ink);border-radius:12px 0 0 12px;\n  /* один косой срез вместо стрелки: верх длиннее низа */\n  clip-path:polygon(0 0, 100% 0, calc(100% - 20px) 100%, 0 100%)}\n.lleft .num{font-size:19px;font-weight:700;letter-spacing:-.02em;opacity:.5;\n  min-width:28px;text-align:right}\n.lleft .nm{font-size:13px;font-weight:700;line-height:1.3;letter-spacing:-.01em}\n.lright{padding:14px 20px 14px 22px;margin-left:-14px;border-radius:0 12px 12px 0;\n  background:color-mix(in srgb, var(--ink) 2%, transparent);\n  display:flex;flex-direction:column;justify-content:center;gap:3px}\n.lright b{font-size:13px;font-weight:700;color:var(--ink);line-height:1.4}\n.lright span{font-size:12.5px;color:var(--ink-2);line-height:1.5}\n.lright .meta{margin-top:6px;font-size:11.5px;font-weight:600;\n  color:var(--ink-3);display:flex;gap:16px;flex-wrap:wrap}\n.lright .meta i{font-style:normal}\n.lright .meta i.rk-high{color:var(--acc-mid-ink)}\n.lright .meta i.rk-medium{color:var(--ink-3)}\n.lright .meta i.rk-low{color:var(--acc-ink)}\n.lright .meta i.rk::before{content:\"\";display:inline-block;width:6px;height:6px;\n  border-radius:50%;background:currentColor;margin-right:6px;vertical-align:1px}\n@media (max-width:820px){\n  .lrow{grid-template-columns:1fr}\n  .lleft{clip-path:none;padding-right:18px;border-radius:12px 12px 0 0}\n  .lright{margin-left:0;padding-left:20px}\n}\n\n<style>\n/* ── Разбор модуля: «как сейчас» рядом с «как предлагаю» ─────────────────── */\n.sech{font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;\n  color:var(--ink-3);margin:34px 0 14px;display:flex;align-items:center;gap:14px}\n.sech::after{content:\"\";flex:1;height:1px;background:var(--line)}\n.two2{display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:start}\n.two2 .viz{margin-bottom:0}\n/* Настоящая таблица отчёта — намеренно без украшений: она должна выглядеть\n   ровно так, как выглядит сегодня, иначе сравнение нечестное. */\n.rawwrap{overflow-x:auto}\ntable.raw{border-collapse:collapse;width:100%;font-size:11.5px;line-height:1.4}\ntable.raw th,table.raw td{border:1px solid var(--line);padding:6px 8px;\n  text-align:left;vertical-align:top;hyphens:none}\ntable.raw th{background:color-mix(in srgb, var(--ink) 4%, transparent);\n  font-weight:700;color:var(--ink-3);font-size:10.5px;white-space:nowrap}\ntable.raw td{color:var(--ink-2)}\ntable.raw td.num{font-variant-numeric:tabular-nums;text-align:center;white-space:nowrap}\n.verd{background:color-mix(in srgb, var(--sw-violet) 5%, var(--raise));\n  border:1px solid color-mix(in srgb, var(--sw-violet) 24%, var(--line));\n  border-radius:16px;padding:16px 20px;margin:12px 0 0}\n.verd p{margin:0 0 9px;font-size:13px;line-height:1.55;color:var(--ink-2)}\n.verd p:last-child{margin-bottom:0}\n.verd b{color:var(--ink)}\n@media (max-width:1000px){ .two2{grid-template-columns:1fr} }\n\n\n\n\n<style>\n/* ── Карточка конкурента ──────────────────────────────────────────────────\n   BLOCK 06 отдаёт ВОСЕМНАДЦАТЬ колонок на 8–15 строк. Таблицей это не\n   читается ни на каком экране: строка уезжает вбок, и чтобы сравнить оффер\n   с ценой, приходится возить полосу прокрутки туда-сюда.\n   Конкурент — объект, а не строка сравнения. Поэтому карточка, и поля в ней\n   сгруппированы по смыслу: кто это → что предлагает → чем силён и слаб →\n   что мешает клиенту и как он это снимает → наша возможность.\n   Ни одно поле не выброшено: все восемнадцать на месте. */\n.comp{display:flex;flex-direction:column;gap:12px}\n.ccard2{border:1px solid var(--line);background:var(--card-solid);border-radius:18px;\n  overflow:hidden}\n.ccard2 .chead{display:grid;grid-template-columns:1fr auto;gap:16px;align-items:start;\n  padding:16px 20px;background:color-mix(in srgb, var(--ink) 3%, transparent);\n  border-bottom:1px solid var(--line)}\n.ccard2 .cid{font-size:10.5px;font-weight:700;letter-spacing:.06em;color:var(--ink-3);\n  hyphens:none}\n.ccard2 .cnm{font-size:16px;font-weight:700;letter-spacing:-.02em;margin:3px 0 4px}\n.ccard2 .cmeta{display:flex;gap:8px;flex-wrap:wrap;align-items:center;font-size:11.5px;\n  color:var(--ink-3)}\n.ccard2 .scale{display:inline-block;font-size:10px;font-weight:700;letter-spacing:.05em;\n  text-transform:uppercase;padding:2px 8px;border-radius:999px;background:var(--line-2);\n  color:var(--ink-2);hyphens:none}\n.ccard2 .price{text-align:right}\n.ccard2 .price b{display:block;font-size:16px;font-weight:700;letter-spacing:-.02em}\n.ccard2 .price span{display:block;font-size:10.5px;color:var(--ink-3);margin-top:2px}\n.cgrid{display:grid;grid-template-columns:1fr 1fr;gap:0}\n.cbox{padding:15px 20px;border-top:1px solid var(--line-2)}\n.cbox:nth-child(odd){border-right:1px solid var(--line-2)}\n.cbox h5{margin:0 0 8px;font-size:10px;font-weight:700;letter-spacing:.07em;\n  text-transform:uppercase;color:var(--ink-3)}\n.cbox p{margin:0;font-size:12.5px;line-height:1.5;color:var(--ink-2)}\n.cbox p+p{margin-top:7px}\n.cbox ul{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:6px}\n.cbox li{font-size:12.5px;line-height:1.45;color:var(--ink-2);padding-left:14px;\n  position:relative}\n.cbox li::before{content:\"\";position:absolute;left:0;top:7px;width:5px;height:5px;\n  background:var(--ink-3)}\n.cbox.pro li::before{background:var(--mid)}\n.cbox.con li::before{background:var(--sw-violet)}\n.cbox.full{grid-column:1/-1;border-right:0}\n.cbox.gap2{grid-column:1/-1;border-right:0;\n  background:color-mix(in srgb, var(--mid) 5%, transparent)}\n.cbox.gap2 p{color:var(--ink)}\n\n/* ── Гэп-анализ, сгруппированный по статусу ───────────────────────────────\n   Главное здесь — не «что у нас лучше», а НА ЧЁМ это утверждение стоит.\n   Поэтому «Основание статуса» вынесено на видное место, а не спрятано\n   одиннадцатой колонкой, куда никто не долистает. */\n/* Секция статуса/эмоции — отдельная карточка: шапка, под ней шапка колонок,\n   под ней ряды. Заголовок, стоящий просто строкой над рядами, сливается с\n   таблицей — владелица поймала это на M2. */\n.gap{display:flex;flex-direction:column;gap:14px}\n.gsec{border:1px solid var(--line);border-radius:16px;overflow:hidden;\n  background:var(--card-solid)}\n.gsec h4{margin:0;padding:14px 18px;font-size:12px;font-weight:700;letter-spacing:.08em;\n  text-transform:uppercase;color:var(--ink);display:flex;align-items:center;gap:14px;\n  border-bottom:1px solid var(--line)}\n/* Заголовок с эмоцией: крупный значок слева, рядом название и подсказка в две\n   строки — блок начинается с образа, а не с полоски текста. */\n.gsec h4.wemo .etxt{display:flex;flex-direction:column;gap:3px;min-width:0}\n.gsec h4.wemo .etxt b{font-size:15px;font-weight:700;letter-spacing:-.01em;\n  text-transform:none;color:var(--ink)}\n.gsec h4.wemo .etxt span{font-size:11.5px;font-weight:600;letter-spacing:0;\n  text-transform:none;color:var(--ink-3)}\n.gsec h4 .cnt{margin-left:auto;font-size:11px;font-weight:700;color:var(--ink-2);\n  letter-spacing:0;text-transform:none;hyphens:none;white-space:nowrap}\n.grow2{display:grid;grid-template-columns:186px 1fr 1fr 1fr;gap:16px;\n  padding:12px 18px;border-top:1px solid var(--line-2);align-items:start;font-size:12.5px;\n  line-height:1.45}\n.grow2:first-of-type{border-top:0}\n.grow2 .kk{font-weight:700;color:var(--ink);font-size:13px}\n.grow2 .vv{color:var(--ink-2)}\n.grow2 .vv b{color:var(--ink);font-weight:600}\n.ghead{display:grid;grid-template-columns:186px 1fr 1fr 1fr;gap:16px;\n  padding:10px 18px;font-size:10px;font-weight:700;letter-spacing:.07em;\n  text-transform:uppercase;color:var(--ink-3);\n  background:color-mix(in srgb, var(--ink) 3%, transparent);\n  border-bottom:1px solid var(--line)}\n.warn{background:color-mix(in srgb, var(--sw-violet) 7%, var(--raise));\n  border:1px solid color-mix(in srgb, var(--sw-violet) 28%, var(--line));\n  border-radius:16px;padding:16px 20px;margin:12px 0 0}\n.warn p{margin:0 0 9px;font-size:13px;line-height:1.55;color:var(--ink-2)}\n.warn p:last-child{margin-bottom:0}\n.warn b{color:var(--ink)}\n@media (max-width:900px){\n  .cgrid,.grow2,.ghead{grid-template-columns:1fr}\n  .cbox:nth-child(odd){border-right:0}\n  .ghead{display:none}\n}\n\n\n/* ── Метка проверки цитаты ────────────────────────────────────────────────\n   Самое ценное в M3 — не оформление, а то, что цитаты УЖЕ проверяются\n   машиной: страница скачивается и в ней ищется точное совпадение подстроки.\n   Непрошедшие удаляются из отчёта. Читатель об этом не знает вообще.\n   Метка возвращает ему это знание: цитата со «сверено с источником» стоит\n   дороже той же цитаты без метки, а стоит нам это ноль — работа уже сделана. */\n.vmark{display:inline-flex;align-items:center;gap:6px;font-size:10.5px;font-weight:700;\n  letter-spacing:.04em;text-transform:uppercase;hyphens:none}\n.vmark i{width:9px;height:9px;border-radius:50%;display:block;flex:0 0 auto}\n.vmark.ok{color:var(--ink-2)} .vmark.ok i{background:var(--mid)}\n.vmark.nopage{color:var(--ink-3)} .vmark.nopage i{border:1.5px solid var(--sw-violet)}\n.vmark.gone{color:var(--ink-3)} .vmark.gone i{background:var(--sw-grey)}\n/* ── Карточка цитаты ──────────────────────────────────────────────────────\n   ПРАВКА: владелица — «тема, сегмент, источник, всё одним цветом, всё\n   сливается; и палочка силы боли непонятная и некрасивая».\n   Оба замечания об одном: в карточке не было ИЕРАРХИИ. Шесть полей стояли\n   одинаковым кеглем и одинаковым цветом, хотя важность у них разная.\n   Разложено по весу: тема — заголовок под цитатой, сегмент — плашкой,\n   источник уходит вниз и тише всех, числа отделены линией.\n   Сила боли показана той же конструкцией, что все меры на платформе:\n   дорожка плюс заливка. Три отдельных штриха были чужой формой — такой\n   больше нигде нет, оттого и «непонятно и некрасиво». */\n.vq2{border:1px solid var(--line);background:var(--card-solid);border-radius:16px;\n  padding:0;display:flex;flex-direction:column;overflow:hidden}\n.vq2 .vtop{padding:15px 18px 0}\n.vq2 blockquote{margin:12px 0 0;font-family:var(--serif);font-style:italic;\n  font-size:15px;line-height:1.5;color:var(--ink)}\n.vq2 .vtheme{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;\n  margin:14px 0 0;padding:0 18px}\n.vq2 .vtheme b{font-size:13.5px;font-weight:700;color:var(--ink);letter-spacing:-.01em}\n.vq2 .seg2{display:inline-block;font-size:10px;font-weight:700;letter-spacing:.05em;\n  text-transform:uppercase;color:var(--ink-2);background:var(--line-2);\n  padding:3px 9px;border-radius:999px;hyphens:none}\n.vq2 .vsrc2{padding:5px 18px 0;font-size:11.5px;color:var(--ink-3)}\n.vq2 .vnums{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:14px;\n  padding:12px 18px;border-top:1px solid var(--line-2);\n  background:color-mix(in srgb, var(--ink) 2%, transparent)}\n.vq2 .vnums .lab{display:block;font-size:10px;font-weight:700;letter-spacing:.07em;\n  text-transform:uppercase;color:var(--ink-3);margin-bottom:5px}\n.vq2 .vnums .big2{font-size:15px;font-weight:700;color:var(--ink);letter-spacing:-.02em}\n.vq2 .vnums .big2 em{font-style:normal;font-size:11.5px;font-weight:600;\n  color:var(--ink-3);margin-left:4px}\n/* Мера силы — дорожка и заливка, как у всех полос на платформе. */\n.pain{display:flex;align-items:center;gap:9px;margin-top:2px}\n.pain .rail2{flex:1;max-width:78px;height:9px;background:var(--line-2)}\n.pain .rail2 i{display:block;height:100%;background:var(--mid)}\n.pain b{font-size:12.5px;font-weight:700;color:var(--ink)}\n.vq2 .vans{padding:13px 18px;border-top:1px solid var(--line-2);font-size:12.5px;\n  line-height:1.45;color:var(--ink)}\n.vq2 .vans span{display:block;font-size:10px;font-weight:700;letter-spacing:.07em;\n  text-transform:uppercase;color:var(--ink-3);margin-bottom:3px}\n.vgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:12px}\n/* ── Значок эмоции ────────────────────────────────────────────────────────\n   ВОССТАНОВЛЕНО. Правила значка я снесла, когда переписывала блок банка языка\n   целиком: пропали fill:none и stroke:currentColor. Без них браузер рисует\n   svg по умолчанию — заливает чёрным и не рисует контур вовсе. Владелица это\n   и увидела: «опять всё чёрное». Это была поломка, а не оформление.\n   Контур, без заливки, цвет наследуется от родителя — то есть от эмоции. */\n.emo{flex:0 0 auto;display:flex;align-items:center}\n.emo svg{fill:none;stroke:currentColor;stroke-width:1.6;\n  stroke-linecap:round;stroke-linejoin:round;display:block}\n\n/* ── Банк языка: одна карточка, внутри полосы с разрывами ─────────────────\n   Владелица: «а если не скруглённые плашки, а как у наших графиков — собрать\n   линией; общее скруглённое, а внутри разделено по эмоциям с небольшим\n   разрывом, как в диаграмме».\n   Так и сделано, и это оказалось точнее, чем плашки. Цветная подложка была\n   чужим приёмом: у нас цвет живёт ЗАЛИВКОЙ ПОЛОСЫ, а не подкрашенным полем.\n   Здесь полоса делает три работы сразу — отделяет эмоцию, называет её цветом\n   и ПОКАЗЫВАЕТ ОБЪЁМ: высота равна доле реплик этой эмоции. Разрывы между\n   полосами те же 3px, что между секторами кольца. */\n.lang{border:1px solid var(--line);border-radius:18px;background:var(--card-solid);\n  max-width:900px;padding:6px 0}\n.lrow2{display:grid;grid-template-columns:7px 236px 1fr;gap:0;align-items:stretch}\n.lbar{margin:3px 0 3px 10px}\n/* Значок эмоции — крупный, в цвет своей полосы, слева от всего текстового\n   столбика: названия, подсказки и чисел. Владелица просила именно так:\n   «во всю высоту заголовка». Размер здесь и есть смысл — эмоция должна\n   узнаваться раньше, чем прочитано слово, а на 36px рисунок этого не давал. */\n/* ПРАВКА, владелица: «надо сделать линию — восемь из двенадцати — и вот это\n   цветное; тогда никаких иконок не нужно».\n   Так и вышло лучше. Значок был украшением и трижды не давался; линия —\n   измерение, она работает. Дорожка равна всему банку, заливка — доле этой\n   эмоции. Число рядом даёт точность, длина — сравнение без чтения.\n   Значков в блоке больше нет. */\n.ltag{display:flex;flex-direction:column;gap:8px;padding:16px 18px 16px 16px}\n.lmeter{display:flex;align-items:center;gap:10px;margin-top:2px}\n.lmeter .rail3{flex:1;height:9px;background:var(--line-2)}\n.lmeter .rail3 i{display:block;height:100%}\n.lmeter b{font-size:11.5px;font-weight:700;color:var(--ink);white-space:nowrap;\n  hyphens:none}\n.ltag .ename{font-size:14.5px;font-weight:700;color:var(--ink);line-height:1.25}\n.ltag .ename span{display:block;font-size:11px;font-weight:600;color:var(--ink-3);\n  margin-top:4px}\n.llist{display:flex;flex-direction:column;gap:8px;padding:16px 18px 16px 6px}\n.llist div{font-family:var(--serif);font-size:13.5px;line-height:1.45;color:var(--ink);\n  padding-left:16px;position:relative}\n.llist div::before{content:\"\";position:absolute;left:0;top:7.5px;width:5px;height:5px;\n  /* Было «--c2» — такой переменной в файле нет вовсе, и точки рисовались\n     прозрачными, то есть их не было видно. Ставим ту же бирюзу заливкой, что у\n     всех круглых маркеров списков на платформе.\n     11.09: переменная появилась — renderLangBank ставит её на строке группы.\n     Точка теперь того же цвета, что полоса и шкала этой эмоции (владелица:\n     «точечки к каждым надо в этот же цвет»), бирюза остаётся запасной. */\n  border-radius:50%;background:var(--c2,var(--mid))}\n.llist div span{font-family:var(--sans);font-size:11px;color:var(--ink-3);\n  margin-left:8px;white-space:nowrap}\n@media (max-width:760px){\n  .lrow2{grid-template-columns:7px 1fr}\n  .llist{grid-column:2;padding:0 18px 14px 6px}\n}\n\n/* ── Варианты значка эмоции ───────────────────────────────────────────────\n   Лица я нарисовала дважды и дважды мимо. Рисовать выразительное лицо вслепую\n   я проверить не могу: вижу координаты, а не результат. Поэтому вместо третьей\n   попытки того же — четыре РАЗНЫХ направления сразу, чтобы выбрать глазами. */\n.vars{display:flex;flex-direction:column;gap:0}\n.vrow{display:grid;grid-template-columns:236px 1fr;gap:20px;padding:18px 0;\n  border-top:1px solid var(--line-2);align-items:center}\n.vrow:first-child{border-top:0}\n.vrow .vinfo b{display:block;font-size:14px;font-weight:700;color:var(--ink);\n  letter-spacing:-.01em;margin-bottom:5px}\n.vrow .vinfo span{font-size:12px;color:var(--ink-2);line-height:1.45}\n.vset{display:flex;align-items:center;gap:26px;flex-wrap:wrap}\n.vset figure{margin:0;display:flex;flex-direction:column;align-items:center;gap:7px}\n.vset figcaption{font-size:10px;font-weight:700;letter-spacing:.07em;\n  text-transform:uppercase;color:var(--ink-3)}\n.vset svg{display:block;fill:none;stroke-linecap:round;stroke-linejoin:round}\n\n/* ── Проба маскота ────────────────────────────────────────────────────────\n   Владелица прислала птичек и женщин, сделанных ChatGPT, и спросила, подойдут\n   ли. Отвечаю пробой, а не словами: перерисовала птицу под наш вес линии —\n   без круга, без заливок, тёмными чернилами, а фирменный цвет остался только\n   в признаке эмоции. Рядом стоит текущий значок, чтобы сравнивать вживую. */\n.mtest{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:0 22px}\n.mcol{padding:16px 0;border-top:1px solid var(--line-2)}\n.mcol h5{margin:0 0 12px;font-size:10px;font-weight:700;letter-spacing:.07em;\n  text-transform:uppercase;color:var(--ink-3)}\n.mrow3{display:flex;align-items:center;gap:18px;flex-wrap:wrap}\n.mrow3 figure{margin:0;display:flex;flex-direction:column;align-items:center;gap:8px}\n.mrow3 svg{display:block;fill:none;stroke-linecap:round;stroke-linejoin:round}\n.mrow3 figcaption{font-size:11px;color:var(--ink-3)}\n.msize{display:flex;align-items:flex-end;gap:16px;margin-top:14px;padding-top:12px;\n  border-top:1px solid var(--line-2)}\n\n.bias{background:color-mix(in srgb, var(--sw-grey) 8%, var(--raise));\n  border:1px solid var(--line);border-radius:14px;padding:14px 18px;margin-top:14px;\n  font-size:12.5px;line-height:1.55;color:var(--ink-2)}\n.bias b{color:var(--ink)}\n\n/* ── Своё для этой страницы ─────────────────────────────────── */\n.sw-help{box-shadow:inset 3px 0 0 var(--mid)}\n.sw-help h3{color:var(--ink)}\n.sw-help li::before{background:var(--acc-strong)}\n\n/* ── Карта рынка — перенесена из разбора M2, где уцелела ── */\n.mkt{display:grid;grid-template-columns:112px repeat(4,1fr);gap:3px}\n.mkt .hd{font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;\n  color:var(--ink-3);display:flex;align-items:flex-end;justify-content:center;\n  padding-bottom:7px;text-align:center;line-height:1.3}\n.mkt .rw{font-size:11.5px;font-weight:700;color:var(--ink-2);display:flex;\n  align-items:center;justify-content:flex-end;padding-right:12px;text-align:right;\n  line-height:1.3}\n.mkt .cell{background:var(--line-2);min-height:74px;padding:9px;display:flex;\n  flex-direction:column;gap:7px}\n.mkt .cell.ours{background:color-mix(in srgb, var(--mid) 12%, var(--line-2));\n  box-shadow:inset 0 0 0 2px color-mix(in srgb, var(--mid) 55%, transparent)}\n.mkt .cell .dots{display:flex;flex-wrap:wrap;gap:4px;align-content:flex-start}\n.mktwrap{position:relative}\n.mkt .dot{width:15px;height:15px;display:grid;place-items:center;padding:0;border:0;\n  background:none;cursor:pointer;border-radius:50%}\n.mkt .dot i{width:9px;height:9px;border-radius:50%;background:var(--sw-grey);display:block;\n  transition:transform .12s ease,opacity .12s ease}\n.mkt .dot i.us{background:var(--mid);box-shadow:0 0 0 2px var(--card-solid),\n  0 0 0 4px color-mix(in srgb, var(--mid) 60%, transparent)}\n.mkt .dot:focus-visible{outline:2px solid var(--mid);outline-offset:2px}\n.mkt.seek .dot i{opacity:.22}\n.mkt.seek .dot.hit i{opacity:1;transform:scale(1.7)}\n.mkt.seek .cell{opacity:.55}\n.mkt.seek .cell.hit{opacity:1}\n.mkttip{position:absolute;z-index:5;pointer-events:none;opacity:0;transform:translate(-50%,-100%);\n  background:var(--card-solid);border:1px solid var(--line);padding:10px 12px;min-width:186px;\n  max-width:260px;box-shadow:0 6px 20px rgba(0,0,0,.12);transition:opacity .12s ease}\n.mkttip.on{opacity:1}\n.mkttip b{display:block;font-size:13px;font-weight:700;color:var(--ink);margin-bottom:7px;line-height:1.25}\n.mkttip dl{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;margin:0;font-size:11.5px}\n.mkttip dt{color:var(--ink-3)}\n.mkttip dd{margin:0;color:var(--ink-2);font-weight:600;font-variant-numeric:tabular-nums;text-align:right}\n.mktlist{margin-top:20px;padding-top:14px;border-top:1px solid var(--line)}\n.mktlist h4{margin:0 0 4px;font-size:10px;font-weight:700;letter-spacing:.07em;\n  text-transform:uppercase;color:var(--ink-3)}\n.mktlist .hint{margin:0 0 10px;font-size:12px;color:var(--ink-3)}\n.mktlist .hdr,.mktlist .r{display:grid;grid-template-columns:1fr 112px 108px 96px;\n  gap:14px;padding:7px 8px;align-items:baseline}\n.mktlist .hdr{font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;\n  color:var(--ink-3);padding-bottom:4px}\n.mktlist .r{border-top:1px solid var(--line-2);font-size:12.5px;cursor:default}\n.mktlist .r:hover,.mktlist .r.on{background:var(--line-2)}\n.mktlist .r:focus-visible{outline:2px solid var(--mid);outline-offset:-2px}\n.mktlist .r b{font-weight:600;color:var(--ink)}\n.mktlist .r.mine{background:color-mix(in srgb, var(--mid) 10%, transparent)}\n.mktlist .r.mine b{font-weight:700}\n.mktlist .r .g{color:var(--ink-2)}\n.mktlist .r .num{text-align:right;font-variant-numeric:tabular-nums;color:var(--ink-2);\n  font-weight:600}\n.mktlist .r .num.no{font-weight:400;color:var(--ink-3)}\n.mkt .cell .n{margin-top:auto;font-size:11px;font-weight:700;color:var(--ink-2);\n  font-variant-numeric:tabular-nums}\n.mkt .cell.empty .n{color:var(--ink-3);font-weight:600}\n.mktleg{display:flex;gap:18px;flex-wrap:wrap;margin-top:14px;padding-top:12px;\n  border-top:1px solid var(--line);font-size:11.5px;color:var(--ink-3)}\n.mktleg span{display:flex;align-items:center;gap:8px}\n.mktleg i{width:9px;height:9px;border-radius:50%;display:block}\n\n/* ── SWOT — утверждено владелицей 11.09 (вариант «рейл») ─────────────────────\n   Переопределяет старые правила оболочки выше: там четыре поля были четырёх\n   разных цветов. Плашки равной высоты, рейл слева у всех четырёх, цветом\n   различается сторона: бирюза «работает на нас», фиолетовый «против».\n   Квадранты различают ПОДПИСИ ОСЕЙ, а не заливки. */\n.swot{display:grid;grid-template-columns:74px 1fr 1fr;gap:10px;align-items:stretch}\n.swot .cor{font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;\n  color:var(--ink-3);display:flex;align-items:flex-end;justify-content:center;\n  padding-bottom:8px;line-height:1.3}\n.swot .cor.r{align-items:center;justify-content:flex-end;text-align:right;padding:0 10px 0 0}\n.swot .sw{border:1px solid var(--line);border-radius:16px;padding:16px 18px;\n  background:var(--card-solid);display:flex;flex-direction:column;\n  box-shadow:inset 3px 0 0 var(--acc-mid)}\n.swot .sw h3{font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;\n  color:var(--ink-3);margin:0 0 10px;display:block}\n.swot .sw ul{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:7px}\n.swot .sw li{font-size:13px;color:var(--ink-2);padding-left:14px;position:relative;line-height:1.5}\n.swot .sw li::before{content:\"\";position:absolute;left:0;top:8px;width:5px;height:5px;\n  border-radius:50%;background:var(--acc-mid)}\n.swot .sw-help{box-shadow:inset 3px 0 0 var(--mid)}\n.swot .sw-help h3{color:var(--ink)}\n.swot .sw-help li::before{background:var(--acc-strong)}\n.swot .sw-note{grid-column:1/-1;font-size:11.5px;color:var(--ink-3);margin-top:4px;line-height:1.5}\n@media (max-width:820px){ .swot{grid-template-columns:1fr} .swot .cor{display:none} }\n";
+// Блоки M1 — ниши карточками, легенда кольца, радар. Лежат ВТОРЫМ блоком
+// <style> в design/РАЗБОР-M1.html. Это, кстати, и был источник моих ошибок
+// сегодня: разборы содержат по два-три блока стилей, а все мои проверки читали
+// только первый и потому «не видели» половину правил.
+const REPORT_RULES_CSS = ".rules{background:none;backdrop-filter:none;border:0;border-radius:0;overflow:visible;\n  display:grid;grid-template-columns:repeat(2,1fr);gap:14px}\n.rule-card{position:relative;overflow:hidden;\n  background:var(--card);backdrop-filter:blur(14px);border:1px solid var(--line);\n  border-radius:20px;padding:22px 24px 22px 26px;\n  font-size:13.6px;line-height:1.6;color:var(--ink-2);\n  box-shadow:inset 0 1px 0 var(--hi), 0 10px 26px -20px rgba(45,36,22,.3);\n  transition:box-shadow .4s ease, transform .4s cubic-bezier(.2,.8,.2,1)}\n.rule-card:hover{transform:translateY(-2px);\n  box-shadow:inset 0 1px 0 var(--hi), 0 18px 34px -20px rgba(45,36,22,.4)}\n.rule-card b{position:absolute;right:16px;bottom:-14px;\n  font-size:74px;font-weight:700;line-height:1;\n  color:color-mix(in srgb, var(--ink) 12%, transparent);\n  pointer-events:none;user-select:none}\n.rule-card::before{content:\"\";position:absolute;left:0;top:0;height:2px;width:0;\n  background:linear-gradient(90deg, var(--mid), transparent);\n  transition:width .55s cubic-bezier(.2,.8,.2,1)}\n.rule-card:hover::before{width:100%}\n.rule-card span{position:relative;z-index:1;display:block;max-width:34ch}";
+const REPORT_M3_CSS = ".vq .vst{display:flex;align-items:center;gap:7px;font-size:10px;font-weight:700;\n  letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3)}\n.vq .vst i{width:9px;height:9px;border-radius:50%;display:block;flex:0 0 auto}\n.vq .vst.wait i{border:1.5px solid var(--ink-3)}\n.vq .vst.work i{background:var(--mid)}\n.vq .vst.done i{background:var(--ink-3)}\n.vq .vst.work{color:var(--ink)}\n.vq2{border:1px solid var(--line);background:var(--card-solid);border-radius:16px;\n  padding:0;display:flex;flex-direction:column;overflow:hidden}\n.vq2 .vtop{padding:15px 18px 0}\n.vq2 blockquote{margin:12px 0 0;font-family:var(--serif);font-style:italic;\n  font-size:15px;line-height:1.5;color:var(--ink)}\n.vq2 .vtheme{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;\n  margin:14px 0 0;padding:0 18px}\n.vq2 .vtheme b{font-size:13.5px;font-weight:700;color:var(--ink);letter-spacing:-.01em}\n.vq2 .seg2{display:inline-block;font-size:10px;font-weight:700;letter-spacing:.05em;\n  text-transform:uppercase;color:var(--ink-2);background:var(--line-2);\n  padding:3px 9px;border-radius:999px;hyphens:none}\n.vq2 .vsrc2{padding:5px 18px 0;font-size:11.5px;color:var(--ink-3)}\n.vq2 .vnums{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:14px;\n  padding:12px 18px;border-top:1px solid var(--line-2);\n  background:color-mix(in srgb, var(--ink) 2%, transparent)}\n.vq2 .vnums .lab{display:block;font-size:10px;font-weight:700;letter-spacing:.07em;\n  text-transform:uppercase;color:var(--ink-3);margin-bottom:5px}\n.vq2 .vnums .big2{font-size:15px;font-weight:700;color:var(--ink);letter-spacing:-.02em}\n.vq2 .vnums .big2 em{font-style:normal;font-size:11.5px;font-weight:600;\n  color:var(--ink-3);margin-left:4px}\n.pain{display:flex;align-items:center;gap:9px;margin-top:2px}\n.pain .rail2{flex:1;max-width:78px;height:9px;background:var(--line-2)}\n.pain .rail2 i{display:block;height:100%;background:var(--mid)}\n.pain b{font-size:12.5px;font-weight:700;color:var(--ink)}\n.vq2 .vans{padding:13px 18px;border-top:1px solid var(--line-2);font-size:12.5px;\n  line-height:1.45;color:var(--ink)}\n.vq2 .vans span{display:block;font-size:10px;font-weight:700;letter-spacing:.07em;\n  text-transform:uppercase;color:var(--ink-3);margin-bottom:3px}\n.emo{flex:0 0 auto;display:flex;align-items:center}\n.emo svg{fill:none;stroke:currentColor;stroke-width:1.6;\n  stroke-linecap:round;stroke-linejoin:round;display:block}\n.lang{border:1px solid var(--line);border-radius:18px;background:var(--card-solid);\n  max-width:900px;padding:6px 0}\n.bias{background:color-mix(in srgb, var(--sw-grey) 8%, var(--raise));\n  border:1px solid var(--line);border-radius:14px;padding:14px 18px;margin-top:14px;\n  font-size:12.5px;line-height:1.55;color:var(--ink-2)}\n.bias b{color:var(--ink)}";
+const REPORT_DEMO_CSS = ".pyr{display:flex;flex-direction:column;gap:13px}\n.pyr-head{display:grid;grid-template-columns:1fr 78px 1fr;align-items:center;\n  margin-bottom:14px;padding-bottom:11px;border-bottom:1px solid var(--line);gap:8px}\n.pyr-head .t{font-size:16px;font-weight:700;letter-spacing:-.02em;color:var(--ink);\n  display:flex;align-items:center;gap:9px}\n.pyr-head .t.r{justify-content:flex-end}\n.pyr-head .t .sx{width:26px;height:26px;border-radius:8px;display:flex;\n  align-items:center;justify-content:center;flex:0 0 auto}\n.pyr-head .t .sx{background:var(--line-2)}\n.pyr-head .t .sx svg{width:17px;height:17px;fill:none;stroke:var(--ink-2);\n  stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;display:block}\n.pyr-head .c{text-align:center;font-size:10px;font-weight:700;letter-spacing:.07em;\n  text-transform:uppercase;color:var(--ink-3)}\n.pyrow{display:grid;grid-template-columns:1fr 78px 1fr;align-items:center;gap:8px}\n.pyrow .s{display:flex;align-items:center}\n.pyrow .s.l{justify-content:flex-end}\n.pyrow .rail{flex:1;height:14px;background:var(--line-2);display:flex}\n.pyrow .s.l .rail{justify-content:flex-end}\n.pyrow .bar{height:14px;flex:0 0 auto;min-width:3px}\n.pyrow .l .bar{background:var(--mid)}\n.pyrow .r .bar{background:var(--sw-violet)}\n.pyrow .s .v{font-size:11.5px;font-weight:700;color:var(--ink);\n  font-variant-numeric:tabular-nums;min-width:38px}\n.pyrow .s.l .v{text-align:right;margin-right:9px}\n.pyrow .s.r .v{text-align:left;margin-left:9px}\n.pyrow .age{text-align:center;font-size:11.5px;color:var(--ink-2);font-weight:600;\n  font-variant-numeric:tabular-nums}\n.val,.axis,.lbl,.gx,.dbar .n,.kpi .n,.pyrow .s .v,.gvol .v{hyphens:none;-webkit-hyphens:none}\n.bpain .dbar{grid-template-columns:1fr 190px 58px}\n.chnside .dbar{grid-template-columns:1fr 84px 34px}\n.bpain .dbar .t{color:var(--ink-2)}\n.bpain .dbar .n{font-variant-numeric:tabular-nums}\n.val,.axis,.lbl,.gx,.dbar .n,.kpi .n,.pyrow .s .v,.gvol .v{hyphens:none;-webkit-hyphens:none}\n.att .dbar{grid-template-columns:172px 1fr 104px}\n.att .dbar .n{white-space:nowrap}\n.demo{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;padding:18px 22px;\n  border-top:1px solid var(--line-2)}\n.demo h4{font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;\n  color:var(--ink-3);margin:0 0 10px}\n.dsplit{display:flex;height:26px;border-radius:0;overflow:hidden;margin-bottom:7px}\n.dsplit span{display:flex;align-items:center;justify-content:center;font-size:11px;\n  font-weight:700;color:#12100D}\n.dbars{display:flex;flex-direction:column;gap:13px}\n.dbar{display:grid;grid-template-columns:46px 1fr 30px;gap:8px;align-items:center;font-size:11.5px}\n.dbar .t{color:var(--ink-3)}\n.dbar .g{height:14px;background:var(--line-2)}\n.dbar .g i{display:block;height:100%;background:var(--mid)}\n.dbar .n{text-align:right;font-weight:700;color:var(--ink)}\n.chips{display:flex;flex-direction:column;gap:11px}\n.chips figure{margin:0;display:flex;flex-direction:row;align-items:center;gap:11px;\n  text-align:left}\n.chips figure .disc{width:34px;height:34px;border-radius:11px;display:flex;\n  align-items:center;justify-content:center;background:var(--line-2)}\n.chips figure svg{width:19px;height:19px;fill:none;stroke:var(--ink-2);\n  stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;display:block}\n.chips figcaption{font-size:12.5px;font-weight:600;color:var(--ink-2);line-height:1.35}\n.demo.split{grid-template-columns:1fr 1fr;gap:0}\n.demo.split > div + div{border-left:1px solid var(--line);padding-left:24px}\n.demo.split > div:first-child{padding-right:24px}";
+const REPORT_M5_CSS = ".inp{display:grid;gap:0}\n.inp .ir{display:grid;grid-template-columns:190px 1fr 128px;gap:16px;padding:10px 8px;\n  border-top:1px solid var(--line-2);font-size:12.5px;align-items:baseline}\n.inp .ir:first-child{border-top:0}\n.inp .ir .k{color:var(--ink-3);font-weight:600}\n.inp .ir .v{color:var(--ink);line-height:1.5}\n.inp .ir .v.miss{color:var(--ink-3);font-style:italic}\n.inp .ir .o{font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;\n  text-align:right}\n.inp .ir .o.brief{color:var(--acc-ink)}\n.inp .ir .o.site{color:var(--ink-2)}\n.inp .ir .o.none{color:var(--acc-quiet)}\n.kan{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}\n.kcol h3{font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;\n  color:var(--ink-3);margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid var(--line)}\n.kcard{border:1px solid var(--line);border-radius:14px;padding:13px 15px;margin-bottom:9px;\n  background:var(--card-solid)}\n.kcard b{display:block;font-size:12.5px;margin-bottom:4px}\n.kcard span{display:block;font-size:11.5px;color:var(--ink-3);line-height:1.5}\n.kcard .met{margin-top:8px;padding-top:8px;border-top:1px solid var(--line-2);\n  font-size:11px;color:var(--ink-2);font-weight:600}\n.kcard .met u{text-decoration:none;color:var(--acc-ink);font-weight:700}";
+const REPORT_PERS_CSS = ".pers-conf{margin-top:14px;padding-top:14px;border-top:1px solid rgba(23,21,18,.1)}\n.pers-conf .clab{display:block;font-size:10px;font-weight:700;letter-spacing:.07em;\n  text-transform:uppercase;color:var(--ink-3);margin-bottom:6px}\n.pers-conf .crail{display:block;height:9px;background:var(--line-2);margin-bottom:7px}\n.pers-conf .crail i{display:block;height:100%}\n.pers-conf b{font-size:13px;font-weight:700;color:var(--ink)}\n.pers-conf span.sub2{display:block;font-size:11px;color:var(--ink-3);margin-top:3px}";
+const REPORT_LIB4_CSS = ".pers{display:grid;grid-template-columns:230px 1fr;gap:0;\n  border:1px solid var(--line);border-radius:20px;overflow:hidden;margin-bottom:14px}\n.prow{display:grid;grid-template-columns:150px 1fr 1fr;gap:16px;\n  padding:12px 22px;border-top:1px solid var(--line-2);font-size:13px;line-height:1.5}\n.prow:first-child{border-top:0}\n.prow .p{color:var(--ink-3);font-size:11.5px;font-weight:600;padding-top:1px}\n.prow .v{color:var(--ink)}\n.prow .a{color:var(--acc-ink);font-weight:600}\n.lad{display:flex;flex-direction:column;gap:8px}\n.lrow{display:grid;grid-template-columns:var(--lw,300px) 1fr;gap:0;align-items:stretch}\n.lleft{position:relative;display:flex;align-items:center;gap:13px;\n  padding:14px 26px 14px 18px;color:var(--ink);border-radius:12px 0 0 12px;\n  /* один косой срез вместо стрелки: верх длиннее низа */\n  clip-path:polygon(0 0, 100% 0, calc(100% - 20px) 100%, 0 100%)}\n.lleft .num{font-size:19px;font-weight:700;letter-spacing:-.02em;opacity:.5;\n  min-width:28px;text-align:right}\n.lleft .nm{font-size:13px;font-weight:700;line-height:1.3;letter-spacing:-.01em}\n.lright{padding:14px 20px 14px 22px;margin-left:-14px;border-radius:0 12px 12px 0;\n  background:color-mix(in srgb, var(--ink) 2%, transparent);\n  display:flex;flex-direction:column;justify-content:center;gap:3px}\n.lright b{font-size:13px;font-weight:700;color:var(--ink);line-height:1.4}\n.lright span{font-size:12.5px;color:var(--ink-2);line-height:1.5}\n.lright .meta{margin-top:6px;font-size:11.5px;font-weight:600;\n  color:var(--ink-3);display:flex;gap:16px;flex-wrap:wrap}\n.lright .meta i{font-style:normal}\n.lright .meta i.rk-high{color:var(--acc-mid-ink)}\n.lright .meta i.rk-medium{color:var(--ink-3)}\n.lright .meta i.rk-low{color:var(--acc-ink)}\n.lright .meta i.rk::before{content:\"\";display:inline-block;width:6px;height:6px;\n  border-radius:50%;background:currentColor;margin-right:6px;vertical-align:1px}\n.ltag{display:flex;flex-direction:column;gap:8px;padding:16px 18px 16px 16px}\n.lmeter{display:flex;align-items:center;gap:10px;margin-top:2px}\n.lmeter .rail3{flex:1;height:9px;background:var(--line-2)}\n.lmeter .rail3 i{display:block;height:100%}\n.lmeter b{font-size:11.5px;font-weight:700;color:var(--ink);white-space:nowrap;\n  hyphens:none}\n.ltag .ename{font-size:14.5px;font-weight:700;color:var(--ink);line-height:1.25}\n.ltag .ename span{display:block;font-size:11px;font-weight:600;color:var(--ink-3);\n  margin-top:4px}\n.llist{display:flex;flex-direction:column;gap:8px;padding:16px 18px 16px 6px}\n.llist div{font-family:var(--serif);font-size:13.5px;line-height:1.45;color:var(--ink);\n  padding-left:16px;position:relative}\n.llist div::before{content:\"\";position:absolute;left:0;top:7.5px;width:5px;height:5px;\n  /* Было «--c2» — такой переменной в файле нет вовсе, и точки рисовались\n     прозрачными, то есть их не было видно. Ставим ту же бирюзу заливкой, что у\n     всех круглых маркеров списков на платформе.\n     11.09: переменная появилась — renderLangBank ставит её на строке группы.\n     Точка теперь того же цвета, что полоса и шкала этой эмоции (владелица:\n     «точечки к каждым надо в этот же цвет»), бирюза остаётся запасной. */\n  border-radius:50%;background:var(--c2,var(--mid))}\n.llist div span{font-family:var(--sans);font-size:11px;color:var(--ink-3);\n  margin-left:8px;white-space:nowrap}\n.pyr{display:flex;flex-direction:column;gap:13px}\n.pyrow{display:grid;grid-template-columns:1fr 78px 1fr;align-items:center;gap:8px}\n.pyrow .s{display:flex;align-items:center}\n.pyrow .s.l{justify-content:flex-end}\n.pyrow .rail{flex:1;height:14px;background:var(--line-2);display:flex}\n.pyrow .s.l .rail{justify-content:flex-end}\n.pyrow .bar{height:14px;flex:0 0 auto;min-width:3px}\n.pyrow .l .bar{background:var(--mid)}\n.pyrow .r .bar{background:var(--sw-violet)}\n.pyrow .s .v{font-size:11.5px;font-weight:700;color:var(--ink);\n  font-variant-numeric:tabular-nums;min-width:38px}\n.pyrow .s.l .v{text-align:right;margin-right:9px}\n.pyrow .s.r .v{text-align:left;margin-left:9px}\n.pyrow .age{text-align:center;font-size:11.5px;color:var(--ink-2);font-weight:600;\n  font-variant-numeric:tabular-nums}\n.val,.axis,.lbl,.gx,.dbar .n,.kpi .n,.pyrow .s .v,.gvol .v{hyphens:none;-webkit-hyphens:none}";
+const REPORT_COMP_CSS = ".ccard{border:1px solid var(--line);background:var(--card-solid);border-radius:16px;\n  padding:16px 18px;display:flex;flex-direction:column;gap:11px}\n.ccard .ch{display:flex;align-items:center;gap:11px}\n.ccard .ci{width:34px;height:34px;border-radius:11px;background:var(--line-2);\n  display:flex;align-items:center;justify-content:center;flex:0 0 auto}\n.ccard .ci svg{width:19px;height:19px;fill:none;stroke:var(--ink-2);stroke-width:1.6;\n  stroke-linecap:round;stroke-linejoin:round;display:block}\n.ccard .cn{font-size:14px;font-weight:700;line-height:1.25}\n.ccard .cn span{display:block;font-size:11px;font-weight:600;color:var(--ink-3);\n  margin-top:3px}\n.ccard .cd{font-size:12.5px;color:var(--ink-2);line-height:1.5}\n.ccard .cf{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;\n  padding-top:11px;border-top:1px solid var(--line-2);margin-top:auto}\n.ccard .cf div span{display:block;font-size:10px;font-weight:700;letter-spacing:.07em;\n  text-transform:uppercase;color:var(--ink-3);margin-bottom:3px}\n.ccard .cf div b{font-size:12px;font-weight:700;color:var(--ink)}\n.ccard .cf .r{text-align:right}\n.comp{display:flex;flex-direction:column;gap:12px}\n.ccard2 .cmeta{display:flex;gap:8px;flex-wrap:wrap;align-items:center;font-size:11.5px;\n  color:var(--ink-3)}\n.comp{display:flex;flex-direction:column;gap:12px}\n.ccard2 .cmeta{display:flex;gap:8px;flex-wrap:wrap;align-items:center;font-size:11.5px;\n  color:var(--ink-3)}";
+const REPORT_LIB3_CSS = ".voc{display:flex;gap:12px;overflow-x:auto;scroll-snap-type:x mandatory;\n  scrollbar-width:none;padding-bottom:2px}\n.voc::-webkit-scrollbar{display:none}\n.vq{flex:0 0 auto;width:268px;scroll-snap-align:start;\n  border:1px solid var(--line);background:var(--card-solid);padding:17px 19px;\n  border-radius:16px;display:flex;flex-direction:column;gap:12px;\n  justify-content:space-between}\n.vq blockquote{margin:0;font-family:var(--serif);font-style:italic;\n  font-size:14px;line-height:1.5;color:var(--ink)}\n.vq .vst{display:flex;align-items:center;gap:7px;font-size:10px;font-weight:700;\n  letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3)}\n.vq .vst i{width:9px;height:9px;border-radius:50%;display:block;flex:0 0 auto}\n.vq .vst.wait i{border:1.5px solid var(--ink-3)}\n.vq .vst.work i{background:var(--mid)}\n.vq .vst.done i{background:var(--ink-3)}\n.vq .vst.work{color:var(--ink)}\n.vq .vf{display:flex;justify-content:space-between;align-items:center;gap:12px;\n  padding-top:12px;border-top:1px solid var(--line-2)}\n.vq .vsrc{font-size:11px;color:var(--ink-3);line-height:1.4}\n.vq .vsrc b{display:block;color:var(--ink-2);font-weight:600;font-size:11.5px}\n.vq .vcnt{font-size:11px;font-weight:700;color:var(--ink);white-space:nowrap;\n  display:flex;align-items:center;gap:7px}\n.vq .vcnt i{width:8px;height:8px;background:var(--mid);display:block}\n.alt{border:1px solid var(--line);border-radius:16px;overflow:hidden}\n.chn{display:grid;grid-template-columns:repeat(auto-fit,minmax(296px,1fr));gap:12px}\n.obj{border:1px solid var(--line);border-radius:16px;overflow:hidden;max-width:940px}\n.hooks{display:flex;flex-direction:column;gap:0}";
+const REPORT_LIB2_CSS = ".srcs{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:0 28px}\n.srow{display:grid;grid-template-columns:32px 1fr;gap:12px;padding:13px 0;\n  border-top:1px solid var(--line-2);align-items:baseline}\n.srow .sn{font-size:11.5px;font-weight:700;color:var(--acc-mid-ink);\n  font-variant-numeric:tabular-nums;hyphens:none}\n.srow .sd{font-size:12.5px;line-height:1.45;min-width:0}\n.srow .sd .dom{display:flex;align-items:baseline;justify-content:space-between;gap:12px}\n.srow .sd .dom a{font-size:13.5px;font-weight:700;color:var(--acc-mid-ink);\n  text-decoration:none;border-bottom:1px solid color-mix(in srgb, var(--acc-mid-ink) 45%, transparent);\n  overflow-wrap:break-word;hyphens:none}\n.srow .sd .dom a:hover{border-bottom-color:var(--acc-mid-ink)}\n.srow .sd .dom a svg{width:10px;height:10px;display:inline-block;vertical-align:1px;\n  margin-left:5px;fill:none;stroke:currentColor;stroke-width:2}\n.srow .sd .dt{font-size:11px;color:var(--ink-3);white-space:nowrap;flex:0 0 auto;\n  hyphens:none}\n.srow .sd .took{margin-top:8px}\n.srow .sd .took span{display:block;font-size:10px;font-weight:700;letter-spacing:.07em;\n  text-transform:uppercase;color:var(--ink-3);margin-bottom:3px}\n.srow .sd .took em{font-style:normal;color:var(--ink-2);font-size:12.5px;line-height:1.45}\n.heat{width:100%;border-collapse:separate;border-spacing:3px;font-size:12px}\n.heat th{font-weight:600;color:var(--ink-3);font-size:10.5px;letter-spacing:.05em;\n  text-transform:uppercase;padding:0 6px 6px;text-align:center;vertical-align:bottom}\n.heat th:first-child{text-align:left}\n.heat td{text-align:center;padding:9px 6px;border-radius:8px;font-weight:700;color:var(--ink)}\n.heat td:first-child{text-align:left;font-weight:600;color:var(--ink-2);\n  background:none;padding-left:0;white-space:nowrap}";
+const REPORT_M4_CSS = ".awrow{display:grid;grid-template-columns:210px 1fr;gap:16px;align-items:center;\n  padding:11px 0;border-top:1px solid var(--line-2)}\n.awrow:first-child{border-top:0}\n.awrow .awnm{font-size:13px;font-weight:700;color:var(--ink);line-height:1.3}\n.awrow .awnm span{display:block;font-size:11px;font-weight:600;color:var(--ink-3);\n  margin-top:3px}\n.aw{display:flex;height:26px;gap:3px}\n.aw span{display:flex;align-items:center;justify-content:center;font-size:10.5px;\n  font-weight:700;color:#12100D;hyphens:none;min-width:0}\n.awleg{display:flex;gap:16px;flex-wrap:wrap;margin-top:14px;padding-top:12px;\n  border-top:1px solid var(--line);font-size:11px;color:var(--ink-3)}\n.awleg i{width:11px;height:9px;display:inline-block;margin-right:6px}";
+const REPORT_M2_CSS = ".swot{display:grid;grid-template-columns:1fr 1fr;gap:12px}\n.sw{border:1px solid var(--line);border-radius:16px;padding:16px 18px;\n  background:color-mix(in srgb, var(--ink) 2%, transparent)}\n.sw h3{font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;\n  color:var(--ink-3);margin-bottom:10px;display:flex;align-items:center;gap:8px}\n.sw h3 i{width:16px;height:3px;border-radius:2px;display:block}\n.sw ul{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:7px}\n.sw li{font-size:13px;color:var(--ink-2);padding-left:14px;position:relative;line-height:1.5}\n.sw li::before{content:\"\";position:absolute;left:0;top:8px;width:5px;height:5px;\n  border-radius:50%;background:var(--ink-3)}\n.sw{position:relative}\n.sw-note{grid-column:1/-1;font-size:11.5px;color:var(--ink-3);margin-top:2px;line-height:1.5}\n.sw-help{box-shadow:inset 3px 0 0 var(--mid)}\n.sw-help h3{color:var(--ink)}\n.sw-help li::before{background:var(--acc-strong)}\n.mkt{display:grid;grid-template-columns:112px repeat(4,1fr);gap:3px}\n.mkt .hd{font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;\n  color:var(--ink-3);display:flex;align-items:flex-end;justify-content:center;\n  padding-bottom:7px;text-align:center;line-height:1.3}\n.mkt .rw{font-size:11.5px;font-weight:700;color:var(--ink-2);display:flex;\n  align-items:center;justify-content:flex-end;padding-right:12px;text-align:right;\n  line-height:1.3}\n.mkt .cell{background:var(--line-2);min-height:74px;padding:9px;display:flex;\n  flex-direction:column;gap:7px}\n.mkt .cell.ours{background:color-mix(in srgb, var(--mid) 12%, var(--line-2));\n  box-shadow:inset 0 0 0 2px color-mix(in srgb, var(--mid) 55%, transparent)}\n.mkt .cell .dots{display:flex;flex-wrap:wrap;gap:4px;align-content:flex-start}\n.mktwrap{position:relative}\n.mkt .dot{width:15px;height:15px;display:grid;place-items:center;padding:0;border:0;\n  background:none;cursor:pointer;border-radius:50%}\n.mkt .dot i{width:9px;height:9px;border-radius:50%;background:var(--sw-grey);display:block;\n  transition:transform .12s ease,opacity .12s ease}\n.mkt .dot i.us{background:var(--mid);box-shadow:0 0 0 2px var(--card-solid),\n  0 0 0 4px color-mix(in srgb, var(--mid) 60%, transparent)}\n.mkt .dot:focus-visible{outline:2px solid var(--mid);outline-offset:2px}\n.mkt.seek .dot i{opacity:.22}\n.mkt.seek .dot.hit i{opacity:1;transform:scale(1.7)}\n.mkt.seek .cell{opacity:.55}\n.mkt.seek .cell.hit{opacity:1}\n.mkttip{position:absolute;z-index:5;pointer-events:none;opacity:0;transform:translate(-50%,-100%);\n  background:var(--card-solid);border:1px solid var(--line);padding:10px 12px;min-width:186px;\n  max-width:260px;box-shadow:0 6px 20px rgba(0,0,0,.12);transition:opacity .12s ease}\n.mkttip.on{opacity:1}\n.mkttip b{display:block;font-size:13px;font-weight:700;color:var(--ink);margin-bottom:7px;line-height:1.25}\n.mkttip dl{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;margin:0;font-size:11.5px}\n.mkttip dt{color:var(--ink-3)}\n.mkttip dd{margin:0;color:var(--ink-2);font-weight:600;font-variant-numeric:tabular-nums;text-align:right}\n.mktlist{margin-top:20px;padding-top:14px;border-top:1px solid var(--line)}\n.mktlist h4{margin:0 0 4px;font-size:10px;font-weight:700;letter-spacing:.07em;\n  text-transform:uppercase;color:var(--ink-3)}\n.mktlist .hint{margin:0 0 10px;font-size:12px;color:var(--ink-3)}\n.mktlist .hdr,.mktlist .r{display:grid;grid-template-columns:1fr 112px 108px 96px;\n  gap:14px;padding:7px 8px;align-items:baseline}\n.mktlist .hdr{font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;\n  color:var(--ink-3);padding-bottom:4px}\n.mktlist .r{border-top:1px solid var(--line-2);font-size:12.5px;cursor:default}\n.mktlist .r:hover,.mktlist .r.on{background:var(--line-2)}\n.mktlist .r:focus-visible{outline:2px solid var(--mid);outline-offset:-2px}\n.mktlist .r b{font-weight:600;color:var(--ink)}\n.mktlist .r.mine{background:color-mix(in srgb, var(--mid) 10%, transparent)}\n.mktlist .r.mine b{font-weight:700}\n.mktlist .r .g{color:var(--ink-2)}\n.mktlist .r .num{text-align:right;font-variant-numeric:tabular-nums;color:var(--ink-2);\n  font-weight:600}\n.mktlist .r .num.no{font-weight:400;color:var(--ink-3)}\n.mkt .cell .n{margin-top:auto;font-size:11px;font-weight:700;color:var(--ink-2);\n  font-variant-numeric:tabular-nums}\n.mkt .cell.empty .n{color:var(--ink-3);font-weight:600}\n.mktleg{display:flex;gap:18px;flex-wrap:wrap;margin-top:14px;padding-top:12px;\n  border-top:1px solid var(--line);font-size:11.5px;color:var(--ink-3)}\n.mktleg span{display:flex;align-items:center;gap:8px}\n.mktleg i{width:9px;height:9px;border-radius:50%;display:block}\n.swot{display:grid;grid-template-columns:74px 1fr 1fr;gap:10px;align-items:stretch}\n.swot .cor{font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;\n  color:var(--ink-3);display:flex;align-items:flex-end;justify-content:center;\n  padding-bottom:8px;line-height:1.3}\n.swot .cor.r{align-items:center;justify-content:flex-end;text-align:right;padding:0 10px 0 0}\n.swot .sw{border:1px solid var(--line);border-radius:16px;padding:16px 18px;\n  background:var(--card-solid);display:flex;flex-direction:column;\n  box-shadow:inset 3px 0 0 var(--acc-mid)}\n.swot .sw h3{font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;\n  color:var(--ink-3);margin:0 0 10px;display:block}\n.swot .sw ul{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:7px}\n.swot .sw li{font-size:13px;color:var(--ink-2);padding-left:14px;position:relative;line-height:1.5}\n.swot .sw li::before{content:\"\";position:absolute;left:0;top:8px;width:5px;height:5px;\n  border-radius:50%;background:var(--acc-mid)}\n.swot .sw-help{box-shadow:inset 3px 0 0 var(--mid)}\n.swot .sw-help h3{color:var(--ink)}\n.swot .sw-help li::before{background:var(--acc-strong)}\n.swot .sw-note{grid-column:1/-1;font-size:11.5px;color:var(--ink-3);margin-top:4px;line-height:1.5}\n.infer{font-size:10.5px;font-weight:600;letter-spacing:.03em;color:var(--ink-3);\n  margin-left:6px;white-space:nowrap}";
+const REPORT_M7_CSS = ".glue{border:1px dashed var(--line);border-radius:14px;padding:16px 18px;\n  background:color-mix(in srgb, var(--mid) 5%, transparent)}\n.glue .gl{display:grid;grid-template-columns:1fr 92px 96px;gap:14px;padding:7px 0;\n  border-top:1px solid var(--line-2);font-size:12.5px;align-items:baseline}\n.glue .gl:first-of-type{border-top:0}\n.glue .gl .n{text-align:right;font-variant-numeric:tabular-nums;font-weight:700;color:var(--ink)}\n.glue .gl .t{text-align:right;font-size:11px;color:var(--ink-3)}\n.glue .gl.cfm b{color:var(--acc-ink)}\n.glue .cap{font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;\n  color:var(--ink-3);margin-bottom:10px}\n.sem{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,320px);gap:22px;align-items:start}\n.semrow{display:grid;grid-template-columns:1fr 52px;gap:12px;padding:8px 9px;\n  align-items:center;cursor:default;border-radius:10px}\n.semrow:hover,.semrow.on{background:var(--line-2)}\n.semrow:focus-visible{outline:2px solid var(--mid);outline-offset:-2px}\n.semrow .nm{font-size:12.5px;color:var(--ink-2);margin-bottom:5px;line-height:1.3}\n.semrow.on .nm{color:var(--ink);font-weight:600}\n.semrow .rail{height:14px;background:var(--line-2)}\n.semrow .rail i{display:block;height:14px;background:var(--ink-3)}\n.semrow.on .rail i{background:var(--mid)}\n.semrow .n{text-align:right;font-size:12.5px;font-weight:700;color:var(--ink);\n  font-variant-numeric:tabular-nums}\n.sempanel{border:1px solid var(--line);border-radius:16px;padding:15px 16px;\n  background:var(--card-solid);position:sticky;top:16px}\n.sempanel .cap{font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;\n  color:var(--ink-3);margin-bottom:3px}\n.sempanel .who{font-size:13px;font-weight:700;color:var(--ink);margin-bottom:12px;line-height:1.3}\n.sempanel .note{margin-top:11px;padding-top:10px;border-top:1px solid var(--line-2);\n  font-size:11.5px;color:var(--ink-2);line-height:1.5}\n.sempanel .note b{color:var(--ink)}\n.serp{display:flex;flex-direction:column;gap:0}\n.serp .s{padding:13px 2px;border-top:1px solid var(--line-2)}\n.serp .s:first-child{border-top:0}\n.serp .s .t{font-size:13.5px;font-weight:600;line-height:1.35;margin-bottom:4px}\n.serp .s .u{font-size:11.5px;color:var(--ink-3);margin-bottom:8px;word-break:break-all}\n.serp .s .meta{display:flex;gap:8px;flex-wrap:wrap;font-size:11px;color:var(--ink-3);\n  margin-bottom:7px}\n.serp .s .meta b{color:var(--ink-2);font-weight:600}\n.serp .s .str{font-size:12.5px;color:var(--ink-2);line-height:1.5;\n  padding-left:14px;position:relative}\n.serp .s .str::before{content:'';position:absolute;left:0;top:7px;width:5px;height:5px;\n  border-radius:50%;background:var(--mid)}\n.aud{display:flex;flex-direction:column;gap:0}\n.aud .a{display:grid;grid-template-columns:150px 1fr;gap:16px;padding:14px 2px;\n  border-top:1px solid var(--line-2)}\n.aud .a:first-child{border-top:0}\n.aud .a .who{font-size:13px;font-weight:700;color:var(--ink);line-height:1.3}\n.aud .a .who span{display:block;font-size:11px;font-weight:600;color:var(--ink-3);\n  margin-top:4px}\n.aud .a .freq{margin-top:8px}\n.aud .a .freq .rail{height:14px;background:var(--line-2)}\n.aud .a .freq .rail i{display:block;height:14px;background:var(--mid)}\n.aud .a .freq .lab{font-size:10.5px;color:var(--ink-3);margin-top:4px}\n.aud .a .cols{display:grid;grid-template-columns:1fr 1fr;gap:16px}\n.aud .a .cols h5{margin:0 0 5px;font-size:10px;font-weight:700;letter-spacing:.05em;\n  text-transform:uppercase;color:var(--ink-3)}\n.aud .a .cols p{margin:0;font-size:12.5px;color:var(--ink-2);line-height:1.5}\n.aud .a .themes{margin-top:10px;font-size:11.5px;color:var(--ink-3)}";
+const REPORT_M1_CSS = "\n/* ── Легенда кольца ───────────────────────────────────────────────────────\n   Две правки владелицы, 10.09.\n   1. Кольцо взято ОДИН В ОДИН из утверждённой библиотеки: тот же радиус,\n      толщина, зазоры между секторами, те же ступени светлоты, тот же центр.\n      Я перерисовала его по-своему — другой радиус, другие оттенки, без\n      зазоров, — и оно перестало быть тем же кольцом. Своей версии больше нет.\n   2. «Ключевая потребность», «платёжеспособность», «уверенность» повторялись\n      в каждой из пяти строк. Подписи вынесены в шапку и написаны ОДИН раз —\n      то же правило, что и в таблицах. Значения встали в колонки и теперь\n      сравниваются взглядом сверху вниз, чего в повторяющихся строках не было. */\n.leghead,.sl.rich{display:grid;grid-template-columns:44px 1fr 62px 128px 72px;\n  gap:14px;align-items:start}\n.leghead{padding:0 0 9px;border-bottom:1px solid var(--line);\n  font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;\n  color:var(--ink-3)}\n.sl.rich{padding:13px 0;border-top:1px solid var(--line-2)}\n.sl.rich:first-of-type{border-top:0}\n.sl.rich .ic{width:40px;height:40px;border-radius:12px;display:flex;\n  align-items:center;justify-content:center;border:1px solid var(--line);\n  font-size:12.5px;font-weight:700;color:#12100D;letter-spacing:-.02em;hyphens:none}\n.sl.rich .nm{font-size:12.5px;line-height:1.45;color:var(--ink-2);min-width:0}\n.sl.rich .nm b{display:block;color:var(--ink);font-weight:700;font-size:14px;\n  margin-bottom:3px}\n.sl.rich .nm .need{display:block;margin-top:5px;color:var(--ink)}\n.sl.rich .v2{font-size:12.5px;color:var(--ink-2);font-variant-numeric:tabular-nums;\n  hyphens:none;padding-top:2px}\n.sl.rich .v2.big{font-size:17px;font-weight:700;color:var(--ink);letter-spacing:-.02em}\n@media (max-width:900px){\n  .leghead{display:none}\n  .sl.rich{grid-template-columns:44px 1fr;gap:10px}\n  .sl.rich .v2{grid-column:2}\n}\n\n/* ── Ниши: профиль «ёжиком» ───────────────────────────────────────────────\n   Владелица 10.09: «тут просто цифры, цифры, цифры — что они значат, непонятно».\n   Так и было: пять голых чисел в строке, и ни одно ничего не говорит само по себе.\n   Здесь радар подходит — по тому же правилу, по которому он НЕ подошёл сегментам:\n   он сравнивает ОДИН объект по МНОГИМ осям. У ниши ровно четыре оси, все четыре\n   в одной шкале 1–5, и форма фигуры сразу читается: ровный четырёхугольник —\n   ниша без слабых мест, вытянутый — что-то сильно проседает. Две ниши с одинаковой\n   суммой выглядят по-разному, а в столбце чисел это неразличимо. */\n.nprof{display:grid;grid-template-columns:repeat(auto-fit,minmax(316px,1fr));gap:12px}\n.ncard2{border:1px solid var(--line);background:var(--card-solid);border-radius:16px;\n  padding:16px 18px;display:grid;grid-template-columns:132px 1fr;gap:16px;\n  align-items:start}\n/* ПРАВКА: у приоритетной ниши была бирюзовая подложка, и рядом с бирюзовой\n   плашкой «Идём» всё сливалось в одно зелёное пятно. Подложка убрана: статус\n   уже назван плашкой и цветом фигуры, третий раз повторять его фоном незачем.\n   Тем более что ниш со статусом «идём» бывает несколько — выделять фоном\n   «самую главную» значит вводить четвёртый статус, которого в данных нет. */\n.ncard2 .nh b{display:block;font-size:14.5px;font-weight:700;line-height:1.25}\n.ncard2 .tot{display:flex;align-items:baseline;gap:9px;margin:9px 0 8px}\n.ncard2 .tot i{font-style:normal;font-size:26px;font-weight:700;letter-spacing:-.03em}\n.ncard2 .tot em{font-style:normal;font-size:10px;font-weight:700;letter-spacing:.07em;\n  text-transform:uppercase;color:var(--ink-3)}\n.rkey{display:flex;align-items:center;gap:20px;flex-wrap:wrap;\n  padding:14px 18px;border:1px solid var(--line);border-radius:16px;\n  background:var(--card-solid);margin-bottom:12px}\n.rkey .rtext{font-size:12.5px;color:var(--ink-2);line-height:1.5;max-width:52ch}\n.rkey .rtext b{color:var(--ink)}\n\n/* Плашки статусов — из макета платформы, один в один, включая русские\n   подписи. Английские Go / Maybe / No-Go в русском отчёте стоять не должны:\n   для английской версии будут английские, для русской — русские. */\n.kchip{display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:999px;\n  font-size:12px;font-weight:600;hyphens:none}\n.kchip .d{width:7px;height:7px;border-radius:50%;flex:0 0 auto}\n.kchip-go{background:color-mix(in srgb, var(--acc-strong) 12%, var(--card-solid));color:var(--ink)}\n.kchip-go .d{background:var(--acc-strong)}\n.kchip-mb{background:color-mix(in srgb, var(--acc-mid) 22%, var(--card-solid));color:var(--ink)}\n.kchip-mb .d{background:var(--acc-mid)}\n.kchip-no{background:color-mix(in srgb, var(--acc-quiet) 30%, var(--card-solid));color:var(--ink)}\n.kchip-no .d{background:var(--acc-quiet)}\n\n/* ── Сигналы построчно ────────────────────────────────────────────────────\n   Владелица: «всё налеплено, теряется понимание; чек вообще непонятен».\n   Было одним абзацем: спрос, конкуренция, чек и риск подряд через точку.\n   Теперь каждый признак — своя строка с подписью, а «чек 890 ₽ × 12 мес»\n   расписан словами: сколько платят в месяц и сколько месяцев остаются. */\n.sigrows{display:flex;flex-direction:column;gap:0;margin-top:11px}\n.sigrow{display:grid;grid-template-columns:104px 1fr;gap:12px;padding:7px 0;\n  border-top:1px solid var(--line-2);font-size:12px;line-height:1.45}\n.sigrow:first-child{border-top:0}\n.sigrow .k2{font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;\n  color:var(--ink-3);padding-top:2px}\n.sigrow .v3{color:var(--ink-2)}\n.sigrow .v3 b{color:var(--ink);font-weight:600}\n\n/* Карточка «не идём» — без фигуры, но с причиной. Профиль ей не нужен:\n   разбирать сильные стороны ниши, куда мы не идём, незачем. А вот ПОЧЕМУ не\n   идём — нужно, иначе ниша просто исчезает из разбора и через месяц никто не\n   вспомнит, отбросили её по данным или забыли. */\n.ncard2.slim{grid-template-columns:1fr;opacity:.9}\n.ncard2.slim .why2{font-size:12.5px;color:var(--ink-2);line-height:1.5;margin-top:10px}\n.ncard2.slim .why2 b{color:var(--ink);font-weight:600}\n\n/* Пометка «вывод» — для строк, у которых источника нет и быть не может:\n   они выведены из других строк отчёта. Ставится вместо номера, а не рядом с\n   ним, чтобы нельзя было принять вывод за находку. */\n.infer{display:inline-block;font-size:10px;font-weight:700;letter-spacing:.07em;\n  text-transform:uppercase;color:var(--ink-3);background:var(--line-2);\n  padding:1px 7px;border-radius:999px;margin-left:6px;hyphens:none;\n  vertical-align:1px}\n\n/* Выделение по клику: связывает полосу и карточку. */\n.ncard2{transition:box-shadow .2s, border-color .2s}\n.ncard2.on{border-color:var(--mid);\n  box-shadow:0 0 0 2px color-mix(in srgb, var(--mid) 45%, transparent)}\n.nbar{cursor:pointer}\n.nhint{font-size:12px;color:var(--ink-3);margin:10px 0 0;min-height:17px}\n\n/* ── Разбор модуля: «как сейчас» рядом с «как предлагаю» ─────────────────── */\n.sech{font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;\n  color:var(--ink-3);margin:34px 0 14px;display:flex;align-items:center;gap:14px}\n.sech::after{content:\"\";flex:1;height:1px;background:var(--line)}\n.two2{display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:start}\n.two2 .viz{margin-bottom:0}\n/* Настоящая таблица отчёта — намеренно без украшений: она должна выглядеть\n   ровно так, как выглядит сегодня, иначе сравнение нечестное. */\n.rawwrap{overflow-x:auto}\ntable.raw{border-collapse:collapse;width:100%;font-size:11.5px;line-height:1.4}\ntable.raw th,table.raw td{border:1px solid var(--line);padding:6px 8px;\n  text-align:left;vertical-align:top;hyphens:none}\ntable.raw th{background:color-mix(in srgb, var(--ink) 4%, transparent);\n  font-weight:700;color:var(--ink-3);font-size:10.5px;white-space:nowrap}\ntable.raw td{color:var(--ink-2)}\ntable.raw td.num{font-variant-numeric:tabular-nums;text-align:center;white-space:nowrap}\n.verd{background:color-mix(in srgb, var(--sw-violet) 5%, var(--raise));\n  border:1px solid color-mix(in srgb, var(--sw-violet) 24%, var(--line));\n  border-radius:16px;padding:16px 20px;margin:12px 0 0}\n.verd p{margin:0 0 9px;font-size:13px;line-height:1.55;color:var(--ink-2)}\n.verd p:last-child{margin-bottom:0}\n.verd b{color:var(--ink)}\n@media (max-width:1000px){ .two2{grid-template-columns:1fr} }\n";
+const REPORT_SIDEBAR = "<aside class=\"side\">\n    <div class=\"brand\">\n      <img class=\"logo\" alt=\"bulbul lab\" src=\"data:image/png;base64,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\">\n    </div>\n    <div class=\"client\"><span class=\"cmark\">ЛЛ</span>\n      <span><b>Ловец Лидов</b><i>Россия · русский</i></span></div>\n    <div class=\"search\">🔍 Поиск…</div>\n\n    <div class=\"navgrid\">\n      <button class=\"navtile\" aria-current=\"page\">\n        <span class=\"ic\"><svg viewBox=\"0 0 24 24\"><path d=\"M4 11 12 4l8 7\"/><path d=\"M6 10v9h12v-9\"/></svg></span>\n        Исследование</button>\n      <button class=\"navtile\" disabled>\n        <span class=\"ic\"><svg viewBox=\"0 0 24 24\"><rect x=\"4\" y=\"6\" width=\"16\" height=\"12\" rx=\"2\"/><path d=\"M4 10h16\"/></svg></span>\n        Контент-план</button>\n      <button class=\"navtile\" disabled>\n        <span class=\"ic\"><svg viewBox=\"0 0 24 24\"><path d=\"M4 19V9l8-5 8 5v10\"/><path d=\"M10 19v-6h4v6\"/></svg></span>\n        Лендинг</button>\n      <button class=\"navtile\" disabled>\n        <span class=\"ic\"><svg viewBox=\"0 0 24 24\"><circle cx=\"12\" cy=\"12\" r=\"8\"/><path d=\"M12 8v4l3 2\"/></svg></span>\n        Аналитика</button>\n    </div>\n\n    <nav class=\"navlist\">\n      <div class=\"grp\">Настройки</div>\n      <button class=\"navrow\" disabled><span class=\"dot\"></span>Бренд</button>\n      <button class=\"navrow\" disabled><span class=\"dot\"></span>Голос</button>\n      <button class=\"navrow\" disabled><span class=\"dot\"></span>Площадки</button>\n      <button class=\"navrow\" disabled><span class=\"dot\"></span>Эталоны<span class=\"cnt\">3</span></button>\n      <div class=\"grp\">Работа</div>\n      <button class=\"navrow\" disabled><span class=\"dot\"></span>Темы<span class=\"cnt\">5</span></button>\n      <button class=\"navrow\" disabled><span class=\"dot\"></span>Контент<span class=\"cnt\">7</span></button>\n    </nav>\n\n    <div class=\"upsell\">\n      <b><i>Кредиты</i>412</b>\n      <span>Прогон ниши ≈ 93 кредита. Хватит ещё на четыре.</span>\n    </div>\n  </aside>";
+
+// Экранирование — одно на весь файл: им пользуются и рисование блоков, и
+// сборка выгрузки. Раньше оно жило внутри generateHTMLReport, и после выноса
+// блоков наружу отчёт остался без него.
+function escHtml(s) {
+  return String(s == null ? '' : s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ── РИСОВАНИЕ БЛОКОВ ОТЧЁТА ─────────────────────────────────────────────────
+// Вынесено из generateHTMLReport наружу 11.09.2026. Причина прямая: владелица
+// просила «собрать на сайте», а весь этот код был заперт внутри ВЫГРУЗКИ —
+// поэтому сайт оставался со старыми голыми таблицами, сколько бы я ни правила
+// отчёт. Теперь обе поверхности рисуют одним кодом: правка в одном месте
+// видна и на сайте, и в выгруженном файле.
+//
+// Возвращает { html, scripts }: scripts — код рисования кольца и ниш, его
+// надо выполнить после вставки html (в отчёте на load, в приложении в effect).
+function renderResearchHTML(content, opts) {
+  const blockScripts = [];
+  // Контекст разбора: сигналы 04_1 для карточек ниш, накопление SWOT, имя
+  // компании для подсветки «мы» на карте рынка.
+  // has042: в этом же тексте есть матрица приоритизации. Нужно, чтобы решить
+  // судьбу таблицы 04_1: её строки и так уезжают в карточки ниш, и печатать
+  // их отдельной таблицей — это второй раз тот же список ниш (замечание
+  // владелицы по карте модулей). Но если матрицы почему-то нет, таблицу
+  // оставляем: потерять данные хуже, чем показать их дважды.
+  const swotCtx = { signals: {}, ourName: (opts && opts.ourName) || '',
+    has042: /BLOCK\s*04_2\b/i.test(String(content || '')) };
+  const safeJson = o => JSON.stringify(o).replace(/<\/script>/gi,'<\\/script>');
+  const esc = escHtml;
+
+  // Ссылки в отчёте живые, а не текстом — владелица просила это ещё для блока
+  // источников в M1: «прям на название сайтов». Голый URL тоже превращаем.
+  // Модель ссылается на соседние блоки рабочим именем — «BLOCK 04, сегмент
+  // S3». Нам это имя нужно, заказчику оно ничего не говорит (владелица: «разве
+  // человеку будет понятно, что это значит?»). Подменяем на человеческое
+  // название блока прямо в тексте: замена по всему отчёту, а не только в
+  // таблицах, — ссылка встречается и в абзацах.
+  const BLOCK_NAMES = {
+    '02':'Источники', '03':'Ёмкость рынка', '04':'Сегменты аудитории',
+    '04_0':'Источники', '04_1':'Разведка ниш', '04_2':'Приоритет ниш',
+    '05':'Источники', '06':'Карта рынка', '06B':'Смежные конкуренты',
+    '06_1':'Гэп-анализ', '06_2':'SWOT', '06_3':'Позиционирование',
+    '07':'Голос клиента', '07A':'Банк живого языка', '07B':'Банк хуков',
+    '07C':'Альтернативы', '07D':'Кому не продаём',
+    '08':'Кластеры намерений', '08A':'Где сидит аудитория',
+    '09':'Персоны', '09B':'Демография', '10':'JTBD', '11':'Осведомлённость',
+    '12':'Страхи', '12B':'Ограничения для контента', '13':'Критерии выбора',
+    '14':'Путь клиента', '15':'Когнитивные тактики', '16':'Гипотезы',
+    '17A':'Вход для офферов', '17B':'Мастерская офферов', '18':'Архетипы персон',
+    '18B':'Архетип бренда', '20':'Контент-система', '21':'Брифы на креативы',
+    '22':'ТЗ на лендинг', '23':'Главная ставка',
+  };
+  const deref = t => String(t == null ? '' : t)
+    .replace(/\bBLOCK\s*([0-9]{1,2}(?:_[0-9]+)?[A-Z]?)/gi,
+      (m, id) => BLOCK_NAMES[id.toUpperCase()] ? '«'+BLOCK_NAMES[id.toUpperCase()]+'»' : m);
+
+  function mdInline(t) {
+    let h = esc(deref(t));
+    h = h.replace(/\[([^\]]+)\]\((https?:\/\/[^)\s]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
+    h = h.replace(/(^|[\s(])((?:https?:\/\/|www\.)[^\s<),]+)/g,
+      (m,pre,u) => pre+'<a href="'+(u.indexOf('http')===0?u:'https://'+u)+'" target="_blank" rel="noopener">'+u+'</a>');
+    h = h.replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>');
+    return h;
+  }
+
+  // ── БЛОКИ ИЗ БИБЛИОТЕКИ ────────────────────────────────────────────────────
+  // Таблица опознаётся по заголовку блока и рисуется ТЕМ ЖЕ кодом, что в
+  // design/БИБЛИОТЕКА-ВИЗУАЛИЗАЦИЙ.html. Разметка перенесена дословно: каждый
+  // формат там согласован поштучно, и собирать их заново в отчёте означало бы
+  // третий дизайн в проекте. Если блок не опознан — печатается таблицей, и
+  // отчёт всё равно открывается.
+  const numOf = v => {
+    const t = String(v||'').replace(/[\s ]/g,'').replace(',', '.').match(/-?\d+(\.\d+)?/);
+    return t ? parseFloat(t[0]) : null;
+  };
+  const col = (headers, ...needles) => headers.find(h =>
+    needles.some(n => String(h).toLowerCase().includes(n)));
+
+  // География спроса (SEO-06). Плотность считается ЗДЕСЬ, а не берётся числом
+  // от модели, — так же, как в библиотеке: доля в запросах ÷ доля в населении.
+  function renderGeo(headers, rows) {
+    const kReg = col(headers,'регион'), kVal = col(headers,'запрос');
+    if (!kReg || !kVal) return null;
+    const pop = {};
+    for (const r of GEO_REGIONS) pop[r.name.toLowerCase()] = r.pop;
+    const data = [];
+    let base = null;
+    for (const r of rows) {
+      const name = String(r[kReg]||'').replace(/\*\*/g,'').trim();
+      const v = numOf(r[kVal]);
+      if (!name || v == null) continue;
+      const p = pop[name.toLowerCase()];
+      if (p === 1) { base = { name, v }; continue; }
+      if (p) data.push({ n:name, v, pop:p*100 });
+    }
+    if (!base || !data.length) return null;
+    const total = base.v;
+    const d = data.map(x => ({ ...x, k: total ? (x.v/total*100)/x.pop : 0 }));
+    const maxDev = Math.max(0.01, Math.max(...d.map(x => Math.abs(x.k-1)))*1.06);
+    const fmt = n => String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g,' ');
+    const row = (nm, volPct, vol, k, isBase) => {
+      const up = k >= 1.005, eq = Math.abs(k-1) < .005;
+      const w = Math.abs(k-1)/maxDev*50;
+      const bar = (eq || isBase) ? '' : '<span class="d '+(up?'up':'dn')+'" style="width:'+w.toFixed(1)+'%"></span>';
+      return '<div class="grow'+(isBase?' base':'')+'">'
+        + '<div class="nm">'+esc(nm)+'</div>'
+        + '<div class="gvol"><span class="rail"><span class="b" style="width:'+volPct.toFixed(1)+'%"></span></span>'
+        + '<span class="v">'+fmt(vol)+'</span></div>'
+        + '<div class="gden"><span class="mid0"></span>'+bar+'</div>'
+        + '<div class="gx '+(isBase||eq?'eq':(up?'up':'dn'))+'">'+k.toFixed(2).replace('.',',')+'</div>'
+        + '</div>';
+    };
+    return '<div class="geohead"><div>Регион</div><div>Запросов в месяц · доля от России</div>'
+      + '<div>Плотность спроса</div><div class="r">×</div></div>'
+      + '<div class="geo">'
+      + row(base.name, 100, base.v, 1, true)
+      + d.map(x => row(x.n, Math.max(1.2, x.v/total*100), x.v, x.k, false)).join('')
+      + '</div>'
+      + '<div class="geoleg">'
+      + '<span><i style="background:var(--mid)"></i>спрос выше ожидаемого по населению</span>'
+      + '<span><i style="background:var(--sw-violet)"></i>ниже ожидаемого</span>'
+      + '<span><i style="background:color-mix(in srgb, var(--ink) 28%, transparent)"></i>середина — ровно по населению</span>'
+      + '</div>';
+  }
+
+
+  // ── BLOCK 04: доли сегментов кольцом + легенда ──────────────────────────────
+  // Геометрия, оттенки и разметка легенды — из design/РАЗБОР-M1.html, где это
+  // утверждено. Кольцо, а не «пирог»: подписи выносятся вбок и не наезжают.
+  function renderSegments(headers, rows) {
+    const kName = col(headers,'сегмент'), kShare = col(headers,'доля');
+    if (!kName) return null;
+    const kWho = col(headers,'кто это','описание'), kNeed = col(headers,'потребн');
+    const kPay = col(headers,'платёжесп','платежесп'), kConf = col(headers,'confidence','уверен');
+    // Форма данных — ровно та, которую ждёт перенесённый код: массив
+    // [ID, сегмент, кто это, потребность, платёжеспособность, уверенность, доля].
+    // Подгонять надо данные под утверждённый код, а не наоборот.
+    const segs = rows.map((r,i) => [
+      'S'+(i+1),
+      String(r[kName]||'').replace(/\*\*/g,'').trim(),
+      kWho ? String(r[kWho]||'') : '',
+      kNeed ? String(r[kNeed]||'') : '',
+      kPay ? String(r[kPay]||'') : '',
+      kConf ? (numOf(r[kConf]) || String(r[kConf]||'')) : '',
+      kShare ? (numOf(r[kShare])||0) : 0,
+    ]).filter(x => x[1]);
+    if (!segs.length || !segs.some(x => x[6] > 0)) return null; // без долей кольцо строить не из чего
+    blockScripts.push('renderDonut('+safeJson(segs)+');');
+    return '<div class="seg" style="grid-template-columns:190px 1fr;gap:22px">'
+      + '<div id="rpt-donut"></div>'
+      + '<div><div class="leghead"><span></span><span>Сегмент и потребность</span>'
+      + '<span>Доля</span><span>Достаток</span><span>Уверенность</span></div>'
+      + '<div class="seg-leg" id="rpt-donut-leg"></div></div></div>';
+  }
+
+  // ── BLOCK 04_2: ниши полосами + профиль по каждой ───────────────────────────
+  // Владелица: «нажимаешь на полосу — подсвечивается эта ниша ниже», и отдельно
+  // просила показывать, ПОЧЕМУ не идём. Сигналы берём из BLOCK 04_1 той же ниши:
+  // это и есть слияние двух таблиц, только в отчёте, без правки промпта.
+  function renderNiches(headers, rows, ctx) {
+    const kName = col(headers,'ниша'), kVerd = col(headers,'вердикт');
+    if (!kName) return null;
+    const kTot = col(headers,'итого');
+    const kAx = ['спрос','конкуренц','экономик','соответств'].map(a => col(headers,a));
+    const kWhy = col(headers,'почему не'), kDem = col(headers,'запросов в месяц'), kNote = col(headers,'сверка');
+    const vdOf = t => /не идём|no-?go|stop/i.test(t) ? 'no' : (/под вопрос|maybe|hold/i.test(t) ? 'mb' : 'go');
+    const D = rows.map(r => {
+      const n = String(r[kName]||'').replace(/\*\*/g,'').trim();
+      if (!n) return null;
+      const v = kAx.map(k => k ? (numOf(r[k])||0) : 0);
+      const t = kTot ? (numOf(r[kTot]) || v.reduce((a,b)=>a+b,0)) : v.reduce((a,b)=>a+b,0);
+      return { n, v, t, vd:vdOf(kVerd?String(r[kVerd]||''):''),
+        why:kWhy?mdInline(String(r[kWhy]||'').trim()):'', dem:kDem?String(r[kDem]||'').trim():'',
+        note:kNote?mdInline(String(r[kNote]||'').trim()):'',
+        sig:(ctx.signals && ctx.signals[n.toLowerCase()]) || [] };
+    }).filter(Boolean);
+    if (!D.length) return null;
+    blockScripts.push('renderNicheBoard('+safeJson(D)+');');
+    // Полосы и пояснение — рядом, а не друг под другом (проба по просьбе
+    // владелицы 11.09: под полосами оставалось много воздуха). Откатывается
+    // одной строкой: убрать обёртку .nwrap, и всё встанет как было.
+    return '<div class="nwrap"><div>'
+      + '<div id="rpt-niches"></div><p class="nhint" id="rpt-nhint"></p></div>'
+      + '<div class="rkey rkey-side"><div id="rpt-rkey"></div>'
+      + '<div class="rtext"><b>Как читать фигуру.</b> Четыре оси — четыре оценки '
+      + 'из таблицы приоритета, каждая от 1 до 5. Чем дальше точка от центра, тем '
+      + 'лучше. Ровная фигура — ниша без слабых мест; вытянутая — что-то сильно '
+      + 'проседает, и это видно раньше, чем прочитаны числа.</div></div></div>'
+      + '<div class="nprof" id="rpt-nprof"></div>';
+  }
+
+
+  // Код рисования взят из design/РАЗБОР-M1.html ДОСЛОВНО. Подменены только
+  // данные (вместо зашитого массива — данные из таблиц отчёта) и три
+  // идентификатора контейнеров. Ни одна строка рисования не переписана:
+  // когда я переписывала их «по смыслу», расхождения с утверждённым видом
+  // появлялись каждый раз — цвета, пропавший ключ радара, чужие классы.
+  const BLOCK_JS = [
+    "var el=function(n,a){var e=document.createElementNS('http://www.w3.org/2000/svg',n);",
+    "  for(var k in a)e.setAttribute(k,a[k]);return e;};",
+    "function escText(t){return String(t==null?'':t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}",
+    "var esc=escText, L=function(t,u){return '<a href=\"'+u+'\" target=\"_blank\" rel=\"noopener\">'+t+'</a>';};",
+    "function renderDonut(segs){",
+    "\n  /* Порядок колонок исходной таблицы сохранён целиком: ID, сегмент, кто это,\n     ключевая потребность, платёжеспособность, уверенность. Плюс доля — она в\n     BLOCK 04 сегодня НЕ выдаётся, см. оговорку под блоком. */\n  ",
+    ";\n  /* Геометрия и оттенки — как в утверждённой библиотеке, без изменений. */\n  const TINT=[100,62,40,24,13];\n  const R=84,SW=26,CX=115,CY=115,GAP=.016;\n  const total=segs.reduce((s,x)=>s+x[6],0);\n  const pt=a=>[CX+R*Math.cos(a*Math.PI/180),CY+R*Math.sin(a*Math.PI/180)];\n  const svg=el('svg',{viewBox:'0 0 230 230',width:230,height:230});\n  let a0=-90;\n  segs.forEach((row,i)=>{\n    const v=row[6], a1=a0+v/total*360, g0=a0+GAP*360, g1=a1-GAP*360;\n    if(g1>g0){\n      const p0=pt(g0),p1=pt(g1);\n      svg.appendChild(el('path',{d:`M ${p0[0]} ${p0[1]} A ${R} ${R} 0 ${(g1-g0)>180?1:0} 1 ${p1[0]} ${p1[1]}`,\n        fill:'none',stroke:`color-mix(in srgb, var(--mid) ${TINT[i]}%, var(--line-2))`,\n        'stroke-width':SW,'stroke-linecap':'butt'}));\n    }\n    a0=a1;\n  });\n  const t=el('text',{x:CX,y:CY-2,'text-anchor':'middle',class:'val',style:'font-size:30px'});\n  t.textContent='5'; svg.appendChild(t);\n  const t2=el('text',{x:CX,y:CY+17,'text-anchor':'middle',class:'axis'});\n  t2.textContent='сегментов'; svg.appendChild(t2);\n  document.getElementById('rpt-donut').appendChild(svg);\n  document.getElementById('rpt-donut-leg').innerHTML=segs.map(([id,n,who,need,pay,cf,v],i)=>{\n    const bg=`color-mix(in srgb, var(--mid) ${TINT[i]}%, var(--line-2))`;\n    const out=id==='S5';\n    return `<div class=\"sl rich\">\n      <span class=\"ic\" style=\"background:${bg}\">${id}</span>\n      <span class=\"nm\"><b>${n}</b>${who}\n        <span class=\"need\">${out?'<span class=\"no\">не наш сегмент</span>':need}</span></span>\n      <span class=\"v2 big\">${v}%</span>\n      <span class=\"v2\">${pay}</span>\n      <span class=\"v2\">${cf} из 5</span></div>`;\n  }).join('');\n\n  /* Наведение (просьба владелицы 11.09): сектор и его строка в легенде\n     подсвечиваются вместе, в обе стороны. Тот же приём, что у кругов рынка и\n     у карты рынка — один язык взаимодействия на весь отчёт. */\n  var arcs=(svg.children?[].slice.call(svg.children):[]).filter(function(nd){\n    return String(nd.tagName||nd.id||'').indexOf('path')>=0; });\n  var legRows=[].slice.call(document.getElementById('rpt-donut-leg').querySelectorAll('.sl'));\n  var hiD=function(ix){\n    arcs.forEach(function(aq,j){ aq.setAttribute('opacity', ix<0||ix===j?'1':'.32'); });\n    legRows.forEach(function(r,j){ r.classList.toggle('on', ix===j); });\n  };\n  arcs.forEach(function(aq,j){\n    aq.setAttribute('style','transition:opacity .15s ease');\n    aq.addEventListener('mouseenter',function(){hiD(j);});\n    aq.addEventListener('mouseleave',function(){hiD(-1);});\n  });\n  legRows.forEach(function(r,j){\n    r.addEventListener('mouseenter',function(){hiD(j);});\n    r.addEventListener('mouseleave',function(){hiD(-1);});\n  });\n}",
+    "function renderNicheBoard(D){",
+    "\n  const VD={go:['Идём','kchip-go','var(--acc-strong)'],\n            mb:['Под вопросом','kchip-mb','var(--acc-mid)'],\n            no:['Не идём','kchip-no','var(--acc-quiet)']};\n  ",
+    ";\n\n  /* ── полосы: мера из «Приоритета ниш», цвет — по вердикту ── */\n  const W=520,padL=196,padR=54,rowH=27,top=4,H=top+D.length*rowH+4,max=20;\n  const x=v=>padL+(W-padL-padR)*(v/max);\n  const svg=el('svg',{viewBox:`0 0 ${W} ${H}`,width:'100%',height:H});\n  const bars=[];\n  D.forEach((d,i)=>{\n    const y=top+i*rowH;\n    const t=el('text',{x:padL-10,y:y+14,class:'lbl','text-anchor':'end'});\n    t.textContent=d.n; svg.appendChild(t);\n    svg.appendChild(el('rect',{x:padL,y:y+3,width:W-padL-padR,height:14,fill:'var(--line-2)'}));\n    const bw=Math.max(x(d.t)-padL,3);\n    const r=el('rect',{x:padL,y:y+3,width:bw,height:14,fill:VD[d.vd][2]});\n    svg.appendChild(r); bars.push(r);\n    const val=el('text',{x:padL+bw+8,y:y+14,class:'val'}); val.textContent=d.t; svg.appendChild(val);\n    /* прозрачная полоса на всю ширину строки — попасть по ней легче, чем по\n       короткому столбику: цель для нажатия должна быть больше самой метки */\n    const hit=el('rect',{x:0,y,width:W,height:rowH,fill:'transparent',class:'nbar'});\n    hit.addEventListener('click',()=>pick(i));\n    svg.appendChild(hit);\n  });\n  document.getElementById('rpt-niches').appendChild(svg);\n\n  /* ── профили: только те, куда можем пойти ── */\n  const AX=['Спрос','Конкуренция','Экономика','Соответствие'];\n  const S=132, R=46;\n  const Wr=l=>l?252:S, C=l=>[Wr(l)/2,S/2];\n  const pt=(i,v,l)=>{const [cx,cy]=C(l),a=(-90+i*90)*Math.PI/180,r=R*(v/5);\n    return [cx+r*Math.cos(a),cy+r*Math.sin(a)];};\n  const radar=(vals,col,labels)=>{\n    const [CX,CY]=C(labels);\n    const g=el('svg',{viewBox:`0 0 ${Wr(labels)} ${S}`,width:Wr(labels),height:S});\n    [1,2,3,4,5].forEach(k=>{\n      const d=[0,1,2,3].map(i=>pt(i,k,labels).map(n=>n.toFixed(1)).join(',')).join(' ');\n      g.appendChild(el('polygon',{points:d,fill:'none',\n        stroke:k===5?'var(--line)':'var(--line-2)','stroke-width':1}));\n    });\n    [0,1,2,3].forEach(i=>{const p=pt(i,5,labels);\n      g.appendChild(el('line',{x1:CX,y1:CY,x2:p[0],y2:p[1],stroke:'var(--line-2)','stroke-width':1}));});\n    if(vals){\n      const d=vals.map((v,i)=>pt(i,v,labels).map(n=>n.toFixed(1)).join(',')).join(' ');\n      /* Цвет фигуры — по вердикту, тот же, что у полосы и у плашки. Иначе\n         статус назван в двух местах из трёх, а «идём» и «под вопросом»\n         выглядят одинаково — при том что и тех и других бывает по несколько. */\n      g.appendChild(el('polygon',{points:d,\n        fill:`color-mix(in srgb, ${col} 24%, transparent)`,\n        stroke:col,'stroke-width':2,'stroke-linejoin':'round'}));\n      vals.forEach((v,i)=>{const p=pt(i,v,labels);\n        g.appendChild(el('circle',{cx:p[0],cy:p[1],r:3,fill:col}));});\n    }\n    if(labels){\n      const off=[[0,-10],[13,4],[0,17],[-13,4]];\n      AX.forEach((n,i)=>{const p=pt(i,5,labels);\n        const t=el('text',{x:p[0]+off[i][0],y:p[1]+off[i][1],class:'axis',\n          'text-anchor':i===1?'start':(i===3?'end':'middle')});\n        t.textContent=n; g.appendChild(t);});\n    }\n    return g;\n  };\n  document.getElementById('rpt-rkey').appendChild(radar(null,null,true));\n\n  const box=document.getElementById('rpt-nprof'), cards=[];\n  const cls=(d,on)=>'ncard2'+(d.vd==='no'?' slim':'')+(on?' on':'');\n  D.forEach((d,i)=>{\n\n    const card=document.createElement('div');\n    card.className=cls(d,false);\n    if(d.vd==='no'){\n      /* Разбор тот же и в том же объёме — меняется только вес: нет фигуры,\n         подложка тише. Прятать данные по отброшенной нише нельзя: решение\n         «не идём» проверяется по тем же сигналам, что и «идём». */\n      card.innerHTML=`<div><div class=\"nh\"><b>${d.n}</b></div>\n        <div class=\"tot\"><i>${d.t}</i><em>из 20 баллов</em></div>\n        <span class=\"kchip ${VD[d.vd][1]}\"><span class=\"d\"></span>${VD[d.vd][0]}</span>\n        <div class=\"why2\"><b>Почему не идём.</b> ${d.why}</div>\n        <div class=\"sigrows\">${d.sig.map(([k,v])=>\n          `<div class=\"sigrow\"><span class=\"k2\">${k}</span><span class=\"v3\">${typeof v==='string'?v:v.h}</span></div>`).join('')}</div></div>`;\n    }else{\n      const left=document.createElement('div');\n      left.appendChild(radar(d.v,VD[d.vd][2],false));\n      const right=document.createElement('div');\n      right.innerHTML=`<div class=\"nh\"><b>${d.n}</b></div>\n        <div class=\"tot\"><i>${d.t}</i><em>из 20 баллов</em></div>\n        <span class=\"kchip ${VD[d.vd][1]}\"><span class=\"d\"></span>${VD[d.vd][0]}</span>\n        <div class=\"sigrows\">${d.sig.map(([k,v])=>\n          `<div class=\"sigrow\"><span class=\"k2\">${k}</span><span class=\"v3\">${v}</span></div>`).join('')}</div>`;\n      card.appendChild(left); card.appendChild(right);\n    }\n    card.addEventListener('click',()=>pick(i));\n    box.appendChild(card); cards.push(card);\n  });\n\n  const hint=document.getElementById('rpt-nhint');\n  let cur=-1;\n  function pick(i){\n    cur = (cur===i ? -1 : i);\n    bars.forEach((r,k)=>r.setAttribute('opacity', cur<0||cur===k ? '1' : '.32'));\n    cards.forEach((c,k)=>{ if(c) c.className=cls(D[k],cur===k); });\n    hint.textContent = cur<0 ? ''\n      : `Выбрана ниша «${D[cur].n}» — подсвечена ниже.`;\n  }\n}",
+    "function renderSerp(D){\n  const box=document.getElementById('rpt-serp'); if(!box) return;\n  \n  box.innerHTML=D.map(([t,u,q,k,str])=>`<div class=\"s\">\n    <div class=\"t\">${L(esc(t),'https://'+u)}</div>\n    <div class=\"u\">${esc(u)}</div>\n    <div class=\"meta\"><span>найдено по: <b>${esc(q)}</b></span><span>·</span><span>${esc(k)}</span></div>\n    <div class=\"str\">${esc(str)}</div></div>`).join('');\n}",
+    "function renderAudit(D){\n  const box=document.getElementById('rpt-aud'); if(!box) return;\n  /* Приводим к «публикаций в месяц», иначе «2–3 в неделю» и «1 в неделю»\n     несравнимы на глаз. Шкала общая на всех — в этом весь смысл. */\n  \n  const max=Math.max(...D.map(d=>d[2]));\n  box.innerHTML=D.map(([n,ch,per,lab,th,ok,better])=>`<div class=\"a\">\n    <div><div class=\"who\">${esc(n)}<span>${esc(ch)}</span></div>\n      <div class=\"freq\"><div class=\"rail\"><i style=\"width:${per/max*100}%\"></i></div>\n        <div class=\"lab\">${esc(lab)} · ${per}/мес</div></div></div>\n    <div><div class=\"cols\">\n      <div><h5>Что работает</h5><p>${esc(ok)}</p></div>\n      <div><h5>Как сделать лучше</h5><p>${esc(better)}</p></div>\n    </div><div class=\"themes\">Темы: ${esc(th)}</div></div></div>`).join('');\n}",
+    "function renderGlue(D){\n  const box=document.getElementById('rpt-glue'); if(!box) return;\n  \n  box.innerHTML=D.map(([p,n,c])=>`<div class=\"gl${c?' cfm':''}\">\n    <span><b>${esc(p)}</b></span>\n    <span class=\"n\">${String(n).replace(/\\B(?=(\\d{3})+(?!\\d))/g,'\\u00A0')}</span>\n    <span class=\"t\">${c?'вы подтвердили':'из выдачи'}</span></div>`).join('');\n}",
+    "function renderSemantics(D){\n  const M=['янв','фев','мар','апр','май','июн','июл','авг','сен','окт','ноя','дек'];\n  \n  const bars=document.getElementById('rpt-sembars'); if(!bars) return;\n  const max=Math.max(...D.map(d=>d.v));\n  const fmt=n=>String(n).replace(/\\B(?=(\\d{3})+(?!\\d))/g,' ');\n  /* Слово, полоса и число — в ОДНУ строку. Раньше слово стояло над полосой, и каждый кластер занимал две: на четырёх незаметно, на пятидесяти ядро растягивалось на два экрана. */\n  bars.innerHTML=D.map((d,i)=>`<div class=\"semrow\" data-i=\"${i}\" tabindex=\"0\"><div class=\"nm\">${esc(d.n)}</div><div class=\"rail\"><i style=\"width:${Math.max(d.v/max*100,1.5)}%\"></i></div><div class=\"n\">${fmt(d.v)}</div></div>`).join('');\n\n  const who=document.getElementById('rpt-semwho');\n  const chart=document.getElementById('rpt-semchart');\n  const note=document.getElementById('rpt-semnote');\n  const rows=[...bars.querySelectorAll('.semrow')];\n\n  const draw=i=>{\n    const d=D[i];\n    rows.forEach(r=>r.classList.toggle('on',+r.dataset.i===i));\n    who.textContent=d.n;\n    const W=300,H=104,padT=14,padB=22,padR=6,padL=6;\n    const ih=H-padT-padB, iw=W-padL-padR;\n    const x=k=>padL+iw*k/(M.length-1);\n    const y=v=>padT+ih-v*ih;\n    const svg=el('svg',{viewBox:`0 0 ${W} ${H}`,width:'100%',height:H});\n    /* Дорожка-основание: у линии должно быть от чего меряться, иначе подъём\n       читается только в сравнении с соседней точкой. */\n    svg.appendChild(el('line',{x1:padL,y1:y(0),x2:W-padR,y2:y(0),\n      stroke:'var(--line-2)','stroke-width':1}));\n    const pk=d.s.indexOf(Math.max(...d.s)), dp=d.s.indexOf(Math.min(...d.s));\n    /* Провал отмечаем вертикалью, а не второй линией: это про «когда не писать». */\n    svg.appendChild(el('line',{x1:x(dp),y1:padT,x2:x(dp),y2:y(0),\n      stroke:'var(--line)','stroke-width':1,'stroke-dasharray':'2 3'}));\n    const path=d.s.map((v,k)=>(k?'L':'M')+x(k).toFixed(1)+','+y(v).toFixed(1)).join(' ');\n    svg.appendChild(el('path',{d:path,fill:'none',stroke:'var(--mid)','stroke-width':2,\n      'stroke-linejoin':'round'}));\n    svg.appendChild(el('circle',{cx:x(pk),cy:y(d.s[pk]),r:3.5,fill:'var(--mid)'}));\n    svg.appendChild(el('circle',{cx:x(dp),cy:y(d.s[dp]),r:3,fill:'var(--card-solid)',\n      stroke:'var(--ink-3)','stroke-width':1.5}));\n    M.forEach((m,k)=>{\n      const t=el('text',{x:x(k),y:H-7,class:'axis','text-anchor':'middle',\n        'font-size':'8.5'});\n      t.textContent=m[0].toUpperCase();\n      /* Месяцы пика и провала подписываем целиком — именно их и ищут глазами. */\n      if(k===pk||k===dp){ t.textContent=m; t.setAttribute('font-size','8.5');\n        t.setAttribute('fill', k===pk?'var(--acc-ink)':'var(--ink-2)');\n        t.setAttribute('font-weight','700'); }\n      svg.appendChild(t);\n    });\n    chart.innerHTML=''; chart.appendChild(svg);\n    const ratio=(d.s[pk]/d.s[dp]).toFixed(1).replace('.',',');\n    note.innerHTML=`Пик — <b>${M[pk]}</b>, провал — <b>${M[dp]}</b>, разница\n      <b>в ${ratio} раза</b>. Статью под этот кластер ставить в работу за месяц-полтора\n      до подъёма.`;\n  };\n  draw(0);\n  bars.addEventListener('mouseover',e=>{const r=e.target.closest('.semrow'); if(r) draw(+r.dataset.i);});\n  bars.addEventListener('focusin',e=>{const r=e.target.closest('.semrow'); if(r) draw(+r.dataset.i);});\n}",
+    "function renderMarketMap(P){\n  const box=document.getElementById('rpt-mkt'); if(!box) return;\n  const PRICE=['масс-маркет','средний','дорогой','VIP'];\n  const FAME=['лидер','заметный','нишевый'];\n  /* [название, цена 0-3, известность 0-2, брендовый спрос в месяц, мы?] */\n  \n  const ourPrice=P.find(x=>x[4])[1];\n  const top=Math.max(...P.map(x=>x[3]||0));\n  const fmt=n=>String(n).replace(/\\B(?=(\\d{3})+(?!\\d))/g,'\\u00A0');\n\n  let h='<div></div>'+PRICE.map(n=>`<div class=\"hd\">${n}</div>`).join('');\n  FAME.forEach((f,fi)=>{\n    h+=`<div class=\"rw\">${f}</div>`;\n    PRICE.forEach((pr,pi)=>{\n      const list=P.filter(x=>x[1]===pi&&x[2]===fi);\n      h+=`<div class=\"cell${pi===ourPrice?' ours':''}${list.length?'':' empty'}\" data-c=\"${fi}-${pi}\">\n        <span class=\"dots\">${list.map(x=>\n          `<button type=\"button\" class=\"dot\" data-i=\"${P.indexOf(x)}\"\n            aria-label=\"${x[0]}: ${PRICE[x[1]]}, ${FAME[x[2]]}\"><i class=\"${x[4]?'us':''}\"></i></button>`\n        ).join('')}</span>\n        <span class=\"n\">${list.length||'—'}</span></div>`;\n    });\n  });\n  box.innerHTML=h;\n\n  /* Список под картой — он и есть орган управления: наводишь на название и\n     видишь, где этот игрок стоит. Сама точка подписи не несёт, поэтому искать\n     конкретного конкурента по карте невозможно — только по списку. */\n  const listBox=document.getElementById('rpt-mkt-col');\n  const order=P.map((x,i)=>[x,i]).sort((a,b)=>(b[0][3]||-1)-(a[0][3]||-1));\n  listBox.innerHTML=\n    `<h4>Кто где стоит · ${P.length} игроков</h4>`+\n    `<p class=\"hint\">Наведите на название — на карте загорится его точка. И наоборот: наведите на точку — подсветится строка и всплывёт карточка.</p>`+\n    `<div class=\"hdr\"><span>Название</span><span>Цена</span><span>Известность</span>`+\n    `<span style=\"text-align:right\">Брендовый спрос</span></div>`+\n    order.map(([x,i])=>`<div class=\"r${x[4]?' mine':''}\" data-i=\"${i}\" tabindex=\"0\">\n      <b>${x[0]}${x[4]?' — мы':''}</b>\n      <span class=\"g\">${PRICE[x[1]]}</span>\n      <span class=\"g\">${FAME[x[2]]}</span>\n      <span class=\"num${x[3]?'':' no'}\">${x[3]?fmt(x[3])+'/мес':'не замерено'}</span>\n    </div>`).join('');\n\n  /* Подсказка у точки — владелица попросила оставить: на карте у кружка нет\n     подписи, и без неё непонятно, на кого навёл. Держим её внутри обёртки,\n     чтобы координаты считались от одного элемента и она не убегала при прокрутке. */\n  const wrap=box.parentNode, tip=document.createElement('div');\n  tip.className='mkttip'; tip.setAttribute('role','status'); wrap.appendChild(tip);\n  const showTip=(btn,x)=>{\n    const pct=x[3]?x[3]/top*100:null;\n    const share=pct===null?null:(pct<1?'&lt;1':Math.round(pct));\n    tip.innerHTML=`<b>${x[0]}${x[4]?' — мы':''}</b><dl>`+\n      `<dt>Цена</dt><dd>${PRICE[x[1]]}</dd>`+\n      `<dt>Известность</dt><dd>${FAME[x[2]]}</dd>`+\n      `<dt>Ищут название в месяц</dt><dd>${x[3]?fmt(x[3]):'не замерено'}</dd>`+\n      (share!==null?`<dt>Доля от лидера рынка</dt><dd>${share}%</dd>`:'')+\n      `</dl>`;\n    const b=btn.getBoundingClientRect(), w=wrap.getBoundingClientRect();\n    tip.style.left=(b.left-w.left+b.width/2)+'px';\n    tip.style.top=(b.top-w.top-8)+'px';\n    tip.classList.add('on');\n  };\n  const hideTip=()=>tip.classList.remove('on');\n\n  const dots=[...box.querySelectorAll('.dot')];\n  const rows=[...listBox.querySelectorAll('.r')];\n  const seek=i=>{\n    box.classList.add('seek');\n    dots.forEach(d=>{\n      const on=+d.dataset.i===i;\n      d.classList.toggle('hit',on);\n      if(on&&d.parentNode&&d.parentNode.parentNode) d.parentNode.parentNode.classList.add('hit');\n    });\n    box.querySelectorAll('.cell').forEach(c=>{\n      if(!c.querySelector('.dot.hit')) c.classList.remove('hit');\n    });\n    rows.forEach(r=>r.classList.toggle('on',+r.dataset.i===i));\n  };\n  const rest=()=>{\n    box.classList.remove('seek');\n    dots.forEach(d=>d.classList.remove('hit'));\n    box.querySelectorAll('.cell').forEach(c=>c.classList.remove('hit'));\n    rows.forEach(r=>r.classList.remove('on'));\n  };\n  /* Связь в обе стороны: со списка на карту (главное, ради чего это делалось)\n     и с карты на список — чтобы у точки, на которую случайно навёл, нашлось имя. */\n  listBox.addEventListener('mouseover',e=>{const r=e.target.closest('.r'); if(r) seek(+r.dataset.i);});\n  listBox.addEventListener('mouseleave',rest);\n  listBox.addEventListener('focusin',e=>{const r=e.target.closest('.r'); if(r) seek(+r.dataset.i);});\n  listBox.addEventListener('focusout',rest);\n  const onDot=d=>{ const i=+d.dataset.i; seek(i); showTip(d,P[i]); };\n  box.addEventListener('mouseover',e=>{const d=e.target.closest('.dot'); if(d) onDot(d);});\n  box.addEventListener('mouseleave',()=>{rest(); hideTip();});\n  box.addEventListener('focusin',e=>{const d=e.target.closest('.dot'); if(d) onDot(d);});\n  box.addEventListener('focusout',()=>{rest(); hideTip();});\n}",
+    "function renderAwareness(D){\n  const box=document.getElementById('rpt-aw'); if(!box) return;\n  const LV=['L1 не знает о проблеме','L2 осознаёт проблему','L3 ищет решение',\n            'L4 сравнивает продукты','L5 знает нас'];\n  const TINT=[16,32,52,74,100];\n  const fill=i=>TINT[i]>=100?'var(--mid)'\n    :`color-mix(in srgb, var(--mid) ${TINT[i]}%, var(--line-2))`;\n  \n  box.innerHTML=D.map(([n,sub,v])=>\n    `<div class=\"awrow\">\n      <div class=\"awnm\">${n}<span>${sub}</span></div>\n      <div class=\"aw\">${v.map((x,i)=>x?\n        `<span style=\"width:${x}%;background:${fill(i)}\">${x>=15?x+'%':''}</span>`:'').join('')}</div>\n    </div>`).join('')+\n    `<div class=\"awleg\">${LV.map((n,i)=>\n      `<span><i style=\"background:${fill(i)}\"></i>${n}</span>`).join('')}</div>`;\n}",
+    "function renderSources(d){\n  const box=document.getElementById('rpt-srcs');\n  if(!box) return;\n  \n  const ext='<svg viewBox=\"0 0 12 12\"><path d=\"M4.5 2h5.5v5.5\"/><path d=\"M10 2L4.5 7.5\"/><path d=\"M8 8.5V10H2V4h1.5\"/></svg>';\n  box.innerHTML=d.map(([n,dom,t,use,url])=>\n    `<div class=\"srow\"><span class=\"sn\">[${n}]</span>\n       <span class=\"sd\">\n         <span class=\"dom\"><a href=\"${url}\" target=\"_blank\" rel=\"noopener\">${dom}${ext}</a>\n           <span class=\"dt\">${use}</span></span>\n         <span class=\"took\"><span>что взяли</span><em>${t}</em></span>\n       </span></div>`).join('');\n}",
+    "function renderMarketSize(d){\n  var box=document.getElementById('rpt-tam'); if(!box) return;\n  /* ТРЕТИЙ ЗАХОД, 11.09. Капсулы со смещением не легли: у SOM при доле около\n     процента подпись выезжала за край. Владелица предложила круги — и это\n     лучше по существу: у круга ПЛОЩАДЬ пропорциональна числу (радиус берём\n     как корень из доли), то есть пропорция честная, а не нарисованная.\n     Круги вложенные и касаются снизу — видно, что SOM лежит ВНУТРИ SAM.\n     Подписи вынесены наружу, каждая на своей высоте: налезать им негде. */\n  var n=d.length, S=360, pad=10, topSpace=30;\n  /* Запас сверху: подпись самого большого круга стоит НАД его верхней точкой,\n     и без запаса она уезжала выше края поля. */\n  var R=(S-pad-topSpace)/2;\n  var sh=d.map(function(x){ return Math.max(x[3]||0, 0.0004); });\n  var base=sh[0]||1;\n  var rr=sh.map(function(v){ return Math.max(R*Math.sqrt(v/base), R*0.13); });\n  var W=S+250, cx=pad+R, baseY=S-pad;\n  var svg=el('svg',{viewBox:'0 0 '+W+' '+S,width:'100%',height:'auto'});\n  var circles=[], i;\n  for(i=0;i<n;i++){\n    var r=rr[i], cy=baseY-r;\n    var tint=[22,44,70,100][Math.min(i,3)];\n    var c=el('circle',{cx:cx,cy:cy,r:r,'data-i':i,\n      fill:i===n-1?'var(--mid)':'color-mix(in srgb, var(--mid) '+tint+'%, var(--card-solid))',\n      style:'transition:opacity .15s ease'});\n    svg.appendChild(c); circles.push(c);\n  }\n  for(i=0;i<n;i++){\n    var r=rr[i], topY=baseY-2*r, x2=cx+R+22;\n    svg.appendChild(el('line',{x1:cx,y1:topY,x2:x2,y2:topY,stroke:'var(--line)','stroke-width':1}));\n    svg.appendChild(el('circle',{cx:cx,cy:topY,r:2.5,fill:'var(--ink-3)'}));\n    var code=el('text',{x:x2+8,y:topY-3,class:'val',style:'font-size:17px'});\n    code.textContent=d[i][0]; svg.appendChild(code);\n    var words=String(d[i][1]||'').split(' '), lines=[], cur='';\n    words.forEach(function(wd){\n      if((cur+' '+wd).trim().length>20){ lines.push(cur.trim()); cur=wd; }\n      else cur=(cur+' '+wd).trim();\n    });\n    if(cur) lines.push(cur);\n    lines.slice(0,2).forEach(function(ln,li){\n      var note=el('text',{x:x2+8,y:topY+13+li*15,class:'axis',style:'font-size:12px'});\n      note.textContent=ln; svg.appendChild(note);\n    });\n  }\n  var wrap=document.createElement('div'); wrap.className='tamwrap';\n  var leftBox=document.createElement('div'); leftBox.appendChild(svg);\n  var right=document.createElement('div'); right.className='tamvals';\n  right.innerHTML=d.map(function(x,ix){\n    return '<div class=\"tamrow\" data-i=\"'+ix+'\"><span class=\"c\">'+escText(x[0])+'</span>'\n      +'<b>'+escText(x[2])+'</b>'\n      +(x[4]?'<span class=\"rel\">'+escText(x[4])+'</span>':'')+'</div>';\n  }).join('');\n  wrap.appendChild(leftBox); wrap.appendChild(right); box.appendChild(wrap);\n  var rows=[].slice.call(right.querySelectorAll('.tamrow'));\n  function hi(ix){\n    circles.forEach(function(c,j){ c.setAttribute('opacity', ix<0||ix===j?'1':'.3'); });\n    rows.forEach(function(r2,j){ r2.className='tamrow'+(ix===j?' on':''); });\n  }\n  circles.forEach(function(c,j){\n    c.addEventListener('mouseenter',function(){hi(j);});\n    c.addEventListener('mouseleave',function(){hi(-1);});\n  });\n  rows.forEach(function(r2,j){\n    r2.addEventListener('mouseenter',function(){hi(j);});\n    r2.addEventListener('mouseleave',function(){hi(-1);});\n  });\n}",
+    "function renderHeat(cols,rows){\n  \n  const tint=v=>v===0?'color-mix(in srgb, var(--ink) 3%, transparent)'\n    :`color-mix(in srgb, var(--mid) ${v*22}%, var(--card-solid))`;\n  document.getElementById('rpt-heat').innerHTML =\n    '<thead><tr><th></th>'+cols.map(c=>`<th>${c}</th>`).join('')+'</tr></thead><tbody>'+\n    rows.map(([n,vs])=>`<tr><td>${esc(n)}</td>`+\n      vs.map(v=>`<td style=\"background:${tint(v)}\">${v?'':'—'}</td>`).join('')+'</tr>').join('')+\n    '</tbody>';\n}",
+    "function renderVoc(D){\n  const box=document.getElementById('rpt-voc'); if(!box) return;\n  const V={ok:['сверено с источником','ok'],nopage:['страница не открылась','nopage']};\n  \n  box.innerHTML=D.map(c=>{\n    const [txt,cls]=V[c.v];\n    const INT={3:['высокая',100],2:['средняя',62],1:['низкая',30]};\n    const [word,pct]=INT[c.int];\n    return `<div class=\"vq2\">\n      <div class=\"vtop\">\n        <span class=\"vmark ${cls}\"><i></i>${txt}</span>\n        <blockquote>${c.q}</blockquote>\n      </div>\n      <div class=\"vtheme\"><b>${c.theme}</b><span class=\"seg2\">${c.seg}</span></div>\n      <div class=\"vsrc2\">${L(c.src,c.url)} · ${c.date}</div>\n      <div class=\"vnums\">\n        <div><span class=\"lab\">как часто встречается</span>\n          <span class=\"big2\">${c.freq.split(' ')[0]}<em>${c.freq.split(' ').slice(1).join(' ')}</em></span></div>\n        <div><span class=\"lab\">сила боли</span>\n          <span class=\"pain\"><span class=\"rail2\"><i style=\"width:${pct}%\"></i></span><b>${word}</b></span></div>\n      </div>\n      <div class=\"vans\"><span>формула ответа</span>${c.ans}</div>\n    </div>`;\n  }).join('');\n  const ok=D.filter(x=>x.v==='ok').length;\n  const bad=D.length-ok;\n  /* Фраза про непрочитанные страницы раньше стояла в тексте всегда — отчёт\n     сообщал о сбое, которого не было. Считаем по факту. */\n  const tail = bad\n    ? `; у ${bad} ${bad===1?'страница не открылась':'страниц не открылось'} — ${bad===1?'она оставлена':'они оставлены'} с пометкой, а не удалена.`\n    : '; все страницы открылись.';\n  var biasBox=document.getElementById('rpt-bias'); if(biasBox) biasBox.innerHTML=\n    `<b>Смещение выборки.</b> Поиск шёл по жалобам и отзывам, а там пишут в основном\n     недовольные и опытные пользователи — молчаливое большинство сюда не попало.\n     Без этой оговорки список болей читается как «мнение рынка», а это мнение\n     самой громкой его части.\n     <br><b>Проверено ${ok} из ${D.length}</b> цитат${tail}`;\n}",
+    "function renderAlt(d){\n  var box=document.getElementById('rpt-alt'); if(!box) return;\n  /* Альтернатива — предмет разговора, а не строка: её называют, объясняют,\n     чем она берёт, и отвечают на неё. Тот же формат, что у ограничений. */\n  box.innerHTML=d.map(function(r,i){\n    var n=r[0],ty=r[1],why=r[2],say=r[3],main=r[4];\n    return '<div class=\"rule-card'+(main?' lead':'')+'\"><b>'+(i+1)+'</b>'\n      +'<span class=\"eb\">'+escText(main?'главный конкурент':(ty||'альтернатива'))+'</span>'\n      +'<span class=\"nm\">'+escText(n)+'</span>'\n      +(why?'<span>'+escText(why)+'</span>':'')\n      +(say?'<span class=\"ft\">Отвечаем: '+escText(say)+'</span>':'')\n      +'</div>';\n  }).join('');\n}",
+    "function renderChannels(d){\n  const box=document.getElementById('rpt-chn');\n  if(!box) return;\n  const G={\n    forum:'<path d=\"M3 6.5A2.5 2.5 0 015.5 4h13A2.5 2.5 0 0121 6.5v7a2.5 2.5 0 01-2.5 2.5H9l-5 4v-4H5.5A2.5 2.5 0 013 13.5z\"/>',\n    star:'<path d=\"M12 3l2.7 5.9 6.3.7-4.7 4.3 1.3 6.2L12 17l-5.6 3.1 1.3-6.2L3 9.6l6.3-.7z\"/>',\n    tg:'<rect x=\"6\" y=\"2.5\" width=\"12\" height=\"19\" rx=\"2.6\"/><path d=\"M9 9h6M9 12.5h4\"/>',\n    video:'<path d=\"M3 7.5A2.5 2.5 0 015.5 5h8A2.5 2.5 0 0116 7.5v9a2.5 2.5 0 01-2.5 2.5h-8A2.5 2.5 0 013 16.5z\"/><path d=\"M16 10.6l5-2.6v8l-5-2.6z\"/>',\n    news:'<rect x=\"3\" y=\"4.5\" width=\"18\" height=\"15\" rx=\"2.2\"/><path d=\"M7 9h6M7 12.5h10M7 16h10\"/>',\n  };\n  \n  box.innerHTML=d.map(([n,ty,ic,what,live,use,ref])=>\n    `<div class=\"ccard\">\n       <div class=\"ch\">\n         <span class=\"ci\"><svg viewBox=\"0 0 24 24\">${G[ic]}</svg></span>\n         <div class=\"cn\">${n} <a class=\"rn2\" href=\"#src\">[${ref}]</a><span>${ty}</span></div>\n       </div>\n       <div class=\"cd\">${what}</div>\n       <div class=\"cf\">\n         <div><span>признак живости</span><b>${live}</b></div>\n         <div class=\"r\"><span>как использовать</span><b>${use}</b></div>\n       </div>\n     </div>`).join('');\n\n  /* Доли по площадкам — те же 41 цитата, разложенные по источникам. */\n  const sh=[['vc.ru',14],['oborot.ru',9],['Отзывы на картах',8],\n            ['Telegram-чаты',6],['YouTube-разборы',4]];\n  const tot=sh.reduce((a,b)=>a+b[1],0), mx=Math.max(...sh.map(x=>x[1]));\n  /* Округляем по наибольшему остатку, а не каждое число по отдельности:\n     при обычном округлении сумма даёт 101%, и это первое, что бросается\n     в глаза в отчёте. */\n  const ex=sh.map(([n,v])=>({n,v,f:Math.floor(v/tot*100),r:(v/tot*100)%1}));\n  let left=100-ex.reduce((a,b)=>a+b.f,0);\n  ex.slice().sort((a,b)=>b.r-a.r).forEach(o=>{ if(left>0){o.f++;left--;} });\n  document.getElementById('v-chn-share').innerHTML=ex.map(o=>\n    `<div class=\"dbar\"><span class=\"t\">${o.n}</span>\n       <span class=\"g\"><i style=\"width:${(o.v/mx*100).toFixed(0)}%\"></i></span>\n       <span class=\"n\">${o.f}%</span></div>`).join('');\n}",
+    "function renderObj(d){\n  const box=document.getElementById('rpt-obj');\n  if(!box) return;\n  \n  box.innerHTML='<div class=\"ohead\"><span>Что говорит клиент</span>'+\n    '<span>Чем снимаем</span></div>'+\n    d.map(([f,a])=>\n    `<div class=\"orow\"><div class=\"of\">${f}</div><div class=\"oa\">${a}</div></div>`).join('');\n}",
+    "function renderHooks(d){\n  var box=document.getElementById('rpt-hooks'); if(!box) return;\n  /* Хук — это чужая фраза, поэтому антиквой и в кавычках, как цитата.\n     Под ней — где её брать и о чём она. */\n  box.innerHTML=d.map(function(r,i){\n    var t=r[0],topic=r[1],place=r[2];\n    var tail=[topic,place].filter(Boolean).join(' · ');\n    return '<div class=\"rule-card\"><b>'+(i+1)+'</b>'\n      +'<span class=\"q\">«'+escText(t)+'»</span>'\n      +(tail?'<span class=\"ft\">'+escText(tail)+'</span>':'')\n      +'</div>';\n  }).join('');\n}",
+    "function renderCompCards(D){\n  const box=document.getElementById('rpt-comp'); if(!box) return;\n  \n  box.innerHTML=D.map(c=>{\n    const t=v=>typeof v==='string'?v:v.h;\n    return `<div class=\"ccard2\">\n      <div class=\"chead\">\n        <div>\n          <div class=\"cid\">${c.id} · ${c.niche}</div>\n          <div class=\"cnm\">${c.n}</div>\n          <div class=\"cmeta\"><span class=\"scale\">${c.scale}</span>${L(c.dom,c.url)}</div>\n        </div>\n        <div class=\"price\"><b>${c.price}</b><span>${c.per}</span></div>\n      </div>\n      <div class=\"cgrid\">\n        <div class=\"cbox\"><h5>Оффер</h5><p>${c.offer}</p></div>\n        <div class=\"cbox\"><h5>Позиционирование</h5><p>${c.pos}</p>\n          <p style=\"color:var(--ink-3)\">${c.cta}</p></div>\n        <div class=\"cbox pro\"><h5>Сильные стороны</h5><ul>${c.pro.map(x=>`<li>${x}</li>`).join('')}</ul></div>\n        <div class=\"cbox con\"><h5>Слабые стороны</h5><ul>${c.con.map(x=>`<li>${x}</li>`).join('')}</ul></div>\n        <div class=\"cbox\"><h5>Что мешает клиенту</h5><p>${c.bar}</p></div>\n        <div class=\"cbox\"><h5>Как он это снимает</h5><p>${c.ans}</p></div>\n        <div class=\"cbox\"><h5>Доказательства</h5><p>${c.proof}</p></div>\n        <div class=\"cbox\"><h5>Триггеры дефицита</h5><p>${t(c.trig)}</p></div>\n        <div class=\"cbox gap2\"><h5>Наша возможность</h5><p>${c.gap}</p></div>\n      </div></div>`;\n  }).join('');\n}",
+    "function renderSwotGrid(S){\n  var box=document.getElementById('rpt-swot'); if(!box) return;\n  var Q=[['s','Сильные стороны',true],['w','Слабые стороны',false],\n         ['o','Возможности',true],['t','Угрозы',false]];\n  var cell=function(k,title,help){\n    var items=(S[k]||[]).map(function(x){\n      /* Строка SWOT — это утверждение и то, чем оно подтверждено. Без второй\n         части квадрат превращается в список мнений, а подтверждение раньше\n         оставалось в сырой таблице под сеткой и дублировало её. */\n      var what=Array.isArray(x)?x[0]:x, why=Array.isArray(x)?x[1]:'', act=Array.isArray(x)?x[2]:'';\n      var tail=[];\n      if(why) tail.push('подтверждение: '+escText(why));\n      if(act) tail.push('делаем: '+escText(act));\n      return '<li>'+escText(what)\n        +(tail.length?'<em>'+tail.join(' · ')+'</em>':'')+'</li>';\n    }).join('');\n    if(!items) items='<li style=\"color:var(--ink-3)\">нет данных</li>';\n    return '<div class=\"sw'+(help?' sw-help':'')+'\"><h3>'+title+'</h3><ul>'+items+'</ul></div>';\n  };\n  box.innerHTML='<div class=\"cor\"></div><div class=\"cor\">помогает</div><div class=\"cor\">мешает</div>'\n    +'<div class=\"cor r\">наше</div>'+cell('s',Q[0][1],true)+cell('w',Q[1][1],false)\n    +'<div class=\"cor r\">внешнее</div>'+cell('o',Q[2][1],true)+cell('t',Q[3][1],false)\n    +'<p class=\"sw-note\">Верхний ряд — то, на что мы влияем сами. Нижний происходит '\n    +'независимо от наших решений: на него можно только успеть среагировать.</p>';\n}",
+    "function renderPersonas(D){\n  const box=document.getElementById('rpt-pers'); if(!box) return;\n  \n  const CONF={4:['подтверждена','var(--mid)',80],2:['гипотеза','var(--sw-violet)',40]};\n  const TINT=[16,32,52,74,100];\n  box.innerHTML=D.map(p=>{\n    const [w,col,pct]=CONF[p.conf];\n    const mx=Math.max(...p.pain.map(x=>x[1]),1);\n    const painRows=p.pain.map(([t,v])=>\n      `<div class=\"dbar\"><span class=\"t\">${t}</span>\n         <span class=\"g\"><i style=\"width:${v?(v/mx*100).toFixed(0):2}%\"></i></span>\n         <span class=\"n\">${v?v+' из 41':'—'}</span></div>`).join('');\n    /* Метка гипотезы стоит У ИМЕНИ, а не только в шкале уверенности ниже:\n       читатель пробегает портреты по именам, и персона на двух цитатах не\n       должна читаться наравне с персоной на двадцати. */\n    const flag = p.conf<=2\n      ? '<span class=\"pflag\">гипотеза</span>' : '';\n    return `<div class=\"pers\" style=\"margin-bottom:14px\">\n      <div class=\"pers-side\">\n        <div class=\"pers-av\">${p.ini}</div>\n        <div><div class=\"rl\">${p.role}</div><h3>${p.nm}${flag}</h3></div>\n        <div class=\"one\">${p.one}</div>\n        <div class=\"pers-share\"><b>${p.share}</b><span>доля в аудитории</span></div>\n        <div class=\"pers-conf\">\n          <span class=\"clab\">уверенность</span>\n          <span class=\"crail\"><i style=\"width:${pct}%;background:${col}\"></i></span>\n          <b>${p.conf} из 5 · ${w}</b>\n          <span class=\"sub2\">${p.quotes?p.quotes+' проверенные цитаты из «Голоса клиента»':'проверенных цитат нет'}</span>\n        </div>\n      </div>\n      <div class=\"pers-main\">\n        <div class=\"bmet\">\n          <div><h4>Кто решает</h4><div class=\"big\">${p.who}</div>\n            <div class=\"sm\">${p.conf>2?'Блок «как согласовать с руководством» не нужен':'Аргументы должны пересказываться'}</div></div>\n          <div><h4>Цикл сделки</h4><div class=\"big\">${p.cycle}</div>\n            <div class=\"trk\"><span class=\"rg\" style=\"left:${p.cyclePct[0]}%;width:${p.cyclePct[1]}%\"></span></div>\n            <div class=\"trk-ax\"><span>0</span><span>15</span><span>30 дней</span></div></div>\n          <div><h4>Бюджет без согласования</h4><div class=\"big\">${p.budget}</div>\n            <div class=\"trk\"><span class=\"rg\" style=\"left:0;width:${p.mark?50:0}%\"></span>\n              ${p.mark?`<span class=\"mk\" style=\"left:${p.mark}%\"></span>`:''}</div>\n            <div class=\"mklbl\">${p.markTxt}</div></div>\n          <div><h4>Осведомлённость</h4>\n            <div class=\"aw\" style=\"height:22px;margin-top:6px\">${p.aw.map((x,i)=>x?\n              `<span style=\"width:${x}%;background:${TINT[i]>=100?'var(--mid)':`color-mix(in srgb, var(--mid) ${TINT[i]}%, var(--line-2))`}\">${x>=15?x+'%':''}</span>`:'').join('')}</div>\n            <div class=\"sm\" style=\"margin-top:7px\">Доминирует ${['L1','L2','L3','L4','L5'][p.aw.indexOf(Math.max(...p.aw))]}</div></div>\n        </div>\n        <div class=\"bpain\"><h4>Боли по частоте упоминания <span style=\"font-weight:600;letter-spacing:0;text-transform:none\">· из «Голоса клиента»</span></h4>\n          <div class=\"dbars\">${painRows}</div></div>\n        <div class=\"prow-head\"><span>Параметр</span><span>Значение</span><span>Что из этого следует</span></div>\n        ${p.rows.map(r=>`<div class=\"prow\"><span class=\"p\">${r[0]}</span>\n          <span class=\"v\">${r[1]==='нет своих цитат'?'<span class=\"no\">нет своих цитат</span>':r[1]}</span>\n          <span class=\"a\">${r[2]}</span></div>`).join('')}\n      </div></div>`;\n  }).join('');\n}",
+    "function renderLadder(STEP,st){\n  /* Одна шкала светлоты вместо пяти тонов: продвижение по пути — одна\n     величина. Тёмные чернила держат контраст на всех пяти ступенях,\n     слабейшая 7.83 при норме 4.5 — проверено. */\n  \n  const COL=STEP.map(k=>k>=100?'var(--mid)'\n    :`color-mix(in srgb, var(--mid) ${k}%, var(--line-2))`);\n  \n  const RISK={high:'высокий риск потери',medium:'средний риск',low:'низкий риск'};\n  const maxW=250, minW=175;\n  document.getElementById('rpt-lad').innerHTML=st.map(([nm,pct,risk,act,desc],i)=>{\n    const w=Math.round(maxW-(maxW-minW)*(i/(st.length-1)));\n    return `<div class=\"lrow\" style=\"--lw:${w}px\">\n      <div class=\"lleft\" style=\"background:${COL[i]}\">\n        <span class=\"num\">${String(i).padStart(2,'0')}</span>\n        <span class=\"nm\">${nm}</span>\n      </div>\n      <div class=\"lright\">\n        <b>${act}</b>\n        <span>${desc}</span>\n        <span class=\"meta\"><i>доходит ${pct}%</i><i class=\"rk rk-${risk}\">${RISK[risk]}</i></span>\n      </div>\n    </div>`;\n  }).join('');\n}",
+    "function renderPyramid(rows){\n  \n  const mx=Math.max(...rows.flatMap(r=>[r[1],r[2]]));\n  document.getElementById('rpt-pyr').innerHTML=rows.map(([a,m,f])=>\n    `<div class=\"pyrow\">\n       <div class=\"s l\"><span class=\"v\">${String(m).replace('.',',')}%</span><span class=\"rail\"><span class=\"bar\" style=\"width:${(m/mx*100).toFixed(1)}%\"></span></span></div>\n       <div class=\"age\">${a}</div>\n       <div class=\"s r\"><span class=\"rail\"><span class=\"bar\" style=\"width:${(f/mx*100).toFixed(1)}%\"></span></span><span class=\"v\">${String(f).replace('.',',')}%</span></div>\n     </div>`).join('');\n}",
+    "function renderOfferInput(D){\n  const box=document.getElementById('rpt-inp'); if(!box) return;\n  const LBL={brief:'из брифа',site:'с сайта',none:'не задано'};\n  box.innerHTML='<div class=\"th\"><span>Что знаем</span><span>Значение</span>'+\n    '<span>Откуда</span></div>'+\n    D.map(([k,v,o])=>`<div class=\"tr\">\n    <div>${esc(k)}</div>\n    <div${o==='none'?' class=\"no\"':''}>${esc(v)}</div>\n    <div><span class=\"tag\">${LBL[o]}</span></div></div>`).join('');\n}",
+    "function renderFinalOffer(O,ix){\n  const box=document.getElementById('rpt-off-'+(ix||0)); if(!box) return;\n  \n  box.innerHTML=`\n   <div style=\"border:1px solid var(--line);border-radius:18px;padding:22px 24px;background:var(--card-solid)\">\n    <div style=\"font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--ink-3);margin-bottom:12px\">${esc(O.seg)}</div>\n    <div style=\"font-family:'Source Serif 4',Georgia,serif;font-size:25px;font-weight:600;line-height:1.2;color:var(--ink);margin-bottom:8px\">${esc(O.h1)}</div>\n    <div style=\"font-size:14px;color:var(--ink-2);line-height:1.5;margin-bottom:18px;max-width:56ch\">${esc(O.h2)}</div>\n    <div style=\"display:grid;grid-template-columns:1fr 1fr;gap:14px;padding:14px 0;border-top:1px solid var(--line-2);border-bottom:1px solid var(--line-2);margin-bottom:16px\">\n      <div><div style=\"font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-3);margin-bottom:5px\">Проблема</div>\n        <div style=\"font-size:12.5px;color:var(--ink-2);line-height:1.45\">${esc(O.prob)}</div></div>\n      <div><div style=\"font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-3);margin-bottom:5px\">Результат</div>\n        <div style=\"font-size:12.5px;color:var(--ink-2);line-height:1.45\">${esc(O.res)}</div></div>\n    </div>\n    <div style=\"font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-3);margin-bottom:8px\">Что входит</div>\n    <ul style=\"margin:0 0 18px;padding-left:18px;font-size:12.5px;color:var(--ink-2);line-height:1.9\">\n      ${O.pack.map(p=>`<li>${esc(p)}</li>`).join('')}</ul>\n    <div style=\"display:flex;align-items:center;gap:18px;flex-wrap:wrap\">\n      <div style=\"font-size:19px;font-weight:700;color:var(--ink)\">${esc(O.price)}</div>\n      <div style=\"flex:1;min-width:180px;font-size:12px;line-height:1.4;${O.risk?'color:var(--ink-2)':'color:var(--ink-3);font-style:italic'}\">\n        ${O.risk?esc(O.risk):'снятие риска не заполнено — здесь клиент решает, рисковать ли'}</div>\n      <div style=\"background:var(--ink);color:var(--mist-1);font-size:13px;font-weight:600;padding:11px 22px;border-radius:999px\">${esc(O.cta)}</div>\n    </div>\n    <div style=\"margin-top:12px;font-size:11px;color:var(--ink-3)\">Ведёт на: ${esc(O.to)}</div>\n   </div>`;\n}",
+    "function renderKanban(D){\n  var box=document.getElementById('rpt-kan'); if(!box) return;\n  var COLS=[['Ждут проверки',/не запущен|ждёт|план/i],['В работе',/в работ|идёт|запущен/i],\n            ['Проверены',/провер|заверш|готов/i]];\n  box.innerHTML=COLS.map(function(c){\n    var items=D.filter(function(h){return c[1].test(h.st||'') ||\n        (c[0]==='Ждут проверки' && !COLS.some(function(x){return x[1].test(h.st||'');}));});\n    return '<div class=\"kcol\"><h3>'+c[0]+'</h3>'+items.map(function(h){\n      return '<div class=\"kcard\"><b>'+escText(h.n)+'</b><span>'+escText(h.what)+'</span>'\n        +(h.met?'<div class=\"met\"><u>Успех</u> — '+escText(h.met)+'</div>':'')+'</div>';}).join('')\n      +'</div>';}).join('');\n}",
+    "function renderPyramid(rows){\n  \n  const mx=Math.max(...rows.flatMap(r=>[r[1],r[2]]));\n  document.getElementById('rpt-pyr').innerHTML=rows.map(([a,m,f])=>\n    `<div class=\"pyrow\">\n       <div class=\"s l\"><span class=\"v\">${String(m).replace('.',',')}%</span><span class=\"rail\"><span class=\"bar\" style=\"width:${(m/mx*100).toFixed(1)}%\"></span></span></div>\n       <div class=\"age\">${a}</div>\n       <div class=\"s r\"><span class=\"rail\"><span class=\"bar\" style=\"width:${(f/mx*100).toFixed(1)}%\"></span></span><span class=\"v\">${String(f).replace('.',',')}%</span></div>\n     </div>`).join('');\n}",
+    "function renderAgeBars(age){\n  \n  const inc=[['ниже ср.',18],['средний',54],['выше ср.',28]];\n  const draw=(id,rows)=>{const m=Math.max(...rows.map(r=>r[1]));\n    document.getElementById(id).innerHTML=rows.map(([t,v])=>\n      `<div class=\"dbar\"><span class=\"t\">${t}</span><span class=\"g\"><i style=\"width:${v/m*100}%\"></i></span><span class=\"n\">${v}%</span></div>`).join('');};\n  draw('rpt-age',age); draw('v-inc',inc);\n}",
+    "function renderLangBank(G){\n  const box=document.getElementById('rpt-lang'); if(!box) return;\n  \n  const total=G.reduce((a,g)=>a+g[4].length,0);\n  box.innerHTML=G.map(([n,col,ik,hint,rows])=>{\n    const pct=Math.round(rows.length/total*100);\n    return `<div class=\"lrow2\" style=\"--c2:${col}\">\n       <span class=\"lbar\" style=\"background:${col}\"></span>\n       <div class=\"ltag\">\n         <span class=\"ename\">${n}<span>${hint}</span></span>\n         <span class=\"lmeter\">\n           <span class=\"rail3\"><i style=\"width:${pct}%;background:${col}\"></i></span>\n           <b>${rows.length} из ${total}</b>\n         </span>\n       </div>\n       <div class=\"llist\">${rows.map(r=>\n         `<div>${r[0]}<span>${L(r[1],r[2])}</span></div>`).join('')}</div>\n     </div>`;\n  }).join('');\n}",
+    "function renderBet(D){\n  var box=document.getElementById('rpt-bet'); if(!box) return;\n  /* Тот же формат, что у ограничений: карточка на предмет, крупная цифра\n     фоном. Порядок здесь не украшение — это ход рассуждения: ставка, на чём\n     стоит, что если верна, что если нет, чем проверяем. Первая карточка во\n     всю ширину: остальные четыре опираются на неё, а не стоят вровень. */\n  box.innerHTML=D.map(function(r,i){\n    return '<div class=\"rule-card'+(i?'':' wide')+'\"><b>'+(i+1)+'</b>'\n      +'<span class=\"eb\">'+escText(r[0])+'</span>'\n      +'<span>'+escText(r[1])+'</span></div>';\n  }).join('');\n}",
+    "function renderNotSell(D){\n  var box=document.getElementById('rpt-notsell'); if(!box) return;\n  /* Отказ читают по одному: «а этот наш?». Признак вынесен отдельной\n     строкой — по нему и узнают, а не по общему описанию. */\n  box.innerHTML=D.map(function(r,i){\n    return '<div class=\"rule-card\"><b>'+(i+1)+'</b>'\n      +'<span class=\"eb\">не наш клиент</span>'\n      +'<span class=\"nm\">'+escText(r[0])+'</span>'\n      +(r[1]?'<span>'+escText(r[1])+'</span>':'')\n      +(r[2]?'<span class=\"ft\">Как узнать: '+escText(r[2])+'</span>':'')\n      +'</div>';\n  }).join('');\n}",
+    "function renderTopContent(D){\n  var box=document.getElementById('rpt-topc'); if(!box) return;\n  /* Мера как везде: полоса 14px на дорожке, торцы прямые, число снаружи\n     полосы чернилами. Считаем от максимума — сравнивают единицы между собой,\n     а не с абсолютной шкалой, которой у просмотров не бывает. */\n  var max=Math.max.apply(null,D.map(function(x){return x.v;}).concat([1]));\n  box.innerHTML=D.map(function(d){\n    var w=d.v>0?Math.max(d.v/max*100,1.5):0;\n    var head=d.url?('<a href=\"'+d.url+'\" target=\"_blank\" rel=\"noopener\">'+escText(d.t)+'</a>'):escText(d.t);\n    var sub=[d.p,d.meta].filter(Boolean).join(' · ');\n    return '<div class=\"tcrow\">'\n      +'<div class=\"tcn\">'+head+(sub?'<span>'+escText(sub)+'</span>':'')+'</div>'\n      +'<div class=\"rail\"><i style=\"width:'+w.toFixed(1)+'%\"></i></div>'\n      +'<div class=\"tcv\">'+escText(d.raw)+(d.resp?'<span>'+escText(d.resp)+'</span>':'')+'</div>'\n      +(d.hook?'<div class=\"tch\">Хук: '+escText(d.hook)+'</div>':'')\n      +'</div>';\n  }).join('');\n}",
+    "function renderPatterns(D){\n  var box=document.getElementById('rpt-patterns'); if(!box) return;\n  /* Паттерн — вывод, по которому принимают решение. Название крупно, под ним\n     почему срабатывает, внизу за линией — что делать и на чём основано. */\n  box.innerHTML=D.map(function(r,i){\n    var foot=[r[2]?'Делаем: '+r[2]:'', r[3]?'Основано на: '+r[3]:''].filter(Boolean).join(' · ');\n    return '<div class=\"rule-card\"><b>'+(i+1)+'</b>'\n      +'<span class=\"eb\">что работает</span>'\n      +'<span class=\"nm\">'+escText(r[0])+'</span>'\n      +(r[1]?'<span>'+escText(r[1])+'</span>':'')\n      +(foot?'<span class=\"ft\">'+escText(foot)+'</span>':'')\n      +'</div>';\n  }).join('');\n}",
+    "function renderJtbd(D){\n  var box=document.getElementById('rpt-jtbd'); if(!box) return;\n  /* Фраза собрана целиком: связки «когда / я хочу / чтобы» приглушены, чтобы\n     читалось предложение, а не заполненная анкета. */\n  var lead=function(w){return '<i>'+w+'</i> ';};\n  box.innerHTML=D.map(function(r,i){\n    var seg=r[0], when=r[1], want=r[2], so=r[3], win=r[4], gap=r[5], fear=r[6];\n    var foot=[win?'Успех: '+win:'', gap?'Пробел: '+gap:'', fear?'Страх: '+fear:''].filter(Boolean).join(' · ');\n    return '<div class=\"rule-card\"><b>'+(i+1)+'</b>'\n      +(seg?'<span class=\"eb\">'+escText(seg)+'</span>':'')\n      +'<span class=\"q\">'+(when?lead('Когда')+escText(when)+', ':'')\n        +(want?lead('я хочу')+escText(want):'')\n        +(so?', '+lead('чтобы')+escText(so):'')+'</span>'\n      +(foot?'<span class=\"ft\">'+escText(foot)+'</span>':'')\n      +'</div>';\n  }).join('');\n}",
+    "function renderTactics(D){\n  var box=document.getElementById('rpt-tactics'); if(!box) return;\n  /* Риск стоит прямо под примером формулировки, а не в дальней колонке:\n     его читают вместе с ней или не читают вовсе. */\n  box.innerHTML=D.map(function(r,i){\n    return '<div class=\"rule-card\"><b>'+(i+1)+'</b>'\n      +(r[1]?'<span class=\"eb\">'+escText(r[1])+'</span>':'')\n      +'<span class=\"nm\">'+escText(r[0])+'</span>'\n      +(r[2]?'<span class=\"q\">«'+escText(r[2])+'»</span>':'')\n      +(r[3]&&r[3]!=='—'?'<span class=\"warnline\">Риск: '+escText(r[3])+'</span>':'')\n      +(r[4]?'<span class=\"ft\">'+escText(r[4])+'</span>':'')\n      +'</div>';\n  }).join('');\n}",
+    "function renderPositioning(D){\n  var box=document.getElementById('rpt-pos3'); if(!box) return;\n  box.innerHTML=D.map(function(r,i){\n    return '<div class=\"rule-card\"><b>'+(i+1)+'</b>'\n      +'<span class=\"eb\">'+escText(r[0])+'</span>'\n      +'<span class=\"nm\">'+escText(r[1])+'</span>'\n      +(r[2]?'<span>'+escText(r[2])+'</span>':'')\n      +(r[3]?'<span class=\"q\">'+escText(r[3])+'</span>':'')\n      +(r[4]?'<span class=\"ft\">'+escText(r[4])+'</span>':'')\n      +'</div>';\n  }).join('');\n}",
+    "function renderArchetype(D){\n  var box=document.getElementById('rpt-arch'); if(!box) return;\n  /* Первая карточка широкая: архетип — утверждение обо всём бренде, от него\n     зависит тон всего, что напишет контент-завод. */\n  box.innerHTML=D.map(function(r,i){\n    var foot=[r[3]?'У соперников занято: '+r[3]:'', r[4]?'Рискуем: '+r[4]:''].filter(Boolean).join(' · ');\n    return '<div class=\"rule-card'+(i?'':' wide')+'\"><b>'+(i+1)+'</b>'\n      +(r[1]?'<span class=\"eb\">'+escText(r[1])+'</span>':'')\n      +'<span class=\"nm\">'+escText(r[0])+'</span>'\n      +(r[2]?'<span>'+escText(r[2])+'</span>':'')\n      +(foot?'<span class=\"ft\">'+escText(foot)+'</span>':'')\n      +'</div>';\n  }).join('');\n}",
+    "function renderIntent(D){\n  var box=document.getElementById('rpt-intent'); if(!box) return;\n  box.innerHTML='<div class=\"th\"><span>Кластер и запросы</span><span>Что писать</span>'\n    +'<span>Чем подкрепить</span></div>'\n    +D.map(function(r){\n      return '<div class=\"tr\">'\n        +'<div><span class=\"nm\">'+escText(r[0])+'</span>'\n          +(r[1]?'<span class=\"q\">'+escText(r[1])+'</span>':'')\n          +(r[2]?'<span class=\"tag\">'+escText(r[2])+'</span>':'')+'</div>'\n        +'<div>'+escText(r[3]||'')+'</div>'\n        +'<div>'+escText(r[4]||'')+'</div>'\n      +'</div>';\n    }).join('');\n}",
+    "function renderCriteria(D){\n  var box=document.getElementById('rpt-crit'); if(!box) return;\n  box.innerHTML='<div class=\"th\"><span>Критерий</span><span>Чем подтверждаем</span>'\n    +'<span>Где показываем</span></div>'\n    +D.map(function(r){\n      return '<div class=\"tr\">'\n        +'<div><span class=\"nm\">'+escText(r[0])+'</span>'\n          +(r[1]?'<span class=\"tag\">'+escText(r[1])+'</span>':'')\n          +(r[2]?'<span class=\"q\">'+escText(r[2])+'</span>':'')+'</div>'\n        +'<div>'+escText(r[3]||'')+'</div>'\n        +'<div>'+escText(r[4]||'')+'</div>'\n      +'</div>';\n    }).join('');\n}",
+    "function renderWorkbench(D){\n  var box=document.getElementById('rpt-wb'); if(!box) return;\n  box.innerHTML=D.map(function(r,i){\n    var hooks=(r[1]||[]).map(function(h){return '<li>«'+escText(h)+'»</li>';}).join('');\n    var line=[r[2]?'Боль: '+r[2]:'', r[3]?'Результат: '+r[3]:''].filter(Boolean).join(' · ');\n    var foot=[r[5]?'Доказательства: '+r[5]:'', r[6]].filter(Boolean).join(' · ');\n    return '<div class=\"rule-card\"><b>'+(i+1)+'</b>'\n      +'<span class=\"eb\">'+escText(r[0]||('оффер '+(i+1)))+'</span>'\n      +(hooks?'<ul class=\"hooklist\">'+hooks+'</ul>':'')\n      +(line?'<span>'+escText(line)+'</span>':'')\n      +(r[4]?'<span>'+escText(r[4])+'</span>':'')\n      +(foot?'<span class=\"ft\">'+escText(foot)+'</span>':'')\n      +'</div>';\n  }).join('');\n}",
+    "function renderBenchmarks(D){\n  var box=document.getElementById('rpt-bmk'); if(!box) return;\n  /* Объём выборки стоит рядом с числом, а не в примечании: медиана по трём\n     единицам — не бенчмарк, и увидеть это надо сразу. */\n  box.innerHTML=D.map(function(r){\n    return '<div class=\"bcell\">'\n      +'<span class=\"bk\">'+escText(r[0])+'</span>'\n      +'<span class=\"bv\">'+escText(r[1])+'</span>'\n      +(r[2]?'<span class=\"br\">'+escText(r[2])+'</span>':'')\n      +(r[3]?'<span class=\"bn\">на '+escText(r[3])+'</span>':'<span class=\"bn\">объём не указан</span>')\n      +(r[4]&&r[4]!=='—'?'<span class=\"bnote\">'+escText(r[4])+'</span>':'')\n      +'</div>';\n  }).join('');\n}",
+    "function renderGuardrails(D){\n  var box=document.getElementById('rpt-rules'); if(!box) return;\n  /* Решётка карточек, а не плоский список строк — формат из макета платформы.\n     Ограничения читают перед тем, как писать, и каждое должно быть отдельным\n     предметом, а не пунктом в простыне. */\n  box.innerHTML=D.map(function(r,i){\n    return '<div class=\"rule-card\"><b>'+(i+1)+'</b><span>'+escText(r)+'</span></div>';\n  }).join('');\n}",
+  ].join('\n');
+
+
+  // ── SEO-02: семантика полосами + сезонность по кластеру ─────────────────────
+  function renderSemanticsBlock(headers, rows) {
+    const kC = col(headers,'кластер'), kV = col(headers,'частотн');
+    if (!kC || !kV) return null;
+    const kS = col(headers,'сезонн');
+    // Сезонность в таблице словами («рост с сентября»), помесячных чисел нет —
+    // рисуем ровную линию и честно подписываем. Выдумывать кривую нельзя.
+    const D = rows.map(r => {
+      const n = String(r[kC]||'').replace(/\*\*/g,'').trim();
+      const v = numOf(r[kV]);
+      if (!n || v == null) return null;
+      return { n, v, s: new Array(12).fill(0.5), note: kS ? String(r[kS]||'') : '' };
+    }).filter(Boolean);
+    if (!D.length) return null;
+    blockScripts.push('renderSemantics('+safeJson(D)+');');
+    return '<div class="sem"><div id="rpt-sembars"></div>'
+      + '<div class="sempanel"><div class="cap">Сезонность по месяцам</div>'
+      + '<div class="who" id="rpt-semwho"></div><div id="rpt-semchart"></div>'
+      + '<div class="note" id="rpt-semnote"></div></div></div>';
+  }
+
+  // ── SEO-01: страницы выдачи карточками ──────────────────────────────────────
+  function renderSerpBlock(headers, rows) {
+    const kU = col(headers,'url'), kQ = col(headers,'найдено');
+    if (!kU) return null;
+    const kT = col(headers,'заголовок'), kK = col(headers,'тип'), kS = col(headers,'чем сильна');
+    const D = rows.map(r => {
+      const u = String(r[kU]||'').replace(/\*\*|\[|\]/g,'').trim();
+      if (!u) return null;
+      return [ kT ? String(r[kT]||'') : u, u.replace(/^https?:\/\//,''),
+               kQ ? String(r[kQ]||'') : '', kK ? String(r[kK]||'') : '',
+               kS ? String(r[kS]||'') : '' ];
+    }).filter(Boolean);
+    if (!D.length) return null;
+    blockScripts.push('renderSerp('+safeJson(D)+');');
+    return '<div class="serp" id="rpt-serp"></div>';
+  }
+
+  // ── SEO-03: контент-аудит, частота полосой в общей шкале ───────────────────
+  function renderAuditBlock(headers, rows) {
+    const kN = col(headers,'конкурент'), kF = col(headers,'частота');
+    if (!kN || !kF) return null;
+    const kC = col(headers,'тип контента'), kT = col(headers,'темы');
+    const kOk = col(headers,'что работает'), kB = col(headers,'как сделать лучше');
+    // «2–3 в неделю» и «1 в неделю» на глаз несравнимы — приводим к месяцу.
+    const perMonth = t => {
+      const s = String(t||'').toLowerCase();
+      const n = numOf(s);
+      if (n == null) return null;
+      if (/недел/.test(s)) return n * 4;
+      if (/день|сутк/.test(s)) return n * 30;
+      return n;
+    };
+    const D = rows.map(r => {
+      const n = String(r[kN]||'').replace(/\*\*/g,'').trim();
+      const per = perMonth(r[kF]);
+      if (!n || per == null) return null;
+      return [ n, kC?String(r[kC]||''):'', per, String(r[kF]||''),
+               kT?String(r[kT]||''):'', kOk?String(r[kOk]||''):'', kB?String(r[kB]||''):'' ];
+    }).filter(Boolean);
+    if (!D.length) return null;
+    blockScripts.push('renderAudit('+safeJson(D)+');');
+    return '<div class="aud" id="rpt-aud"></div>';
+  }
+
+
+  // ── BLOCK 06: карта рынка на двух измеримых осях ────────────────────────────
+  // Цена из прайсов, известность — замер брендового спроса (processM3Fame).
+  // Разметка и поведение перенесены из design/РАЗБОР-M2.html дословно.
+  function renderMarket(headers, rows, ctx, brief) {
+    const kN = col(headers,'назван'), kP = col(headers,'ценовой'), kF = col(headers,'известн');
+    if (!kN || !kP || !kF) return null;
+    const priceIdx = t => {
+      const s = String(t||'').toLowerCase();
+      if (/vip|вип/.test(s)) return 3;
+      if (/дорог/.test(s)) return 2;
+      if (/средн/.test(s)) return 1;
+      return 0;                                   // масс-маркет и всё неопознанное
+    };
+    const fameIdx = t => {
+      const s = String(t||'').toLowerCase();
+      if (/лидер/.test(s)) return 0;
+      if (/заметн/.test(s)) return 1;
+      return 2;                                   // нишевый-малый / не замерено
+    };
+    const our = String((ctx && ctx.ourName) || '').toLowerCase();
+    const P = rows.map(r => {
+      const n = String(r[kN]||'').replace(/\*\*|\[|\]/g,'').trim();
+      if (!n) return null;
+      const dem = numOf(r[kF]);                   // «лидер · 41 300/мес» → число
+      const row = [ n, priceIdx(r[kP]), fameIdx(r[kF]), dem ];
+      if (our && n.toLowerCase().includes(our)) row.push(true);
+      return row;
+    }).filter(Boolean);
+    if (P.length < 4) return null;                // на трёх точках карта бессмысленна
+    if (!P.some(x => x[4])) P[P.length-1].push(true); // без «нас» подсветка не работает
+    blockScripts.push('renderMarketMap('+safeJson(P)+');');
+    return '<div class="mktwrap"><div class="mkt" id="rpt-mkt"></div></div>'
+      + '<div class="mktleg">'
+      + '<span><i style="background:var(--mid)"></i>мы</span>'
+      + '<span><i style="background:var(--sw-grey)"></i>игрок рынка</span>'
+      + '<span>подсвечен наш ценовой уровень — <b>сравнение идёт внутри него</b></span>'
+      + '</div><div class="mktlist" id="rpt-mkt-col"></div>';
+  }
+
+
+  // ── BLOCK 11: осведомлённость лентой ────────────────────────────────────────
+  // Распределение по пяти ступеням — одна шкала светлоты, как утверждено:
+  // разные тона читались бы как разные ВЕЩИ, а тут одна величина.
+  function renderAwarenessBlock(headers, rows) {
+    const kP = col(headers,'персона','сегмент'), kD = col(headers,'распредел');
+    if (!kP || !kD) return null;
+    const kDom = col(headers,'доминир');
+    const D = rows.map(r => {
+      const n = String(r[kP]||'').replace(/\*\*/g,'').trim();
+      // «L2: 60%, L3: 30%, L4: 10%» → пять чисел по порядку ступеней
+      const raw = String(r[kD]||'');
+      const v = [0,0,0,0,0];
+      let got = false;
+      raw.replace(/L\s*([1-5])\s*[:—-]?\s*(\d+)\s*%?/gi, (m,lv,pc) => { v[+lv-1] = +pc; got = true; return m; });
+      if (!n || !got) return null;
+      return [ n, kDom ? String(r[kDom]||'') : '', v ];
+    }).filter(Boolean);
+    if (!D.length) return null;
+    blockScripts.push('renderAwareness('+safeJson(D)+');');
+    return '<div id="rpt-aw"></div>';
+  }
+
+
+  // ── Источники (04_0, 02, 05, SEO-00) ────────────────────────────────────────
+  // Владелица просила активные ссылки прямо на названия сайтов. Формат из
+  // библиотеки: номер, площадка ссылкой, что взяли, куда пошло.
+  function renderSources(headers, rows) {
+    const kU = col(headers,'url','ссылк');
+    // «Канал» ищем ПЕРВЫМ: у радара колонки «Канал | Площадка», и поиск по
+    // «площадк» подставлял в имя строки слово «YouTube» вместо названия
+    // канала — строка выглядела пустой.
+    const kN = col(headers,'канал','источник','площадк','сайт');
+    if (!kU && !kN) return null;
+    const kW = col(headers,'что из него','что взяли','что видно','описан');
+    // Четвёртый слот — «где используем». У радара его роль играет «Чей»
+    // (конкурент / смежная ниша / медиа). «Площадку» сюда не берём: в
+    // обычных источниках она же стоит именем строки, и слот дублировал имя.
+    let kB = col(headers,'блок','куда','использ','чей');
+    if (kB === kN) kB = null;
+    const kD = col(headers,'дата');
+    const d = rows.map((r,i) => {
+      const url = kU ? String(r[kU]||'').replace(/\*\*|\[|\]/g,'').trim() : '';
+      const name = kN ? String(r[kN]||'').replace(/\*\*/g,'').trim()
+                      : url.replace(/^https?:\/\//,'').split('/')[0];
+      if (!name && !url) return null;
+      const num = numOf(Object.values(r)[0]) || (i+1);
+      return [ num, name, kW?String(r[kW]||''):'', kB?String(r[kB]||''):(kD?String(r[kD]||''):''),
+               url.indexOf('http')===0 ? url : (url ? 'https://'+url : '') ];
+    }).filter(Boolean);
+    if (!d.length) return null;
+    blockScripts.push('renderSources('+safeJson(d)+');');
+    return '<div class="srcs" id="rpt-srcs"></div>';
+  }
+
+  // ── BLOCK 03: размер рынка воронкой ─────────────────────────────────────────
+  // Проценты от ПРЕДЫДУЩЕЙ ступени, а не от целого: они отвечают на «почему так
+  // мало» точнее, чем доля от TAM. Три оттенка одного цвета — величина одна.
+  function renderMarketSize(headers, rows) {
+    const kS = col(headers,'ступен','уровень','показател','метрик');
+    const kV = col(headers,'значен','объём','сумма','₽');
+    if (!kV) return null;
+    const kN = col(headers,'что входит','описан','коммент');
+    const d = rows.map(r => {
+      const code = String((kS?r[kS]:Object.values(r)[0])||'').replace(/\*\*/g,'').trim();
+      const val = String(r[kV]||'').trim();
+      if (!/^(TAM|SAM|SOM)/i.test(code)) return null;
+      return [ code.slice(0,3).toUpperCase(), kN?String(r[kN]||''):'', val, numOf(val)||0, '' ];
+    }).filter(Boolean);
+    if (d.length !== 3) return null;               // воронка ровно из трёх ступеней
+    const top = d[0][3] || 1;
+    d.forEach((x,i) => {
+      x[3] = top ? x[3]/top : 1;                   // доля от TAM задаёт ширину
+      if (i) { const prev = d[i-1]; x[4] = prev && prev[3] ? Math.round(x[3]/prev[3]*100)+'% от предыдущей' : ''; }
+    });
+    blockScripts.push('renderMarketSize('+safeJson(d)+');');
+    return '<div id="rpt-tam"></div>';
+  }
+
+  // ── BLOCK 06_1: гэп-анализ матрицей ─────────────────────────────────────────
+  // Тепловая карта вместо таблицы с галочками: пустые столбцы сразу показывают,
+  // где мы одни. Насыщенность = наличие функции.
+  function renderGap(headers, rows) {
+    const kC = col(headers,'критер','функц','парамет');
+    if (!kC) return null;
+    // Колонки-конкуренты — все, кроме служебных
+    const skip = /критер|функц|парамет|статус|действ|kpi|поймём|источник|коммент|приоритет/i;
+    const comps = headers.filter(h => h !== kC && !skip.test(h));
+    if (comps.length < 2) return null;
+    const lvl = v => {
+      const s = String(v||'').toLowerCase().trim();
+      if (!s || s === '—' || /нет|отсут|—/.test(s)) return 0;
+      if (/да|есть|win|полн|сильн/.test(s)) return 3;
+      if (/частич|parity|средн/.test(s)) return 2;
+      return 1;
+    };
+    const rws = rows.map(r => [ String(r[kC]||'').replace(/\*\*/g,'').trim(), comps.map(c => lvl(r[c])) ])
+                    .filter(x => x[0]);
+    if (!rws.length) return null;
+    blockScripts.push('renderHeat('+safeJson(comps)+','+safeJson(rws)+');');
+    return '<div style="overflow-x:auto"><table class="heat" id="rpt-heat"></table></div>';
+  }
+
+
+  // ── BLOCK 07 / 07A: голос клиента лентой ────────────────────────────────────
+  // Цитата дословно, площадка, тема и пометка статуса. Статус «в работе» ставит
+  // контент-машина — пока его нет, все цитаты «ждут»: это честно, а не пусто.
+  function renderVocBlock(headers, rows) {
+    const kQ = col(headers,'цитата');
+    if (!kQ) return null;
+    const kS = col(headers,'источник','площадк'), kT = col(headers,'тема','боль');
+    const kSeg = col(headers,'сегмент','ниша'), kN = col(headers,'частотн','упомин');
+    const kU = col(headers,'url'), kD = col(headers,'дата');
+    const kI = col(headers,'интенсивн'), kA = col(headers,'формула ответа','что из этого следует');
+    const intOf = v => { const t=String(v||'').toLowerCase();
+      return /высок/.test(t) ? 3 : (/средн/.test(t) ? 2 : (/низк/.test(t) ? 1 : 2)); };
+    // Форма — ровно та, которую ждёт код из разбора M3. Метка проверки: пока
+    // верификация идёт на стороне модуля, в отчёт приходит уже отобранное,
+    // поэтому все цитаты помечаются «сверено»; «страница не открылась» ставится
+    // только если это прямо написано в строке.
+    const D = rows.map(r => {
+      const q = String(r[kQ]||'').trim();
+      if (!q) return null;
+      const raw = Object.values(r).join(' ').toLowerCase();
+      return {
+        q: /^[«"']/.test(q) ? q : '«'+q+'»',
+        v: /не открыл|недоступн|404/.test(raw) ? 'nopage' : 'ok',
+        theme: kT?String(r[kT]||''):'', seg: kSeg?String(r[kSeg]||''):'',
+        src: kS?String(r[kS]||''):'', url: kU?String(r[kU]||''):'',
+        date: kD?String(r[kD]||'дата не указана'):'дата не указана',
+        freq: kN?String(r[kN]||''):'', int: kI?intOf(r[kI]):2,
+        ans: kA?String(r[kA]||''):'',
+      };
+    }).filter(Boolean);
+    if (!D.length) return null;
+    blockScripts.push('renderVoc('+safeJson(D)+');');
+    return '<div class="voc" id="rpt-voc"></div><p class="bias" id="rpt-bias"></p>';
+  }
+
+  // ── BLOCK 07A: банк живого языка ────────────────────────────────────────────
+  // Фразы сгруппированы по эмоции: она определяет, каким тоном отвечать.
+  function renderLangBankBlock(headers, rows) {
+    const kQ = col(headers,'цитата','фраза');
+    const kE = col(headers,'эмоц');
+    if (!kQ || !kE) return null;
+    const kT = col(headers,'тема'), kP = col(headers,'площадк');
+    const TONE = {
+      // Четыре цвета по решению владелицы: синий, чёрный, серый, бирюза.
+      // Проверять теперь только по СОБРАННОЙ странице: переменные в отчёте
+      // переопределяются палитрой, и сверка по исходнику один раз уже
+      // показала разные цвета там, где на экране был один.
+      'раздражение': ['var(--sw-violet)','angry','злой заголовок, прямо называем проблему'],
+      'усталость':   ['var(--ink)','tired','спокойно и коротко, без восклицаний'],
+      'недоверие':   ['var(--sw-grey)','doubt','сначала доказательство, потом обещание'],
+      'надежда':     ['var(--mid)','hope','показываем результат и первый шаг'],
+    };
+
+
+    const groups = new Map();
+    for (const r of rows) {
+      const q = String(r[kQ]||'').trim();
+      const e = String(r[kE]||'').trim();
+      if (!q || !e) continue;
+      const key = e.toLowerCase();
+      if (!groups.has(key)) groups.set(key, []);
+      groups.get(key).push([ /^[«"']/.test(q) ? q : '«'+q+'»',
+                             kT?String(r[kT]||''):'', kP?String(r[kP]||''):'' ]);
+    }
+    if (!groups.size) return null;
+    const G = [...groups.entries()].map(([k, items]) => {
+      const t = TONE[k] || ['var(--ink-3)','other','тон подбирается по смыслу'];
+      return [ k.charAt(0).toUpperCase()+k.slice(1), t[0], t[1], t[2], items ];
+    });
+    blockScripts.push('renderLangBank('+safeJson(G)+');');
+    return '<div id="rpt-lang"></div>';
+  }
+
+  // ── BLOCK 07C: альтернативы, против чего конкурируем ────────────────────────
+  function renderAltBlock(headers, rows) {
+    const kA = col(headers,'альтернатив');
+    if (!kA) return null;
+    const kT = col(headers,'тип'), kW = col(headers,'почему'), kS = col(headers,'что мы говорим','ответ');
+    const d = rows.map((r,i) => {
+      const n = String(r[kA]||'').replace(/\*\*/g,'').trim();
+      if (!n) return null;
+      return [ n, kT?String(r[kT]||''):'', kW?String(r[kW]||''):'', kS?String(r[kS]||''):'', i===0 ];
+    }).filter(Boolean);
+    if (!d.length) return null;
+    blockScripts.push('renderAlt('+safeJson(d)+');');
+    return '<div class="rules" id="rpt-alt"></div>';
+  }
+
+  // ── BLOCK 12 / 12B: возражения и ответы ─────────────────────────────────────
+  function renderObjBlock(headers, rows) {
+    const kF = col(headers,'страх','сомнен','возражен');
+    if (!kF) return null;
+    const kA = col(headers,'артефакт','снятия','чем снимаем','ответ');
+    if (!kA) return null;
+    const d = rows.map(r => {
+      const f = String(r[kF]||'').replace(/\*\*/g,'').trim();
+      if (!f) return null;
+      return [ f, String(r[kA]||'') ];
+    }).filter(Boolean);
+    if (!d.length) return null;
+    blockScripts.push('renderObj('+safeJson(d)+');');
+    return '<div class="obj" id="rpt-obj"></div>';
+  }
+
+  // ── BLOCK 07B: банк хуков ───────────────────────────────────────────────────
+  function renderHooksBlock(headers, rows) {
+    const kH = col(headers,'цитата-хук','хук');
+    if (!kH) return null;
+    const kT = col(headers,'тема','боль'), kP = col(headers,'площадк');
+    const d = rows.map(r => {
+      const h = String(r[kH]||'').replace(/^[«"']|[»"']$/g,'').trim();
+      if (!h) return null;
+      return [ h, kT?String(r[kT]||''):'', kP?String(r[kP]||''):'' ];
+    }).filter(Boolean);
+    if (!d.length) return null;
+    blockScripts.push('renderHooks('+safeJson(d)+');');
+    return '<div class="rules" id="rpt-hooks"></div>';
+  }
+
+  // ── BLOCK 08A: где сидит аудитория ──────────────────────────────────────────
+  function renderChannelsBlock(headers, rows) {
+    const kP = col(headers,'площадк','канал');
+    if (!kP) return null;
+    const kT = col(headers,'тип'), kW = col(headers,'что аудитория','что делают','о чём');
+    const kL = col(headers,'признак','живост','актив'), kU = col(headers,'url');
+    const d = rows.map(r => {
+      const n = String(r[kP]||'').replace(/\*\*|\[|\]/g,'').trim();
+      if (!n) return null;
+      return [ n, kT?String(r[kT]||''):'', kW?String(r[kW]||''):'',
+               kL?String(r[kL]||''):'', kU?String(r[kU]||''):'' ];
+    }).filter(Boolean);
+    if (!d.length) return null;
+    blockScripts.push('renderChannels('+safeJson(d)+');');
+    return '<div class="chn" id="rpt-chn"></div>';
+  }
+
+
+  // ── BLOCK 06 таблица 2: конкурент карточкой, а не строкой на 16 колонок ─────
+  // Конкурент — объект, его рассматривают целиком. Шестнадцать полей строкой не
+  // читаются ни на каком экране: чтобы сравнить оффер с ценой, надо возить
+  // полосу прокрутки. Ни одно поле не выброшено, они сгруппированы по смыслу.
+  function renderCompetitorCards(headers, rows) {
+    const kN = col(headers,'назван');
+    const kOffer = col(headers,'оффер');
+    if (!kN || !kOffer) return null;                 // это не таблица «вглубь»
+    const g = (r,k) => k ? String(r[k]||'').replace(/\*\*/g,'').trim() : '';
+    const kId = col(headers,'comp_id','id'), kSc = col(headers,'масштаб'),
+          kU = col(headers,'сайт','url'), kNi = col(headers,'ниша','продукт'),
+          kPr = col(headers,'ценообраз','цена','прайс'), kPos = col(headers,'позиционир'),
+          kPro = col(headers,'сильные'), kCon = col(headers,'слабые'),
+          kCta = col(headers,'cta','призыв'), kProof = col(headers,'доказател'),
+          kBar = col(headers,'барьер'), kAns = col(headers,'ответ конкурента','ответ'),
+          kGap = col(headers,'gap','возможност');
+    const split = v => String(v||'').split(/[;•]|,\s(?=[А-ЯA-Z])/).map(x=>x.trim()).filter(Boolean);
+    const D = rows.map((r,i) => {
+      const n = g(r,kN);
+      if (!n) return null;
+      const url = g(r,kU).replace(/\[|\]/g,'');
+      return {
+        id: g(r,kId) || ('C'+(i+1)), niche: g(r,kNi), n,
+        scale: g(r,kSc) || '—', dom: url.replace(/^https?:\/\//,''),
+        url: url.indexOf('http')===0 ? url : (url ? 'https://'+url : '#'),
+        price: g(r,kPr) || '—', per: '',
+        offer: g(r,kOffer), pos: g(r,kPos), cta: g(r,kCta),
+        pro: split(g(r,kPro)), con: split(g(r,kCon)),
+        bar: g(r,kBar), ans: g(r,kAns), proof: g(r,kProof),
+        trig: '—', gap: g(r,kGap),
+      };
+    }).filter(Boolean);
+    if (!D.length) return null;
+    blockScripts.push('renderCompCards('+safeJson(D)+');');
+    return '<div class="comp" id="rpt-comp"></div>';
+  }
+
+
+  // ── BLOCK 06_2: SWOT ────────────────────────────────────────────────────────
+  // В промпте это ЧЕТЫРЕ отдельные таблицы подряд (сильные, слабые, возможности,
+  // угрозы), а рисуются они одной сеткой. Поэтому таблицы копятся в ctx, а сетка
+  // выводится на первой из них — остальные три потом просто гасятся.
+  const SWOT_ORDER = [
+    ['s', 'Сильные стороны',  /сильн/i,      true ],
+    ['w', 'Слабые стороны',   /слаб/i,       false],
+    ['o', 'Возможности',      /возможност/i, true ],
+    ['t', 'Угрозы',           /угроз/i,      false],
+  ];
+  function renderSwot(headers, rows, ctx) {
+    const kWhat = col(headers,'что именно');
+    if (!kWhat) return null;
+    const sub = String(ctx.lastSub || '');
+    const found = SWOT_ORDER.find(x => x[2].test(sub));
+    if (!found) return null;
+    ctx.swot = ctx.swot || {};
+    const kWhy = col(headers,'чем подтвержд','подтвержд','источник');
+    const kDo  = col(headers,'что с этим','что делаем','действие');
+    ctx.swot[found[0]] = rows.map(r => {
+      const what = String(r[kWhat]||'').replace(/\*\*/g,'').trim();
+      if (!what) return null;
+      const why = kWhy ? String(r[kWhy]||'').replace(/\*\*/g,'').trim() : '';
+      const act = kDo  ? String(r[kDo] ||'').replace(/\*\*/g,'').trim() : '';
+      return [what, /^—?$/.test(why) ? '' : why, /^—?$/.test(act) ? '' : act];
+    }).filter(Boolean);
+    if (ctx.swotDrawn) return '';                 // сетка уже выведена выше
+    ctx.swotDrawn = true;
+    // Разметка собирается скриптом, когда все четыре таблицы прочитаны.
+    blockScripts.push('renderSwotGrid(' + safeJson(ctx.swot) + ');');
+    ctx.swotRef = blockScripts.length - 1;        // место, которое допишем
+    return '<div class="swot" id="rpt-swot"></div>';
+  }
+
+
+  // ── BLOCK 09: персоны портретом ─────────────────────────────────────────────
+  // Восемнадцать колонок строкой не читаются. Портрет: слева кто это и
+  // уверенность, справа боли полосами и остальные поля.
+  function renderPersonasBlock(headers, rows) {
+    const kId = col(headers,'persona_id','id'), kRole = col(headers,'роль','должност');
+    if (!kRole) return null;
+    const kComp = col(headers,'компан','ниша'), kCtx = col(headers,'контекст','ситуац');
+    const kPain = col(headers,'боли'), kObj = col(headers,'возражен'), kTrig = col(headers,'триггер');
+    const kCh = col(headers,'канал'), kQ = col(headers,'цитат'), kConf = col(headers,'confidence','уверен');
+    const split = v => String(v||'').split(/[;,]\s*/).map(x=>x.trim()).filter(Boolean);
+    // Портрет ждёт ровно такой набор полей — он собран под утверждённую
+    // разметку, а не наоборот. Чего в таблице нет, честно оставляем пустым:
+    // «доля в аудитории» и «срок сделки» в BLOCK 09 не выдаются.
+    const D = rows.map((r,i) => {
+      const role = String(r[kRole]||'').replace(/\*\*/g,'').trim();
+      if (!role) return null;
+      const conf = kConf ? (numOf(r[kConf]) || 2) : 2;
+      // Пункты боли приходят из ячейки через запятую и написаны как попало:
+      // часть с заглавной, часть с маленькой. Приводим к одному виду.
+      const up = t => t ? t.charAt(0).toUpperCase()+t.slice(1) : t;
+      const pains = split(r[kPain]).slice(0,5).map(up);
+      const nm = role;
+      return {
+        ini: (kId ? String(r[kId]||'') : ('P'+(i+1))).replace(/[^A-Za-zА-Яа-я0-9]/g,'').slice(0,2).toUpperCase(),
+        nm, role: kComp ? String(r[kComp]||'') : '',
+        who: kCtx ? String(r[kCtx]||'') : '',
+        one: kQ ? String(r[kQ]||'') : '',
+        share: '—', budget: '—', cycle: '—', cyclePct: [0,0],
+        mark: 0, markTxt: '',
+        conf: conf >= 3 ? 4 : 2,
+        aw: [0,0,0,0,0],
+        pain: pains.map((t,j) => [t, pains.length - j]),
+        quotes: kQ ? [String(r[kQ]||'')].filter(Boolean) : [],
+        rows: [
+          ['Возражения', split(r[kObj]).map(up).join('; ')],
+          ['Триггеры', split(r[kTrig]).map(up).join('; ')],
+          ['Каналы', split(r[kCh]).map(up).join('; ')],
+        ].filter(x => x[1]),
+      };
+    }).filter(Boolean);
+    if (!D.length) return null;
+    blockScripts.push('renderPersonas('+safeJson(D)+');');
+    // Класс pers принадлежит одной персоне (внутри него сетка «боковина + данные»).
+    // Контейнер должен быть просто колонкой, иначе персоны встают ПАРАМИ и
+    // давят друг друга — владелица: «две как будто в куче».
+    return '<div class="perslist" id="rpt-pers"></div>';
+  }
+
+  // ── BLOCK 14: путь клиента лесенкой ─────────────────────────────────────────
+  function renderJourney(headers, rows) {
+    const kSt = col(headers,'этап');
+    if (!kSt) return null;
+    const kG = col(headers,'цель','что делаем','действ'), kR = col(headers,'риск','барьер');
+    const kD = col(headers,'доход','конверс','%');
+    const st = rows.map(r => {
+      const n = String(r[kSt]||'').replace(/\*\*/g,'').trim();
+      if (!n) return null;
+      return [ n, 0, 'high', kG?String(r[kG]||''):'', kR?String(r[kR]||''):'' ];
+    }).filter(Boolean);
+    if (st.length < 3) return null;
+    // Доли: из таблицы, если есть; иначе ровное сужение — форма лесенки важнее
+    // выдуманных процентов, а числа на ней не печатаются.
+    const STEP = st.map((_,i) => {
+      const v = kD ? numOf(rows[i][kD]) : null;
+      return v != null ? Math.max(8, Math.min(100, v)) : Math.round(100 - i*(70/(st.length-1)));
+    });
+    st.forEach((x,i) => { x[1] = STEP[i]; });
+    blockScripts.push('renderLadder('+safeJson(STEP)+','+safeJson(st)+');');
+    return '<div class="lad" id="rpt-lad"></div>';
+  }
+
+
+  // ── BLOCK 16: гипотезы доской ───────────────────────────────────────────────
+  // На доске видно то, чего в таблице не видно вовсе: сколько всего проверяется
+  // одновременно и что уже сдвинулось. Критерий успеха — единственное, ради
+  // чего гипотеза существует, поэтому он в карточке отдельной строкой.
+  function renderHypotheses(headers, rows) {
+    const kN = col(headers,'формулировка','гипотез');
+    if (!kN) return null;
+    const kW = col(headers,'что тестируем'), kM = col(headers,'ожидаемый эффект','метрик');
+    const kS = col(headers,'статус');
+    const D = rows.map(r => {
+      const n = String(r[kN]||'').replace(/\*\*/g,'').trim();
+      if (!n) return null;
+      return { n, what: kW?String(r[kW]||''):'', met: kM?String(r[kM]||''):'', st: kS?String(r[kS]||''):'' };
+    }).filter(Boolean);
+    if (!D.length) return null;
+    blockScripts.push('renderKanban('+safeJson(D)+');');
+    return '<div class="kan" id="rpt-kan"></div>';
+  }
+
+  // ── BLOCK 17A: вход для офферов с пометкой происхождения ────────────────────
+  // Пометка — вся суть блока: выдумать строку с меткой «из брифа» модель не
+  // может, а пустое поле видно и превращается в вопрос заказчику.
+  function renderOfferInputBlock(headers, rows) {
+    if (!rows.length) return null;
+    const r = rows[0];
+    const skip = /seller_id|^id$/i;
+    const D = headers.filter(h => !skip.test(h)).map(h => {
+      const v = String(r[h]||'').trim();
+      const empty = !v || /^(—|не задано|нет данных)$/i.test(v);
+      return [ h, empty ? 'не задано' : v, empty ? 'none' : 'brief' ];
+    });
+    if (D.length < 3) return null;
+    blockScripts.push('renderOfferInput('+safeJson(D)+');');
+    return '<div class="dtbl" style="--cols:190px 1fr 128px" id="rpt-inp"></div>';
+  }
+
+  // ── BLOCK 17 FINAL: оффер так, как его увидит покупатель ────────────────────
+  // Это и проверка: если в таком виде он не убеждает, то и на лендинге не
+  // убедит — переделывать надо здесь, а не после запуска.
+  function renderOffers(headers, rows) {
+    const kH = col(headers,'заголовок');
+    if (!kH) return null;
+    const g = (r,k) => k ? String(r[k]||'').replace(/\*\*/g,'').trim() : '';
+    const kSub = col(headers,'подзаголовок'), kSeg = col(headers,'сегмент'),
+          kAw = col(headers,'осведомл'), kProb = col(headers,'проблема'),
+          kRes = col(headers,'результат'), kPack = col(headers,'состав','пакет'),
+          kPrice = col(headers,'цена'), kRisk = col(headers,'снятие риска'),
+          kCta = col(headers,'призыв','cta'), kTo = col(headers,'куда ведёт');
+    const out = rows.map((r,i) => {
+      const h1 = g(r,kH);
+      if (!h1) return null;
+      const O = {
+        seg: [g(r,kSeg), g(r,kAw)].filter(Boolean).join(' · '),
+        h1, h2: g(r,kSub), prob: g(r,kProb), res: g(r,kRes),
+        pack: g(r,kPack).split(/[;,]\s*/).filter(Boolean),
+        price: g(r,kPrice) || '—',
+        risk: g(r,kRisk) && !/^—$/.test(g(r,kRisk)) ? g(r,kRisk) : null,
+        cta: g(r,kCta) || 'Оставить заявку', to: g(r,kTo),
+      };
+      blockScripts.push('renderFinalOffer('+safeJson(O)+',' + i + ');');
+      return '<div id="rpt-off-'+i+'"></div>';
+    }).filter(Boolean);
+    if (!out.length) return null;
+    return '<div style="display:flex;flex-direction:column;gap:14px">'+out.join('')+'</div>';
+  }
+
+
+  // ── BLOCK 09B: демография сегмента B2C ──────────────────────────────────────
+  // Главное в этом блоке — то, чего мы НЕ можем: пол и возраст числами нашими
+  // средствами не добываются. Если в значении стоит «нужны данные рекламного
+  // кабинета», рисовать нечего — печатаем таблицей, честно и без картинки.
+  function renderDemography(headers, rows) {
+    const kF = col(headers,'поле'), kV = col(headers,'значение');
+    if (!kF || !kV) return null;
+    const get = re => {
+      const r = rows.find(x => re.test(String(x[kF]||'')));
+      return r ? String(r[kV]||'') : '';
+    };
+    const ageRaw = get(/возраст/i);
+    // «25–34: 38%, 35–44: 31%» → полосы. Нет пар — блока нет.
+    const age = [];
+    ageRaw.replace(/(\d{2}\s*[–-]\s*\d{2}|\d{2}\+)\s*[:—-]?\s*(\d+)\s*%/g,
+      (m,band,pc) => { age.push([band.replace(/\s/g,''), +pc]); return m; });
+    if (age.length < 2) return null;
+    blockScripts.push('renderAgeBars('+safeJson(age)+');');
+    return '<div class="demo"><h4>Возраст</h4><div class="dbars" id="rpt-age"></div></div>';
+  }
+
+
+  // ── BLOCK 12B: ограничения для контента ─────────────────────────────────────
+  // Что этой аудитории не простят. Каждое правило — отдельная карточка, а не
+  // строка в простыне: их читают перед тем, как писать.
+  function renderGuardrailsBlock(headers, rows) {
+    const kR = col(headers,'правило','что нельзя','ограничен');
+    if (!kR) return null;
+    const kW = col(headers,'на основании','почему','из чего');
+    const D = rows.map(r => {
+      const t = String(r[kR]||'').replace(/\*\*/g,'').trim();
+      if (!t) return null;
+      const why = kW ? String(r[kW]||'').trim() : '';
+      return why ? t + ' — ' + why : t;
+    }).filter(Boolean);
+    if (!D.length) return null;
+    blockScripts.push('renderGuardrails('+safeJson(D)+');');
+    return '<div class="rules" id="rpt-rules"></div>';
+  }
+
+  // ── BLOCK 23 таблица 1: главная ставка карточками ───────────────────────────
+  // Пять элементов, каждый одной фразой, и читают их по одному, а не сравнивают
+  // между собой — тот же способ чтения, что у ограничений для контента, значит
+  // и подача та же. Владелица про этот блок говорила «всё бедное»: таблица из
+  // двух колонок ставке не по росту, от неё зависит остальное исследование.
+  // Вторая таблица блока (цели с метриками) остаётся таблицей — там числа
+  // сравнивают, карточки бы этому только мешали.
+  function renderBetBlock(headers, rows) {
+    const kE = col(headers,'элемент'), kF = col(headers,'формулировк','значение');
+    if (!kE || !kF) return null;
+    const D = rows.map(r => [
+      String(r[kE]||'').replace(/\*\*/g,'').trim(),
+      String(r[kF]||'').replace(/\*\*/g,'').trim(),
+    ]).filter(x => x[0] && x[1]);
+    if (D.length < 2) return null;
+    blockScripts.push('renderBet('+safeJson(D)+');');
+    return '<div class="rules bet" id="rpt-bet"></div>';
+  }
+
+  // ── BLOCK 07D: кому не продаём ──────────────────────────────────────────────
+  // Каждая строка — отдельный отказ, и читают их по одному: «а этот наш?».
+  // Тот же формат, что у ограничений и альтернатив.
+  function renderNotSellBlock(headers, rows) {
+    const kW = col(headers,'кто','сегмент');
+    const kY = col(headers,'почему');
+    if (!kW || !kY) return null;
+    const kS = col(headers,'признак','как узна','узнать');
+    const D = rows.map(r => {
+      const who = String(r[kW]||'').replace(/\*\*/g,'').trim();
+      if (!who) return null;
+      return [ who, String(r[kY]||'').trim(), kS ? String(r[kS]||'').trim() : '' ];
+    }).filter(Boolean);
+    if (!D.length) return null;
+    blockScripts.push('renderNotSell('+safeJson(D)+');');
+    return '<div class="rules" id="rpt-notsell"></div>';
+  }
+
+  // ── BLOCK 24: каналы конкурентов ────────────────────────────────────────────
+  // Рисуем тем же форматом, что «Где сидит аудитория» (08A): это тот же предмет —
+  // площадка, на которой кто-то сидит. Два разных вида для одного предмета
+  // развели бы отчёт, а не обогатили.
+  function renderRadarChannelsBlock(headers, rows) {
+    const kN = col(headers,'канал');
+    if (!kN) return null;
+    const kP = col(headers,'площадк'), kWho = col(headers,'чей','конкурент');
+    const kSub = col(headers,'подписч','аудитор'), kF = col(headers,'как часто','частот');
+    const kFmt = col(headers,'формат'), kU = col(headers,'url','источник','ссылк');
+    const g = (r,k) => k ? String(r[k]||'').replace(/\*\*|\[|\]/g,'').trim() : '';
+    const d = rows.map(r => {
+      const n = g(r,kN);
+      if (!n) return null;
+      const size = [g(r,kSub), g(r,kF)].filter(x=>x && x!=='—').join(' · ');
+      return [ n, g(r,kP), [g(r,kWho), g(r,kFmt)].filter(Boolean).join(' · '), size, g(r,kU) ];
+    }).filter(Boolean);
+    if (!d.length) return null;
+    blockScripts.push('renderChannels('+safeJson(d)+');');
+    return '<div class="chn" id="rpt-chn"></div>';
+  }
+
+  // ── BLOCK 06_4: доля внимания ───────────────────────────────────────────────
+  // Рисуем той же мерой, что «что залетает»: и там, и здесь сравнивают доли
+  // между собой. Заводить второй вид полос ради одного блока — плодить
+  // разнобой, из-за которого отчёт и выглядел собранным из кусков.
+  function renderShareBlock(headers, rows) {
+    const kN = col(headers,'компан','назван'), kV = col(headers,'доля');
+    if (!kN || !kV) return null;
+    const kA = col(headers,'запрос');
+    const d = rows.map(r => {
+      const n = String(r[kN]||'').replace(/\*\*/g,'').trim();
+      const v = numOf(r[kV]);
+      if (!n) return null;
+      return { t: n, v: v == null ? 0 : v, raw: String(r[kV]||'').trim(),
+               p: '', resp: kA ? String(r[kA]||'').trim() + '/мес' : '',
+               meta: '', hook: '', url: '' };
+    }).filter(Boolean);
+    if (!d.length) return null;
+    blockScripts.push('renderTopContent('+safeJson(d)+');');
+    return '<div class="topc" id="rpt-topc"></div>';
+  }
+
+  // ── BLOCK 24A: что залетает ─────────────────────────────────────────────────
+  // Просмотры — число, и сравнивают их между собой: значит полосы, а не текст.
+  // Разбор (формат, длительность, хук) идёт второй строкой под названием: он
+  // объясняет полосу, но сам по себе не сравнивается.
+  function renderTopContentBlock(headers, rows) {
+    const kT = col(headers,'единица','заголов','контент');
+    const kV = col(headers,'просмотр');
+    if (!kT || !kV) return null;
+    const kP = col(headers,'площадк'), kR = col(headers,'отклик','лайк'),
+          kF = col(headers,'формат'), kH = col(headers,'хук'),
+          kD = col(headers,'длительн'), kC = col(headers,'cta','призыв'),
+          kU = col(headers,'url','ссылк');
+    const g = (r,k) => k ? String(r[k]||'').replace(/\*\*|\[|\]/g,'').trim() : '';
+    const d = rows.map(r => {
+      const t = g(r,kT); const v = numOf(r[kV]);
+      if (!t) return null;
+      return { t, v: v == null ? 0 : v, raw: g(r,kV) || 'не замерено',
+               p: g(r,kP), resp: g(r,kR),
+               meta: [g(r,kF), g(r,kD), g(r,kC)].filter(x=>x && x!=='—').join(' · '),
+               hook: g(r,kH), url: g(r,kU) };
+    }).filter(Boolean);
+    if (!d.length) return null;
+    d.sort((a,b) => b.v - a.v);
+    blockScripts.push('renderTopContent('+safeJson(d)+');');
+    return '<div class="topc" id="rpt-topc"></div>';
+  }
+
+  // ── BLOCK 24B: что работает в нише ──────────────────────────────────────────
+  // Паттерн читают по одному и по нему принимают решение — формат карточек,
+  // тот же, что у ограничений и альтернатив.
+  function renderPatternsBlock(headers, rows) {
+    const kP = col(headers,'паттерн','что работает');
+    if (!kP) return null;
+    const kB = col(headers,'на чём','основан'), kW = col(headers,'почему'),
+          kD = col(headers,'что делать','нам');
+    const g = (r,k) => k ? String(r[k]||'').replace(/\*\*/g,'').trim() : '';
+    const d = rows.map(r => {
+      const n = g(r,kP);
+      if (!n) return null;
+      return [ n, g(r,kW), g(r,kD), g(r,kB) ];
+    }).filter(Boolean);
+    if (!d.length) return null;
+    blockScripts.push('renderPatterns('+safeJson(d)+');');
+    return '<div class="rules" id="rpt-patterns"></div>';
+  }
+
+  // ── BLOCK 10: JTBD ──────────────────────────────────────────────────────────
+  // «Когда… я хочу… чтобы…» — это одно предложение, а не три ячейки. Печатать
+  // его таблицей значит заставлять читателя собирать фразу глазами обратно.
+  function renderJtbdBlock(headers, rows) {
+    const kW = col(headers,'когда'), kI = col(headers,'я хочу'), kT = col(headers,'чтобы');
+    if (!kW || !kI || !kT) return null;
+    const kSeg = col(headers,'сегмент','персона'), kS = col(headers,'успех'),
+          kG = col(headers,'пробел'), kF = col(headers,'страх');
+    const g = (r,k) => k ? String(r[k]||'').replace(/\*\*/g,'').trim() : '';
+    const d = rows.map(r => {
+      const w = g(r,kW), i = g(r,kI);
+      if (!w && !i) return null;
+      return [ g(r,kSeg), w, i, g(r,kT), g(r,kS), g(r,kG), g(r,kF) ];
+    }).filter(Boolean);
+    if (!d.length) return null;
+    blockScripts.push('renderJtbd('+safeJson(d)+');');
+    return '<div class="rules" id="rpt-jtbd"></div>';
+  }
+
+  // ── BLOCK 15: когнитивные тактики ───────────────────────────────────────────
+  // Тактику читают перед тем, как писать: сама тактика, чем подкреплена, как
+  // звучит и чем рискуем. Риск обязан стоять рядом, а не в дальней колонке —
+  // иначе его прочитают последним или не прочитают вовсе.
+  function renderTacticsBlock(headers, rows) {
+    const kT = col(headers,'тактик');
+    if (!kT) return null;
+    const kP = col(headers,'принцип'), kA = col(headers,'артефакт','инструмент'),
+          kR = col(headers,'риск'), kE = col(headers,'пример'),
+          kM = col(headers,'метрик'), kPer = col(headers,'персона');
+    const g = (r,k) => k ? String(r[k]||'').replace(/\*\*/g,'').trim() : '';
+    const d = rows.map(r => {
+      const t = g(r,kT);
+      if (!t) return null;
+      return [ t, g(r,kP), g(r,kE), g(r,kR), [g(r,kPer), g(r,kA), g(r,kM)].filter(x=>x&&x!=='—').join(' · ') ];
+    }).filter(Boolean);
+    if (!d.length) return null;
+    blockScripts.push('renderTactics('+safeJson(d)+');');
+    return '<div class="rules" id="rpt-tactics"></div>';
+  }
+
+  // ── BLOCK 06_3: позиционирование по сегментам ───────────────────────────────
+  // На каждый сегмент — своя формулировка: в какой категории нас понимают,
+  // чем берём и против чего стоим. Это заготовка первого экрана, её читают
+  // по одной, а не сравнивают колонками.
+  function renderPositioningBlock(headers, rows) {
+    const kS = col(headers,'сегмент'), kC = col(headers,'категор');
+    if (!kS || !kC) return null;
+    const kB = col(headers,'выгод'), kP = col(headers,'доказат'),
+          kA = col(headers,'против'), kD = col(headers,'отличие');
+    const g = (r,k) => k ? String(r[k]||'').replace(/\*\*/g,'').trim() : '';
+    const d = rows.map(r => {
+      const seg = g(r,kS);
+      if (!seg) return null;
+      return [ seg, g(r,kC), g(r,kB), g(r,kD), [g(r,kA)?'против: '+g(r,kA):'', g(r,kP)?'доказываем: '+g(r,kP):''].filter(Boolean).join(' · ') ];
+    }).filter(Boolean);
+    if (!d.length) return null;
+    blockScripts.push('renderPositioning('+safeJson(d)+');');
+    return '<div class="rules" id="rpt-pos3"></div>';
+  }
+
+  // ── BLOCK 18B: архетип бренда ───────────────────────────────────────────────
+  // Строк обычно одна-две, и это утверждение о всём бренде — значит широкая
+  // карточка, как у главной ставки, а не строка в таблице на шесть колонок.
+  function renderArchetypeBlock(headers, rows) {
+    const kA = col(headers,'архетип');
+    if (!kA) return null;
+    const kR = col(headers,'роль'), kW = col(headers,'почему'),
+          kT = col(headers,'занят','соперник','конкурент'), kX = col(headers,'риск');
+    const g = (r,k) => k ? String(r[k]||'').replace(/\*\*/g,'').trim() : '';
+    const d = rows.map(r => {
+      const a = g(r,kA);
+      if (!a || /^—$/.test(a)) return null;
+      return [ a, g(r,kR), g(r,kW), g(r,kT), g(r,kX) ];
+    }).filter(Boolean);
+    if (!d.length) return null;
+    blockScripts.push('renderArchetype('+safeJson(d)+');');
+    return '<div class="rules bet" id="rpt-arch"></div>';
+  }
+
+  // ── BLOCK 08: кластеры намерений ────────────────────────────────────────────
+  // Восемь колонок в строку не читаются. Кластер и примеры запросов — слева,
+  // роль в воронке и осведомлённость — метками, формула и доказательство —
+  // справа: так видно, ЧТО писать и ГДЕ это работает.
+  function renderIntentBlock(headers, rows) {
+    const kC = col(headers,'кластер');
+    if (!kC) return null;
+    const kQ = col(headers,'пример','запрос'), kA = col(headers,'осведомл'),
+          kR = col(headers,'роль','воронк'), kF = col(headers,'формул'),
+          kP = col(headers,'доказат','артефакт'), kD = col(headers,'мера спроса','спрос');
+    const g = (r,k) => k ? String(r[k]||'').replace(/\*\*/g,'').trim() : '';
+    const d = rows.map(r => {
+      const c = g(r,kC);
+      if (!c) return null;
+      return [ c, g(r,kQ), [g(r,kR), g(r,kA), g(r,kD)].filter(x=>x&&x!=='—').join(' · '),
+               g(r,kF), g(r,kP) ];
+    }).filter(Boolean);
+    if (!d.length) return null;
+    blockScripts.push('renderIntent('+safeJson(d)+');');
+    return '<div class="dtbl" style="--cols:minmax(0,1.3fr) minmax(0,.9fr) minmax(0,1.1fr)" id="rpt-intent"></div>';
+  }
+
+  // ── BLOCK 13: критерии выбора ───────────────────────────────────────────────
+  // По этим критериям сравнивают нас с другими. Строка на критерий: чем
+  // подтверждаем и где это показываем — рядом, иначе критерий останется
+  // словами без применения.
+  function renderCriteriaBlock(headers, rows) {
+    const kC = col(headers,'критерий');
+    if (!kC) return null;
+    const kPer = col(headers,'персона'), kPain = col(headers,'боль','задача'),
+          kRes = col(headers,'результат'), kArt = col(headers,'артефакт','доказат'),
+          kUse = col(headers,'где');
+    const g = (r,k) => k ? String(r[k]||'').replace(/\*\*/g,'').trim() : '';
+    const d = rows.map(r => {
+      const c = g(r,kC);
+      if (!c) return null;
+      return [ c, [g(r,kPer), g(r,kPain)].filter(x=>x&&x!=='—').join(' · '),
+               g(r,kRes), g(r,kArt), g(r,kUse) ];
+    }).filter(Boolean);
+    if (!d.length) return null;
+    blockScripts.push('renderCriteria('+safeJson(d)+');');
+    return '<div class="dtbl" style="--cols:minmax(0,1.2fr) minmax(0,1fr) minmax(0,1.1fr)" id="rpt-crit"></div>';
+  }
+
+  // ── BLOCK 17B: мастерская офферов ───────────────────────────────────────────
+  // Три варианта хука на оффер — это черновики, из которых выбирают. Показываем
+  // их списком внутри карточки, а не строкой через точку с запятой.
+  function renderWorkbenchBlock(headers, rows) {
+    const kH = col(headers,'hook','хук');
+    if (!kH) return null;
+    const kId = col(headers,'offer_id','id'), kPain = col(headers,'боль'),
+          kRes = col(headers,'результат'), kMech = col(headers,'механизм','почему работает'),
+          kProof = col(headers,'доказат'), kAw = col(headers,'осведомл'), kPer = col(headers,'persona');
+    const g = (r,k) => k ? String(r[k]||'').replace(/\*\*/g,'').trim() : '';
+    const d = rows.map(r => {
+      const h = g(r,kH);
+      if (!h) return null;
+      const hooks = h.split(/\s*(?:;|\n|\d\)\s|•)\s*/).map(x=>x.trim()).filter(Boolean);
+      return [ g(r,kId), hooks, g(r,kPain), g(r,kRes), g(r,kMech), g(r,kProof),
+               [g(r,kPer), g(r,kAw)].filter(x=>x&&x!=='—').join(' · ') ];
+    }).filter(Boolean);
+    if (!d.length) return null;
+    blockScripts.push('renderWorkbench('+safeJson(d)+');');
+    return '<div class="rules" id="rpt-wb"></div>';
+  }
+
+  // ── BLOCK 24C: бенчмарки ниши ───────────────────────────────────────────────
+  // Пять-шесть чисел, на которые потом равняются. Плитками: число крупно,
+  // разброс и объём выборки под ним. Объём обязателен — медиана по трём
+  // единицам не бенчмарк, и это должно быть видно сразу, а не в примечании.
+  function renderBenchmarksBlock(headers, rows) {
+    const kM = col(headers,'показател'), kV = col(headers,'медиан');
+    if (!kM || !kV) return null;
+    const kR = col(headers,'разброс'), kN = col(headers,'на скольких','единиц'), kNote = col(headers,'примечан');
+    const g = (r,k) => k ? String(r[k]||'').replace(/\*\*/g,'').trim() : '';
+    const d = rows.map(r => {
+      const m = g(r,kM);
+      if (!m) return null;
+      return [ m, g(r,kV) || 'не замерено', g(r,kR), g(r,kN), g(r,kNote) ];
+    }).filter(Boolean);
+    if (!d.length) return null;
+    blockScripts.push('renderBenchmarks('+safeJson(d)+');');
+    return '<div class="bmk" id="rpt-bmk"></div>';
+  }
+
+  const BLOCK_VIEWS = [
+    { re: /SEO-0?6\b|География\s+спроса/i, fn: renderGeo },
+    { re: /BLOCK\s*04(?![_0-9])|Сегменты\s+(целевой\s+)?аудитории/i, fn: renderSegments },
+    { re: /BLOCK\s*04_2\b|Приоритет\s+ниш|Prioritization/i, fn: renderNiches },
+    { re: /SEO-0?2\b|Semantic\s+Core|Семантическое\s+ядро/i, fn: renderSemanticsBlock },
+    { re: /SEO-0?1\b|Search\s+Competitors|Конкуренты\s+в\s+выдаче/i, fn: renderSerpBlock },
+    { re: /SEO-0?3\b|Content\s+Audit|Контент-аудит|Аудит\s+контента/i, fn: renderAuditBlock },
+    { re: /BLOCK\s*06(?![_0-9B])|Карта\s+рынка|Competitor\s+Map/i, fn: renderCompetitorCards },
+    { re: /BLOCK\s*06(?![_0-9B])|Карта\s+рынка|Competitor\s+Map/i, fn: renderMarket },
+    { re: /BLOCK\s*06B\b|Смежные/i, fn: renderCompetitorCards },
+    { re: /BLOCK\s*06_2\b|SWOT/i, fn: renderSwot },
+    { re: /BLOCK\s*11\b|Awareness|Осведомлённост/i, fn: renderAwarenessBlock },
+    { re: /BLOCK\s*(04_0|02|05)(?![_0-9])|SEO-0?0\b|Источник/i, fn: renderSources },
+    { re: /BLOCK\s*03\b|Market\s+Size|Размер\s+рынка|Ёмкость/i, fn: renderMarketSize },
+    { re: /BLOCK\s*06_1\b|Gap\s+Analysis|Гэп-анализ/i, fn: renderGap },
+    { re: /BLOCK\s*07(?![A-DB0-9])|Voice\s+of\s+Customer|Голос\s+клиента/i, fn: renderVocBlock },
+    { re: /BLOCK\s*07A\b|Как\s+говорит|Банк\s+живого\s+языка/i, fn: renderLangBankBlock },
+    { re: /BLOCK\s*07B\b|Hook\s+Bank|Банк\s+хуков/i, fn: renderHooksBlock },
+    { re: /BLOCK\s*07C\b|Альтернатив/i, fn: renderAltBlock },
+    { re: /BLOCK\s*07D\b|Кому\s+не\s+прода/i, fn: renderNotSellBlock },
+    { re: /BLOCK\s*08A\b|Где\s+сидит/i, fn: renderChannelsBlock },
+    { re: /BLOCK\s*24(?![_0-9A-Z])|Каналы\s+конкурентов/i, fn: renderRadarChannelsBlock },
+    { re: /BLOCK\s*06_4\b|Доля\s+внимания/i, fn: renderShareBlock },
+    { re: /BLOCK\s*24A\b|Что\s+залетает/i, fn: renderTopContentBlock },
+    { re: /BLOCK\s*24B\b|Что\s+работает\s+в\s+нише/i, fn: renderPatternsBlock },
+    { re: /BLOCK\s*12(?!B)\b|Fears|Страхи/i, fn: renderObjBlock },
+    { re: /BLOCK\s*09(?!B)\b|LPR\s+Personas|Персоны/i, fn: renderPersonasBlock },
+    { re: /BLOCK\s*14\b|Customer\s+Journey|Путь\s+клиента/i, fn: renderJourney },
+    { re: /BLOCK\s*09B\b|Демография/i, fn: renderDemography },
+    { re: /BLOCK\s*12B\b|Ограничения\s+для/i, fn: renderGuardrailsBlock },
+    { re: /BLOCK\s*10\b|JTBD/i, fn: renderJtbdBlock },
+    { re: /BLOCK\s*15\b|Cognitive\s+Tactics|Когнитивные\s+тактики/i, fn: renderTacticsBlock },
+    { re: /BLOCK\s*06_3\b|Позиционирование\s+по\s+сегментам/i, fn: renderPositioningBlock },
+    { re: /BLOCK\s*18B\b|Архетип\s+бренда/i, fn: renderArchetypeBlock },
+    { re: /BLOCK\s*08(?![A-Z0-9])|Intent\s+Clusters|Кластеры\s+намерений/i, fn: renderIntentBlock },
+    { re: /BLOCK\s*13\b|Decision\s+Criteria|Критерии\s+выбора/i, fn: renderCriteriaBlock },
+    { re: /BLOCK\s*17B\b|Offer\s+Workbench|Мастерская\s+офферов/i, fn: renderWorkbenchBlock },
+    { re: /BLOCK\s*24C\b|Бенчмарки/i, fn: renderBenchmarksBlock },
+    { re: /BLOCK\s*23\b|Главная\s+ставка/i, fn: renderBetBlock },
+    { re: /BLOCK\s*16\b|Hypotheses|Гипотез/i, fn: renderHypotheses },
+    { re: /BLOCK\s*17A\b|Offer\s+Input|Вход\s+для\s+офферов|что\s+мы\s+знаем\s+о\s+себе/i, fn: renderOfferInputBlock },
+    { re: /BLOCK\s*17\s*FINAL|Final\s+Offers|Финальные\s+офферы/i, fn: renderOffers },
+  ];
+  function renderKnownBlock(heading, headers, rows, ctx) {
+    if (!heading) return null;
+    for (const v of BLOCK_VIEWS) {
+      if (!v.re.test(heading)) continue;
+      // Формат не подошёл (не хватило колонок) — пробуем следующий, и только
+      // если не подошёл ни один, печатаем таблицей. Под одним заголовком блока
+      // может лежать несколько разных таблиц: у BLOCK 06 это карта рынка и
+      // разбор вглубь, и различаются они только набором колонок.
+      let res = null;
+      try { res = v.fn(headers, rows, ctx || {}); } catch (e) { res = null; }
+      if (res) return res;
+      if (res === '') return '';   // блок сознательно пуст (вторая таблица SWOT)
+    }
+    return null;
+  }
+
+  // Имя блока для ЗАГОЛОВКА в отчёте. Раньше заголовок собирался из того, что
+// напечатала модель, и половина приходила по-английски: «Decision Criteria»,
+// «Cognitive Tactics», «Voice of Customer», «Intent Clusters», «Offer Workbench».
+// Правило «весь отчёт на языке отчёта» на них не срабатывало: это не текст, а
+// служебное имя блока из промпта. Берём имя отсюда по номеру — заголовок
+// перестал зависеть от того, перевела модель название или скопировала.
+const BLOCK_TITLES = {
+  '01':'География и открытая статистика', '02':'Источники',
+  '03':'Ёмкость рынка: TAM, SAM, SOM', '04':'Сегменты целевой аудитории',
+  '04_0':'Источники разведки', '04_1':'Эффективность услуг по нишам',
+  '04_2':'Приоритет ниш', '05':'Индекс открытых источников',
+  '06':'Карта рынка и конкуренты', '06B':'Смежные конкуренты и заменители',
+  '06_1':'Гэп-анализ: где выигрываем и где проигрываем', '06_2':'SWOT',
+  '06_3':'Позиционирование по сегментам',
+  '06_4':'Доля внимания',
+  '07':'Голос клиента', '07A':'Банк живого языка', '07B':'Банк хуков',
+  '07C':'Альтернативы: что делают вместо покупки', '07D':'Кому не продаём',
+  '08':'Кластеры намерений', '08A':'Где сидит аудитория',
+  '09':'Персоны лиц, принимающих решение', '09B':'Демография сегмента',
+  '10':'Работы, ради которых нас нанимают',
+  '11':'Уровни осведомлённости', '12':'Страхи и сомнения',
+  '12B':'Ограничения для контента', '13':'Критерии выбора',
+  '14':'Путь клиента', '15':'Когнитивные тактики', '16':'Гипотезы',
+  '17':'Финальные офферы', '17A':'Вход для офферов', '17B':'Мастерская офферов',
+  '18':'Архетипы персон', '18B':'Архетип бренда',
+  '19':'Визуальная стратегия', '19A':'Карта архетипов',
+  '20':'Контент-система', '21':'Брифы на креативы', '22':'ТЗ на лендинг',
+  '23':'Главная ставка и цели',
+  '24':'Каналы конкурентов', '24_0':'Источники радара',
+  '24A':'Что залетает', '24B':'Что работает в нише', '24C':'Бенчмарки ниши',
+  'SEO-00':'Источники', 'SEO-01':'Конкуренты в выдаче',
+  'SEO-02':'Семантическое ядро', 'SEO-03':'Контент-аудит',
+  'SEO-06':'География спроса',
+};
+
+function mdToHtml(text) {
     if (!text) return '';
     const lines = text.split('\n');
-    let html = '', inTable = false, tableRows = [];
+    let html = '', inTable = false, tableRows = [], lastHeading = '';
+    // Контекст модуля: сигналы из BLOCK 04_1 нужны карточкам ниш в 04_2.
+      // ПРОВЕРЕНО НА ЖИВОМ ОТВЕТЕ МОДЕЛИ 12.09. Заголовок приходит в виде
+    // «BLOCK 16 — Hypotheses (16_Гипотезы)»: английское имя и русское в
+    // скобках. Раньше я срезала скобки и оставляла АНГЛИЙСКОЕ — в русском
+    // отчёте это читалось как чужое. Берём русское, если оно есть.
+    const human = x => {
+      const t = String(x||'').trim();
+      // Сначала — справочник имён по номеру блока: заголовок не должен
+      // зависеть от того, перевела модель служебное название или скопировала
+      // его по-английски (владелица нашла пять таких: Decision Criteria,
+      // Cognitive Tactics, Voice of Customer, Intent Clusters, Offer Workbench).
+      const byNum = t.match(/^(?:BLOCK\s*([0-9]{1,2}[_0-9A-Z]*)|(SEO-\d\d))\b/i);
+      if (byNum) {
+        const key = (byNum[1] || byNum[2] || '').toUpperCase();
+        if (BLOCK_TITLES[key]) return BLOCK_TITLES[key];
+      }
+      const ru = t.match(/\(\s*[0-9A-Za-z_]*?_?([А-Яа-яЁё][^)]*)\)\s*$/);
+      if (ru) return ru[1].replace(/_/g,' ').trim();
+      return t
+        .replace(/^(?:BLOCK|SEO)[\s-]*[0-9]+[A-Z_0-9]*(?:\s+[A-Z]{2,})*\s*[—:-]\s*/i,'')
+        .replace(/\s*\([0-9A-Za-z_]+\)\s*$/,'')
+        .trim();
+    };
+    const ctx = swotCtx;
+    ctx.h1seen = false;
     const flushTable = () => {
-      if (tableRows.length < 2) { tableRows.forEach(r => { html += '<p style="font-size:12px;color:#666;margin:2px 0">'+esc(r)+'</p>'; }); tableRows=[]; inTable=false; return; }
+      if (tableRows.length < 2) { tableRows.forEach(r => { html += '<p>'+esc(r)+'</p>'; }); tableRows=[]; inTable=false; return; }
       const hdrs = tableRows[0].split('|').map(h=>h.trim()).filter(Boolean);
       const rows = tableRows.slice(2).map(r=>r.split('|').map(c=>c.trim()).filter(Boolean));
-      html += '<div style="overflow-x:auto;margin:12px 0"><table style="border-collapse:collapse;width:100%;font-size:12px"><thead><tr>';
-      hdrs.forEach(h => { html += '<th style="padding:7px 10px;background:#f4f4f4;border:1px solid #e0e0e0;text-align:left;font-weight:600;white-space:normal;min-width:70px;color:#333">'+esc(h)+'</th>'; });
+      // Сначала — согласованный формат по заголовку блока. Не опознан — таблица.
+      const asObjs = rows.map(r => { const o={}; hdrs.forEach((h,i)=>o[h]=r[i]||''); return o; });
+      // 04_1 сам не рисуется — он кормит карточки ниш ниже.
+      if (/BLOCK\s*04_1\b/i.test(lastHeading)) {
+        const kn = hdrs.find(h => h.toLowerCase().includes('ниш'));
+        if (kn) for (const r of asObjs) {
+          const nm = String(r[kn]||'').replace(/\*\*/g,'').trim().toLowerCase();
+          if (!nm) continue;
+          // Значение идёт в карточку как РАЗМЕТКА: там жирная цена и ссылки
+          // на источники — именно так это выглядит в утверждённом блоке.
+          ctx.signals[nm] = hdrs.filter(h => h !== kn && String(r[h]||'').trim())
+            .map(h => [h.replace(/\s*\(.*\)/,''), mdInline(String(r[h]))]);
+        }
+      }
+      // 04_1 напечатана в карточках ниш ниже — второй раз тот же список не нужен.
+      if (/BLOCK\s*04_1\b/i.test(lastHeading) && ctx.has042) { tableRows=[]; inTable=false; return; }
+      const special = renderKnownBlock(lastHeading, hdrs, asObjs, ctx);
+      if (special != null) { html += special; tableRows=[]; inTable=false; return; }
+      // Числовая колонка узнаётся по содержимому, а не по названию: правило
+      // «числа снаружи полосы, чернилами» начинается с того, что число вообще
+      // должно быть выровнено по разряду, иначе колонку не сравнить глазами.
+      const isNum = v => /^[\d\s\u00A0.,%+\u2212-]+$/.test(String(v||'').trim()) && /\d/.test(String(v||''));
+      const numCols = hdrs.map((_,ci) => rows.length>0 && rows.every(r => !r[ci] || r[ci]==='—' || isNum(r[ci])));
+      // Служебные пометки исследования приглушаем, чтобы они не спорили с данными
+      const quiet = v => /^(не замерено|нет данных|не задано|не применим|—)/i.test(String(v||'').trim());
+      html += '<div class="tbl"><table><thead><tr>';
+      hdrs.forEach((h,ci) => { html += '<th'+(numCols[ci]?' style="text-align:right"':'')+'>'+esc(h)+'</th>'; });
       html += '</tr></thead><tbody>';
-      rows.forEach((row,ri) => {
-        html += '<tr style="background:'+(ri%2===0?'#fff':'#fafafa')+'">';
-        row.forEach(c => { html += '<td style="padding:7px 10px;border:1px solid #e0e0e0;vertical-align:top;word-break:break-word;max-width:240px;line-height:1.5">'+esc(c)+'</td>'; });
+      rows.forEach(row => {
+        html += '<tr>';
+        row.forEach((c,ci) => {
+          // Первая колонка — имя строки, чернилами и полужирным: тот же приём,
+          // что .nm в разборах. Служебные пометки приглушены.
+          const inner = ci===0 ? '<b>'+mdInline(c)+'</b>' : mdInline(c);
+          const st = [numCols[ci]?'text-align:right;font-variant-numeric:tabular-nums':'',
+                      quiet(c)?'color:var(--ink-3);font-style:italic':''].filter(Boolean).join(';');
+          html += '<td'+(st?' style="'+st+'"':'')+'>'+inner+'</td>';
+        });
         html += '</tr>';
       });
       html += '</tbody></table></div>';
@@ -2723,22 +4843,148 @@ function generateHTMLReport(brief, results, lang, priceLayers, selectedLayers, s
       if (line.trim().startsWith('|')) { inTable=true; tableRows.push(line); continue; }
       if (inTable) flushTable();
       const t = line.trim();
-      if (line.startsWith('# ')) html += '<h1 style="font-size:20px;font-weight:600;margin:24px 0 8px;color:#111;border-bottom:2px solid #639922;padding-bottom:6px">'+esc(line.slice(2))+'</h1>';
-      else if (line.startsWith('## ')) html += '<h2 style="font-size:16px;font-weight:600;margin:20px 0 6px;color:#111;padding-bottom:4px;border-bottom:1px solid #e5e5e5">'+esc(line.slice(3))+'</h2>';
-      else if (line.startsWith('### ')) html += '<h3 style="font-size:14px;font-weight:600;margin:14px 0 4px;color:#333">'+esc(line.slice(4))+'</h3>';
-      else if (line.startsWith('#### ')) html += '<h4 style="font-size:13px;font-weight:600;margin:10px 0 3px;color:#444">'+esc(line.slice(5))+'</h4>';
-      else if (/^\*\*(.+)\*\*$/.test(t)) html += '<p style="font-size:13px;font-weight:600;margin:8px 0 3px;color:#111">'+esc(t.slice(2,-2))+'</p>';
-      else if (t.startsWith('**') && t.includes('**')) {
-        html += '<p style="margin:4px 0;font-size:13px;line-height:1.6">'+t.replace(/\*\*([^*]+)\*\*/g,'<strong>$1</strong>')+'</p>';
+      // Подпись прямо перед таблицей. В SWOT четыре таблицы идут подряд под
+      // одним заголовком блока, и различить их можно только по ней.
+      if (t && !t.startsWith('|') && !/^#{1,4}\s/.test(line)) ctx.lastSub = t;
+      // Сами подписи SWOT в отчёт не идут: четыре таблицы рисуются одной
+      // сеткой, где эти слова уже стоят заголовками полей. Без этого под
+      // сеткой оставались три висячие строки «Слабые стороны:» и соседние.
+      if (/BLOCK\s*06_2|SWOT/i.test(lastHeading) &&
+          /^(сильные|слабые|возможности|угрозы)/i.test(t)) continue;
+      if (/^#{1,4}\s/.test(line)) lastHeading = line.replace(/^#+\s*/,'').trim();  // сырой — по нему узнаём формат
+      else if (/^(BLOCK|SEO-)/i.test(t)) {
+        // Живой ответ модели печатает имя блока ОБЫЧНОЙ строкой, без решёток.
+        // До 12.09 она попадала в отчёт мелким серым абзацем, и блоки шли
+        // без заголовков вовсе. Делаем её заголовком уровня блока.
+        lastHeading = t;
+        html += '<h2>'+esc(human(t))+'</h2>';
+        continue;
       }
-      else if (/^[-•·]\s/.test(t)) html += '<p style="margin:3px 0 3px 18px;font-size:13px;color:#333">• '+esc(t.slice(2))+'</p>';
-      else if (/^\d+\.\s/.test(t)) html += '<p style="margin:3px 0 3px 18px;font-size:13px;color:#333">'+esc(t)+'</p>';
+      // Рабочие имена блоков («BLOCK 03 — Market Size», «SEO-02 — Semantic
+      // Core») нужны нам и промпту, но не заказчику: в отчёте остаётся только
+      // человеческая часть заголовка. Английский хвост тоже убираем.
+      // Первый заголовок первого уровня в модуле пропускаем: модуль уже назван
+      // в шапке карточки, и второе имя подряд читается как пустой блок.
+      if (line.startsWith('# ')) {
+        if (!ctx.h1seen) { ctx.h1seen = true; }
+        else html += '<h1>'+esc(human(line.slice(2)))+'</h1>';
+      }
+      else if (line.startsWith('## ')) html += '<h2>'+esc(human(line.slice(3)))+'</h2>';
+      else if (line.startsWith('### ')) html += '<h3>'+esc(human(line.slice(4)))+'</h3>';
+      else if (line.startsWith('#### ')) html += '<h4>'+esc(human(line.slice(5)))+'</h4>';
+      else if (/^\*\*(.+)\*\*$/.test(t)) html += '<p><b>'+esc(t.slice(2,-2))+'</b></p>';
+      else if (t.startsWith('**') && t.includes('**')) {
+        html += '<p>'+mdInline(t)+'</p>';
+      }
+      else if (/^[-•·]\s/.test(t)) html += '<p class="rli">'+mdInline(t.slice(2))+'</p>';
+      else if (/^\d+\.\s/.test(t)) html += '<p class="rli">'+mdInline(t)+'</p>';
+
+      else if (/^[═─—_]{3,}$/.test(t)) continue;   // декоративная линия из промпта
       else if (!t) html += '<div style="height:8px"></div>';
-      else html += '<p style="margin:4px 0;font-size:13px;line-height:1.6;color:#333">'+esc(line)+'</p>';
+      else html += '<p>'+mdInline(line)+'</p>';
     }
     if (inTable) flushTable();
     return html;
   }
+
+
+  const html = mdToHtml(content);
+  // SWOT собирается из четырёх таблиц: к моменту первой мы знаем не всё,
+  // поэтому финальный набор подставляем после разбора всего текста.
+  if (swotCtx.swot && swotCtx.swotRef != null) {
+    blockScripts[swotCtx.swotRef] = 'renderSwotGrid(' + JSON.stringify(swotCtx.swot) + ');';
+  }
+  return { html, scripts: blockScripts, js: BLOCK_JS };
+}
+
+// Разметка внутри пункта итога: жирное и ссылки. Полный mdInline живёт
+// внутри сборщика отчёта и наружу не выходит, а тащить его копию ради двух
+// правил — заводить второй источник правды.
+function mdInlineSafe(t) {
+  let h = escHtml(String(t == null ? '' : t));
+  h = h.replace(/\[([^\]]+)\]\((https?:\/\/[^)\s]+)\)/g,
+    '<a href="$2" target="_blank" rel="noopener">$1</a>');
+  h = h.replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>');
+  return h;
+}
+
+// «## ИТОГ МОДУЛЯ» — три части: что узнали, что это значит, что делаем.
+// Вырезаем из текста, чтобы показать карточкой наверху. Если раздела нет
+// (старый прогон или модель его не написала), возвращаем текст как есть:
+// молча терять хвост модуля нельзя.
+function splitModuleSummary(content) {
+  const t = String(content || '');
+  const m = t.match(/\n#{1,3}\s*ИТОГ\s+МОДУЛЯ[^\n]*\n/i);
+  if (!m) return { body: t, summary: null };
+  const head = t.slice(0, m.index);
+  const tail = t.slice(m.index + m[0].length);
+  // Следующий заголовок первого-второго уровня закрывает раздел.
+  const nxt = tail.search(/\n#{1,2}\s+\S/);
+  const part = nxt >= 0 ? tail.slice(0, nxt) : tail;
+  const rest = nxt >= 0 ? tail.slice(nxt) : '';
+  const grab = re => {
+    const s1 = part.search(re);
+    if (s1 < 0) return [];
+    const after = part.slice(s1).replace(re, '');
+    const end = after.search(/\n#{2,4}\s+\S/);
+    return (end >= 0 ? after.slice(0, end) : after)
+      .split('\n').map(x => x.replace(/^\s*[-*•]\s*/, '').trim())
+      .filter(x => x && !/^#{1,4}\s/.test(x));
+  };
+  return {
+    body: head + rest,
+    summary: {
+      learned: grab(/#{2,4}\s*Что\s+узнали[^\n]*\n/i),
+      means:   grab(/#{2,4}\s*Что\s+это\s+значит[^\n]*\n/i),
+      next:    grab(/#{2,4}\s*Что\s+делаем[^\n]*\n/i),
+    },
+  };
+}
+
+// Карточка итога. Это ответ на вопрос «что мне это дало», и он должен быть
+// заметнее таблиц, а не тише их: владелица — «оно так выглядит, что даже
+// особо и не прочиталось». Поэтому здесь единственная в отчёте подложка под
+// не-табличным блоком. Правило «под данными поверхность ровная» не нарушено:
+// это не данные, а вывод из них, и выделять его — его работа.
+//
+// Раскладка неравная нарочно. «Что узнали» — существо дела, ему больше места
+// и антиква покрупнее; «что это значит» и «что делаем» — следствия, они
+// стоят справа столбиком и набраны мельче. Три равные колонки читались как
+// три одинаково важных списка, то есть ни один не был важным.
+function renderModuleSummary(s) {
+  if (!s) return '';
+  const esc = escHtml;
+  const part = (title, items, cls) => items && items.length
+    ? '<div class="' + cls + '"><span class="smh">' + esc(title) + '</span><ul>'
+      + items.map(x => '<li>' + mdInlineSafe(x) + '</li>').join('') + '</ul></div>'
+    : '';
+  const main = part('Что узнали', s.learned, 'sm-main');
+  const side = part('Что это значит', s.means, 'sm-side')
+             + part('Что делаем дальше', s.next, 'sm-side');
+  if (!main && !side) return '';
+  return '<div class="msum">'
+    + '<div class="msum-h">Что дал этот модуль</div>'
+    + '<div class="msum-body">' + main + (side ? '<div class="sm-col">' + side + '</div>' : '') + '</div>'
+    + '</div>';
+}
+
+function generateHTMLReport(brief, results, lang, priceLayers, selectedLayers, singleModId) {
+  const esc = escHtml;
+  // Якорь на модуль. По-нишевые модули встречаются несколько раз, поэтому в
+  // адрес входит и ниша — иначе все ссылки вели бы в первое вхождение.
+  const slug = t => String(t||'').toLowerCase().replace(/[^a-zа-яё0-9]+/gi,'-').replace(/^-|-$/g,'');
+  const anchorOf = r => 'mod-' + r.id + (r.niche ? '--' + slug(r.niche) : '');
+  // Скрипты рисования собираются, пока строятся секции, — объявляем до цикла.
+  const blockScripts = [];
+  let blockJS = '';
+  const targetResults = dropOrphans(singleModId ? results.filter(r=>r.id===singleModId) : results);
+  const completedMods = MODULES.filter(m => targetResults.find(r=>r.id===m.id));
+  const date = new Date().toLocaleDateString('ru-RU');
+  const hasCompany = brief.currentRevenue || brief.currentClients || brief.currentAvgCheck;
+  const chosenLayer = selectedLayers && selectedLayers.length > 0 && priceLayers && priceLayers.length > 0
+    ? selectedLayers.map(i => priceLayers[i]&&priceLayers[i].name).filter(Boolean).join(', ')
+    : null;
+
 
   // Extract key insights from M1 content for executive summary
   function extractInsights(content) {
@@ -2791,7 +5037,7 @@ function generateHTMLReport(brief, results, lang, priceLayers, selectedLayers, s
   const moduleChartDivs = {};
   let extraScripts = '';
   function pushReportChart(chartKey, canvasId, title, subtitle, height) {
-    // chartKey = resKey() формата: 'M1_2' (глобальный) или 'M2@@Ниша' (по-нишевой) —
+    // chartKey = resKey() формата: 'M2' (глобальный) или 'M2@@Ниша' (по-нишевой) —
     // так у каждой (модуль,ниша) пары свой набор графиков, а не общий на весь отчёт.
     moduleChartDivs[chartKey] = (moduleChartDivs[chartKey]||'')
       + '<div style="background:#f8f8f8;border-radius:10px;padding:14px;border:1px solid #eee;margin:8px 0 16px">'
@@ -2801,11 +5047,11 @@ function generateHTMLReport(brief, results, lang, priceLayers, selectedLayers, s
   }
   const safeJson = o => JSON.stringify(o).replace(/<\/script>/gi,'<\\/script>');
 
-  const m12rep = targetResults.find(r=>r.id==='M1_2');
+  const m12rep = targetResults.find(r=>r.id==='M2');
   const niches12 = m12rep && m12rep.nicheData && Array.isArray(m12rep.nicheData.niches) ? m12rep.nicheData.niches : null;
   if (niches12 && niches12.length) {
-    pushReportChart('M1_2','rpt_niches','Полная карта ниш по эффективности (баллу)','Зелёные — Go, оранжевые — Maybe, красные — No-Go', Math.max(180, niches12.length*24));
-    if (brief.selectedNiche) moduleChartDivs['M1_2'] += '<div style="background:#EFF6E4;border:1px solid #cfe3b4;border-radius:8px;padding:10px 14px;margin:-8px 0 16px"><span style="font-size:11px;font-weight:700;color:#27500A;text-transform:uppercase;letter-spacing:0.04em">Для исследования выбраны:</span> <span style="font-size:13px;font-weight:600;color:#111">'+esc(brief.selectedNiche)+'</span></div>';
+    pushReportChart('M2','rpt_niches','Полная карта ниш по эффективности (баллу)','Зелёные — Go, оранжевые — Maybe, красные — No-Go', Math.max(180, niches12.length*24));
+    if (brief.selectedNiche) moduleChartDivs['M2'] += '<div style="background:#EFF6E4;border:1px solid #cfe3b4;border-radius:8px;padding:10px 14px;margin:-8px 0 16px"><span style="font-size:11px;font-weight:700;color:#27500A;text-transform:uppercase;letter-spacing:0.04em">Для исследования выбраны:</span> <span style="font-size:13px;font-weight:600;color:#111">'+esc(brief.selectedNiche)+'</span></div>';
     extraScripts += 'if(document.getElementById("rpt_niches")){var nn='+safeJson(niches12)+'.slice().sort(function(a,b){return (b.score||0)-(a.score||0)});'
       +'var coln=function(v){return v==="Go"?"#4A7C1F":v==="Maybe"?"#D98A2B":"#C0503A";};'
       +'new Chart(document.getElementById("rpt_niches"),{type:"bar",data:{labels:nn.map(function(n){return n.name}),datasets:[{data:nn.map(function(n){return n.score||0}),backgroundColor:nn.map(function(n){return coln(n.verdict)})}]},options:{indexAxis:"y",responsive:true,plugins:{legend:{display:false}},scales:{x:{beginAtZero:true}}}});}';
@@ -2814,10 +5060,10 @@ function generateHTMLReport(brief, results, lang, priceLayers, selectedLayers, s
   // M2/M4/M7 графики — ОДИН НАБОР НА НИШУ, не один на весь отчёт (при нескольких нишах
   // .find() брал только первую попавшуюся; секции модулей в отчёте уже идут по одной
   // на (модуль,ниша) — графики должны совпадать с этим 1:1). Ключ — resKey(rep), тот же,
-  // что используют секции ('M2' для глобального, 'M2@@Ниша' для по-нишевого); canvas id
+  // что используют секции ('M3' для глобального, 'M2@@Ниша' для по-нишевого); canvas id
   // разбавлен индексом — id должен быть уникален во всём документе, а имя ниши как id
   // небезопасно (кириллица/пробелы).
-  targetResults.filter(r=>r.id==='M2').forEach((rep, i) => {
+  targetResults.filter(r=>r.id==='M3').forEach((rep, i) => {
     const compMx = rep.chartData && rep.chartData.competitorMatrix;
     if (!compMx || !compMx.length) return;
     const canvasId = 'rpt_comp_'+i;
@@ -2827,7 +5073,7 @@ function generateHTMLReport(brief, results, lang, priceLayers, selectedLayers, s
       +'new Chart(document.getElementById("'+canvasId+'"),{type:"bubble",data:{datasets:cc.map(function(d){return{label:d.name+(d.isUs?" (мы)":""),data:[{x:d.price||0,y:d.quality||0,r:d.isUs?11:7}],backgroundColor:d.isUs?"#639922DD":"#0F6E5666",borderColor:d.isUs?"#27500A":"transparent",borderWidth:d.isUs?2:0};})},options:{responsive:true,scales:{x:{title:{display:true,text:"Цена: 1 дешевле, 5 дороже"},min:0,max:6},y:{title:{display:true,text:"Качество и ценность (1-5)"},min:0,max:6}}}});}';
   });
 
-  targetResults.filter(r=>r.id==='M4').forEach((rep, i) => {
+  targetResults.filter(r=>r.id==='M6').forEach((rep, i) => {
     const awLv = rep.chartData && rep.chartData.awarenessLevels;
     if (!awLv || !awLv.length) return;
     const canvasId = 'rpt_aware_'+i;
@@ -2838,7 +5084,7 @@ function generateHTMLReport(brief, results, lang, priceLayers, selectedLayers, s
       +'new Chart(document.getElementById("'+canvasId+'"),{type:"bar",data:{labels:aa.map(function(d){return d.segment||""}),datasets:lv.map(function(x){return{label:x[0],data:aa.map(function(d){return d[x[1]]||0}),backgroundColor:x[2]};})},options:{indexAxis:"y",responsive:true,scales:{x:{stacked:true},y:{stacked:true}},plugins:{legend:{position:"bottom",labels:{boxWidth:12,font:{size:10}}}}}});}';
   });
 
-  targetResults.filter(r=>r.id==='M7').forEach((rep, i) => {
+  targetResults.filter(r=>r.id==='M8').forEach((rep, i) => {
     const semCl = rep.chartData && rep.chartData.semanticClusters;
     if (!semCl || !semCl.length) return;
     const canvasId = 'rpt_sem_'+i;
@@ -2864,43 +5110,57 @@ function generateHTMLReport(brief, results, lang, priceLayers, selectedLayers, s
   }
 
   // Cover page
-  const companyMetrics = hasCompany ? '<div style="background:#E8F4FD;border-radius:10px;padding:16px;margin:16px 0"><p style="font-size:11px;font-weight:700;color:#185FA5;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:12px">Данные компании</p><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px">'
-    +(brief.currentRevenue?'<div style="background:#fff;border-radius:8px;padding:12px;border:1px solid #C5E0F7"><div style="font-size:10px;color:#185FA5;margin-bottom:3px;font-weight:500">Текущая выручка</div><div style="font-size:20px;font-weight:700;color:#0C447C">'+esc(brief.currentRevenue)+'</div></div>':'')
-    +(brief.currentClients?'<div style="background:#fff;border-radius:8px;padding:12px;border:1px solid #C5E0F7"><div style="font-size:10px;color:#185FA5;margin-bottom:3px;font-weight:500">Активных клиентов</div><div style="font-size:20px;font-weight:700;color:#0C447C">'+esc(brief.currentClients)+'</div></div>':'')
-    +(brief.currentAvgCheck?'<div style="background:#fff;border-radius:8px;padding:12px;border:1px solid #C5E0F7"><div style="font-size:10px;color:#185FA5;margin-bottom:3px;font-weight:500">Средний чек</div><div style="font-size:20px;font-weight:700;color:#0C447C">'+esc(brief.currentAvgCheck)+'</div></div>':'')
-    +'</div></div>' : '';
+  const kpi = (lab, val) => '<div class="stat"><span class="k">'+esc(lab)+'</span><b>'+esc(val)+'</b></div>';
+  const companyMetrics = hasCompany ? '<div class="stats">'
+    +(brief.currentRevenue?kpi('Текущая выручка', brief.currentRevenue):'')
+    +(brief.currentClients?kpi('Активных клиентов', brief.currentClients):'')
+    +(brief.currentAvgCheck?kpi('Средний чек', brief.currentAvgCheck):'')
+    +'</div>' : '';
 
-  const posBar = (hasCompany && m1r && m1r.chartData) ? '<div style="margin:12px 0"><div style="display:flex;justify-content:space-between;margin-bottom:5px"><span style="font-size:12px;color:#555;font-weight:500">Доля рынка (SAM)</span><span style="font-size:12px;font-weight:700;color:#27500A" id="rpt_pos_lbl">—</span></div><div style="height:14px;background:#e8e8e8;border-radius:7px;overflow:hidden"><div id="rpt_pos_bar" style="height:100%;background:linear-gradient(90deg,#639922,#97C459);border-radius:7px;width:2%;transition:width 0.8s ease"></div></div></div>' : '';
+  const posBar = (hasCompany && m1r && m1r.chartData)
+    ? '<div style="margin-top:14px"><div class="rid">Доля рынка (SAM)</div>'
+      + '<div class="meas"><span class="rail"><i id="rpt_pos_bar" style="width:2%"></i></span>'
+      + '<span class="v" id="rpt_pos_lbl">—</span></div></div>' : '';
 
   // Module badges
+  // Плашки модулей — ссылки: владелица просила «нажал на M2 и перекинуло».
+  // Несделанные остаются мёртвым текстом, чтобы не обманывать ожидание.
   const allModBadges = MODULES.map(m => {
-    const done = results.find(r=>r.id===m.id);
-    return '<span style="font-size:11px;font-weight:500;padding:4px 10px;border-radius:5px;background:'+(done?moduleBgs[m.id]:'#f0f0f0')+';color:'+(done?moduleDarks[m.id]:'#aaa')+'">'+m.id+(done?' ✓':'')+'</span>';
+    const done = targetResults.find(r=>r.id===m.id);
+    if (!done) return '<span>'+m.id+'</span>';
+    return '<a class="on" href="#'+anchorOf(done)+'">'+m.id+' ✓</a>';
   }).join('');
 
-  const cover = '<div style="background:linear-gradient(135deg,#1a1a2e 0%,#16213e 50%,#0f3460 100%);border-radius:16px;padding:2.5rem;margin-bottom:1.5rem;color:#fff">'
-    +'<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:1.5rem">'
-    +'<div><div style="font-size:11px;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:8px">Исследование целевой аудитории</div>'
-    +'<div style="font-size:30px;font-weight:700;margin-bottom:4px;letter-spacing:-0.5px">'+esc(brief.name||'—')+'</div>'
-    +'<div style="font-size:14px;color:rgba(255,255,255,0.65);line-height:1.4">'+esc([brief.niche,brief.format].filter(Boolean).join(' · ')||'—')+'</div></div>'
-    +'<div style="text-align:right;flex-shrink:0"><div style="font-size:12px;color:rgba(255,255,255,0.5);margin-bottom:8px">'+date+'</div>'
-    +'<div style="display:flex;gap:5px;flex-wrap:wrap;justify-content:flex-end">'+allModBadges+'</div></div></div>'
-    +'<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px;margin-bottom:1.5rem">'
-    +'<div style="background:rgba(255,255,255,0.08);border-radius:8px;padding:10px 14px"><div style="font-size:10px;color:rgba(255,255,255,0.5);margin-bottom:3px">Рынок</div><div style="font-size:14px;font-weight:600;color:#fff">'+esc(brief.geoMarket||brief.geo||'—')+'</div></div>'
-    +'<div style="background:rgba(255,255,255,0.08);border-radius:8px;padding:10px 14px"><div style="font-size:10px;color:rgba(255,255,255,0.5);margin-bottom:3px">Язык</div><div style="font-size:14px;font-weight:600;color:#fff">'+esc(lang||'—')+'</div></div>'
-    +(brief.geoCompany?'<div style="background:rgba(255,255,255,0.08);border-radius:8px;padding:10px 14px"><div style="font-size:10px;color:rgba(255,255,255,0.5);margin-bottom:3px">География</div><div style="font-size:14px;font-weight:600;color:#fff">'+esc(brief.geoCompany)+'</div></div>':'')
-    +(chosenLayer?'<div style="background:rgba(239,159,39,0.2);border-radius:8px;padding:10px 14px;border:1px solid rgba(239,159,39,0.4)"><div style="font-size:10px;color:#EF9F27;margin-bottom:3px">Ценовой слой</div><div style="font-size:14px;font-weight:600;color:#EF9F27">'+esc(chosenLayer)+'</div></div>':'')
-    +'</div>'
+  const coverRow = (k,v) => v ? '<div><dt>'+esc(k)+'</dt><dd>'+esc(v)+'</dd></div>' : '';
+  // Верхняя панель — из макета: заголовок слева, дата под ним, действия справа.
+  // Верхней панели больше нет: название проекта, ниша и рынок жили отдельной
+  // плашкой над обложкой, и это читалось как два разных блока об одном и том же.
+  // Владелица: «надо, чтобы оно как-то целиком».
+  const topBar = '';
+  const cover = '<div class="card nacre cover">'
+    +'<div class="chead"><div>'
+    +'<span class="kchip kchip-go rpt-mark"><span class="d"></span>Отчёт</span>'
+    +'<span class="eyebrow">Исследование целевой аудитории</span>'
+    +'<h1 class="covername">'+esc(brief.name||'—')+'</h1>'
+    +'<p class="coversub">'+esc([brief.niche,brief.geoMarket||brief.geo].filter(Boolean).join(' · '))+'</p></div>'
+    +'<div class="coveract"><span class="note">'+esc(date)+'</span>'
+    +'<button class="btn no-print" onclick="window.print()">Печать / PDF</button></div></div>'
+    +'<dl class="coverdl">'
+    + coverRow('Рынок', brief.geoMarket||brief.geo)
+    + coverRow('География компании', brief.geoCompany)
+    + coverRow('Язык отчёта', langSelf(lang))
+    + coverRow('Ценовой уровень', chosenLayer)
+    +'</dl>'
+    +'<div class="mods">'+allModBadges+'</div>'
     +companyMetrics+posBar+'</div>';
 
   // Executive summary block
   const allInsights = targetResults.flatMap(r => extractInsights(r.content));
-  const execBlock = allInsights.length > 0 ? '<div style="background:#fff;border-radius:14px;padding:1.75rem;margin-bottom:1.25rem;border:1px solid #e5e5e5;border-left:4px solid #639922">'
-    +'<p style="font-size:11px;font-weight:700;color:#27500A;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:14px">Ключевые выводы исследования</p>'
-    +allInsights.map((ins,i) => '<div style="display:flex;gap:12px;padding:10px 0;border-bottom:1px solid #f0f0f0">'
-      +'<span style="width:22px;height:22px;border-radius:50%;background:#EAF3DE;color:#27500A;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px">'+(i+1)+'</span>'
-      +'<p style="font-size:13px;line-height:1.5;color:#222;margin:0">'+esc(ins)+'</p>'
-      +'</div>').join('')
+  // Нумерованные кружки убраны: владелица просила не делать иконки в кружках,
+  // и здесь цифра в кружке — та же декорация. Выводы это список, значит точка.
+  const execBlock = allInsights.length > 0 ? '<div class="card">'
+    +'<div class="chead"><h2>Ключевые выводы</h2><span class="note">из всех модулей</span></div>'
+    +'<ul class="klist">'+allInsights.map(ins => '<li>'+esc(ins)+'</li>').join('')+'</ul>'
     +'</div>' : '';
 
   // Module sections. Отсортировано так же, как строит run(): глобальные сначала, затем
@@ -2919,39 +5179,585 @@ function generateHTMLReport(brief, results, lang, priceLayers, selectedLayers, s
     // Разделитель «Ниша: …» перед первым модулем каждой новой ниши — при 1 нише не показываем,
     // чтобы не плодить шум в самом частом случае.
     if (r.niche && r.niche !== lastNiche && nichesOf(brief).length > 1) {
-      sections += '<div style="margin:28px 0 10px;padding:12px 18px;background:#1a1a2e;border-radius:10px">'
-        + '<span style="font-size:10px;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:0.08em">Ниша</span> '
-        + '<span style="font-size:15px;font-weight:700;color:#fff;margin-left:8px">'+esc(r.niche)+'</span></div>';
+      sections += '<div class="nicheband"><span class="lab">Ниша</span>'
+        + '<span class="nm">'+esc(r.niche)+'</span></div>';
     }
     lastNiche = r.niche;
     const m = MODULES.find(x=>x.id===r.id);
-    const col = moduleColors[r.id]||'#639922';
-    const bg = moduleBgs[r.id]||'#EAF3DE';
-    const dark = moduleDarks[r.id]||'#27500A';
     const charts = r.id==='M1' ? chartDivs : (moduleChartDivs[resKey(r)]||'');
-    const dlBtn = '<button onclick="(function(){var h=document.documentElement.outerHTML;var b=new Blob([h],{type:\'text/html\'});var a=document.createElement(\'a\');a.href=URL.createObjectURL(b);a.download=\''+esc(brief.name||'report')+'_'+r.id+(r.niche?'_'+r.niche:'')+'.html\';a.click();})()" style="padding:5px 12px;background:'+col+';color:#fff;border:none;border-radius:6px;font-size:11px;cursor:pointer;font-family:inherit">↓ '+r.id+'</button>';
-    sections += '<div style="background:#fff;border-radius:14px;padding:1.75rem;margin-bottom:1.25rem;border:1px solid #e5e5e5">'
-      +'<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:1.25rem;padding-bottom:10px;border-bottom:2px solid '+col+'">'
-      +'<div style="display:flex;align-items:center;gap:10px">'
-      +'<span style="font-size:12px;font-weight:700;padding:4px 10px;border-radius:5px;background:'+bg+';color:'+dark+'">'+r.id+'</span>'
-      +'<span style="font-size:17px;font-weight:600;color:#111">'+(m?m.title:'Module')+'</span></div>'
-      +dlBtn+'</div>'
+    // Итог модуля вынимаем ДО отрисовки и показываем над блоками: это ответ на
+    // вопрос «что мне это дало», и в конце трёхэкранного модуля до него просто
+    // не доходят. В теле он после этого не повторяется.
+    const cut = splitModuleSummary(r.content);
+    const rendered = renderResearchHTML(cut.body, { ourName: brief.name });
+    const summary = renderModuleSummary(cut.summary);
+    blockScripts.push(...rendered.scripts);
+    blockJS = rendered.js;
+    // Модуль различается ПОДПИСЬЮ, а не своим цветом. Семь фирменных цветов
+    // модулей (зелёный, бирюзовый, синий, фиолетовый, коричневый, красный,
+    // малиновый) остались от старого отчёта и спорят с правилом «палитра ровно
+    // четыре цвета»: читатель ищет в них значение и не находит.
+    // Значки вместо кнопок (правка владелицы 11.09): «прям как кнопки можно
+    // убрать, просто интуитивно понятные значки». Формы взяты самые обычные —
+    // стрелка вниз в лоток для выгрузки, два прямоугольника для копирования;
+    // обводка и толщина те же, что у значков бокового меню в макете, свои
+    // метафоры я не выдумываю. Если формы не те — заменю на ваши.
+    const ICON_DL = '<svg viewBox="0 0 24 24"><path d="M12 4v10"/><path d="M8 11l4 4 4-4"/>'
+      + '<path d="M5 18h14"/></svg>';
+    const ICON_COPY = '<svg viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="2"/>'
+      + '<path d="M5 15V5.5A1.5 1.5 0 016.5 4H15"/></svg>';
+    const fileName = esc(brief.name||'report')+'_'+r.id+(r.niche?'_'+r.niche:'');
+    const dlBtn = '<span class="ibar">'
+      + '<button class="ibtn no-print" title="Выгрузить этот модуль файлом" '
+      + 'aria-label="Выгрузить" onclick="(function(){'
+      + 'var b=new Blob([decodeURIComponent(\''+encodeURIComponent(String(r.content||''))+'\')],{type:\'text/markdown\'});'
+      + 'var a=document.createElement(\'a\');a.href=URL.createObjectURL(b);'
+      + 'a.download=\''+fileName+'.md\';a.click();})()">'+ICON_DL+'</button>'
+      + '<button class="ibtn no-print" title="Скопировать текст модуля" '
+      + 'aria-label="Скопировать" data-md="'+esc(r.content||'')+'" '
+      + 'onclick="var b=this;navigator.clipboard.writeText(b.dataset.md).then(function(){'
+      + 'b.classList.add(\'ok\');setTimeout(function(){b.classList.remove(\'ok\');},1200);});">'
+      + ICON_COPY+'</button></span>';
+    sections += '<div class="card" id="'+esc(anchorOf(r))+'">'
+      +'<div class="chead"><h2>'+esc(m?(m.titleRu||m.title):'Модуль')+'</h2>'
+      +'<span class="note">'+esc(r.id)+(r.niche?' · '+esc(r.niche):'')+dlBtn+'</span></div>'
+      +summary
       +charts
-      +mdToHtml(r.content)+'</div>';
+      +rendered.html+'</div>';
   }
 
-  const html = '<!DOCTYPE html>\n<html lang="ru">\n<head>\n<meta charset="UTF-8">\n<meta name="viewport" content="width=device-width,initial-scale=1">\n<title>CA Research — '+esc(brief.name||'Report')+(singleModId?' · '+singleModId:'')+'</title>\n'
+  const html = '<!DOCTYPE html>\n<html lang="ru">\n<head>\n<meta charset="UTF-8">\n'
+    +'<meta name="viewport" content="width=device-width,initial-scale=1">\n'
+    +'<title>'+esc(brief.name||'Исследование')+(singleModId?' · '+singleModId:'')+'</title>\n'
+    +'<link rel="preconnect" href="https://fonts.googleapis.com">\n'
+    +'<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>\n'
+    +'<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap">\n'
     +'<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"><\/script>\n'
-    +'<style>\n*{box-sizing:border-box;margin:0;padding:0}\nbody{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#f0f2f5;color:#111;padding:2rem 1rem}\n.report{max-width:820px;margin:0 auto}\n@media print{body{background:#fff;padding:0}button.no-print{display:none}}\n</style>\n</head>\n<body>\n'
-    +'<div class="report">\n'
-    +'<div style="text-align:right;margin-bottom:16px">\n'
-    +'<button class="no-print" onclick="window.print()" style="padding:9px 20px;background:#111;color:#fff;border:none;border-radius:8px;font-size:13px;cursor:pointer;font-family:inherit;font-weight:500">Печать / Сохранить PDF ↓</button>\n'
-    +'</div>\n'
-    +cover
-    +execBlock
-    +sections
-    +'</div>\n'
-    +chartScripts
+    +'<style>'+REPORT_CSS+'\n'+REPORT_BLOCK_CSS+'\n'+REPORT_M1_CSS+'\n'+REPORT_M7_CSS+'\n'+REPORT_M2_CSS+'\n'+REPORT_M4_CSS+'\n'+REPORT_LIB2_CSS+'\n'+REPORT_LIB3_CSS+'\n'+REPORT_COMP_CSS+'\n'+REPORT_LIB4_CSS+'\n'+REPORT_PERS_CSS+'\n'+REPORT_M5_CSS+'\n'+REPORT_DEMO_CSS+'\n'+REPORT_M3_CSS+'\n'+REPORT_RULES_CSS+'\n'
+    // В макете эти четыре переменные проставляет скрипт переключения палитры.
+    // В выгруженном отчёте скрипта нет, и без них ВСЁ бирюзовое рисуется
+    // пустотой — ровно та ошибка, что уже была в библиотеке. Задаём прямо,
+    // значениями действующей палитры «Коралловый риф».
+    +'\n:root{--back:#4D66F7;--back-fg:#FFFFFF;--mid:#06BDBD;--mid-fg:#12100D;'
+    +'--front:#5CD0D0;--front-fg:#12100D;--maybe-bg:rgba(23,21,18,.05);'
+    // Вердикты. В :root макета остались значения «Тиффани», где «не идём»
+    // ЖЁЛТЫЙ (#BA970A) — в живом макете их перебивал скрипт палитры, а в
+    // выгруженном отчёте перебивать некому, и ниши красились чужими цветами.
+    // Ставим утверждённые: бирюза «идём», фиолетовый «под вопросом», графит
+    // «не идём». Палитра ровно из четырёх цветов, как договаривались.
+    +'--acc-strong:#06BDBD;--acc-mid:#4D66F7;--acc-quiet:#6E6C66;--acc-ink:#06BDBD;'
+    +'--acc-strong-ink:#06BDBD;--acc-mid-ink:#4A62EE;--acc-quiet-ink:#5E5C57;'
+    +'--sw-green:#06BDBD;--sw-blue:#4DD1F7;--sw-violet:#4D66F7;--sw-grey:#6E6C66}'
+    // Глубокая бирюза отдельной переменной. Брать для неё --acc-strong
+    // нельзя: этой же строкой выше палитра переопределяет его в яркую
+    // #06BDBD, и «недоверие» в банке живого языка выходило того же цвета,
+    // что «надежда». Переменная своя — переопределить её некому.
+    +'\n:root{--mid-deep:#078282}'
+    // --raise — поверхность панели с данными. В библиотеке она объявлена в
+    // её собственном :root, в отчёт переехали только правила: панели
+    // оставались вообще без фона, а с перламутром под ними это стало видно.
+    +'\n:root{--raise:var(--card-solid)}'
+    +'\n@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--maybe-bg:rgba(255,255,255,.05)}}'
+    // Правки под отчёт: в макете боковое меню — навигация живого приложения,
+    // в выгруженном файле она никуда не ведёт, поэтому неактивные пункты
+    // приглушены сильнее, а на печати меню убирается целиком.
+    +'\n.side .navtile[disabled],.side .navrow[disabled]{opacity:.45}'
+    // Параметры прогона: подпись и значение в одну строку, пары в колонках.
+    // Было наследие .kfield из макета — там это поле формы, и текст разъезжался.
+    +'\n.coverdl{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));'
+    +'gap:14px 26px;margin:22px 0 0;padding-top:18px;border-top:1px solid var(--line)}'
+    +'\n.coverdl>div{display:flex;gap:10px;align-items:baseline;font-size:13px}'
+    +'\n.coverdl dt{color:var(--ink-3);white-space:nowrap}'
+    +'\n.coverdl dd{margin:0;color:var(--ink);font-weight:600}'
+    +'\n.mods{display:flex;gap:7px;flex-wrap:wrap;margin-top:24px;padding-top:18px;border-top:1px solid var(--line)}'
+    +'\n.mods span{font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3);padding:4px 9px;border-radius:7px;border:1px solid var(--line)}'
+    +'\n.mods span.on{color:var(--ink);border-color:transparent;background:color-mix(in srgb, var(--mid) 14%, transparent)}'
+    +'\n.rli{font-size:13.5px;color:var(--ink-2);margin:5px 0;padding-left:15px;position:relative;max-width:74ch}'
+    +'\n.rli::before{content:"";position:absolute;left:0;top:8px;width:5px;height:5px;border-radius:50%;background:var(--mid)}'
+    // Карточки модулей — перламутром (решение владелицы 11.09). Это ровно по
+    // нашему правилу: перламутр — материал ОБЪЕКТОВ (обложка, карточка), а под
+    // данными поверхность ровная. Поэтому переливается сама карточка модуля,
+    // а панели с таблицами внутри неё остаются сплошными.
+    +'\n:root{--glow:#06BDBD}'
+    // Перламутр — настоящий, фотографией (снимок раковины от владелицы,
+    // 12.09). Градиентами структуру не собрать: у перламутра пластины и
+    // волокна, а градиент умеет пятна и волны — три захода это показали.
+    // Снимок белый, без розового, палитре не мешает: цвет даёт заливка
+    // поверх него, снимок отвечает только за структуру. Он же лежит фоном
+    // страницы (--bgimg) — одна картинка на весь отчёт, 29 КБ.
+    //
+    // Плашка — СТЕКЛО, не глухая плита (владелица: «в образце жемчужины
+    // переливчатые, и фон под ними не серый»). Отсюда два слоя: сама плашка
+    // полупрозрачная и размывает фон под собой (backdrop-filter), а снимок
+    // с заливкой лежат отдельным слоем на 62% — сквозь них видно страницу.
+    // Порядок именно такой: заливка ПОВЕРХ снимка, иначе фотография глушит
+    // цвет. Содержимое поднято над слоем, иначе текстура легла бы на текст.
+    +'\n:root{--nacre-img:url(data:image/jpeg;base64,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)}'
+    +'\n.nacre,.side .upsell{background:rgba(255,254,251,.86);'
+      +'backdrop-filter:blur(16px) saturate(150%);-webkit-backdrop-filter:blur(16px) saturate(150%);'
+      +'position:relative;isolation:isolate;'
+      +'border:1px solid rgba(255,255,255,.9);'
+      +'box-shadow:0 24px 42px -18px rgba(45,36,22,.34), 0 0 0 1px rgba(23,21,18,.06),'
+      +'inset 0 1px 0 rgba(255,255,255,.95)}'
+    +'\n.nacre::before,.side .upsell::before{content:"";position:absolute;inset:0;z-index:0;'
+      +'border-radius:inherit;pointer-events:none;opacity:.62;background:'
+      +'radial-gradient(48% 120px at 26% 0%, rgba(255,255,255,.86), rgba(255,255,255,0) 74%),'
+      +'linear-gradient(112deg,'
+        +'color-mix(in srgb, var(--glow) 11%, transparent) 0%,'
+        +'rgba(254,252,248,.28) 22%,'
+        +'rgba(235,230,244,.34) 44%,'
+        +'color-mix(in srgb, var(--mid) 10%, rgba(226,233,240,.24)) 63%,'
+        +'rgba(249,240,220,.32) 82%,'
+        +'color-mix(in srgb, var(--glow) 10%, transparent) 100%),'
+      +'var(--nacre-img) center/cover}'
+    // Главная ставка карточками: надзаголовок — название элемента,
+    // первая карточка во всю ширину и антиквой, как цитата, — это
+    // утверждение, от которого зависит остальное.
+    +'\n.rules .eb{font-size:10px;font-weight:700;letter-spacing:.07em;'
+      +'text-transform:uppercase;color:var(--ink-3);margin-bottom:7px;max-width:34ch}'
+    +'\n.rules .nm{font-size:15px;font-weight:700;color:var(--ink);line-height:1.3;'
+      +'margin-bottom:7px;max-width:34ch}'
+    +'\n.rules .q{font-family:var(--serif);font-size:15px;line-height:1.5;'
+      +'color:var(--ink);max-width:38ch}'
+    // Подпись внизу карточки отделена волосяной линией: это не продолжение
+    // мысли, а служебная приписка — где взять, как узнать, чем ответить.
+    +'\n.rules .ft{margin-top:12px;padding-top:10px;border-top:1px solid var(--line);'
+      +'font-size:11.5px;color:var(--ink-3);line-height:1.5;max-width:36ch}'
+    // Что залетает: название и разбор слева, полоса, число справа — одна
+    // строка на единицу. Хук идёт отдельной строкой во всю ширину: это
+    // чужие слова, их читают, а не сравнивают.
+    +'\n.topc{display:flex;flex-direction:column;gap:0}'
+    +'\n.tcrow{display:grid;grid-template-columns:minmax(0,300px) 1fr 116px;'
+      +'gap:14px;align-items:center;padding:10px 0;border-top:1px solid var(--line-2)}'
+    +'\n.topc .tcrow:first-child{border-top:0}'
+    +'\n.tcn{font-size:13.5px;line-height:1.35;color:var(--ink);min-width:0}'
+    +'\n.tcn a{color:var(--ink);text-decoration:none}'
+    +'\n.tcn a:hover{text-decoration:underline}'
+    +'\n.tcn span{display:block;font-size:11.5px;color:var(--ink-3);margin-top:3px}'
+    +'\n.tcv{text-align:right;font-size:13.5px;font-weight:700;color:var(--ink);'
+      +'font-variant-numeric:tabular-nums}'
+    +'\n.tcv span{display:block;font-size:11.5px;font-weight:600;color:var(--ink-3);margin-top:2px}'
+    +'\n.tch{grid-column:1/-1;font-family:var(--serif);font-size:13.5px;'
+      +'color:var(--ink-2);line-height:1.5;padding:2px 0 2px 2px}'
+    // Связки в JTBD приглушены: читается предложение, а не анкета.
+    +'\n.rules .q i{font-style:normal;font-family:var(--sans);font-size:11px;'
+      +'font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3)}'
+    // Риск у тактики — не подпись, а предупреждение: стоит выше подписи и
+    // помечен полосой сбоку, чтобы его нельзя было пролистать.
+    +'\n.rules .warnline{margin-top:10px;padding:7px 0 7px 11px;font-size:11.5px;'
+      +'color:var(--ink-2);line-height:1.5;box-shadow:inset 2px 0 0 var(--acc-mid);max-width:34ch}'
+    // Хуки-кандидаты — список, а не строка через точку с запятой: из них
+    // выбирают, значит каждый должен стоять отдельно.
+    // Итог модуля. Единственная подложка под не-табличным блоком в отчёте:
+    // это вывод, ради которого модуль читают, и он должен быть заметнее
+    // таблиц под ним. Полоса слева и лёгкая бирюзовая заливка — те же приёмы,
+    // что у «главного конкурента» в альтернативах, только на целом блоке.
+    +'\n.msum{margin:2px 0 26px;padding:18px 22px 20px;border-radius:16px;'
+      +'background:color-mix(in srgb, var(--mid) 5%, transparent);'
+      +'box-shadow:inset 3px 0 0 var(--mid)}'
+    +'\n.msum-h{font-size:10px;font-weight:700;letter-spacing:.07em;'
+      +'text-transform:uppercase;color:var(--acc-ink);margin-bottom:14px}'
+    +'\n.msum-body{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);'
+      +'gap:22px 34px;align-items:start}'
+    +'\n.msum .sm-col{display:flex;flex-direction:column;gap:18px}'
+    +'\n.msum .smh{display:block;font-size:10px;font-weight:700;letter-spacing:.07em;'
+      +'text-transform:uppercase;color:var(--ink-3);margin-bottom:8px}'
+    +'\n.msum ul{margin:0;padding-left:17px;list-style:none}'
+    +'\n.msum li{position:relative;margin:8px 0}'
+    +'\n.msum li::before{content:"";position:absolute;left:-17px;top:8px;width:5px;'
+      +'height:5px;border-radius:50%;background:var(--mid)}'
+    // Существо дела — антиквой и крупнее: его читают первым и целиком.
+    +'\n.msum .sm-main li{font-family:var(--serif);font-size:13.5px;line-height:1.55;'
+      +'color:var(--ink)}'
+    +'\n.msum .sm-side li{font-size:12.5px;line-height:1.5;color:var(--ink-2);margin:6px 0}'
+    +'\n.msum .sm-side li::before{top:7px;width:4px;height:4px;'
+      +'background:var(--ink-3)}'
+    +'\n.msum li b{color:var(--ink);font-weight:600}'
+    +'\n@media (max-width:860px){.msum-body{grid-template-columns:1fr}}'
+    // Метка гипотезы у имени персоны. Цвет — наш синий: это не ошибка и не
+    // предупреждение, а степень уверенности, и красить её тревожным нечем.
+    +'\n.pers-side h3 .pflag{display:inline-block;margin-left:8px;padding:2px 8px;'
+      +'border-radius:999px;font-family:var(--sans);font-size:10px;font-weight:700;'
+      +'letter-spacing:.07em;text-transform:uppercase;vertical-align:middle;'
+      +'color:var(--ink);background:color-mix(in srgb, var(--sw-violet) 18%, transparent)}'
+    +'\n.rules .hooklist{margin:2px 0 10px;padding-left:16px;list-style:none;max-width:36ch}'
+    +'\n.rules .hooklist li{position:relative;font-family:var(--serif);font-size:13.5px;'
+      +'line-height:1.5;color:var(--ink);margin:5px 0}'
+    +'\n.rules .hooklist li::before{content:"";position:absolute;left:-16px;top:8px;'
+      +'width:5px;height:5px;border-radius:50%;background:var(--mid)}'
+    // Бенчмарки: плитки по ширине, число крупно, под ним разброс и объём.
+    +'\n.bmk{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:0 26px}'
+    +'\n.bcell{padding:14px 0;border-top:1px solid var(--line-2)}'
+    +'\n.bcell .bk{display:block;font-size:10px;font-weight:700;letter-spacing:.07em;'
+      +'text-transform:uppercase;color:var(--ink-3);margin-bottom:6px}'
+    +'\n.bcell .bv{display:block;font-size:19px;font-weight:700;color:var(--ink);'
+      +'font-variant-numeric:tabular-nums;line-height:1.2}'
+    +'\n.bcell .br{display:block;font-size:11.5px;color:var(--ink-2);margin-top:4px}'
+    +'\n.bcell .bn{display:block;font-size:11.5px;color:var(--ink-3);margin-top:2px}'
+    +'\n.bcell .bnote{display:block;font-size:11.5px;color:var(--ink-3);margin-top:6px;line-height:1.45}'
+    +'\n.rules .rule-card.lead{box-shadow:inset 3px 0 0 var(--mid),'
+      +'inset 0 1px 0 var(--hi), 0 10px 26px -20px rgba(45,36,22,.3)}'
+    +'\n.bet .rule-card.wide{grid-column:1/-1}'
+    +'\n.bet .rule-card.wide>span:last-child{font-family:var(--serif);font-size:19px;'
+      +'line-height:1.45;color:var(--ink);max-width:48ch}'
+    +'\n@media (max-width:900px){.bet .rule-card.wide{grid-column:auto}}'
+    // Меню закреплено при прокрутке (владелица: «ушёл вниз — уже не
+    // переключиться»). Две мелочи, без которых прилипание не работает:
+    // у body стоит overflow-x:hidden, а это делает страницу собственным
+    // контейнером прокрутки, и sticky в нём мёртв — меняем на clip, режет
+    // так же, контейнера не создаёт. И меню выше экрана не бывает: даём ему
+    // свою прокрутку, иначе нижние модули уедут за край.
+    +'\nbody{overflow-x:clip}'
+    +'\n.side{position:sticky;top:14px;max-height:calc(100vh - 28px);'
+      +'overflow-y:auto;scrollbar-width:thin}'
+    +'\n.side::-webkit-scrollbar{width:6px}'
+    +'\n.side::-webkit-scrollbar-thumb{background:var(--line);border-radius:3px}'
+    +'\n@media (max-width:900px){.side{position:relative;top:auto;max-height:none}}'
+    +'\n.nacre > *,.side .upsell > *{position:relative;z-index:1}'
+    +'\n.cover .rpt-mark{margin-bottom:10px}'
+    // ── Одна поверхность, но только там, где она нужна ─────────────────────
+    // Первый заход был «плашку всем» — и стало хуже: у географии шапка
+    // колонок лежит ОТДЕЛЬНОЙ строкой над блоком, и рамка отрезала её от
+    // строк; у семантики и выдачи плашка добавила пустого места, которое с
+    // ростом числа строк растёт вместе с ними. Владелица: «то, что не требует
+    // плашек, лучше без них, так красивее».
+    //
+    // Правило уточнено: поверхность нужна ТАБЛИЦЕ — шапка прописными и строки
+    // под ней должны держаться вместе, иначе шапка повисает. Рисунок
+    // (география, сегменты, карта рынка, семантика) поверхности не требует:
+    // он и так читается как предмет, а рамка вокруг только съедает воздух.
+    +'\n.tbl,.dtbl,.obj{background:none;border:0;border-radius:0;'
+      +'backdrop-filter:none;-webkit-backdrop-filter:none}'
+    // Без рамки заливка шапки превращается в висящий серый брусок — вместо
+    // неё волосяная линия под прописными. Первая строка свою верхнюю линию
+    // отдаёт шапке, иначе их две подряд.
+    +'\n.tbl th,.dtbl .th,table.raw th{background:none;'
+      +'border-bottom:1px solid var(--line);padding:13px 18px 9px}'
+    // Верхний отступ у шапки: когда убрали рамку, вместе с ней ушёл и
+    // внутренний отступ, и названия полей прилипли к заголовку блока.
+    +'\n.dtbl .th + .tr{border-top:0}'
+    +'\n.tbl thead + tbody tr:first-child td{border-top:0}'
+    // Решётки карточек — без внешней панели по той же причине.
+    +'\n.swot,.comp,.kan,.chn,.rules{background:none;border:0;padding:0}'
+    // Полосы семантики жили по своим правилам: невыбранные серые, а при
+    // наведении вся строка закрашивалась серым прямоугольником. У ниш
+    // иначе — полоса всегда цветная, выбор виден по её насыщенности.
+    // Приводим к нишам: серых полос и серых заливок строк больше нет.
+    // Конкуренты выдачи шли одной колонкой: четыре строки на каждого,
+    // текст жался влево, справа пусто, а на двадцати страницах блок
+    // растянулся бы на два экрана. Раскладываем в колонки по ширине —
+    // сколько поместится, столько и будет; разделитель снизу, чтобы
+    // список читался списком и в две колонки.
+    +'\n.serp{display:grid;grid-template-columns:repeat(auto-fit,minmax(330px,1fr));'
+      +'gap:0 30px;align-items:start}'
+    +'\n.serp .s{padding:12px 0;border-top:0;border-bottom:1px solid var(--line-2)}'
+    +'\n.serp .s .u{margin-bottom:6px}'
+    +'\n.serp .s .meta{margin-bottom:6px}'
+    +'\n.semrow{display:grid;grid-template-columns:minmax(0,210px) 1fr 64px;'
+      +'gap:14px;align-items:center;padding:4px 9px;cursor:pointer;background:none}'
+    +'\n.semrow .nm{margin-bottom:0;font-size:12.5px;line-height:1.3}'
+    +'\n@media (max-width:860px){.semrow{grid-template-columns:minmax(0,120px) 1fr 56px;gap:10px}}'
+    +'\n.semrow:hover,.semrow.on{background:none}'
+    +'\n.semrow .rail i{background:color-mix(in srgb, var(--mid) 42%, var(--line-2));'
+      +'transition:background .18s ease}'
+    +'\n.semrow:hover .rail i{background:color-mix(in srgb, var(--mid) 70%, var(--line-2))}'
+    +'\n.semrow.on .rail i{background:var(--mid)}'
+    +'\n.semrow .nm{transition:color .18s ease}'
+    +'\n@media (prefers-reduced-motion:reduce){.semrow .rail i,.semrow .nm{transition:none}}'
+    // Шапки строк были трёх видов: у обычной таблицы без заливки и помельче
+    // буквами, у .dtbl заливка 3% и другой кегль, у сырых таблиц 4%. По
+    // отдельности каждая выглядела нормально, рядом — разнобой (владелица:
+    // «у „Кому не продаём“ шапка светлая, а у „Альтернатив“ темнее»).
+    // Одна шапка на все: заливка 4%, прописные, 10px, разрядка .07em.
+    +'\n.tbl th,.dtbl .th,table.raw th{'
+      +'background:color-mix(in srgb, var(--ink) 4%, transparent);'
+      +'color:var(--ink-3);font-size:10px;font-weight:700;letter-spacing:.07em;'
+      +'text-transform:uppercase;white-space:nowrap;text-align:left}'
+    +'\n.tbl th,table.raw th{padding:11px 18px}'
+    +'\n.swot .sw li em{display:block;font-style:normal;font-size:11px;'
+      +'color:var(--ink-3);line-height:1.45;margin-top:3px}'
+    // Воздух: карточки модулей дышат сильнее, чем плитки платформы, — в отчёте
+    // их читают подряд, а не окидывают взглядом. Внутри карточки блоки тоже
+    // разведены: слипшиеся таблицы читаются как одна.
+    +'\n.main > .card{margin-bottom:30px;padding:26px 28px 28px}'
+    +'\n.main > .card > h2,.main > .card > h3{margin-top:30px}'
+    +'\n.main > .card > h2:first-of-type,.main > .card > h3:first-of-type{margin-top:14px}'
+    +'\n.main .tbl,.main .geo,.main .seg,.main .swot,.main .comp,.main .pers,.main .kan{margin:14px 0 22px}'
+    +'\n.main .chead{margin-bottom:14px}'
+    // Легенда кольца: «Платёжеспособность» и «Уверенность» в шапке слипались —
+    // колонки под них были уже самих слов. Даём ширину по содержимому и
+    // разрешаем перенос в шапке, значения при этом остаются в одну строку.
+    // Кольцу нужен зазор от легенды: на узком экране они сходились вплотную.
+    // Кольцо рисуется 230×230, а колонка под него в макете 190 — оно физически
+    // сжималось. Даём ему собственный размер, а легенде — узкие колонки с
+    // переносом: длинные подписи лучше перенести, чем давить картинку.
+    +'\n.main .seg{grid-template-columns:238px minmax(0,1fr)!important;gap:30px;align-items:start}'
+    +'\n.main .leghead,.main .sl.rich{grid-template-columns:40px minmax(0,1fr) 54px 104px 96px;gap:12px}'
+    +'\n.main .sl.rich{border-radius:10px;padding:6px 8px;margin:0 -8px;transition:background .15s ease}'
+    +'\n.main .sl.rich.on{background:color-mix(in srgb, var(--mid) 12%, transparent)}'
+    +'\n.main .leghead>span,.main .sl.rich .v2{white-space:normal;line-height:1.3;hyphens:none}'
+    +'\n.main .sl.rich .v2.big{white-space:nowrap}'
+    // Узкий экран — последним, иначе правила выше его перебивают.
+    // Ниши: полосы слева, «как читать фигуру» справа — колонкой, а не лентой
+    // под ними. Так пустого места между полосами и карточками почти не остаётся.
+    +'\n.nwrap{display:grid;grid-template-columns:minmax(0,1fr) 290px;gap:26px;align-items:start;margin-bottom:18px}'
+    +'\n.rkey-side{display:flex;flex-direction:column;align-items:flex-start;gap:12px;margin:0}'
+    +'\n.rkey-side .rtext{max-width:none;font-size:12.5px}'
+    +'\n@media (max-width:1000px){.main .seg{grid-template-columns:1fr!important}'
+    +'.nwrap{grid-template-columns:1fr}}'
+    +'\n@media (max-width:820px){.main .leghead{display:none}'
+    +'.main .sl.rich{grid-template-columns:40px 1fr;gap:6px 12px}}'
+    // Ёмкость рынка: капсулы слева во всю ширину, числа отдельной колонкой
+    // справа — внутри заливки они не читались.
+    +'\n.tamwrap{display:grid;grid-template-columns:minmax(0,1fr) 220px;gap:24px;align-items:center}'
+    +'\n.tamvals{display:flex;flex-direction:column;gap:2px}'
+    +'\n.tamrow{display:grid;grid-template-columns:52px 1fr;gap:10px;align-items:baseline;'
+    +'padding:9px 0;border-top:1px solid var(--line-2)}'
+    +'\n.tamrow:first-child{border-top:0}'
+    +'\n.tamrow .c{font-size:11px;font-weight:700;letter-spacing:.06em;color:var(--ink-3)}'
+    +'\n.tamrow b{font-size:16px;font-weight:700;color:var(--ink);font-variant-numeric:tabular-nums}'
+    +'\n.tamrow .rel{grid-column:2;font-size:11.5px;color:var(--ink-3)}'
+    +'\n.tamrow{border-radius:9px;padding-left:8px;margin-left:-8px;transition:background .15s ease}'
+    +'\n.tamrow.on{background:color-mix(in srgb, var(--mid) 12%, transparent)}'
+    +'\n.tamwrap ellipse{cursor:default}'
+    +'\n@media (max-width:820px){.tamwrap{grid-template-columns:1fr}}'
+    // Значки выгрузки и копирования — в шапке модуля, без рамок и подписей.
+    +'\n.ibar{display:inline-flex;gap:2px;margin-left:12px;vertical-align:-4px}'
+    +'\n.ibtn{background:none;border:0;padding:5px;cursor:pointer;border-radius:8px;'
+    +'display:inline-flex;line-height:0;transition:background .15s ease}'
+    +'\n.ibtn svg{width:17px;height:17px;stroke:var(--ink-3);fill:none;stroke-width:1.7;'
+    +'stroke-linecap:round;stroke-linejoin:round}'
+    +'\n.ibtn:hover{background:color-mix(in srgb, var(--ink) 6%, transparent)}'
+    +'\n.ibtn:hover svg{stroke:var(--ink)}'
+    +'\n.ibtn.ok svg{stroke:var(--acc-strong)}'
+    // ИЕРАРХИЯ ЗАГОЛОВКОВ. Была перевёрнута: имя модуля 16px, а заголовки
+    // блоков внутри него — браузерные 24px, то есть часть крупнее целого.
+    // Владелица: «это нормально вообще? нет». Ставим явную лесенку:
+    // ниша → модуль → блок внутри модуля.
+    +'\n.main > .card > .chead h2{font-size:21px;letter-spacing:-.015em}'
+    +'\n.main > .card h2{font-size:16px;font-weight:600;margin:26px 0 8px}'
+    +'\n.main > .card h3{font-size:14px;font-weight:600;margin:20px 0 6px;color:var(--ink-2)}'
+    +'\n.main > .card h4{font-size:13px;font-weight:600;margin:16px 0 6px;color:var(--ink-2)}'
+    +'\n.main > .card > h2:first-of-type{margin-top:12px}'
+    // Ниша — крупнее модуля: в одном отчёте их может быть несколько, и это
+    // граница разделов, а не подпись.
+    +'\n.nicheband{margin:42px 0 16px;padding:0 0 12px;border-bottom:2px solid var(--mid)}'
+    +'\n.nicheband .lab{display:block;font-size:10px;font-weight:700;letter-spacing:.1em;'
+    +'text-transform:uppercase;color:var(--ink-3);margin-bottom:6px}'
+    +'\n.nicheband .nm{font-family:var(--serif);font-size:30px;font-weight:600;'
+    +'color:var(--ink);line-height:1.15;letter-spacing:-.02em}'
+    +'\n.nicheband:first-of-type{margin-top:10px}'
+    // Обложка: одно целое — надзаголовок, название проекта, ниша и рынок,
+    // справа дата и печать.
+    +'\n.cover .chead{align-items:flex-start;gap:22px}'
+    +'\n.cover .eyebrow{display:block;font-size:10px;font-weight:700;letter-spacing:.1em;'
+    +'text-transform:uppercase;color:var(--ink-3);margin-bottom:8px}'
+    +'\n.cover .covername{font-family:var(--serif);font-size:34px;font-weight:600;'
+    +'margin:0;line-height:1.1;letter-spacing:-.02em}'
+    +'\n.cover .coversub{margin:8px 0 0;font-size:14px;color:var(--ink-2)}'
+    +'\n.cover .coveract{display:flex;align-items:center;gap:14px;flex-wrap:wrap;'
+    +'white-space:nowrap}'
+    // Персоны. Портрет рассчитан на широкую колонку разбора; в карточке модуля
+    // он у́же, и левая плашка налезала на правую, а нижняя обрезалась.
+    // Даём колонкам минимумы и разрешаем перенос, а не давим содержимое.
+    +'\n.perslist{display:flex;flex-direction:column;gap:14px}'
+    +'\n.main .pers{grid-template-columns:minmax(0,230px) minmax(0,1fr);overflow:visible;'
+    +'border-radius:20px;margin-bottom:18px}'
+    +'\n.main .pers-side{border-radius:20px 0 0 20px;min-width:0}'
+    +'\n.main .pers-main{min-width:0;border-radius:0 20px 20px 0;overflow:hidden}'
+    +'\n.main .prow{grid-template-columns:minmax(0,130px) minmax(0,1fr) minmax(0,1fr);'
+    +'padding:12px 18px;align-items:start}'
+    +'\n.main .prow>*{min-width:0;overflow-wrap:anywhere}'
+    +'\n.main .pers-side h3{overflow-wrap:anywhere}'
+    +'\n@media (max-width:860px){.main .pers{grid-template-columns:1fr}'
+    +'.main .pers-side{border-radius:20px 20px 0 0}'
+    +'.main .pers-main{border-radius:0 0 20px 20px}'
+    +'.main .prow{grid-template-columns:1fr;gap:4px}}'
+    // Навигация по отчёту. Якорю нужен отступ сверху, иначе заголовок модуля
+    // упирается в край окна и кажется, что промахнулись.
+    +'\n.main > .card{scroll-margin-top:18px}'
+    +'\n.cover .mods a{text-decoration:none}'
+    +'\n.cover .mods a:hover{background:color-mix(in srgb, var(--mid) 26%, transparent)}'
+    // Логотип — файл владелицы (PNG от 12.09). Обрезаны поля, белый фон снят
+    // в прозрачность, уменьшен под меню: исходник 1942×809 и 746 КБ, в отчёте
+    // это был бы миллион байт ради картинки шириной в палец.
+    +'\n.side .logo{display:block;width:100%;max-width:170px;height:auto}'
+    // Плитки разделов: активный занимает ВСЮ ширину и выше остальных.
+    // Владелица: «исследование большое, потому что вы в нём; будете в контенте —
+    // большим станет он». Размер здесь говорит «вы тут», а не украшает.
+    // Переход плавный, чтобы в приложении рост читался как движение, а не
+    // как подмена картинки.
+    +'\n.side .navgrid{grid-template-columns:1fr 1fr;gap:7px}'
+    +'\n.side .navtile{transition:padding .22s ease, background .22s ease, color .22s ease, box-shadow .22s ease}'
+    +'\n.side .navtile[aria-current="page"]{grid-column:1/-1;flex-direction:row;'
+    +'align-items:center;gap:14px;padding:20px 18px;font-size:14px;font-weight:600}'
+    +'\n.side .navtile[aria-current="page"] .ic{width:40px;height:40px;border-radius:13px;flex:0 0 auto}'
+    +'\n.side .navtile[aria-current="page"] .ic svg{width:20px;height:20px}'
+    // Неактивные — во всю ширину друг под другом, а не в два столбца: три штуки
+    // в сетке 2×2 оставляли одну сиротой в последнем ряду.
+    +'\n.side .navtile:not([aria-current="page"]){grid-column:1/-1;padding:10px 12px;'
+    +'font-size:12px;flex-direction:row;align-items:center;gap:10px}'
+    +'\n.side .navtile:not([aria-current="page"]):not(:disabled):hover{padding:12px;'
+    +'box-shadow:0 8px 18px -12px rgba(23,21,18,.35)}'
+    +'\n.side .navtile:not([aria-current="page"]) .ic{width:24px;height:24px;border-radius:8px;flex:0 0 auto}'
+    +'\n.side .navtile:not([aria-current="page"]) .ic svg{width:13px;height:13px}'
+    +'\n.side .navtile:disabled{opacity:.5}'
+    +'\n@media (prefers-reduced-motion:reduce){.side .navtile{transition:none}}'
+    +'\n.side .navlist a.navrow{display:flex;align-items:center;gap:10px;width:100%;'
+    +'text-decoration:none;color:var(--ink-2);opacity:1}'
+    +'\n.side .navlist a.navrow:hover{color:var(--ink)}'
+    +'\n.klist{margin:10px 0 0;padding-left:18px}'
+    +'\n.klist li{font-size:13.5px;color:var(--ink-2);line-height:1.55;margin:6px 0}'
+    // ── Одна шкала кеглей ──────────────────────────────────────────────────
+    // Проверила весь отчёт: в живых правилах было 23 размера шрифта. Часть —
+    // роли (заголовок, подпись, число), а часть — просто разные значения для
+    // ОДНОГО И ТОГО ЖЕ: 10 и 10.5 у прописных ярлыков, 11 и 11.5 у подписей,
+    // 12 и 12.5 у вторичного текста, 13.5 и 13.6 у карточек. Разница в
+    // полпункта глазом не читается как решение — читается как небрежность,
+    // и именно из неё складывается ощущение «по отдельности красиво, а
+    // вместе разнобой». Свожу пары к одному значению, роли не трогаю.
+    +'\n.aud .a .freq .lab,.aw span,.ccard2 .cid,.ccard2 .price span,.cmark,'
+      +'.heat th,.vmark,.tbl th,table.raw th{font-size:10px}'
+    +'\n.aud .a .who span,.awleg,.awrow .awnm span,.ccard .cn span,.client i,'
+      +'.kcard .met,.llist div span,.ltag .ename span,.mklbl,.pers-conf span.sub2,'
+      +'.serp .s .meta,.srow .sd .dt,.tamrow .c{font-size:11.5px}'
+    +'\n.ccard .cf div b,.chead .note,.gvol .v,.gx,.heat,.mktlist .hint,'
+      +'.nhint,.sigrow{font-size:12.5px}'
+    +'\n.rule-card{font-size:13.5px}'
+    // Цитата — одна во всём отчёте: антиква 13.5. Была 13 в одном блоке,
+    // 13.5 в другом и 15 в карточке хука.
+    +'\n.dtbl .q,.rules .q,.llist div{font-size:13.5px}'
+    // Имя предмета в карточке — 15. Было 15 в одних карточках и 16 в других,
+    // а 16 у нас занят заголовком блока: имя внутри карточки не может быть
+    // одного роста с заголовком, который её содержит.
+    +'\n.rules .nm,.ccard2 .cnm{font-size:15px}'
+    // Селекторы, объявленные дважды в разных разборах с разными значениями:
+    // побеждал тот, что оказался ниже по файлу, то есть случайный. Называю
+    // победителя явно.
+    +'\n.lbl{font-size:12.5px}'
+    +'\n.val{font-size:11.5px;font-weight:700}'
+    +'\n.infer{font-size:10px;font-weight:700}'
+    +'\n.prow .p{font-weight:600}'
+    +'\n.qarrow{color:var(--ink-3)}'
+    +'\n.fcard .name{font-size:14.5px}'
+    +'\n.fcard .foot b{font-size:12.5px}'
+    +'\nth{font-size:10px}'
+    +'\n.tamrow .c,.upsell b i,.kchip{font-size:11.5px}'
+    // 14.5 в отчёте остаётся только у body — это кегль документа, ему свой
+    // токен. Имя группы в банке языка — предмет в карточке, ему 15, как
+    // всем остальным именам предметов.
+    +'\n:root{--fs-read:14.5px}'
+    +'\n.ltag .ename{font-size:var(--fs-item)}'
+    // 13 и 13.5 стояли рядом у одной и той же роли — строка данных и имя.
+    // Приборы интерфейса (кнопка, поиск, пункт меню) остаются на 13: они
+    // вне колонки с текстом, и там свой ритм.
+    +'\n.aud .a .who,.awrow .awnm,.coverdl>div,.lleft .nm,.lright b,'
+      +'.pers-conf b,.prow,.sempanel .who,table{font-size:13.5px}'
+    // Крупные числа и заголовки предметов: было 17, 18, 19 и 20 подряд —
+    // четыре ступени на расстоянии, которого глаз не различает.
+    +'\n.sl.rich .v2.big,.pers-side h3,.upsell b{font-size:19px}'
+    +'\n.pers-share b{font-size:30px}'
+    // Абзацы модели шли по умолчанию 14.5 — КРУПНЕЕ подзаголовка над ними и
+    // заметно крупнее данных вокруг. Текст исследования не может быть самым
+    // большим на странице.
+    +'\n.main > .card > p{font-size:13.5px;line-height:1.6;color:var(--ink-2);max-width:74ch}'
+    // Прописные ярлыки: разрядка была .03–.1em вразнобой и насыщенность то
+    // 600, то 700. Это одна роль, значит одно значение — .07em и 700.
+    +'\n.aud .a .cols h5,.bmet h4,.bpain h4,.cbox h5,.ccard .cf div span,'
+      +'.ccard2 .scale,.cover .eyebrow,.dtbl .eb,.dtbl .tag,.dtbl .th,.geohead,'
+      +'.kcol h3,.leghead,.mkt .hd,.mktlist .hdr,.mktlist h4,.rules .eb,'
+      +'.sw h3,.swot .sw h3,.tbl th,table.raw th,th,.demo h4,.vis h4,.chnside h4'
+      +'{letter-spacing:.07em;font-weight:700}'
+    +'\n.grp,.heat th,.mods span,.nicheband .lab,.upsell b i,.vmark,.vq2 .seg2'
+      +'{letter-spacing:.07em;font-weight:700}'
+    // ── Токены кегля ───────────────────────────────────────────────────────
+    // Шкала была собрана 12.09 сведением 23 размеров к 16. Имена нужны, чтобы
+    // оболочка брала те же значения по имени, а не списывала числа глазами
+    // (просьба контент-машины). Правила выше числами не переписываю: значения
+    // совпадают с токенами, а массовая замена в чужих утверждённых разборах —
+    // риск без выигрыша. Новое пишем токенами.
+    +'\n:root{--fs-label:10px;--fs-caption:11.5px;--fs-ui:12px;--fs-small:12.5px;'
+      +'--fs-base:13px;--fs-body:13.5px;--fs-sub:14px;--fs-item:15px;--fs-block:16px;'
+      +'--fs-num:19px;--fs-module:21px;--fs-display:30px;--fs-hero:34px}'
+
+    // ── Кнопки и вкладки (перенос из оболочки, просьба контент-машины) ─────
+    // Компонент один на обе стороны: имена отчёта и имена оболочки стоят в
+    // одном правиле, поэтому второй копии не заводится и разъехаться нечему.
+    // Главная кнопка — графит с белым: белый на бирюзе даёт 2.33 при норме
+    // 4.5, замерено обеими сторонами независимо.
+    +'\n.btn-pri,.cm-btn,.cm-btn-pri,.cm-btn-back,.cm-btn-quiet{'
+      +'display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line);'
+      +'border-radius:12px;padding:9px 17px;font-family:var(--sans);'
+      +'font-size:var(--fs-body);font-weight:600;color:var(--ink);cursor:pointer;'
+      +'background:linear-gradient(180deg, var(--card-solid), '
+      +'color-mix(in srgb, var(--card-solid) 93%, var(--ink)));'
+      +'transition:background .16s ease, border-color .16s ease, color .16s ease}'
+    +'\n.cm-btn:hover:not(:disabled),.cm-btn.hov{border-color:var(--ink-3);'
+      +'background:linear-gradient(180deg, color-mix(in srgb, var(--card-solid) 96%, var(--ink)),'
+      +'color-mix(in srgb, var(--card-solid) 88%, var(--ink)))}'
+    +'\n.cm-btn:active:not(:disabled),.cm-btn.act{box-shadow:inset 0 2px 4px rgba(23,21,18,.16)}'
+    +'\n.cm-btn:disabled{opacity:.45;cursor:default}'
+    +'\n.btn-pri,.cm-btn-pri{color:#FFFFFF;border:2px solid #0D0C0A;padding:8px 16px;'
+      +'background:linear-gradient(180deg, #262320, #171512)}'
+    +'\n.btn-pri:hover,.cm-btn-pri:hover:not(:disabled),.cm-btn-pri.hov{'
+      +'border-color:var(--mid);background:linear-gradient(180deg, #2E2A25, #1B1916);'
+      +'box-shadow:0 0 0 3px color-mix(in srgb, var(--mid) 22%, transparent)}'
+    +'\n.btn-pri:active,.cm-btn-pri:active:not(:disabled),.cm-btn-pri.act{'
+      +'box-shadow:inset 0 2px 5px rgba(0,0,0,.5);'
+      +'background:linear-gradient(180deg, #1B1916, #121110)}'
+    +'\n.cm-btn-back{border-color:var(--acc-mid);color:var(--ink)}'
+    +'\n.cm-btn-back:hover:not(:disabled),.cm-btn-back.hov{border-color:var(--acc-mid-ink);'
+      +'background:color-mix(in srgb, var(--acc-mid) 8%, var(--card-solid))}'
+    +'\n.cm-btn-quiet{border-color:transparent;background:none;color:var(--ink-2);font-weight:500}'
+    +'\n.cm-btn-quiet:hover:not(:disabled),.cm-btn-quiet.hov{'
+      +'background:color-mix(in srgb, var(--ink) 6%, transparent);color:var(--ink);'
+      +'border-color:transparent}'
+    // Вкладки с подчёркиванием и числом. Число — вторичными чернилами, у
+    // активной вкладки — бирюзовыми: бирюза заливкой полосы, не буквами.
+    +'\n.tabs,.cm-tabs{display:flex;gap:24px;flex-wrap:wrap;margin:18px 0 0;'
+      +'border-bottom:1px solid var(--line)}'
+    +'\n.tabs a,.cm-tabs a{display:inline-flex;align-items:baseline;gap:7px;'
+      +'padding:9px 1px 10px;margin-bottom:-1px;font-family:var(--sans);'
+      +'font-size:var(--fs-body);font-weight:600;color:var(--ink-3);cursor:pointer;'
+      +'user-select:none;border-bottom:2px solid transparent;'
+      +'transition:color .16s ease, border-color .16s ease}'
+    +'\n.tabs a:hover,.cm-tabs a:hover{color:var(--ink);border-bottom-color:var(--line)}'
+    +'\n.tabs a.on,.cm-tabs a.on{color:var(--ink);border-bottom-color:var(--mid)}'
+    +'\n.tabs .n,.cm-tabs .n{font-size:var(--fs-caption);font-weight:700;'
+      +'color:var(--ink-3);font-variant-numeric:tabular-nums}'
+    +'\n.tabs a.on .n,.cm-tabs a.on .n{color:var(--acc-ink)}'
+    +'\n@media (prefers-reduced-motion:reduce){.cm-btn,.cm-btn-pri,.tabs a,.cm-tabs a{transition:none}}'
+    +'\n@media print{.side,.no-print{display:none!important}.app{grid-template-columns:1fr}.card{break-inside:avoid}}'
+    +'</style>\n</head>\n<body>\n'
+    +'<div class="app">\n'
+    + REPORT_SIDEBAR.replace(/<nav class="navlist">[\s\S]*?<\/nav>/,
+        '<nav class="navlist"><div class="grp">Модули отчёта</div>'
+        + targetResults.map(r => {
+            const m = MODULES.find(x=>x.id===r.id);
+            return '<a class="navrow" href="#'+anchorOf(r)+'"><span class="dot"></span>'
+              + esc(m ? (m.titleRu||m.title) : r.id)
+              + (r.niche ? '<span class="cnt">'+esc(r.id)+'</span>' : '<span class="cnt">'+esc(r.id)+'</span>')
+              + '</a>';
+          }).join('')
+        + '</nav>') + '\n'
+    +'<main class="main">\n'
+    + topBar
+    + cover
+    + execBlock
+    + sections
+    +'</main>\n</div>\n'
+    + chartScripts
+    // КАЖДЫЙ блок в своём try. Был один общий — и падение одного рисования
+    // уносило все следующие: 12.09 из-за ошибки в голосе клиента не собирались
+    // M4, M5 и M7 целиком, а выглядело это как «блоки не сделаны».
+    // Ошибку печатаем в консоль: молчаливый отказ мы уже проходили.
+    + (blockScripts.length
+        ? '<script>'+blockJS+'\nwindow.addEventListener("load",function(){'
+          + blockScripts.map(function(call){
+              return 'try{'+call+'}catch(e){if(window.console)console.error("Блок не собрался:",e);}';
+            }).join('\n')
+          + '});<'+'/script>'
+        : '')
     +'\n</body>\n</html>';
 
   return html;
@@ -2983,6 +5789,52 @@ function Field({ label, optional, info, children }) {
 }
 
 // ── MODULE CARD
+// Стили блоков на сайте. Вставляем один раз и ТОЛЬКО внутрь .rview: в тех же
+// стилях есть правила на голые table/th/td и на .page — без ограничения они
+// переписали бы оформление всего приложения. @media и @supports сохраняются,
+// внутри них селекторы ограничиваются так же.
+let blockStyleInjected = false;
+function injectBlockStyles() {
+  if (blockStyleInjected || typeof document === 'undefined') return;
+  blockStyleInjected = true;
+  const scope = sel => sel.split(',').map(one => {
+    const t = one.trim();
+    if (!t || t.startsWith('@') || t.startsWith('from') || t.startsWith('to') || /^\d+%$/.test(t)) return t;
+    if (t.startsWith(':root')) return '.rview';       // токены уже заданы страницей
+    return '.rview ' + t;
+  }).join(',');
+  // Начало правила — это начало строки, ИЛИ закрывающая скобка, ИЛИ открывающая
+  // скобка @media/@supports. Без третьего случая первое правило внутри каждого
+  // @media оставалось без ограничения и утекало на всю страницу.
+  const prefix = css => css.replace(/(^|[{}])\s*([^{}@]+)\{/g,
+    (m, br, sel) => br + '\n' + scope(sel) + '{');
+  const el = document.createElement('style');
+  el.id = 'research-block-styles';
+  el.textContent = prefix(REPORT_BLOCK_CSS) + '\n' + prefix(REPORT_M1_CSS) + '\n' + prefix(REPORT_M7_CSS) + '\n' + prefix(REPORT_M2_CSS) + '\n' + prefix(REPORT_M4_CSS) + '\n' + prefix(REPORT_LIB2_CSS) + '\n' + prefix(REPORT_LIB3_CSS) + '\n' + prefix(REPORT_COMP_CSS) + '\n' + prefix(REPORT_LIB4_CSS) + '\n' + prefix(REPORT_PERS_CSS) + '\n' + prefix(REPORT_M5_CSS) + '\n' + prefix(REPORT_DEMO_CSS) + '\n' + prefix(REPORT_M3_CSS) + '\n' + prefix(REPORT_RULES_CSS)
+    + '\n.rview{color:var(--ink,#171512);font-family:Montserrat,-apple-system,sans-serif}'
+    + '\n.rview table{min-width:0}';
+  document.head.appendChild(el);
+}
+
+// Показ результата модуля НА САЙТЕ. Рисует ровно тем же кодом, что и выгрузка
+// (renderResearchHTML) — до 11.09.2026 сайт показывал голые markdown-таблицы,
+// потому что весь согласованный вид жил внутри функции отчёта. Владелица:
+// «я думала, это будет на сайте, а не только в выгрузке».
+function ResearchView({ content, ourName }) {
+  const ref = React.useRef(null);
+  const out = React.useMemo(() => renderResearchHTML(content || '', { ourName }), [content, ourName]);
+  React.useEffect(() => { injectBlockStyles(); }, []);
+  React.useEffect(() => {
+    if (!ref.current || !out.scripts.length) return;
+    // Кольцо и ниши рисуются скриптом — выполняем после вставки разметки.
+    // Своя область видимости на каждый запуск: иначе повторное открытие
+    // модуля переопределяет функции и рисует поверх старого.
+    try { new Function(out.js + '\n' + out.scripts.join('\n'))(); }
+    catch (e) { /* блок не нарисовался — таблицы под ним всё равно на месте */ }
+  }, [out]);
+  return <div className="rview" ref={ref} dangerouslySetInnerHTML={{__html: out.html}}/>;
+}
+
 function ModuleCard({ m, on, onToggle, uiLang }) {
   const t = T[uiLang];
   const title = uiLang==='ru' ? (m.titleRu||m.title) : m.title;
@@ -3339,7 +6191,7 @@ function App() {
   const empty = { siteUrl:'', name:'', niche:'', geoCompany:'', geoMarket:'', format:'', audience:'', result:'', price:'', competitors:'', extra:'', currentRevenue:'', currentClients:'', currentAvgCheck:'', targetSegment:'', priceLayer:'', services:[], selectedServices:[], selectedNiche:'', nicheCandidates:'' };
   const [brief, setBrief] = React.useState(empty);
   const [lang, setLang] = React.useState('Russian');
-  const [mods, setMods] = React.useState(['M1_2','M2']);
+  const [mods, setMods] = React.useState(['M2','M3']);
   const [siteUrl, setSiteUrl] = React.useState('');
   const [parsing, setParsing] = React.useState(false);
   const [pMsg, setPMsg] = React.useState('');
@@ -3432,11 +6284,11 @@ function App() {
     const b={...(p.brief||{})};
     if(b.geo&&!b.geoMarket){b.geoMarket=b.geo;delete b.geo;}
     setProj(p); setBrief({...empty,...b}); setLang(p.lang||'Russian');
-    setMods((p.mods||['M1_2','M2']).filter(id => !MODULES.find(m=>m.id===id)?.disabled)); setRep(p.report||'');
+    setMods((p.mods||['M2','M3']).filter(id => !MODULES.find(m=>m.id===id)?.disabled)); setRep(p.report||'');
     setExp({}); setRepOpen(false); setXled('');
     setShowLayers(false); setPriceLayers(p.priceLayers||[]); setSelectedLayers(p.selectedLayers||[]);
     // Если разведка сделана, а ниша ещё не выбрана — восстановить стоп-точку выбора
-    const m12 = (p.results||[]).find(r=>r.id==='M1_2');
+    const m12 = (p.results||[]).find(r=>r.id==='M2');
     if (m12 && !b.selectedNiche) {
       const nd = m12.nicheData || extractNicheData(m12.content||'');
       const niches = (nd && Array.isArray(nd.niches) ? nd.niches : []).slice().sort((a,b)=>(b.score||0)-(a.score||0));
@@ -3460,14 +6312,14 @@ function App() {
   }, [proj, brief, lang, sv]);
 
   const goNew = () => {
-    setProj(null); setBrief(empty); setLang('Russian'); setMods(['M1_2','M2']);
+    setProj(null); setBrief(empty); setLang('Russian'); setMods(['M2','M3']);
     setSiteUrl(''); setPMsg(''); setRep(''); setExp({}); setRepOpen(false); setXled('');
     setShowLayers(false); setPriceLayers([]); setSelectedLayers([]);
     setSc('form');
   };
 
   // extractChartData/extractNicheData/cleanContent — теперь на уровне модуля
-  // (см. рядом с parseMdTables), processM3Voc тоже их использует.
+  // (см. рядом с parseMdTables), processM5Voc тоже их использует.
 
   // Generate price layers after M1
   const generatePriceLayers = React.useCallback(async (m1Content) => {
@@ -3499,12 +6351,13 @@ function App() {
     const p = prevContent || '';
     switch(modId) {
       case 'M1': return buildM1Prompt(brief, lang, p);
-      case 'M2': return buildM2Prompt(brief, lang, p);
       case 'M3': return buildM3Prompt(brief, lang, p);
-      case 'M4': return buildM4Prompt(brief, lang, p, extractSection(p, /^#### VoC Coverage/i));
+      case 'M4': return buildM4Prompt(brief, lang, p);
       case 'M5': return buildM5Prompt(brief, lang, p);
-      case 'M6': return buildM6Prompt(brief, lang, p);
+      case 'M6': return buildM6Prompt(brief, lang, p, extractSection(p, /^#### VoC Coverage/i));
       case 'M7': return buildM7Prompt(brief, lang, p);
+      case 'CONTENT': return buildContentPrompt(brief, lang, p);
+      case 'M8': return buildM8Prompt(brief, lang, p);
       default: return 'Research module '+modId+' for this project in '+lang+'.';
     }
   };
@@ -3586,11 +6439,11 @@ function App() {
       // нерусских рынков поиск искал не то и не там (см. localizedQueryParts).
       const Bn = { ...B, ...(wn ? { selectedNiche: wn } : {}), researchLang: lang };
 
-      // Пауза перед M7 — владелица подтверждает/правит поисковые фразы ДО того,
+      // Пауза перед SEO (M8) — владелица подтверждает/правит поисковые фразы ДО того,
       // как тратится платный вызов Wordstat/Google Ads (26.08.2026, её же
       // предложение после трёх неудачных заходов на автоматический подбор).
       // confirmedSeedsRef переживает паузу (useRef, не сбрасывается рендером).
-      if (mod.id === 'M7' && !confirmedSeedsRef.current[wn]) {
+      if (mod.id === 'M8' && !confirmedSeedsRef.current[wn]) {
         setCurMod(null); setCurNiche(''); setCurStep(''); setCurStepIdx(0);
         const candidates = await extractWordstatSeeds(Bn);
         setSeedError(lastSeedError);
@@ -3625,27 +6478,34 @@ function App() {
       let full = '';
       let wordstatData = null;   // hoisted: нужен после callGPT, чтобы приклеить сырой список (см. ниже)
       searchCallCount = 0;       // для расчёта тарифов (26.08.2026) — считаем ТОЛЬКО за этот модуль
+      keywordCallCount = 0;      // то же для частотности: Wordstat/Google Ads за этот модуль
       try {
         const sameNiche = col.filter(r => (r.niche||'') === wn);
         const prevContent = sameNiche.length ? sameNiche[sameNiche.length-1].content : '';
         let userPrompt;
-        if (mod.id === 'M1_2') {
+        if (mod.id === 'M2') {
           // Разведка ниш: сначала собираем реальные выдержки из веб-поиска
           const evidence = await gatherNicheEvidence(Bn, lang);
-          userPrompt = buildM12Prompt(Bn, lang, prevContent ? prevContent.slice(0, 2000) : '', evidence);
-        } else if (mod.id === 'M2') {
+          userPrompt = buildM2Prompt(Bn, lang, prevContent ? prevContent.slice(0, 2000) : '', evidence);
+        } else if (mod.id === 'M3') {
           // Конкуренты: реальное досье вместо памяти модели
           const evidence = await gatherCompetitorEvidence(Bn);
-          userPrompt = buildM2Prompt(Bn, lang, prevContent || '', evidence);
-        } else if (mod.id === 'M3') {
+          userPrompt = buildM3Prompt(Bn, lang, prevContent || '', evidence);
+        } else if (mod.id === 'M4') {
+          // Контент-радар: конкурентов берём из готового M2 той же ниши —
+          // ищем ИХ каналы, а не статьи про них.
+          const comps = competitorsFromM2(findDep('M3'), Bn);
+          const evidence = await gatherContentRadarEvidence(Bn, comps);
+          userPrompt = buildM4Prompt(Bn, lang, prevContent || '', evidence, comps);
+        } else if (mod.id === 'M5') {
           // VoC: живые цитаты только из реального поиска.
           // Конкурентов берём из уже готового M2 ТОЙ ЖЕ ниши — по ним ищем жалобы;
           // тот же M2-результат идёт в реестр площадок (домены конкурентов, п.2 ТЗ).
-          const m2Result = findDep('M2');
+          const m2Result = findDep('M3');
           const comps = competitorsFromM2(m2Result, Bn);
           const evidence = await gatherVoCEvidence(Bn, comps, m2Result);
-          userPrompt = buildM3Prompt(Bn, lang, prevContent || '', evidence, comps);
-        } else if (mod.id === 'M7') {
+          userPrompt = buildM5Prompt(Bn, lang, prevContent || '', evidence, comps);
+        } else if (mod.id === 'M8') {
           // SEO: реальная выдача по целевым запросам вместо частотностей «из памяти»
           // + реальная частотность из Yandex Wordstat (Россия) или Google Ads (все
           // остальные рынки, REQ-025) — если ключи не настроены, пусто, модуль
@@ -3655,7 +6515,7 @@ function App() {
           const evidence = await gatherSeoEvidence(Bn);
           // Домены конкурентов из уже готового M2 этой ниши — для Google-рынков
           // по ним дополнительно собираются ключи (см. fetchKeywordFrequencyData).
-          const compDomains = competitorDomainsFromM2(findDep('M2'));
+          const compDomains = competitorDomainsFromM2(findDep('M3'));
           wordstatData = await fetchKeywordFrequencyData(Bn, confirmedSeedsRef.current[wn] || [], compDomains);
           // Что уже опубликовано — у нас и у конкурентов. Бесплатно: sitemap.xml,
           // без платных сервисов. Конкурентов берём не больше двух: карта у каждого
@@ -3666,8 +6526,12 @@ function App() {
             const m = await callSitemap(d);
             if (m) rivalMaps.push(m);
           }
-          userPrompt = buildM7Prompt(Bn, lang, prevContent || '', evidence, wordstatData,
-                                     { own: ownMap, competitors: rivalMaps });
+          // География спроса (SEO-06): те же подтверждённые владелицей фразы, но
+          // по регионам. Числа считает код и приклеивает блоком — модель их не
+          // выводит, иначе таблица регионов была бы чистой выдумкой.
+          const geoData = await fetchGeoDemand(Bn, confirmedSeedsRef.current[wn] || []);
+          userPrompt = buildM8Prompt(Bn, lang, prevContent || '', evidence, wordstatData,
+                                     { own: ownMap, competitors: rivalMaps }, geoData);
         } else {
           // Контекст берём от стадии, на которой модуль СТРОИТСЯ (requires), в рамках своей ниши,
           // и целиком: без полного M3 модуль M4 не видит цитат VoC и вынужден их выдумывать.
@@ -3677,26 +6541,33 @@ function App() {
         }
         // M1.2 (разведка ниш) — низкая температура: нужна полнота и повторяемость,
         // а не разные ниши каждый прогон. Остальные модули — дефолт модели.
-        const temp = mod.id === 'M1_2' ? 0.3 : undefined;
+        const temp = mod.id === 'M2' ? 0.3 : undefined;
         // M1.2 просят 10-20+ вертикалей, каждая — строка в BLOCK 04_1 И в 04_2 плюс
         // запись в JSON, плюс до 50 строк источников в 04_0 — общий потолок 8000 токенов
         // не вмещает это целиком, и модель тихо сжимается до "безопасных" ~8 ниш.
-        const maxTok = mod.id === 'M1_2' ? 16000 : undefined;
+        const maxTok = mod.id === 'M2' ? 16000 : undefined;
         full = await callGPT(sys, userPrompt, temp, maxTok);
         // Приклеен кодом ПОСЛЕ ответа модели — не проходит через LLM, значит не может
         // быть урезан/отфильтрован по вкусу модели (владелица просила ровно полный
         // список системы, как при ручной проверке в самой Wordstat).
-        if (mod.id === 'M7' && wordstatData) full += wordstatFullListBlock(wordstatData.frequencies, wordstatData.source, wordstatData.ideas);
+        if (mod.id === 'M8' && wordstatData) full += wordstatFullListBlock(wordstatData.frequencies, wordstatData.source, wordstatData.ideas);
         // M3 VoC гигиена (ТЗ-M3-VOC.md п.1-4): верификация цитат+дедуп+гейт по коду,
         // тем же приёмом — модель уже ответила, дальше правит только код.
-        if (mod.id === 'M3') full = await processM3Voc(full, wn);
+        if (mod.id === 'M5') full = await processM5Voc(full, wn);
+        // M2: известность конкурентов замеряется брендовым спросом, а не оценивается
+        // моделью (решение владелицы 10.09.2026) — см. processM3Fame.
+        if (mod.id === 'M3') full = await processM3Fame(full, Bn);
+        // M1.2: спрос по нишам замеряется рядом с баллом модели (решение
+        // владелицы 11.09.2026) — см. processM2Demand.
+        if (mod.id === 'M2') full = await processM2Demand(full, Bn);
       } catch(e) { full = 'Error: '+e.message; }
       clearInterval(stepTimer);
 
       const usage = lastGptUsage;
       const searchCalls = searchCallCount;
+      const keywordCalls = keywordCallCount;
       const chartData = extractChartData(full);
-      const nicheData = mod.id === 'M1_2' ? extractNicheData(full) : null;
+      const nicheData = mod.id === 'M2' ? extractNicheData(full) : null;
       const cleanedContent = cleanContent(full);
       // Модуль не сгенерировался (сеть/лимит частоты/ошибка API): в content лежит
       // «Error: ...», а не исследование. Помечаем это ЯВНО — иначе провал выглядит
@@ -3704,7 +6575,7 @@ function App() {
       // 429», а agent_package отдал контент-машине просто пустые VOICE_OF_CUSTOMER
       // и PAIN_BANK, и там это разобрали как дефект блока промпта.
       const failed = /^Error:/.test(cleanedContent.trim());
-      const result = { id:mod.id, niche:wn, content:cleanedContent, chartData, ...(failed?{failed:true, error:cleanedContent.trim()}:{}), ...(nicheData?{nicheData}:{}), ...(usage?{usage}:{}), ...(searchCalls?{searchCalls}:{}), at:new Date().toISOString() };
+      const result = { id:mod.id, niche:wn, content:cleanedContent, chartData, ...(failed?{failed:true, error:cleanedContent.trim()}:{}), ...(nicheData?{nicheData}:{}), ...(usage?{usage}:{}), ...(searchCalls?{searchCalls}:{}), ...(keywordCalls?{keywordCalls}:{}), at:new Date().toISOString() };
       col.push(result);
       const upd = { ...p, results:col, updatedAt:new Date().toISOString() };
       setProj(upd); sv(upd);
@@ -3722,7 +6593,7 @@ function App() {
       }
 
       // After M1.2 — стоп: человек выбирает нишу (только при первичной разведке, не при перегенерации ниши)
-      if (mod.id === 'M1_2' && !rerunNiche) {
+      if (mod.id === 'M2' && !rerunNiche) {
         setCurMod(null); setCurNiche(''); setCurStep(''); setCurStepIdx(0);
         const nn = (nicheData && Array.isArray(nicheData.niches) ? nicheData.niches : []).slice().sort((a,b)=>(b.score||0)-(a.score||0));
         setNicheOpts(nn);
@@ -3788,7 +6659,7 @@ function App() {
   // Повторно открыть выбор ниш (кнопка «Добавить ниши»): восстанавливаем список ниш
   // из результата M1.2 и отмечаем уже исследованные.
   const openNichePicker = React.useCallback(() => {
-    const m12 = (proj?.results||[]).find(r=>r.id==='M1_2');
+    const m12 = (proj?.results||[]).find(r=>r.id==='M2');
     const nn = (m12 && m12.nicheData && Array.isArray(m12.nicheData.niches) ? m12.nicheData.niches : []).slice().sort((a,b)=>(b.score||0)-(a.score||0));
     if (!nn.length) return;
     setNicheOpts(nn);
@@ -3904,7 +6775,13 @@ function App() {
   // приходилось открывать второй браузер, чтобы проверить, что второй
   // аккаунт не видит чужие проекты.
   const signOut = () => { clearTokens(); setUnlocked(false); };
-  const Header = () => (
+  // Внутри оболочки своя шапка не нужна: название платформы, выход и переключение
+  // языка уже стоят снаружи, и вторая такая же строка читается как «окно в окне».
+  // Признак embed приходит параметром адреса от оболочки.
+  const embedded = (() => { try {
+    return new URLSearchParams(location.search).get('embed') === '1';
+  } catch { return false; } })();
+  const Header = () => embedded ? null : (
     <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'1.5rem'}}>
       <div>
         <h2 style={{fontSize:22,fontWeight:500}}>{t.appTitle}</h2>
@@ -4260,13 +7137,13 @@ function App() {
             onClick={async ()=>{
               setGeneratingTrend(true);
               try {
-                searchCallCount = 0; // для расчёта тарифов (26.08.2026) — стоимость M8 отдельно от M1-M7
+                searchCallCount = 0; // для расчёта тарифов (26.08.2026) — стоимость тренд-монитора отдельно от модулей
                 const Bn = trendNiche ? {...brief, selectedNiche: trendNiche} : brief;
                 const evidence = await gatherTrendEvidence(Bn);
                 const prev = (trendSnapshots||[])[0];
                 const prevText = prev ? ('Дата: '+prev.snapshot_date+'\n'+JSON.stringify({trends:prev.trends, newsworthy:prev.newsworthy})) : '';
-                const m2 = (proj.results||[]).find(r=>r.id==='M2' && (r.niche||'')===trendNiche);
-                const userPrompt = buildM8Prompt(Bn, lang, prevText, m2?m2.content:'', evidence);
+                const m2 = (proj.results||[]).find(r=>r.id==='M3' && (r.niche||'')===trendNiche);
+                const userPrompt = buildTrendPrompt(Bn, lang, prevText, m2?m2.content:'', evidence);
                 const sys = buildSystem(Bn, lang);
                 const full = await callGPT(sys, userPrompt);
                 const chartData = extractChartData(full) || {};
@@ -4352,7 +7229,7 @@ function App() {
               + Add modules ↗
             </button>
           )}
-          {!isRun && modDone('M1_2') && (
+          {!isRun && modDone('M2') && (
             <button onClick={openNichePicker} style={{fontSize:12,padding:'7px 12px',color:'#2E4F0C',borderColor:'#A8CE6E',background:'#EFF6E4',fontWeight:500}}
               title="Добавить ещё ниши к исследованию — прогонятся только новые, готовые не тронутся">
               ＋ Добавить ниши
@@ -4364,7 +7241,7 @@ function App() {
               📊 Трекер
             </button>
           )}
-          {!isRun && modDone('M2') && (
+          {!isRun && modDone('M3') && (
             <button onClick={()=>{setTrendNiche(workNiches[0]||''); setSc('trends');}} style={{fontSize:12,padding:'7px 12px',color:'#0C447C',borderColor:'#85B7EB',background:'#E6F1FB',fontWeight:500}}
               title="M8: что изменилось в нише за период">
               🔭 Тренды
@@ -4472,7 +7349,7 @@ function App() {
                         // run() внутри (rerunNiche falsy → работает по ВСЕМ выбранным нишам сразу)
                         // тихо стирал и пересчитывал уже готовые M2–M7 всех выбранных ниш —
                         // ↺ на карте ниш неожиданно жёг лимит на весь пройденный прогон.
-                        // offChain-модули (M5) в автоцепочку не попадают — см. флаг в MODULES.
+                        // offChain-модули (офферы, M7) в автоцепочку не попадают — см. флаг в MODULES.
                         // Исключение: сам модуль, на котором нажали ↺, запускается всегда,
                         // иначе кнопка на его карточке молча ничего бы не делала.
                         const order = MODULES.filter(x=>!x.disabled && (!x.offChain || x.id===r.id)).map(x=>x.id);
@@ -4482,7 +7359,7 @@ function App() {
                         // Явная перегенерация M7 = повод пересобрать и поисковые фразы:
                         // сбрасываем подтверждённые сиды, чтобы панель подтверждения
                         // открылась заново и владелица могла их поправить.
-                        if (chain.includes('M7')) delete confirmedSeedsRef.current[rn];
+                        if (chain.includes('M8')) delete confirmedSeedsRef.current[rn];
                         // чистим цепочку только для ЭТОЙ ниши (у по-нишевых), глобальные — как есть
                         const upd={...proj,results:(proj.results||[]).filter(x=> !(chain.includes(x.id) && (isPerNiche(x.id) ? (x.niche||'')===rn : true))),updatedAt:new Date().toISOString()};
                         setProj(upd);sv(upd);
@@ -4523,12 +7400,12 @@ function App() {
                     {r.id === 'M1' && r.chartData && (
                       <MarketPositionBlock chartData={r.chartData} brief={brief} lang={lang}/>
                     )}
-                    <MD text={r.content}/>
+                    <ResearchView content={r.content} ourName={(proj&&proj.brief&&proj.brief.name)||''}/>
                   </>)}
                 </div>
               )}
             </div>
-            {r.id === 'M1_2' && !isRun && showNiches && nicheOpts.length > 0 && (
+            {r.id === 'M2' && !isRun && showNiches && nicheOpts.length > 0 && (
               <div style={{marginBottom:16}}>
                 <div className="card">
                   <h3 style={{fontSize:16,fontWeight:500,marginBottom:6}}>{t.nichePickTitle}</h3>
@@ -4730,7 +7607,7 @@ function App() {
             <button onClick={dlJson} style={{borderColor:'#EF9F27',color:'#633806'}}>{t.dlAgent}</button>
           </div>
           <p style={{fontSize:11,color:'#888',textAlign:'center',marginTop:8}}>{t.autoSaved}</p>
-          {(()=>{const tot=(proj.results||[]).reduce((s,r)=>s+(r.usage?r.usage.total:0),0);return tot>0?(<p style={{fontSize:11,color:'#888',textAlign:'center',marginTop:2}}>Токенов OpenAI за прогон: ≈{(tot/1000).toFixed(1)}k <span style={{color:'#bbb'}}>(сумма по модулям с замером; поиск Tavily считается отдельно)</span></p>):null;})()}
+          {(()=>{const rs=proj.results||[];const tot=rs.reduce((s,r)=>s+(r.usage?r.usage.total:0),0);const sc=rs.reduce((s,r)=>s+(r.searchCalls||0),0);const kc=rs.reduce((s,r)=>s+(r.keywordCalls||0),0);return (tot>0||sc||kc)?(<p style={{fontSize:11,color:'#888',textAlign:'center',marginTop:2}}>За прогон: ≈{(tot/1000).toFixed(1)}k токенов OpenAI · поиск Tavily {sc} {plural(sc,'запрос','запроса','запросов')} · частотность {kc} {plural(kc,'запрос','запроса','запросов')} <span style={{color:'#bbb'}}>(три отдельные платные статьи, считаются каждая своим счётчиком)</span></p>):null;})()}
         </div>
       )}
     </div>

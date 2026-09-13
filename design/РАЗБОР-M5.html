@@ -1,0 +1,1525 @@
+<title>Переоформление M5</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap">
+<style>
+/* ── Референс: ZIXO (Behance, скрины владелицы 08.09.2026), второй заход ─────
+   Первый заход взял общую идею (туман, монохром, веер карт) слишком грубо —
+   владелица: «мало дизайнерских решений». Пересмотрела все восемь скринов
+   заново и выписала конкретные приёмы, которых не было:
+   1. Навигация — не список, а СЕТКА иконок-плиток 2×N для основных разделов,
+      обычный список только для второстепенных пунктов (скрин 1).
+   2. Веер карт — ПЯТЬ карт, не три, дальние размыты (blur), это и даёт
+      ощущение глубины, а не только поворот (скрин 1, 4).
+   3. Волнистая лента — их «Monthly Overview» рисует две переплетённые
+      синусоиды вместо обычной линии; здесь — декоративный слой за геройной
+      зоной, не выдаю за данные (скрин 1).
+   4. Дуга-индикатор (полукруг) вместо полного пончика для одной ключевой
+      величины плюс два числа под ней (скрин 1, «Weekly Spending»).
+   5. Точечный спарклайн (dot-matrix) как альтернатива линии — используют для
+      «Card Usage» (скрин 4).
+   6. Тёмная плашка-подсказка, пришпиленная к пиковой точке графика пунктирной
+      линией (скрин 1, «+8.2%»).
+   7. Круглые цветные иконки-аватары в строках таблицы вместо текстовых меток
+      (скрин 1, Starbucks/Netflix).
+   8. Живая подпись под героем и точки-пагинация (скрин 4, «Choose the color
+      of your card!»).
+   9. У карточек — мягкий внутренний блик сверху (световой блик по границе),
+      не только внешняя тень.
+
+   СТАТУСЫ (идём/под вопросом/не идём, рост/падение) владелица попросила
+   09.09.2026 брать ИЗ ПАЛИТРЫ, не зелёный/красный со стороны. У каждой из
+   четырёх палитр — своя тройка, выведенная из её же трёх цветов (тёмный →
+   «идём», тёплый → «под вопросом», самый глубокий/тревожный → «не идём»),
+   продавлена по контрасту 4.5 именно под фон карточки этой страницы (он
+   светлее прежнего макета, старые значения не проходили) и разведена по
+   различимости при дальтонизме (порог 8.0 в OKLab), как и везде в проекте.
+
+   Шрифт «Roobert» кириллицы не имеет — Montserrat, проверен на три языка. */
+/* ── Второй дизайн-бриф того же дня ──────────────────────────────────────────
+   Владелица прислала разбор стиля ZIXO от ChatGPT и попросила «переодеть»
+   уже собранную панель, не строить отдельный сайт. Ключевая правка брифа —
+   фон должен быть тёплой слоновой костью, а не холодным серым туманом, и
+   акцент — тонким светом (линия, точка, свечение), а не плотной заливкой.
+   Из-за смены фона ВСЕ производные цвета текста (приглушённый, безопасный
+   акцентный, три статуса) пересчитаны заново — они были продавлены именно
+   под старый холодный фон #FCFCFB и на тёплом #FBF9F2 часть не проходила
+   (приглушённый текст держал 2.95 при норме 4.5). */
+:root{
+  /* Фон страницы заметно ГЛУБЖЕ карточек — это и есть причина, по которой в
+     референсе стекло видно, а у меня раньше нет. Замерила по скриншоту ZIXO:
+     фон там ~#C9C7C4, карта ~#F2F0EC, отношение светлот 1.48. У меня было
+     1.07 — белое стекло на почти белом фоне просто исчезало. Новый фон даёт
+     1.42, практически как в оригинале.
+     Правка того же дня: первый вариант фона был «слишком коричневым» —
+     мера теплоты (насколько красный канал превышает синий) была 28. Сейчас 10:
+     жемчужно-серый с лёгкой тёплой ноткой, не бежевый.
+     Вторая правка: «слишком серый, надо светлее» — фон поднят с #D6D4CE до
+     #DEDBD4. Контраст к стеклу упал с 1.42 до 1.33 (в референсе 1.48) — это
+     нижняя граница, при которой карточки ещё читаются как стекло; светлее
+     уже нельзя, они начнут растворяться.
+     Следствие: боковое меню больше не может лежать прямо на фоне (текст на
+     нём переставал проходить контраст) — в референсе оно и есть отдельная
+     светлая панель, сделала так же. */
+  --mist-1:#F6F4EE; --mist-2:#D2CFCA; --card:#FBF9F2cc; --card-solid:#FBF9F2;
+  /* Подложка под графиками и таблицами — СВЕТЛЕЕ обычной карточки.
+     Она лежит прямо на фотографии фона, а у той яркость доходит до 0.95:
+     слоновая кость на светлых участках сливалась с фоном полностью
+     (отношение 1.00 — панели просто не было видно). --raise поднимает её
+     и заодно добавляет тексту 0.2 контраста. Тон оставлен тёплым (R−B = 5),
+     чтобы панель не выпадала из слоновой кости в холодную белизну. */
+  --raise:#FDFCF8;
+  --bloom:rgba(255,255,255,.95); --tint-a:rgba(230,228,215,.55); --tint-b:rgba(210,207,202,.5);
+  /* ПРАВКА 10.09: «текст побледновато читается». Померила — вторичные
+     чернила были светлее третичных (5.27 против 5.88), то есть основной
+     текст абзацев читался ХУЖЕ мелких подписей. Выровнено и углублено. */
+  --ink:#171512; --ink-2:#5B5852; --ink-3:#63615B;
+  --line:rgba(23,21,18,.09); --line-2:rgba(23,21,18,.05);
+  --hi:rgba(255,255,255,.55);
+  /* Итоговые значения выбранной палитры. Копируя стили из макета, я взяла их
+     из более раннего состояния — там ещё стояла «Тиффани», а фирменный --mid
+     вообще задавался скриптом и сюда не попал. Из-за этого всё бирюзовое
+     рисовалось пустотой: полосы SWOT, точки карты, ступень «готовы купить»,
+     третий блок рынка. Здесь палитра одна, поэтому значения заданы прямо. */
+  --mid:#06BDBD;              /* фирменный — заливкой */
+  --acc-ink:#06BDBD;          /* он же в тексте */
+  --acc-strong:#06BDBD;       /* идём */
+  --acc-mid:#4D66F7;          /* под вопросом */
+  --acc-quiet:#6E6C66;        /* не идём */
+  --acc-strong-ink:#06BDBD; --acc-mid-ink:#4A62EE; --acc-quiet-ink:#5E5C57;
+  /* Четыре цвета SWOT. Голубой пришлось увести вглубь, а фиолетовый — сделать
+     настоящим фиолетовым: замерено, что светло-голубой и наша бирюза при
+     дальтонизме сливаются в один цвет (ΔE 0.0 — то есть неотличимы вовсе).
+     На этих значениях худшая пара держит 10.9 при норме 8. */
+  /* Четвёрка SWOT — строго из палитры, без притемнённых производных:
+     фирменная бирюза, голубой и фиолетовый из тех же вспомогательных, графит.
+     Цветом здесь работает только заливка (плашка иконки, рамка, точки списка);
+     буквами эти цвета не ставим — на слоновой кости они не добирают контраста,
+     а подкрашивать их «почти тем же» нельзя, получается чужой цвет. */
+  --sw-green:#06BDBD; --sw-blue:#4DD1F7; --sw-violet:#4D66F7; --sw-grey:#6E6C66;
+  --sans:Montserrat,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  --serif:'Source Serif 4',Georgia,'Times New Roman',serif;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --mist-1:#141210; --mist-2:#0E0C0A; --card:#252119cc; --card-solid:#252119;
+  --raise:#2C2820;
+    --raise:#2C2820;
+    --ink:#F4F1E8; --ink-2:#A6A29A; --ink-3:#A8A49D;
+    --line:rgba(255,255,255,.09); --line-2:rgba(255,255,255,.05);
+    --hi:rgba(255,255,255,.06);
+    --mid:#06BDBD; --acc-ink:#06BDBD;
+    --acc-strong:#06BDBD; --acc-mid:#8A9BFF; --acc-quiet:#9A978F;
+    --acc-strong-ink:#06BDBD; --acc-mid-ink:#8A9BFF; --acc-quiet-ink:#9A978F;
+    --sw-green:#06BDBD; --sw-blue:#4DD1F7; --sw-violet:#8A9BFF; --sw-grey:#9A978F;
+  }
+}
+:root[data-theme="dark"]{
+  --mist-1:#141210; --mist-2:#0E0C0A; --card:#252119cc; --card-solid:#252119;
+  --ink:#F4F1E8; --ink-2:#A6A29A; --ink-3:#A8A49D;
+  --line:rgba(255,255,255,.09); --line-2:rgba(255,255,255,.05);
+  --hi:rgba(255,255,255,.06);
+  --mid:#06BDBD; --acc-ink:#06BDBD;
+  --acc-strong:#06BDBD; --acc-mid:#8A9BFF; --acc-quiet:#9A978F;
+  --acc-strong-ink:#06BDBD; --acc-mid-ink:#8A9BFF; --acc-quiet-ink:#9A978F;
+  --sw-green:#06BDBD; --sw-blue:#4DD1F7; --sw-violet:#8A9BFF; --sw-grey:#9A978F;
+}
+
+/* ── Фон ─────────────────────────────────────────────────────────────────────
+   Решение владелицы 09.09.2026: «Жемчужный светлый оставляем».
+   Выбран рисунок «Серебра» (мягкие световые лучи), перекрашенный в жемчуг.
+   Переключатель фонов удалён — выбор сделан.
+   Перекрасила не подбором фильтра, а по-честному: взяла ЯРКОСТЬ исходника —
+   в ней и живёт весь световой рисунок — и раскрасила её заново тёплой
+   жемчужной гаммой.
+   Понадобился отдельный шаг: вся картинка лежала в узком диапазоне яркости
+   187–248, и раскраска «в лоб» вышла почти белой, стекло карточек на ней
+   пропадало. Растянула этот диапазон на полный 0–255, и глубина вернулась:
+   от #F9F7F1 в свету до #CAC5BA в тени, контраст к карточке 1.03–1.65 при
+   1.48 в референсе ZIXO.
+   Фирменный цвет вернулся к точному цвету логотипа: тёплый фон и холодная
+   бирюза лежат на противоположных сторонах круга, и это не спор, а контраст
+   температур — то, что и делает акцент заметным. */
+:root{ --bgimg:url("data:image/jpeg;base64,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qpFjM1kk0MzQzNDM1IixQAEoiwASkiwSiKMtQQAWKIESiLAAACLAAAAFSiKIAACLAAESiAAiiAiiAiiAiwSiCkogIsAAPbFJRFgAIAABAACWAAAAAEUSgAKRRKAAAACy1q4ox1ic50i4upDWbQyahEiFiBIWBCxlRm6iwABKRRlYgACUQEUQCUsCARYAAARRFEURRAAoEWAAEURYAAkWACUQCURRJRAASURZSUQEWAHtiwAFAiwiiKIIAiwAAAIKgqCpQABYKAtMtKy2MrCpDVwNsjbGkqKRIUVKMtDE6w5TpI5tQksIIEKhagoRLTLRcNQgEsQBKIACASlgQACLAAoiiAASiAABUoiwAASiLAESiASiAASiAiwSiASykogAPapZFEAACgRRJqEUQQlEUQCUSgKRRKpFUshpkVlFQAFEtCSFSlJVuaWKREbZtSaGbJGrgbmQlGJ0hzbhhUsABUqEtVABJpGZsYahlRARYAqUkURRFEURRAAQACURYAAAsURYAARYAiURYARYAARYJRJRFElElVAe4NRKIsiLAAAFAAgAIogAAgAAAAACUCCpQQsgWUFEQWDRC51C3GhNZKyLLTDWSEKgqQsCKjKiWFAAqCoSwUAAQAQQBAASwABYEAiwAAASiLAAFAiwAAiwABIsAEogAIsEogEsEogr2xqAAJRFkRRFgACgRRFglEURRFgEAAQABRKhYgAAKLkWIVBoE1kFydM52TNGahu86azqnObyQEAERYARRFigAAJYVAIVCAJYAAEAKBAgAEURYAAAARRFgAlLFgAlEWACUkWACUQCUQCWCWAHtDcAAAAAiiLIiiKIFAAiwqBLTKiKIqIqosBIAgAAAAIAg1c6IQqCag1nUIgAWDd50ueg5TeSCIKCAoIAAixQEoijKkgIogAIogAUCKSAAAASiKIAAACLABKWKIBKIogSKIBKIogIsIsAPYGpUoFAAAAAAJRFGWkZahFEURRFEUslEBFgERYJRFEAAgJYAXWaJYCFgXfOibwSwWAA1kdZjRM9Ycp0wQQFAAABAEUsABJoZUSUkURYARRAAAqURSRYAAAJRFEWACURRFgCxRFglEWAJFEAlEWCUQHrWNSgWCpQKAAAAAAAAAIioACFAILASwASyAEoiwSiAiiWUAQAANM6MNZAAAAG+dOsxsxO2TlNwyAAAAAAISiL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QlSTTu546w/4tg/yxx//AP8A/DDDDDDDDDDDD3//AP8A8sP/APDfD7D/AI3YQXYVfffffQz/AP8A/gAAAAEM88884EYyEqr/AAaZei7VRou2306wjrml98888wwwwwwwwwwwwww//wD/APDD/jD/AB6w/wAP0F2lX333333/AP8A8gAAADPPPMAAAAFPHKHhlyVVTThVS4j2yp5wqgnstrhnvsssvvjj3jjywww0/wD/APDD/wA0/wAO8P8ADpB9Bd999999AAAAAAAE8wAAEc88s8+u0oaL/VZ9KJJlB6vXHnniiS+W22uCCe6GKS62++uLDDD3/wD6w/7w/wAv+v8AL9B1p9999999AAAAAAM84AAc8888+8+q2iGGTpp9x+NpJTqTbv3Tqy+KW++uOy//AKkohgkvvrgww/8A+8Nf8vete9etcFWlX333330AAAATzzgATzz77Lb776pbxgKbM1FWavWVPsoN9tutc98988IIIIJJb8rLYpL64sPPf89PP8vcPeudO1G1H333330AAQzzjABzz77oII4oJKJL5zjJY/V3sRmG1M5asvteM8s9PPPPP/8APOf/APzktjktriw0/wC8NP8ATvL3LvxtRp199999A088gAEc8++qCe++++OCCW+8MGGnBzkLJlnT6m2T3DrTDPzzzzPPPzz3/wD6gkvjktvjy8/70/29y9w707dSdffffUPPKABPPPvognvuggguvrgsviBDMjQ77s4eVU88wrg5w96w/wDvMc/P88NPf+8IJLY4rLK4PO8vevMedudOXknX330BTwBDzz7qIZ76III5oL76oK7qgygYuvwofnklcYr5KZbuNOPc87K9v+8sPf8A/vCSy+OC2+PTvLzP3PzPvTtZN199MY0IE88+qCW+qCCCyiGayiO++OIO3QmQkCeBt5rvmKCOS/vPTPzvavD3/LDzzzzvKC2uKy2OD3PTvbzbvD/1ZJ19/vMAk4w+C2+qCOOOKS2uCCcQcEgaTl/g+8g7hFrHOujbCy+XvTvDvSvDD3vDz/LT/vKS2OKS2LTvT/LTvnbvVZJBrz//AAAMFILmsjnrilqmBALqvponivNNDhKKokp8Yeqtm6cZb0x+y9wk9/z387w/z09/7wstrgti09y9zy522422fTXR9/7wAAPDOPPPvvgghgoiisiqurththksjpxTTfY+7vvij3vuhtn4361/wv69/wAsNPf84Lb4ra4Pe9P8Pds9dM1HX10/Oc8gDCRzzzT7qL65KZaMbo4c/a4N5OUMJGn0OMfPb74pY7a/NfsM+oL+8vPf88sPPc9La5LYpPctO9s9dc8EFHHW20fuMgADQzjzS5jS6r7776Os0q+/Hu3kEMN0ukcEMMPa5qL8/O8vO84LP88sNPO888Pc9rI5LIvO9vM+ec/MsEUHH33103uc8sPPJgzSqZ7L6t9X2NcV08W1321McV8EEEEMPK45Lp/Oc/P+8pLPf88tPPc9vOc7IZ6Y/P8AfnbPnTjbVNJx99995xPDzOwMYU8W+amTJx5/dBBL199pBpijZdNNNBBDTmO2jLTrDDz/ALzgu9/zz2//AM//AL3/AN84534+z6HMio88TUcaUcdXbw5yFKFPPLjspuyySdRTWeYQQQQWaahwSw885zQ9rsjow0zz489/zwgsst9/94y9707y0306v8pHBMD8xwQQQQSQ04bVxMBGMMMOKrqm50bZfaeaddbfVbaZlvRTTQwyQ8zsvtz28/zy088889y49mtrk/y9707888rmsmBGJy5zwwwQwww85a5xCMMJOLjpor9eXdbXUa08cTScZZnoRccT4Rw8jsst/wA89PPPPe8sP85qYrI7M9PdOc8Y47pboyhhAfPc8sMMMMMHX13vu9Czj4oqcX0lHWmUPl/H200mHcM/EXV0csPY4ZbJ7/oLsvvOc8vM7bZqZOcPcvN77657ob6RwQyM+Kc8MMEFH33311soiCxZIvHm0EFWvesPPP30120lW8+llG+ctNPPP+W8OKKs8Net/crarK7e9PP7oMNPMa5KrKxgRjI8M8MMFHH333322NjhobeVG0EG1OMMMMNPONMMNNEHUlVU1GWEkH+9PMc99Kc/P9uevZ7Zvc/7qMN/+8/IbK7qQygTAd/K88HX3320nEddxIq+Vn2lU0MMGGEHEMOEEEEMfrJK47+8sPPPPc889vM/O9uds9qZqY7qMMP/AP8A+9z2xionsjvJGNyk6w0ffffbW7214Er9SdQdeSwQQQQQQQQww3vohvvvuv8A/v8Af/vvPPLzP7HTnfnfzaiODDDf/wD+wQUd7w/itmtrGDML85wwffffeSSk031p6SdSQfWyQQQQwwww3voggsuttqigsktotgjjrp24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") }
+*{box-sizing:border-box}
+html{-webkit-font-smoothing:antialiased}
+body{margin:0;color:var(--ink);font-family:var(--sans);font-size:14.5px;
+  line-height:1.55;font-variant-numeric:tabular-nums;
+  background:
+    radial-gradient(900px 620px at 46% 60%, color-mix(in srgb, var(--mid) 7%, transparent), transparent 62%),
+    var(--bgimg) center/cover no-repeat fixed,
+    linear-gradient(168deg, var(--mist-1), var(--mist-2))}
+h1,h2,h3{margin:0;font-weight:600;letter-spacing:-.02em;text-wrap:balance}
+svg{display:block}
+
+.page{max-width:1180px;margin:0 auto;padding:30px 24px 60px}
+.lede{max-width:66ch;margin-bottom:24px}
+.lede h1{font-size:29px;margin-bottom:10px}
+/* Вступление лежит ПРЯМО НА ФОТОГРАФИИ фона, а у неё яркость гуляет от 0.58
+   до 0.95. На тёмных участках вторичные чернила давали 3.35 при норме 4.5 —
+   вот это и читалось бледным. Текст поверх фона идёт основными чернилами:
+   на самом тёмном участке 11.0, на самом светлом ещё выше. Правило общее:
+   на фон-фотографию вторичный цвет не кладём, только основной. */
+.lede p{margin:0 0 10px;color:var(--ink);font-size:15px;line-height:1.65}
+.lede b{color:var(--ink)}
+
+/* ПРАВКА 10.09, владелица: «таблички бледно читаются на этом фоне».
+   Замерила: панель была полупрозрачной (80%), и фон просвечивал сквозь неё —
+   отделение панели от фона падало до 1.25 при задуманных 1.33 (в референсе
+   ZIXO 1.48). То есть стекло съедало ровно тот запас светлоты, который был
+   заложен, когда мы подбирали фон.
+   Панель с данными теперь СПЛОШНАЯ. Это то же правило, что с перламутром:
+   стекло и переливы — материал объектов, а под данными поверхность должна
+   быть ровной и не спорить с ними. Размытие убрано — под непрозрачной
+   заливкой оно всё равно ничего не делало, только грузило отрисовку. */
+.viz{background:var(--raise);
+  border:1px solid var(--line);border-radius:22px;padding:20px 22px;margin-bottom:12px;
+  box-shadow:inset 0 1px 0 var(--hi), 0 14px 30px -24px rgba(45,36,22,.3)}
+.vh{display:flex;align-items:baseline;justify-content:space-between;gap:12px;
+  flex-wrap:wrap;margin-bottom:6px}
+.vh h2{font-size:19px}
+.vh .src{font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;
+  color:var(--acc-ink)}
+.vn{margin:0 0 14px;font-size:12.5px;color:var(--ink-3);max-width:70ch;line-height:1.55}
+.two{display:grid;gap:12px;grid-template-columns:1fr 1fr}
+.axis{fill:var(--ink-3);font-size:10.5px;font-family:var(--sans)}
+.lbl{fill:var(--ink-2);font-size:12px;font-family:var(--sans)}
+.val{fill:var(--ink);font-size:11.5px;font-weight:700;font-family:var(--sans)}
+.gridln{stroke:var(--line-2);stroke-width:1}
+
+/* ── SWOT: четыре поля, различаются не цветом, а положением и весом ── */
+.swot{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.sw{border:1px solid var(--line);border-radius:16px;padding:16px 18px;
+  background:color-mix(in srgb, var(--ink) 2%, transparent)}
+.sw h3{font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;
+  color:var(--ink-3);margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.sw h3 i{width:16px;height:3px;border-radius:2px;display:block}
+.sw ul{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:7px}
+.sw li{font-size:13px;color:var(--ink-2);padding-left:14px;position:relative;line-height:1.5}
+.sw li::before{content:"";position:absolute;left:0;top:8px;width:5px;height:5px;
+  border-radius:50%;background:var(--ink-3)}
+
+/* ── Половозрастная пирамида ──────────────────────────────────────────────
+   Из присланного дашборда. Ценна тем, что показывает возраст и пол ОДНОЙ
+   картинкой: у нас это были две отдельные шкалы, и связь «кто именно в этом
+   возрасте» терялась. Столбцы расходятся от общей оси возрастов, поэтому
+   перекос между полами виден по форме, без чтения чисел. */
+/* ЭТАЛОН МЕРЫ — блок «Приоритет ниш», выбран владелицей 10.09.
+   Оттуда сняты три величины, и они теперь действуют на всей странице:
+   полоса 14px, между строками 13px, и под каждой полосой светлая ДОРОЖКА
+   во всю ширину. Дорожка тут не украшение — она показывает шкалу: без неё
+   короткая полоса висит в пустоте и не с чем сравнивать. */
+.pyr{display:flex;flex-direction:column;gap:13px}
+.pyr-head{display:grid;grid-template-columns:1fr 78px 1fr;align-items:center;
+  margin-bottom:14px;padding-bottom:11px;border-bottom:1px solid var(--line);gap:8px}
+/* ПРАВКА: значки стояли на ярких заливках — такого на странице больше нигде
+   нет, и они лезли вперёд содержания. Плашка теперь нейтральная, как у всех
+   остальных значков. Цвет ничего не теряет: сторону и так называют положение,
+   фигура и подпись, а сам цвет живёт в полосах, где он и кодирует пол.
+   И рисунок сменён с условного знака (♂/♀) на ФИГУРУ человека — значок
+   уместен там, где им нарисован образ, а не подставлен символ. */
+.pyr-head .t{font-size:16px;font-weight:700;letter-spacing:-.02em;color:var(--ink);
+  display:flex;align-items:center;gap:9px}
+.pyr-head .t.r{justify-content:flex-end}
+.pyr-head .t .sx{width:26px;height:26px;border-radius:8px;display:flex;
+  align-items:center;justify-content:center;flex:0 0 auto}
+.pyr-head .t .sx{background:var(--line-2)}
+.pyr-head .t .sx svg{width:17px;height:17px;fill:none;stroke:var(--ink-2);
+  stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;display:block}
+.pyr-head .c{text-align:center;font-size:10px;font-weight:700;letter-spacing:.07em;
+  text-transform:uppercase;color:var(--ink-3)}
+.pyrow{display:grid;grid-template-columns:1fr 78px 1fr;align-items:center;gap:8px}
+.pyrow .s{display:flex;align-items:center}
+.pyrow .s.l{justify-content:flex-end}
+/* ПРАВКА: столбцы были толстыми плашками с числом ВНУТРИ — на нашей странице
+   так не сделано больше нигде, оттого блок и выбивался. Приведено к тому же
+   строю, что «боли по частоте» и «достаток»: тонкая полоса, число снаружи
+   чернилами. Цвет остался только заливкой полосы — он тут кодирует пол. */
+.pyrow .rail{flex:1;height:14px;background:var(--line-2);display:flex}
+.pyrow .s.l .rail{justify-content:flex-end}
+.pyrow .bar{height:14px;flex:0 0 auto;min-width:3px}
+.pyrow .l .bar{background:var(--mid)}
+.pyrow .r .bar{background:var(--sw-violet)}
+.pyrow .s .v{font-size:11.5px;font-weight:700;color:var(--ink);
+  font-variant-numeric:tabular-nums;min-width:38px}
+.pyrow .s.l .v{text-align:right;margin-right:9px}
+.pyrow .s.r .v{text-align:left;margin-left:9px}
+.pyrow .age{text-align:center;font-size:11.5px;color:var(--ink-2);font-weight:600;
+  font-variant-numeric:tabular-nums}
+
+/* ── Тепловая карта активности: дни × часы ───────────────────────────────── */
+.hm{display:grid;grid-template-columns:38px repeat(8,1fr);gap:3px;
+  font-size:10.5px;font-variant-numeric:tabular-nums}
+.hm .hh{color:var(--ink-3);text-align:center;padding-bottom:3px}
+.hm .hl{color:var(--ink-3);display:flex;align-items:center;font-weight:600}
+.hm .hc{height:26px;border-radius:4px}
+.hm .hc.peak{box-shadow:inset 0 0 0 2px var(--ink)}
+.hmleg{display:flex;align-items:center;gap:7px;margin-top:12px;font-size:11px;
+  color:var(--ink-3)}
+.hmleg .sc{display:flex;gap:2px}
+.hmleg .sc i{width:22px;height:9px;border-radius:2px;display:block}
+
+/* ── География спроса ─────────────────────────────────────────────────────
+   Две величины в одной строке, но НЕ на одной шкале — это разные вопросы.
+   Слева объём: где людей больше. Справа плотность: где спрос выше, чем
+   положено по населению. Второе и решает бюджет — в Москве запросов больше
+   всегда, просто потому что там больше людей, а дешёвый лид даёт регион,
+   который перевешивает свой размер.
+   Плотность — расходящаяся шкала: у неё есть осмысленный ноль (единица,
+   «ровно по населению»), поэтому два тона и нейтральная середина, а не
+   светлота одного тона. */
+.geo{display:flex;flex-direction:column;gap:13px}
+.geohead,.grow{display:grid;grid-template-columns:196px 1fr 150px 52px;
+  align-items:center;gap:14px}
+.geohead{font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;
+  color:var(--ink-3);padding-bottom:8px;margin-bottom:3px;border-bottom:1px solid var(--line)}
+.geohead .r{text-align:right}
+.grow{padding:0}
+.grow .nm{font-size:12.5px;color:var(--ink-2);line-height:1.3}
+.grow.base .nm{font-weight:700;color:var(--ink)}
+.gvol{display:flex;align-items:center;gap:9px}
+.gvol .rail{flex:1;height:14px;background:var(--line-2);display:flex}
+.gvol .b{height:14px;background:var(--mid);flex:0 0 auto}
+.grow.base .gvol .b{background:color-mix(in srgb, var(--mid) 38%, var(--line-2))}
+.gvol .v{font-size:12px;font-weight:700;font-variant-numeric:tabular-nums}
+/* Расходящаяся полоса: середина — «ровно по населению» */
+.gden{position:relative;height:14px;background:var(--line-2)}
+.gden .mid0{position:absolute;left:50%;top:0;bottom:0;width:1px;
+  background:color-mix(in srgb, var(--ink) 28%, transparent)}
+.gden .d{position:absolute;top:0;height:14px}
+.gden .d.up{left:50%;background:var(--mid)}
+.gden .d.dn{right:50%;background:var(--sw-violet)}
+.gx{font-size:12px;font-weight:700;text-align:right;font-variant-numeric:tabular-nums}
+.gvol .v{min-width:52px;text-align:right}
+.gx.up{color:var(--acc-ink)} .gx.dn{color:var(--acc-mid-ink)} .gx.eq{color:var(--ink-3)}
+.geoleg{display:flex;gap:18px;flex-wrap:wrap;margin-top:14px;font-size:11.5px;
+  color:var(--ink-3)}
+.geoleg span{display:flex;align-items:center;gap:7px}
+.geoleg i{width:11px;height:9px;border-radius:2px;display:block}
+@media (max-width:760px){
+  .geohead{display:none}
+  .grow{grid-template-columns:1fr 52px;grid-template-areas:'nm x' 'vol vol' 'den den';gap:5px}
+  .grow .nm{grid-area:nm} .gvol{grid-area:vol} .gden{grid-area:den} .gx{grid-area:x}
+}
+
+/* ── Портрет B2B, вариант 2: то, что меряется, — измерить ──────────────────
+   Владелица: «можно ещё вариант, чтобы с графиками, а не просто текстом».
+   Разбор показал: из семи строк портрета четыре по своей природе ЧИСЛОВЫЕ —
+   сколько человек участвует в решении, сколько длится сделка, какой бюджет
+   без согласования, на каком уровне осведомлённости сегмент. Текстом они
+   выглядят как мнение, а шкалой — как замер.
+   Три остальные (боль, тормоз, свои слова) остаются словами: их числом не
+   выразить, и попытка была бы враньём. Поэтому вариант 2 — не «то же самое
+   с картинками», а разделение по природе данных. */
+.bmet{display:grid;grid-template-columns:repeat(4,1fr);gap:20px;padding:20px 22px;
+  border-bottom:1px solid var(--line)}
+.bmet h4{font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;
+  color:var(--ink-3);margin:0 0 11px}
+.bmet .big{font-size:19px;font-weight:700;letter-spacing:-.02em;line-height:1.15;
+  margin-bottom:3px}
+.bmet .sm{font-size:11.5px;color:var(--ink-3);line-height:1.45}
+/* фигурки: закрашенные = участвуют в решении */
+.ppl{display:flex;gap:5px;margin-bottom:9px}
+.ppl svg{width:17px;height:19px;display:block}
+/* дорожка со значением: диапазон заливкой, наша отметка штрихом */
+.trk{position:relative;height:14px;background:var(--line-2);margin:6px 0 8px}
+.trk .rg{position:absolute;top:0;bottom:0;background:var(--mid)}
+.trk .mk{position:absolute;top:-4px;bottom:-4px;width:2px;background:var(--ink)}
+.trk-ax{display:flex;justify-content:space-between;font-size:10px;color:var(--ink-3)}
+.mklbl{font-size:11px;color:var(--ink-2);margin-top:7px}
+.mklbl b{color:var(--ink)}
+/* пять ступеней осведомлённости */
+.aw5{display:flex;align-items:flex-end;gap:4px;height:46px;margin-bottom:8px}
+.aw5 div{flex:1;background:var(--mid);position:relative}
+.aw5 div span{position:absolute;left:-2px;right:-2px;bottom:-16px;text-align:center;
+  font-size:9px;color:var(--ink-3);white-space:nowrap}
+.bpain{padding:20px 22px;border-bottom:1px solid var(--line)}
+.bpain h4{font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;
+  color:var(--ink-3);margin:0 0 12px}
+.bpain .dbar{grid-template-columns:1fr 190px 58px}
+.chnside .dbar{grid-template-columns:1fr 84px 34px}
+.bpain .dbar .t{color:var(--ink-2)}
+.bpain .dbar .n{font-variant-numeric:tabular-nums}
+@media (max-width:820px){ .bmet{grid-template-columns:1fr 1fr} }
+
+/* ── Голос клиента: цитата как объект, а не ячейка таблицы ────────────────
+   У конкурента это таблица на тридцать строк, и её никто не дочитывает.
+   Цитата работает иначе: она должна ПРОЗВУЧАТЬ. Поэтому карточка, дословный
+   текст засечным шрифтом — единственное место на странице, где он уместен:
+   так видно, что это чужая речь, а не наш пересказ. Под цитатой — откуда
+   она и сколько раз эта боль встретилась во всём материале.
+
+   ПРАВКА: в макете платформы этот блок уже был сделан КАРУСЕЛЬЮ, а я собрала
+   его заново решёткой. Возвращено к макету — прокрутка вбок со стрелками и
+   привязкой к плашке. Так и правильнее по существу: цитат в отчёте бывает
+   сорок, решётка на сорок карточек занимает экран целиком и обесценивает
+   каждую; лента показывает несколько и не мешает читать дальше. */
+.vochead{display:flex;align-items:center;justify-content:space-between;gap:14px;
+  margin-bottom:12px}
+.vocnav{display:flex;gap:8px}
+/* Стрелки без кружков: кружок — кнопка, а тут не действие, а листание. */
+.qarrow{width:26px;height:26px;border:0;background:none;padding:0;
+  display:flex;align-items:center;justify-content:center;
+  color:var(--ink-3);flex:0 0 auto;cursor:pointer}
+.qarrow:hover{color:var(--ink)}
+.qarrow:disabled{opacity:.3;cursor:default}
+.qarrow svg{width:19px;height:19px;fill:none;stroke:currentColor;stroke-width:1.7;
+  stroke-linecap:round;stroke-linejoin:round}
+.voc{display:flex;gap:12px;overflow-x:auto;scroll-snap-type:x mandatory;
+  scrollbar-width:none;padding-bottom:2px}
+.voc::-webkit-scrollbar{display:none}
+.vq{flex:0 0 auto;width:268px;scroll-snap-align:start;
+  border:1px solid var(--line);background:var(--card-solid);padding:17px 19px;
+  border-radius:16px;display:flex;flex-direction:column;gap:12px;
+  justify-content:space-between}
+.vq blockquote{margin:0;font-family:var(--serif);font-style:italic;
+  font-size:14px;line-height:1.5;color:var(--ink)}
+/* Состояние цитаты приходит ОТ контент-машины, исследование его не хранит.
+   Три состояния различаются формой метки, а не только цветом: пустой кружок,
+   закрашенный фирменный, закрашенный серый. */
+.vq .vst{display:flex;align-items:center;gap:7px;font-size:10px;font-weight:700;
+  letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3)}
+.vq .vst i{width:9px;height:9px;border-radius:50%;display:block;flex:0 0 auto}
+.vq .vst.wait i{border:1.5px solid var(--ink-3)}
+.vq .vst.work i{background:var(--mid)}
+.vq .vst.done i{background:var(--ink-3)}
+.vq .vst.work{color:var(--ink)}
+.vq .vf{display:flex;justify-content:space-between;align-items:center;gap:12px;
+  padding-top:12px;border-top:1px solid var(--line-2)}
+.vq .vsrc{font-size:11px;color:var(--ink-3);line-height:1.4}
+.vq .vsrc b{display:block;color:var(--ink-2);font-weight:600;font-size:11.5px}
+.vq .vcnt{font-size:11px;font-weight:700;color:var(--ink);white-space:nowrap;
+  display:flex;align-items:center;gap:7px}
+.vq .vcnt i{width:8px;height:8px;background:var(--mid);display:block}
+
+/* ── Возражение и ответ ───────────────────────────────────────────────────
+   Страх и то, чем он снимается, ценны только вместе: по отдельности первое —
+   жалоба, второе — лозунг. Поэтому одна строка на пару.
+   ПРАВКА: подписи «что говорит клиент» и «чем снимаем» повторялись в каждой
+   строке. Приведено к тому же виду, что альтернативы, — шапка один раз.
+   Стрелка и заливки половин тоже убраны: направление задаёт порядок колонок,
+   а цвет здесь ничего не кодировал. */
+.obj{border:1px solid var(--line);border-radius:16px;overflow:hidden;max-width:940px}
+.ohead,.orow{display:grid;grid-template-columns:.92fr 1.08fr;gap:18px}
+.ohead{padding:11px 18px;font-size:10px;font-weight:700;letter-spacing:.07em;
+  text-transform:uppercase;color:var(--ink-3);
+  background:color-mix(in srgb, var(--ink) 3%, transparent)}
+.orow{padding:14px 18px;border-top:1px solid var(--line-2);align-items:start}
+.orow .of{font-family:var(--serif);font-style:italic;font-size:13.5px;
+  line-height:1.5;color:var(--ink)}
+.orow .oa{font-size:12.5px;color:var(--ink-2);line-height:1.5}
+
+/* ── Альтернативы: против чего мы на самом деле конкурируем ────────────────
+   Главный конкурент почти всегда «ничего не делать», и его надо выделить
+   графически, иначе его снова прочитают как строку в списке. */
+/* ПРАВКА: подписи «почему её выбирают» и «что мы говорим против» повторялись
+   в каждой строке — это и есть определение таблицы, только вывернутое
+   наизнанку. Написаны один раз в шапке, как в портрете сегмента. */
+.alt{border:1px solid var(--line);border-radius:16px;overflow:hidden}
+.ahead,.arow{display:grid;grid-template-columns:184px 1fr 1fr;gap:16px}
+.ahead{padding:11px 18px;font-size:10px;font-weight:700;letter-spacing:.07em;
+  text-transform:uppercase;color:var(--ink-3);
+  background:color-mix(in srgb, var(--ink) 3%, transparent)}
+.arow{align-items:start;padding:14px 18px;border-top:1px solid var(--line-2)}
+.arow .an{font-size:13.5px;font-weight:700;line-height:1.3}
+.arow .aty{display:inline-block;font-size:10px;font-weight:700;letter-spacing:.05em;
+  text-transform:uppercase;color:var(--ink-3);margin-top:5px}
+.arow .atx{font-size:12.5px;color:var(--ink-2);line-height:1.5}
+/* ПРАВКА: плашка «главный» стояла сразу за названием — толкала строку и
+   выглядела грубо. Выделение ушло вбок: полоса фирменного цвета по левому
+   краю плюс тихая надпись НАД названием. Строка читается ровно, а особый
+   статус виден раньше, чем начинаешь читать. */
+.arow.main{background:color-mix(in srgb, var(--mid) 6%, transparent);
+  border-top:0;padding-left:15px;box-shadow:inset 3px 0 0 var(--mid)}
+.arow .aeb{font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;
+  color:var(--ink-3);margin-bottom:5px}
+
+/* ── Где сидит аудитория ──────────────────────────────────────────────────
+   ПРАВКА: было пять колонок во всю ширину. В каждой ячейке две-три строки
+   текста, между ними метры пустоты — таблица выглядела растянутой и пустой,
+   хотя данных в ней достаточно. Причина в форме, а не в количестве: пять
+   узких колонок с разной длиной текста никогда не выровняются. Пересобрано
+   карточками — площадка тут ОБЪЕКТ, а не строка сравнения: их не читают
+   по колонкам сверху вниз, каждую рассматривают отдельно. */
+/* Сбоку — доли по площадкам. Важно, ЧТО именно тут измерено: это доля
+   собранного материала, а не доля аудитории. Второго числа у нас нет и
+   честно взять его неоткуда — «34% аудитории сидит на vc.ru» было бы
+   выдумкой. Зато первое число само по себе ценно: оно показывает перекос
+   выборки, о котором предупреждает приписка внизу. */
+.chnwrap{display:grid;grid-template-columns:1fr 268px;gap:22px;align-items:start}
+.chnside h4{font-size:10px;font-weight:700;letter-spacing:.07em;
+  text-transform:uppercase;color:var(--ink-3);margin:0 0 4px}
+.chnside .sub{font-size:11.5px;color:var(--ink-3);line-height:1.45;margin:0 0 14px}
+.chn{display:grid;grid-template-columns:repeat(auto-fit,minmax(296px,1fr));gap:12px}
+.ccard{border:1px solid var(--line);background:var(--card-solid);border-radius:16px;
+  padding:16px 18px;display:flex;flex-direction:column;gap:11px}
+.ccard .ch{display:flex;align-items:center;gap:11px}
+.ccard .ci{width:34px;height:34px;border-radius:11px;background:var(--line-2);
+  display:flex;align-items:center;justify-content:center;flex:0 0 auto}
+.ccard .ci svg{width:19px;height:19px;fill:none;stroke:var(--ink-2);stroke-width:1.6;
+  stroke-linecap:round;stroke-linejoin:round;display:block}
+.ccard .cn{font-size:14px;font-weight:700;line-height:1.25}
+.ccard .cn span{display:block;font-size:11px;font-weight:600;color:var(--ink-3);
+  margin-top:3px}
+.ccard .cd{font-size:12.5px;color:var(--ink-2);line-height:1.5}
+.ccard .cf{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;
+  padding-top:11px;border-top:1px solid var(--line-2);margin-top:auto}
+.ccard .cf div span{display:block;font-size:10px;font-weight:700;letter-spacing:.07em;
+  text-transform:uppercase;color:var(--ink-3);margin-bottom:3px}
+.ccard .cf div b{font-size:12px;font-weight:700;color:var(--ink)}
+.ccard .cf .r{text-align:right}
+@media (max-width:1000px){ .chnwrap{grid-template-columns:1fr} }
+@media (max-width:900px){
+  .ohead{display:none}
+  .orow{grid-template-columns:1fr;gap:8px}
+  .ahead{display:none}
+  .arow{grid-template-columns:1fr;gap:8px}
+  .ccard .cf{flex-direction:column;align-items:flex-start;gap:9px}
+  .ccard .cf .r{text-align:left}
+}
+
+/* ── Общая таблица отчёта ─────────────────────────────────────────────────
+   Владелица 10.09: подписи колонок пишутся ОДИН раз в шапке, а не повторяются
+   в каждой строке. Здесь это вынесено в один класс, чтобы все оставшиеся
+   блоки отчёта строились по одному образцу, а не расходились каждый по-своему.
+   Число колонок задаётся переменной --cols на месте. */
+.dtbl{border:1px solid var(--line);border-radius:16px;overflow:hidden}
+.dtbl .th,.dtbl .tr{display:grid;grid-template-columns:var(--cols);gap:18px}
+.dtbl .th{padding:11px 18px;font-size:10px;font-weight:700;letter-spacing:.07em;
+  text-transform:uppercase;color:var(--ink-3);
+  background:color-mix(in srgb, var(--ink) 3%, transparent)}
+.dtbl .tr{padding:14px 18px;border-top:1px solid var(--line-2);align-items:start;
+  font-size:12.5px;line-height:1.5;color:var(--ink-2)}
+/* ПРАВКА: перенос рвал слово где попало, вплоть до одной буквы. Виноват был
+   overflow-wrap:anywhere — он ломает строку в любом месте, не глядя на слоги.
+   Убран. Оставлен hyphens:auto, но он работает только когда браузер знает
+   язык — поэтому на .page стоит lang="ru", иначе словаря переносов нет и
+   ничего не переносится вовсе. И задан минимум: слово от 6 букв, не меньше
+   трёх до переноса и трёх после — одна буква на строке больше невозможна. */
+.dtbl .nm{font-size:13.5px;font-weight:700;color:var(--ink);line-height:1.3;display:block}
+.dtbl .tr>div{min-width:0}
+.page{hyphens:auto;-webkit-hyphens:auto;
+  hyphenate-limit-chars:6 3 3;-webkit-hyphenate-limit-before:3;-webkit-hyphenate-limit-after:3}
+/* Числа, коды и подписи осей не переносим никогда. */
+.val,.axis,.lbl,.gx,.dbar .n,.kpi .n,.pyrow .s .v,.gvol .v{hyphens:none;-webkit-hyphens:none}
+.dtbl .tag{display:inline-block;font-size:10px;font-weight:700;letter-spacing:.05em;
+  text-transform:uppercase;color:var(--ink-3);margin-top:5px}
+.dtbl .q{font-family:var(--serif);font-style:italic;font-size:13px;color:var(--ink);
+  line-height:1.5}
+.dtbl .no{color:var(--ink-3);font-style:italic}
+.dtbl .lead{box-shadow:inset 3px 0 0 var(--mid);padding-left:15px;
+  background:color-mix(in srgb, var(--mid) 5%, transparent)}
+.dtbl .eb{font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;
+  color:var(--ink-3);margin-bottom:5px}
+.dtbl .strong{color:var(--ink);font-weight:600}
+.dt2{margin-top:12px}
+@media (max-width:900px){
+  .dtbl .th{display:none}
+  .dtbl .tr{grid-template-columns:1fr!important;gap:8px}
+}
+
+/* ── Банк хуков ───────────────────────────────────────────────────────────
+   Это не цитаты заново: цитата описывает боль, хук — готовая ПЕРВАЯ СТРОКА.
+   Отбираются из уже собранных цитат, не сочиняются. Поэтому крупно и подряд,
+   как их и будут читать в ленте, а рядом — куда каждый годится. */
+.hooks{display:flex;flex-direction:column;gap:0}
+.hrow{display:grid;grid-template-columns:26px 1fr 190px;gap:16px;align-items:baseline;
+  padding:13px 0;border-top:1px solid var(--line-2)}
+.hrow:first-child{border-top:0}
+.hrow .hn{font-size:12px;font-weight:700;color:var(--ink-3);
+  font-variant-numeric:tabular-nums}
+.hrow .ht{font-family:var(--serif);font-size:15px;line-height:1.45;color:var(--ink)}
+.hrow .hu{font-size:11.5px;color:var(--ink-3);line-height:1.4;text-align:right}
+.hrow .hu b{display:block;color:var(--ink-2);font-weight:600;font-size:12px}
+
+/* ── Контент-система: рубрики и ритм ──────────────────────────────────────── */
+.rub{display:grid;grid-template-columns:repeat(auto-fit,minmax(238px,1fr));gap:12px}
+.rcard{border:1px solid var(--line);background:var(--card-solid);border-radius:16px;
+  padding:16px 18px;display:flex;flex-direction:column;gap:9px}
+.rcard .rn{font-size:14px;font-weight:700;line-height:1.25}
+.rcard .rj{font-size:12.5px;color:var(--ink-2);line-height:1.5}
+.rcard .rf{display:flex;justify-content:space-between;gap:10px;padding-top:10px;
+  border-top:1px solid var(--line-2);margin-top:auto;font-size:11.5px}
+.rcard .rf span{color:var(--ink-3)}
+.rcard .rf b{color:var(--ink);font-weight:700}
+.rhy{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-top:14px}
+.rhy .rd{border:1px solid var(--line);border-radius:12px;padding:11px 10px;
+  background:var(--card-solid);min-height:78px}
+.rhy .rd .dw{font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;
+  color:var(--ink-3);margin-bottom:7px}
+.rhy .rd .dt{font-size:11.5px;color:var(--ink);line-height:1.35;font-weight:600}
+.rhy .rd.off .dt{color:var(--ink-3);font-weight:400}
+.rhy .rd .dbar2{height:5px;margin-top:8px}
+
+/* ── ТЗ на лендинг: экраны по порядку ─────────────────────────────────────
+   Порядок здесь несёт смысл — это последовательность, в которой человек
+   читает страницу, а не список разделов. Поэтому нумерация и вертикальная
+   нить, а не решётка карточек. */
+.lnd{display:flex;flex-direction:column;gap:0;position:relative}
+.lstep{display:grid;grid-template-columns:52px 1fr 1fr;gap:18px;padding:15px 0;
+  border-top:1px solid var(--line-2);align-items:start}
+.lstep:first-child{border-top:0}
+.lstep .ln{font-size:19px;font-weight:700;color:var(--ink-3);letter-spacing:-.02em;
+  font-variant-numeric:tabular-nums;line-height:1.1}
+.lstep .lt{font-size:13.5px;font-weight:700;line-height:1.3}
+.lstep .lj{font-size:12px;color:var(--ink-3);line-height:1.45;margin-top:4px}
+.lstep .lc{font-size:12.5px;color:var(--ink-2);line-height:1.5}
+.lstep .lc b{display:block;font-size:10px;font-weight:700;letter-spacing:.07em;
+  text-transform:uppercase;color:var(--ink-3);margin-bottom:4px}
+@media (max-width:820px){
+  .hrow{grid-template-columns:26px 1fr}
+  .hrow .hu{grid-column:2;text-align:left}
+  .rhy{grid-template-columns:repeat(2,1fr)}
+  .lstep{grid-template-columns:40px 1fr}
+  .lstep .lc{grid-column:2}
+}
+
+/* ── Карта отчёта: что оформлено, чего не хватает ─────────────────────────
+   Тот же приём, что у проверки по 13 вопросам: не рассказывать словами,
+   а показать покрытие. Три состояния различаются и цветом, и формой метки. */
+.mapg{display:grid;grid-template-columns:repeat(auto-fill,minmax(232px,1fr));gap:8px}
+.mcell{display:flex;gap:10px;align-items:flex-start;padding:11px 13px;border-radius:12px;
+  border:1px solid var(--line);background:var(--card-solid);font-size:12.5px;
+  line-height:1.4}
+.mcell i{width:9px;height:9px;border-radius:50%;flex:0 0 auto;margin-top:4px;display:block}
+.mcell span{flex:1}
+.mcell span b{display:block;font-size:10px;font-weight:700;letter-spacing:.07em;
+  text-transform:uppercase;color:var(--ink-3);margin-top:3px}
+.mcell.have{background:color-mix(in srgb, var(--mid) 8%, var(--card-solid));
+  border-color:color-mix(in srgb, var(--mid) 30%, var(--line))}
+.mcell.have i{background:var(--mid)}
+.mcell.add i{border:1.5px solid var(--sw-violet)}
+.mcell.none i{background:var(--sw-grey)}
+.mcell.out{opacity:.72}
+.mcell.out i{background:var(--card-solid);border:1.5px solid var(--sw-grey)}
+.mlegend{display:flex;gap:18px;flex-wrap:wrap;margin-top:14px;font-size:11.5px;
+  color:var(--ink-3)}
+.mlegend span{display:flex;align-items:center;gap:8px}
+.mlegend i{width:9px;height:9px;border-radius:50%;display:block}
+
+/* ── Визуальная стратегия ─────────────────────────────────────────────────── */
+.vis{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.vis h4{font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;
+  color:var(--ink-3);margin:0 0 12px}
+.sw2{display:flex;gap:0;margin-bottom:8px}
+.sw2 div{flex:1;height:52px;display:flex;align-items:flex-end;padding:7px 9px;
+  font-size:10px;font-weight:700;font-variant-numeric:tabular-nums}
+.sw2 div small{font-size:9px;font-weight:600;opacity:.75;display:block}
+.visnote{font-size:12px;color:var(--ink-3);line-height:1.5;margin:0}
+.typo{border:1px solid var(--line);border-radius:14px;padding:16px 18px;
+  background:var(--card-solid)}
+.typo .t1{font-size:22px;font-weight:700;letter-spacing:-.02em;line-height:1.2}
+.typo .t2{font-family:var(--serif);font-size:14px;line-height:1.5;color:var(--ink-2);
+  margin-top:8px}
+.typo .t3{font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;
+  color:var(--ink-3);margin-top:12px}
+.rules{display:flex;flex-direction:column;gap:0}
+.rr{display:grid;grid-template-columns:1fr 1fr;gap:16px;padding:11px 0;
+  border-top:1px solid var(--line-2);font-size:12.5px;line-height:1.45}
+.rr:first-child{border-top:0}
+.rr .y{color:var(--ink)}
+.rr .n2{color:var(--ink-3)}
+.rr .lb2{display:block;font-size:10px;font-weight:700;letter-spacing:.07em;
+  text-transform:uppercase;color:var(--ink-3);margin-bottom:4px}
+@media (max-width:900px){ .vis,.acard .ag,.rr{grid-template-columns:1fr} }
+
+/* ── Ссылка на источник ───────────────────────────────────────────────────
+   Владелица 10.09: «нам надо всё давать, особенно голос клиента, конкурентов,
+   со ссылками, чтобы всё это можно было проверять».
+   Справедливо и это не мелочь: исследование без возможности проверить строку
+   превращается в мнение. Номер [n] ведёт в блок «Источники» внизу — та же
+   сквозная нумерация, что уже принята в отчёте. */
+/* Номера источников — те же ссылки, значит тот же вид: фирменный цвет плюс
+   постоянное подчёркивание. Размер поднят с 10.5 до 11.5: на бирюзе мелкий
+   кегль читается тяжелее всего, а уменьшать контраст здесь нечем. */
+.rn2{display:inline-block;font-size:11.5px;font-weight:700;color:var(--acc-mid-ink);
+  text-decoration:none;vertical-align:0;white-space:nowrap;hyphens:none;
+  border-bottom:1px solid color-mix(in srgb, var(--acc-mid-ink) 45%, transparent)}
+.rn2:hover{border-bottom-color:var(--acc-mid-ink)}
+
+/* ── Источники разведки ───────────────────────────────────────────────────
+   ПРАВКА 10.09, владелица: «после сайта сразу слеплена оценка — непонятно, что
+   это такое; и надо активные ссылки прямо на название сайта».
+   Обе правки по делу. Домен — настоящая ссылка: колонка URL в исходной таблице
+   есть, а кликнуть было нельзя, то есть проверить источник всё равно не
+   получалось. И «что взяли» отделено подписью — без неё строка читалась как
+   продолжение названия сайта.
+   Подчёркивание фирменным цветом, а сами буквы чернилами: бирюза текстом на
+   слоновой кости даёт 2.17 при норме 4.5. */
+.srcs{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:0 28px}
+.srow{display:grid;grid-template-columns:32px 1fr;gap:12px;padding:13px 0;
+  border-top:1px solid var(--line-2);align-items:baseline}
+.srow .sn{font-size:11.5px;font-weight:700;color:var(--acc-mid-ink);
+  font-variant-numeric:tabular-nums;hyphens:none}
+.srow .sd{font-size:12.5px;line-height:1.45;min-width:0}
+.srow .sd .dom{display:flex;align-items:baseline;justify-content:space-between;gap:12px}
+/* ССЫЛКИ — ОДИН вид на всё: синий плюс постоянное подчёркивание.
+   Решение владелицы 10.09: «прийти к одному знаменателю, лучше синим —
+   виднее; если всё бирюзовым, оно будет сливаться».
+   Так и есть, и цифры это подтверждают: синий на подложке даёт 4.79 при норме
+   4.5, бирюза — 2.27. Бирюза остаётся фирменным цветом ЗАЛИВОК (плашки, полосы,
+   секторы), синий — цветом всего кликабельного. Два цвета, две разные работы,
+   ни один не мешает другому.
+   Подчёркивание оставлено постоянным: оно отличает ссылку от просто цветного
+   слова, а на цвет одного этого мало. */
+.srow .sd .dom a{font-size:13.5px;font-weight:700;color:var(--acc-mid-ink);
+  text-decoration:none;border-bottom:1px solid color-mix(in srgb, var(--acc-mid-ink) 45%, transparent);
+  overflow-wrap:break-word;hyphens:none}
+.srow .sd .dom a:hover{border-bottom-color:var(--acc-mid-ink)}
+.srow .sd .dom a svg{width:10px;height:10px;display:inline-block;vertical-align:1px;
+  margin-left:5px;fill:none;stroke:currentColor;stroke-width:2}
+.srow .sd .dt{font-size:11px;color:var(--ink-3);white-space:nowrap;flex:0 0 auto;
+  hyphens:none}
+.srow .sd .took{margin-top:8px}
+.srow .sd .took span{display:block;font-size:10px;font-weight:700;letter-spacing:.07em;
+  text-transform:uppercase;color:var(--ink-3);margin-bottom:3px}
+.srow .sd .took em{font-style:normal;color:var(--ink-2);font-size:12.5px;line-height:1.45}
+
+/* ── Доля внимания ────────────────────────────────────────────────────────── */
+.att .dbar{grid-template-columns:172px 1fr 104px}
+.att .dbar .n{white-space:nowrap}
+
+/* ── Тепловая матрица ── */
+.heat{width:100%;border-collapse:separate;border-spacing:3px;font-size:12px}
+.heat th{font-weight:600;color:var(--ink-3);font-size:10.5px;letter-spacing:.05em;
+  text-transform:uppercase;padding:0 6px 6px;text-align:center;vertical-align:bottom}
+.heat th:first-child{text-align:left}
+.heat td{text-align:center;padding:9px 6px;border-radius:8px;font-weight:700;color:var(--ink)}
+.heat td:first-child{text-align:left;font-weight:600;color:var(--ink-2);
+  background:none;padding-left:0;white-space:nowrap}
+
+
+/* ── Канбан гипотез ── */
+.kan{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.kcol h3{font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;
+  color:var(--ink-3);margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid var(--line)}
+.kcard{border:1px solid var(--line);border-radius:14px;padding:13px 15px;margin-bottom:9px;
+  background:var(--card-solid)}
+.kcard b{display:block;font-size:12.5px;margin-bottom:4px}
+.kcard span{display:block;font-size:11.5px;color:var(--ink-3);line-height:1.5}
+.kcard .met{margin-top:8px;padding-top:8px;border-top:1px solid var(--line-2);
+  font-size:11px;color:var(--ink-2);font-weight:600}
+/* Критерий успеха — единственное, что в карточке фирменного цвета: карточка
+   существует ради него, а всё остальное в ней справочное. */
+.kcard .met u{text-decoration:none;color:var(--acc-ink);font-weight:700}
+
+/* ── Дерево ниш ── */
+.tree{display:flex;flex-direction:column;gap:5px}
+.tnode{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:12px;
+  background:color-mix(in srgb, var(--ink) 2.5%, transparent);font-size:13px}
+.tnode .bar{height:6px;border-radius:0;flex:0 0 auto}
+.tnode .nm{flex:1;color:var(--ink-2)}
+.tnode .sc{font-weight:700;font-size:12.5px;color:var(--ink)}
+.tnode.lead{background:color-mix(in srgb, var(--mid) 10%, transparent)}
+.tnode.lead .nm{color:var(--ink);font-weight:600}
+
+/* ── Плитки-числа ── */
+/* Плитки собраны так же, как в первом шаблоне: отдельные карточки с полями,
+   подпись сверху, число и график в одной строке, изменение снизу. Раньше они
+   были склеены в одну полосу и стояли иначе — это и было «сделано не так». */
+.kpi{display:grid;grid-template-columns:repeat(5,1fr);gap:14px}
+.kpi > div{background:var(--card-solid);border:1px solid var(--line);
+  border-radius:20px;padding:18px 20px}
+.kpi .k{font-size:12px;color:var(--ink-3);margin-bottom:8px}
+.kpi .row{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.kpi .n{font-size:25px;font-weight:700;letter-spacing:-.02em;line-height:1.1}
+.kpi svg{display:block;flex:0 0 auto}
+.kpi .d{font-size:11px;margin-top:7px;display:inline-flex;gap:5px;align-items:baseline}
+.kpi .d b{font-weight:700}
+.kpi .d b.up{color:var(--acc-ink)}       /* рост — фирменная бирюза */
+.kpi .d b.down{color:var(--acc-mid-ink)} /* падение — фиолетовый */
+.kpi .d b.flat{color:var(--ink-2)}       /* без изменений — тёмно-серый */
+.kpi .d span{color:var(--ink-2);font-weight:700}
+
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--ink-2);margin-top:14px}
+.legend i{width:11px;height:8px;display:inline-block;margin-right:6px}
+@media (max-width:1000px){ .kpi{grid-template-columns:repeat(2,1fr)} }
+@media (max-width:820px){ .two,.swot,.kan{grid-template-columns:1fr} }
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+
+/* ── Портрет сегмента ─────────────────────────────────────────────────────────
+   Владелица: «дала простую графику, не сильно яркую и не сильно красивую».
+   Справедливо — но лечится это не количеством цветов. В присланном колесе на
+   13 сегментов цвет ничего не кодирует, а 13 оттенков подряд глаз всё равно
+   не различает. Красоту там делают МАСШТАБ, форма и типографика.
+   Поэтому здесь: крупный знак сегмента, крупные числа, широкие поля, заметное
+   присутствие фирменного цвета — но по-прежнему один акцент, а не радуга.
+   Портрет ветвится по типу аудитории: у B2B решает роль и размер компании,
+   у B2C — возраст, пол, интересы. Это разные наборы полей, и сводить их в
+   одну таблицу нельзя. */
+.pers{display:grid;grid-template-columns:230px 1fr;gap:0;
+  border:1px solid var(--line);border-radius:20px;overflow:hidden;margin-bottom:14px}
+.pers-side{padding:24px;display:flex;flex-direction:column;gap:14px;
+  background:linear-gradient(165deg,
+    color-mix(in srgb, var(--mid) 22%, var(--card-solid)),
+    color-mix(in srgb, var(--mid) 6%, var(--card-solid)))}
+.pers-av{width:74px;height:74px;border-radius:22px;display:flex;align-items:center;
+  justify-content:center;font-size:25px;font-weight:800;letter-spacing:-.02em;
+  color:#12100D;background:linear-gradient(160deg,
+    color-mix(in srgb, var(--mid) 92%, white), color-mix(in srgb, var(--mid) 92%, black))}
+.pers-side .rl{font-size:10px;font-weight:700;letter-spacing:.07em;
+  text-transform:uppercase;color:var(--ink-3)}
+.pers-side h3{font-size:18px;line-height:1.25;letter-spacing:-.02em}
+.pers-side .one{font-size:12.5px;color:var(--ink-2);line-height:1.55}
+.pers-share{margin-top:auto;padding-top:14px;border-top:1px solid rgba(23,21,18,.1)}
+.pers-share b{display:block;font-size:32px;font-weight:700;letter-spacing:-.03em;line-height:1}
+.pers-share span{font-size:11.5px;color:var(--ink-3)}
+.pers-main{background:var(--card-solid)}
+.prow{display:grid;grid-template-columns:150px 1fr 1fr;gap:16px;
+  padding:12px 22px;border-top:1px solid var(--line-2);font-size:13px;line-height:1.5}
+.prow:first-child{border-top:0}
+.prow .p{color:var(--ink-3);font-size:11.5px;font-weight:600;padding-top:1px}
+.prow .v{color:var(--ink)}
+.prow .a{color:var(--acc-ink);font-weight:600}
+.prow-head{display:grid;grid-template-columns:150px 1fr 1fr;gap:16px;padding:11px 22px;
+  font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;
+  color:var(--ink-3);background:color-mix(in srgb, var(--ink) 3%, transparent)}
+
+/* B2C: демография полосами вместо круговых диаграмм */
+.demo{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;padding:18px 22px;
+  border-top:1px solid var(--line-2)}
+.demo h4{font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;
+  color:var(--ink-3);margin:0 0 10px}
+.dsplit{display:flex;height:26px;border-radius:0;overflow:hidden;margin-bottom:7px}
+.dsplit span{display:flex;align-items:center;justify-content:center;font-size:11px;
+  font-weight:700;color:#12100D}
+.dbars{display:flex;flex-direction:column;gap:13px}
+.dbar{display:grid;grid-template-columns:46px 1fr 30px;gap:8px;align-items:center;font-size:11.5px}
+.dbar .t{color:var(--ink-3)}
+.dbar .g{height:14px;background:var(--line-2)}
+.dbar .g i{display:block;height:100%;background:var(--mid)}
+.dbar .n{text-align:right;font-weight:700;color:var(--ink)}
+/* ── Интересы: иконка рисует ОБРАЗ, а не приклеена к подписи ───────────────
+   Владелица: иконка уместна там, где ею нарисована вещь, — так красивее, чем
+   одними словами; и неуместна как значок рядом с заголовком таблицы.
+   Здесь как раз первый случай: «маркетплейсы», «онлайн-курсы», «вечерний
+   Telegram» — это предметы и занятия, у каждого есть узнаваемый рисунок.
+   Поэтому не чипы-таблетки со словами, а плитка: рисунок сверху, слово под ним.
+
+   ПРАВКА: первый заход был бирюзовым — плитка в тон, кружок в тон, шесть
+   цветных пятен подряд. Владелица: «иконки это хорошо, но оформлены
+   неправильно, выбиваются из общей стилистики». Справедливо, и причина
+   считается: интересы НИЧЕГО не кодируют — это перечень, а не величина.
+   Цвет здесь был чистым украшением, а вокруг вся страница держит цвет только
+   там, где он что-то значит. Взяла рисунок иконки прямо из макета платформы
+   (.navtile .ic): нейтральный квадратик со скруглением, штрих графитом.
+
+   ПРАВКА 2: убраны рамки и подложка — «обводки лишние». Так и есть: рамка
+   очерчивает объект, а здесь объектов нет, есть перечень.
+   ПРАВКА 3: не плитки, а список — значок и текст в строку. Плитками короткие
+   подписи разбегались по центрам и читались вразнобой; списком глаз идёт по
+   одной левой кромке, как в остальных таблицах страницы. Два списка стоят
+   рядом и разделены вертикальной линией — это два разных вопроса. */
+.chips{display:flex;flex-direction:column;gap:11px}
+.chips figure{margin:0;display:flex;flex-direction:row;align-items:center;gap:11px;
+  text-align:left}
+.chips figure .disc{width:34px;height:34px;border-radius:11px;display:flex;
+  align-items:center;justify-content:center;background:var(--line-2)}
+.chips figure svg{width:19px;height:19px;fill:none;stroke:var(--ink-2);
+  stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;display:block}
+.chips figcaption{font-size:12.5px;font-weight:600;color:var(--ink-2);line-height:1.35}
+/* Два списка рядом: линия по середине показывает, что вопросы разные. */
+.demo.split{grid-template-columns:1fr 1fr;gap:0}
+.demo.split > div + div{border-left:1px solid var(--line);padding-left:24px}
+.demo.split > div:first-child{padding-right:24px}
+@media (max-width:820px){
+  .demo.split > div + div{border-left:0;border-top:1px solid var(--line);
+    padding-left:0;padding-top:18px}
+  .demo.split > div:first-child{padding-right:0}
+}
+
+/* Покрытие вопросов — вместо радужного колеса */
+.cov{display:grid;grid-template-columns:repeat(auto-fill,minmax(215px,1fr));gap:9px}
+.cq{display:flex;gap:11px;align-items:flex-start;padding:12px 14px;border-radius:13px;
+  border:1px solid var(--line);background:var(--card-solid);font-size:12.5px;line-height:1.45}
+.cq b{font-size:11px;font-weight:800;color:var(--ink-3);min-width:17px;letter-spacing:-.02em}
+.cq.yes{background:color-mix(in srgb, var(--mid) 9%, var(--card-solid));
+  border-color:color-mix(in srgb, var(--mid) 35%, var(--line))}
+.cq.yes b{color:var(--acc-ink)}
+.cq .src2{display:block;margin-top:4px;font-size:10.5px;font-weight:700;
+  letter-spacing:.05em;text-transform:uppercase;color:var(--acc-ink)}
+.cq.no .src2{color:var(--ink-3)}
+@media (max-width:820px){ .pers{grid-template-columns:1fr} .demo{grid-template-columns:1fr}
+  .prow,.prow-head{grid-template-columns:1fr} .prow .p{font-weight:700} }
+
+/* ── Плитки сводки: спарклайн заполняет пустоту справа ───────────────────────
+   Владелица: «слишком большие пробелы». Причина не в отступах, а в том, что
+   плитка широкая, а содержимого мало: число и две строки. В макете там же стоял
+   спарклайн — он и держал правую половину. Возвращаю. */
+
+
+/* ── Доли сегментов: кольцо с иконками ── */
+.seg{display:grid;grid-template-columns:230px 1fr;gap:26px;align-items:center}
+.seg-leg{display:flex;flex-direction:column;gap:9px}
+.sl{display:flex;align-items:center;gap:12px}
+.sl .ic{width:38px;height:38px;border-radius:12px;flex:0 0 auto;display:flex;
+  align-items:center;justify-content:center;border:1px solid var(--line)}
+.sl .ic svg{width:19px;height:19px;fill:none;stroke-width:1.6}
+.sl .nm{flex:1;font-size:12.5px;color:var(--ink-3);line-height:1.35}
+.sl .nm b{display:block;color:var(--ink);font-weight:700;font-size:13.5px}
+.sl .pc{font-size:17px;font-weight:700;letter-spacing:-.02em;min-width:44px;text-align:right}
+
+/* ── SWOT: четыре поля — четыре цвета ────────────────────────────────────────
+   Владелица попросила просто четыре разных цвета вместо кодировки оттенком.
+   Полоска сверху убрана: она спорила со скруглением, и одно из двух должно
+   было уйти. Цвет теперь несёт рамка, подложка, иконка и точки списка —
+   углы остаются круглыми. */
+.sw{position:relative}
+.sw-s{--c:var(--sw-green)}
+.sw-w{--c:var(--sw-violet)}
+.sw-o{--c:var(--sw-blue)}
+.sw-t{--c:var(--sw-grey)}
+.sw-s,.sw-w,.sw-o,.sw-t{
+  background:color-mix(in srgb, var(--c) 9%, transparent);
+  border-color:color-mix(in srgb, var(--c) 34%, var(--line))}
+.sw-s li::before,.sw-w li::before,.sw-o li::before,.sw-t li::before{background:var(--c)}
+.sw-note{grid-column:1/-1;font-size:11.5px;color:var(--ink-3);margin-top:2px;line-height:1.5}
+@media (max-width:820px){ .seg{grid-template-columns:1fr} }
+
+/* ── Путь клиента лесенкой ───────────────────────────────────────────────────
+   Формат из примера владелицы. Хорош он не видом, а устройством: каждый этап
+   сразу спарен с ДЕЙСТВИЕМ — «что делаем на этом этапе». Это тот же приём,
+   что и третья колонка в портрете сегмента: справка превращается в инструкцию.
+   Что взято: ступени полосами, крупный номер, стрелка вперёд, сужение слева.
+
+   ПРАВКА 10.09, владелица: «грубовато, выглядит сильно тяжело». Причин три.
+   1. Пять НАСЫЩЕННЫХ заливок подряд с белым текстом — самый контрастный из
+      возможных приёмов, отсюда тяжесть. Теперь одна бирюза по светлоте от
+      бледной к плотной, текст тёмный. Смысл тот же и даже точнее: продвижение
+      по пути — ОДНА величина, ей и положена одна шкала, а не пять тонов.
+   2. Три из пяти прежних цветов (#8E8C87, #6E76C9, #3FA9C9) вообще не из
+      палитры — остались с раннего захода. Их больше нет.
+   3. Острые углы и глубокий вырез. Углы скруглены, подписи мельче и без
+      разрядки — «техническая» жёсткость уходит.
+
+   ПРАВКА 2, тот же день: стрелка на конце убрана совсем — теперь просто косой
+   срез, и цветная часть придвинута к тексту. Владелица: «эта площадь у нас
+   очень большая закрашена». Так и было: полосы шли до 340px, и на пять рядов
+   набиралась заметная плашка цвета. Сузила до 250–175. Сужение к низу при этом
+   сохранилось — оно показывает, сколько людей доходит, — просто разница теперь
+   мягче, а точный процент всё равно стоит числом справа. */
+.lad{display:flex;flex-direction:column;gap:8px}
+.lrow{display:grid;grid-template-columns:var(--lw,300px) 1fr;gap:0;align-items:stretch}
+.lleft{position:relative;display:flex;align-items:center;gap:13px;
+  padding:14px 26px 14px 18px;color:var(--ink);border-radius:12px 0 0 12px;
+  /* один косой срез вместо стрелки: верх длиннее низа */
+  clip-path:polygon(0 0, 100% 0, calc(100% - 20px) 100%, 0 100%)}
+.lleft .num{font-size:19px;font-weight:700;letter-spacing:-.02em;opacity:.5;
+  min-width:28px;text-align:right}
+.lleft .nm{font-size:13px;font-weight:700;line-height:1.3;letter-spacing:-.01em}
+.lright{padding:14px 20px 14px 22px;margin-left:-14px;border-radius:0 12px 12px 0;
+  background:color-mix(in srgb, var(--ink) 2%, transparent);
+  display:flex;flex-direction:column;justify-content:center;gap:3px}
+.lright b{font-size:13px;font-weight:700;color:var(--ink);line-height:1.4}
+.lright span{font-size:12.5px;color:var(--ink-2);line-height:1.5}
+.lright .meta{margin-top:6px;font-size:11.5px;font-weight:600;
+  color:var(--ink-3);display:flex;gap:16px;flex-wrap:wrap}
+.lright .meta i{font-style:normal}
+.lright .meta i.rk-high{color:var(--acc-mid-ink)}
+.lright .meta i.rk-medium{color:var(--ink-3)}
+.lright .meta i.rk-low{color:var(--acc-ink)}
+.lright .meta i.rk::before{content:"";display:inline-block;width:6px;height:6px;
+  border-radius:50%;background:currentColor;margin-right:6px;vertical-align:1px}
+@media (max-width:820px){
+  .lrow{grid-template-columns:1fr}
+  .lleft{clip-path:none;padding-right:18px;border-radius:12px 12px 0 0}
+  .lright{margin-left:0;padding-left:20px}
+}
+
+<style>
+/* ── Разбор модуля: «как сейчас» рядом с «как предлагаю» ─────────────────── */
+.sech{font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--ink-3);margin:34px 0 14px;display:flex;align-items:center;gap:14px}
+.sech::after{content:"";flex:1;height:1px;background:var(--line)}
+.two2{display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:start}
+.two2 .viz{margin-bottom:0}
+/* Настоящая таблица отчёта — намеренно без украшений: она должна выглядеть
+   ровно так, как выглядит сегодня, иначе сравнение нечестное. */
+.rawwrap{overflow-x:auto}
+table.raw{border-collapse:collapse;width:100%;font-size:11.5px;line-height:1.4}
+table.raw th,table.raw td{border:1px solid var(--line);padding:6px 8px;
+  text-align:left;vertical-align:top;hyphens:none}
+table.raw th{background:color-mix(in srgb, var(--ink) 4%, transparent);
+  font-weight:700;color:var(--ink-3);font-size:10.5px;white-space:nowrap}
+table.raw td{color:var(--ink-2)}
+table.raw td.num{font-variant-numeric:tabular-nums;text-align:center;white-space:nowrap}
+.verd{background:color-mix(in srgb, var(--sw-violet) 5%, var(--raise));
+  border:1px solid color-mix(in srgb, var(--sw-violet) 24%, var(--line));
+  border-radius:16px;padding:16px 20px;margin:12px 0 0}
+.verd p{margin:0 0 9px;font-size:13px;line-height:1.55;color:var(--ink-2)}
+.verd p:last-child{margin-bottom:0}
+.verd b{color:var(--ink)}
+@media (max-width:1000px){ .two2{grid-template-columns:1fr} }
+
+
+
+
+<style>
+/* ── Карточка конкурента ──────────────────────────────────────────────────
+   BLOCK 06 отдаёт ВОСЕМНАДЦАТЬ колонок на 8–15 строк. Таблицей это не
+   читается ни на каком экране: строка уезжает вбок, и чтобы сравнить оффер
+   с ценой, приходится возить полосу прокрутки туда-сюда.
+   Конкурент — объект, а не строка сравнения. Поэтому карточка, и поля в ней
+   сгруппированы по смыслу: кто это → что предлагает → чем силён и слаб →
+   что мешает клиенту и как он это снимает → наша возможность.
+   Ни одно поле не выброшено: все восемнадцать на месте. */
+.comp{display:flex;flex-direction:column;gap:12px}
+.ccard2{border:1px solid var(--line);background:var(--card-solid);border-radius:18px;
+  overflow:hidden}
+.ccard2 .chead{display:grid;grid-template-columns:1fr auto;gap:16px;align-items:start;
+  padding:16px 20px;background:color-mix(in srgb, var(--ink) 3%, transparent);
+  border-bottom:1px solid var(--line)}
+.ccard2 .cid{font-size:10.5px;font-weight:700;letter-spacing:.06em;color:var(--ink-3);
+  hyphens:none}
+.ccard2 .cnm{font-size:16px;font-weight:700;letter-spacing:-.02em;margin:3px 0 4px}
+.ccard2 .cmeta{display:flex;gap:8px;flex-wrap:wrap;align-items:center;font-size:11.5px;
+  color:var(--ink-3)}
+.ccard2 .scale{display:inline-block;font-size:10px;font-weight:700;letter-spacing:.05em;
+  text-transform:uppercase;padding:2px 8px;border-radius:999px;background:var(--line-2);
+  color:var(--ink-2);hyphens:none}
+.ccard2 .price{text-align:right}
+.ccard2 .price b{display:block;font-size:16px;font-weight:700;letter-spacing:-.02em}
+.ccard2 .price span{display:block;font-size:10.5px;color:var(--ink-3);margin-top:2px}
+.cgrid{display:grid;grid-template-columns:1fr 1fr;gap:0}
+.cbox{padding:15px 20px;border-top:1px solid var(--line-2)}
+.cbox:nth-child(odd){border-right:1px solid var(--line-2)}
+.cbox h5{margin:0 0 8px;font-size:10px;font-weight:700;letter-spacing:.07em;
+  text-transform:uppercase;color:var(--ink-3)}
+.cbox p{margin:0;font-size:12.5px;line-height:1.5;color:var(--ink-2)}
+.cbox p+p{margin-top:7px}
+.cbox ul{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:6px}
+.cbox li{font-size:12.5px;line-height:1.45;color:var(--ink-2);padding-left:14px;
+  position:relative}
+.cbox li::before{content:"";position:absolute;left:0;top:7px;width:5px;height:5px;
+  background:var(--ink-3)}
+.cbox.pro li::before{background:var(--mid)}
+.cbox.con li::before{background:var(--sw-violet)}
+.cbox.full{grid-column:1/-1;border-right:0}
+.cbox.gap2{grid-column:1/-1;border-right:0;
+  background:color-mix(in srgb, var(--mid) 5%, transparent)}
+.cbox.gap2 p{color:var(--ink)}
+
+/* ── Гэп-анализ, сгруппированный по статусу ───────────────────────────────
+   Главное здесь — не «что у нас лучше», а НА ЧЁМ это утверждение стоит.
+   Поэтому «Основание статуса» вынесено на видное место, а не спрятано
+   одиннадцатой колонкой, куда никто не долистает. */
+/* Секция статуса/эмоции — отдельная карточка: шапка, под ней шапка колонок,
+   под ней ряды. Заголовок, стоящий просто строкой над рядами, сливается с
+   таблицей — владелица поймала это на M2. */
+.gap{display:flex;flex-direction:column;gap:14px}
+.gsec{border:1px solid var(--line);border-radius:16px;overflow:hidden;
+  background:var(--card-solid)}
+.gsec h4{margin:0;padding:14px 18px;font-size:12px;font-weight:700;letter-spacing:.08em;
+  text-transform:uppercase;color:var(--ink);display:flex;align-items:center;gap:14px;
+  border-bottom:1px solid var(--line)}
+/* Заголовок с эмоцией: крупный значок слева, рядом название и подсказка в две
+   строки — блок начинается с образа, а не с полоски текста. */
+.gsec h4.wemo .etxt{display:flex;flex-direction:column;gap:3px;min-width:0}
+.gsec h4.wemo .etxt b{font-size:15px;font-weight:700;letter-spacing:-.01em;
+  text-transform:none;color:var(--ink)}
+.gsec h4.wemo .etxt span{font-size:11.5px;font-weight:600;letter-spacing:0;
+  text-transform:none;color:var(--ink-3)}
+.gsec h4 .cnt{margin-left:auto;font-size:11px;font-weight:700;color:var(--ink-2);
+  letter-spacing:0;text-transform:none;hyphens:none;white-space:nowrap}
+.grow2{display:grid;grid-template-columns:186px 1fr 1fr 1fr;gap:16px;
+  padding:12px 18px;border-top:1px solid var(--line-2);align-items:start;font-size:12.5px;
+  line-height:1.45}
+.grow2:first-of-type{border-top:0}
+.grow2 .kk{font-weight:700;color:var(--ink);font-size:13px}
+.grow2 .vv{color:var(--ink-2)}
+.grow2 .vv b{color:var(--ink);font-weight:600}
+.ghead{display:grid;grid-template-columns:186px 1fr 1fr 1fr;gap:16px;
+  padding:10px 18px;font-size:10px;font-weight:700;letter-spacing:.07em;
+  text-transform:uppercase;color:var(--ink-3);
+  background:color-mix(in srgb, var(--ink) 3%, transparent);
+  border-bottom:1px solid var(--line)}
+.warn{background:color-mix(in srgb, var(--sw-violet) 7%, var(--raise));
+  border:1px solid color-mix(in srgb, var(--sw-violet) 28%, var(--line));
+  border-radius:16px;padding:16px 20px;margin:12px 0 0}
+.warn p{margin:0 0 9px;font-size:13px;line-height:1.55;color:var(--ink-2)}
+.warn p:last-child{margin-bottom:0}
+.warn b{color:var(--ink)}
+@media (max-width:900px){
+  .cgrid,.grow2,.ghead{grid-template-columns:1fr}
+  .cbox:nth-child(odd){border-right:0}
+  .ghead{display:none}
+}
+
+
+/* ── Метка проверки цитаты ────────────────────────────────────────────────
+   Самое ценное в M3 — не оформление, а то, что цитаты УЖЕ проверяются
+   машиной: страница скачивается и в ней ищется точное совпадение подстроки.
+   Непрошедшие удаляются из отчёта. Читатель об этом не знает вообще.
+   Метка возвращает ему это знание: цитата со «сверено с источником» стоит
+   дороже той же цитаты без метки, а стоит нам это ноль — работа уже сделана. */
+.vmark{display:inline-flex;align-items:center;gap:6px;font-size:10.5px;font-weight:700;
+  letter-spacing:.04em;text-transform:uppercase;hyphens:none}
+.vmark i{width:9px;height:9px;border-radius:50%;display:block;flex:0 0 auto}
+.vmark.ok{color:var(--ink-2)} .vmark.ok i{background:var(--mid)}
+.vmark.nopage{color:var(--ink-3)} .vmark.nopage i{border:1.5px solid var(--sw-violet)}
+.vmark.gone{color:var(--ink-3)} .vmark.gone i{background:var(--sw-grey)}
+/* ── Карточка цитаты ──────────────────────────────────────────────────────
+   ПРАВКА: владелица — «тема, сегмент, источник, всё одним цветом, всё
+   сливается; и палочка силы боли непонятная и некрасивая».
+   Оба замечания об одном: в карточке не было ИЕРАРХИИ. Шесть полей стояли
+   одинаковым кеглем и одинаковым цветом, хотя важность у них разная.
+   Разложено по весу: тема — заголовок под цитатой, сегмент — плашкой,
+   источник уходит вниз и тише всех, числа отделены линией.
+   Сила боли показана той же конструкцией, что все меры на платформе:
+   дорожка плюс заливка. Три отдельных штриха были чужой формой — такой
+   больше нигде нет, оттого и «непонятно и некрасиво». */
+.vq2{border:1px solid var(--line);background:var(--card-solid);border-radius:16px;
+  padding:0;display:flex;flex-direction:column;overflow:hidden}
+.vq2 .vtop{padding:15px 18px 0}
+.vq2 blockquote{margin:12px 0 0;font-family:var(--serif);font-style:italic;
+  font-size:15px;line-height:1.5;color:var(--ink)}
+.vq2 .vtheme{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;
+  margin:14px 0 0;padding:0 18px}
+.vq2 .vtheme b{font-size:13.5px;font-weight:700;color:var(--ink);letter-spacing:-.01em}
+.vq2 .seg2{display:inline-block;font-size:10px;font-weight:700;letter-spacing:.05em;
+  text-transform:uppercase;color:var(--ink-2);background:var(--line-2);
+  padding:3px 9px;border-radius:999px;hyphens:none}
+.vq2 .vsrc2{padding:5px 18px 0;font-size:11.5px;color:var(--ink-3)}
+.vq2 .vnums{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:14px;
+  padding:12px 18px;border-top:1px solid var(--line-2);
+  background:color-mix(in srgb, var(--ink) 2%, transparent)}
+.vq2 .vnums .lab{display:block;font-size:10px;font-weight:700;letter-spacing:.07em;
+  text-transform:uppercase;color:var(--ink-3);margin-bottom:5px}
+.vq2 .vnums .big2{font-size:15px;font-weight:700;color:var(--ink);letter-spacing:-.02em}
+.vq2 .vnums .big2 em{font-style:normal;font-size:11.5px;font-weight:600;
+  color:var(--ink-3);margin-left:4px}
+/* Мера силы — дорожка и заливка, как у всех полос на платформе. */
+.pain{display:flex;align-items:center;gap:9px;margin-top:2px}
+.pain .rail2{flex:1;max-width:78px;height:9px;background:var(--line-2)}
+.pain .rail2 i{display:block;height:100%;background:var(--mid)}
+.pain b{font-size:12.5px;font-weight:700;color:var(--ink)}
+.vq2 .vans{padding:13px 18px;border-top:1px solid var(--line-2);font-size:12.5px;
+  line-height:1.45;color:var(--ink)}
+.vq2 .vans span{display:block;font-size:10px;font-weight:700;letter-spacing:.07em;
+  text-transform:uppercase;color:var(--ink-3);margin-bottom:3px}
+.vgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:12px}
+/* ── Банк языка: реплики, а не строки таблицы ─────────────────────────────
+   Владелица: «так тоже можно, но я думала понаряднее», а потом — «эти кавычки
+   лишние, не в нашем стиле, убирай точно».
+   Крупная кавычка была лишней и правда: на странице нет больше ни одного
+   декоративного знака такого размера, она читалась как чужая вставка.
+   Разделяют реплики те же волосяные линии, что везде, — это и есть наш стиль.
+   Наряднее остаётся за счёт засечного шрифта и двух колонок: реплики короткие,
+   в одну колонку половина ширины пустовала. */
+.lq{display:grid;grid-template-columns:repeat(auto-fit,minmax(268px,1fr));
+  gap:0 30px;padding:4px 18px 14px}
+.lqi{padding:12px 0;border-top:1px solid var(--line-2)}
+.lqi .qt{font-family:var(--serif);font-size:14px;line-height:1.5;color:var(--ink)}
+.lqi .qs{display:block;margin-top:6px;font-family:var(--sans);font-size:11px;
+  color:var(--ink-3)}
+@media (max-width:560px){ .lq{grid-template-columns:1fr} }
+
+.bias{background:color-mix(in srgb, var(--sw-grey) 8%, var(--raise));
+  border:1px solid var(--line);border-radius:14px;padding:14px 18px;margin-top:14px;
+  font-size:12.5px;line-height:1.55;color:var(--ink-2)}
+.bias b{color:var(--ink)}
+
+/* ── Ввод для офферов: откуда взята каждая строка ────────────────────────────
+   Главная беда 17A в том, что таблица не отличает «владелица это написала» от
+   «модель это предположила». Метка происхождения — единственное, что нужно
+   добавить, и она же делает пустые места видимыми. */
+.inp{display:grid;gap:0}
+.inp .ir{display:grid;grid-template-columns:190px 1fr 128px;gap:16px;padding:10px 8px;
+  border-top:1px solid var(--line-2);font-size:12.5px;align-items:baseline}
+.inp .ir:first-child{border-top:0}
+.inp .ir .k{color:var(--ink-3);font-weight:600}
+.inp .ir .v{color:var(--ink);line-height:1.5}
+.inp .ir .v.miss{color:var(--ink-3);font-style:italic}
+.inp .ir .o{font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;
+  text-align:right}
+.inp .ir .o.brief{color:var(--acc-ink)}
+.inp .ir .o.site{color:var(--ink-2)}
+.inp .ir .o.none{color:var(--acc-quiet)}
+@media (max-width:820px){ .kan{grid-template-columns:1fr} .inp .ir{grid-template-columns:1fr auto} }
+</style>
+
+
+<div class="page" lang="ru">
+
+<div class="lede" style="max-width:74ch">
+  <h1>Переоформление M5</h1>
+  <p>Офферы и гипотезы. Четыре таблицы: что тестируем, что знаем о себе,
+  черновики офферов и финальные офферы по сегментам.</p>
+  <p>Главное, что я нашла, к оформлению отношения не имеет:
+  <b>этот модуль сейчас не запускается.</b> Разбор ниже — про то, что будет,
+  когда мы его вернём.</p>
+</div>
+
+<div class="viz" style="border-color:color-mix(in srgb, var(--mid) 34%, var(--line))">
+  <div class="vh"><h2>Находка: M5 выключен из цепочки</h2><span class="src">решение от 26.08.2026</span></div>
+  <p class="vn">В коде у модуля стоит пометка <b>offChain</b>: он не подхватывается
+  автоматически и в обычном прогоне не генерируется вовсе. Причина была разумной —
+  контент-машина брала из M5 только гипотезы, и то справочно, а офферы нужны на
+  этапе воронки и лендинга, не при написании поста. Платить за них в каждом
+  исследовании было незачем.</p>
+  <p class="vn">С тех пор решение изменилось: <b>исследование ЦА делаем полным</b>.
+  А без M5 в отчёте нет ответа на вопрос «что именно продавать этому сегменту» —
+  есть боли, персоны, каналы, но нет предложения. Модуль рабочий и не удалён,
+  включается одной строкой.</p>
+  <p class="vn"><b>Решать вам:</b> вернуть M5 в автоматический прогон? Это плюс
+  примерно восемь минут и один платный вызов на нишу.</p>
+</div>
+
+<div class="viz" style="border-color:color-mix(in srgb, var(--sw-violet) 30%, var(--line))">
+  <div class="vh"><h2>Что делает M5</h2><span class="src">четыре таблицы</span></div>
+  <p class="vn">Три из четырёх — один конвейер: что мы о себе знаем → черновики
+  офферов → финальные. Читатель отчёта видит одни и те же офферы трижды, каждый
+  раз в другой таблице.</p>
+  <div class="dtbl" style="--cols:150px 1fr 84px 84px" id="m5-what"></div>
+</div>
+
+<div class="viz" style="border-color:color-mix(in srgb, var(--mid) 34%, var(--line))">
+  <div class="vh"><h2>Находка: 17A — это не исследование</h2><span class="src">и правил заземления у неё нет</span></div>
+  <p class="vn">BLOCK 17A — «вход для офферов»: бренд, компетенции, отличия,
+  доказательства, кейсы, прайс, гарантии, способы оплаты, тон, запрещённые
+  формулировки. Это данные <b>о нас</b>, а не находки о рынке. Взяться им неоткуда,
+  кроме брифа и сайта.</p>
+  <p class="vn">В промпте под этой таблицей <b>нет ни одного правила</b> — ни «бери
+  только из брифа», ни «если не знаешь, пиши „не задано“». Для сравнения: у
+  конкурентов в M2 и у цитат в M3 такие правила расписаны абзацами.</p>
+  <p class="vn">Чем это плохо на практике: если владелица не указала гарантию,
+  модель <b>напишет правдоподобную</b> — «возврат 14 дней». Дальше эта гарантия
+  честно поедет в финальные офферы, в лендинг и в контент. Ошибка не выглядит
+  ошибкой: она выглядит как заполненная ячейка.</p>
+</div>
+
+<h2 class="sech">16 · Гипотезы</h2>
+
+<div class="viz">
+  <div class="vh"><h2>Как сейчас</h2><span class="src">из отчёта · 16 колонок</span></div>
+  <p class="vn">Десять–пятнадцать строк по шестнадцать колонок. Четыре из них —
+  MDE, дизайн теста, артефакты, статус — это поля плана тестирования, а не
+  исследования: на момент генерации статус у всех одинаковый, а MDE модель
+  посчитать не может, у неё нет вашего трафика.</p>
+  <div class="rawwrap"><table class="raw" id="raw-16"></table></div>
+</div>
+
+<div class="viz">
+  <div class="vh"><h2>Как предлагаю</h2><span class="src">доска · формат из библиотеки</span></div>
+  <p class="vn">Формат уже согласован — беру его как есть, не переделываю.
+  На доске видно то, чего в таблице не видно вовсе: <b>сколько всего проверяется
+  одновременно</b> и что уже сдвинулось. У каждой карточки — критерий успеха,
+  единственное, ради чего гипотеза существует.</p>
+  <div class="kan">
+    <div class="kcol"><h3>Ждут проверки</h3>
+      <div class="kcard"><b>Сравнительные страницы</b><span>«Мы против Envybox» под сравнительный запрос</span><div class="met"><u>Успех</u> — 200 визитов в месяц</div></div>
+      <div class="kcard"><b>Партнёрская посадочная</b><span>Отдельная страница для агентств и студий</span><div class="met"><u>Успех</u> — 5 партнёров за квартал</div></div>
+    </div>
+    <div class="kcol"><h3>В работе</h3>
+      <div class="kcard"><b>Замер прироста у пяти клиентов</b><span>A/B на живом трафике, до и после</span><div class="met"><u>Успех</u> — +25% к таймерному попапу</div></div>
+    </div>
+    <div class="kcol"><h3>Проверены</h3>
+      <div class="kcard"><b>Письма активации</b><span>Цепочка после установки виджета</span><div class="met"><u>Итог</u> — доходимость 34% против 19%</div></div>
+    </div>
+  </div>
+</div>
+
+<div class="verd">
+  <p><b>Что меняется.</b> Таблица становится доской. Шестнадцать колонок не
+  исчезают — они уходят в карточку гипотезы, которая раскрывается по нажатию,
+  как ниши в M1.</p>
+  <p><b>Решать вам:</b> MDE и «дизайн теста» оставляем? Обе колонки модель
+  заполняет вслепую: MDE считается от вашего трафика и текущей конверсии, а их
+  в исследовании нет. Я бы убрала из отчёта и вернула на этапе, когда тест
+  реально ставится.</p>
+</div>
+
+<h2 class="sech">17A · Что мы знаем о себе</h2>
+
+<div class="viz">
+  <div class="vh"><h2>Как сейчас</h2><span class="src">из отчёта · 14 колонок, одна строка</span></div>
+  <p class="vn">Одна строка на четырнадцать колонок — таблица здесь вообще не
+  нужна, это карточка, развёрнутая вбок.</p>
+  <div class="rawwrap"><table class="raw" id="raw-17a"></table></div>
+</div>
+
+<div class="viz">
+  <div class="vh"><h2>Как предлагаю</h2><span class="src">карточка с пометкой происхождения</span></div>
+  <p class="vn">Та же четырнадцать полей, но сверху вниз и <b>с меткой, откуда
+  строка взялась</b>: из брифа, с сайта или не заполнена. Метка — единственное
+  добавление, и она же решает проблему выдуманных гарантий: выдумать строку с
+  пометкой «из брифа» модель не может, а пустое поле честно видно.</p>
+  <div class="inp" id="m5-inp"></div>
+  <p class="vn" style="margin:16px 0 0">Пустые поля — не брак отчёта, а
+  <b>список вопросов к вам</b>. Пять минут на их заполнение стоят больше, чем весь
+  остальной модуль: на них строятся все офферы ниже.</p>
+</div>
+
+<div class="verd">
+  <p><b>Что меняется.</b> В промпт добавляется правило заземления — то же, что уже
+  работает в M2 и M3: <b>бери только из брифа и с сайта, не знаешь — пиши
+  «не задано»</b>. В оформлении — карточка с метками источника вместо строки на
+  четырнадцать колонок.</p>
+  <p><b>Решать вам:</b> эти четырнадцать полей — половина квиза, который мы
+  собираемся делать вместо брифа. Может, спрашивать их прямо там, а 17A оставить
+  только как отражение ответов?</p>
+</div>
+
+<h2 class="sech">17B · Черновики офферов</h2>
+
+<div class="two2">
+  <div class="viz">
+    <div class="vh"><h2>Как сейчас</h2><span class="src">из отчёта · 10 колонок</span></div>
+    <div class="rawwrap"><table class="raw" id="raw-17b"></table></div>
+  </div>
+  <div class="viz">
+    <div class="vh"><h2>Как предлагаю</h2><span class="src">формат «достоинства продукта»</span></div>
+    <p class="vn">Формат из библиотеки. Третья колонка — <b>«когда не работает»</b> —
+    в отчёте сейчас отсутствует, и зря: у каждого достоинства есть условие, при
+    котором оно не срабатывает.</p>
+    <div class="dtbl" style="--cols:1fr 1fr 1fr" id="m5-adv"></div>
+  </div>
+</div>
+
+<div class="verd">
+  <p><b>Что меняется.</b> «Hook-кандидаты (3 варианта)» перестают быть одной
+  ячейкой через запятую — три хука это три строки. Добавляется колонка
+  «когда не работает».</p>
+</div>
+
+<h2 class="sech">17 FINAL · Финальные офферы</h2>
+
+<div class="viz">
+  <div class="vh"><h2>Как сейчас</h2><span class="src">из отчёта · 15 колонок</span></div>
+  <p class="vn">Два-три оффера по пятнадцать колонок. Заголовок, подзаголовок,
+  проблема, результат, состав, цена, снятие риска, призыв — это готовый экран
+  лендинга, разложенный в строку таблицы.</p>
+  <div class="rawwrap"><table class="raw" id="raw-17f"></table></div>
+</div>
+
+<div class="viz">
+  <div class="vh"><h2>Как предлагаю</h2><span class="src">оффер как он выглядит для клиента</span></div>
+  <p class="vn">Оффер — единственная таблица во всём исследовании, которую можно
+  показать <b>так, как её увидит покупатель</b>. Это и проверка: если в таком виде
+  он не убеждает, значит и на лендинге не убедит, и переделывать надо здесь, а не
+  после запуска.</p>
+  <div id="m5-off" style="display:flex;flex-direction:column;gap:14px"></div>
+</div>
+
+<div class="verd">
+  <p><b>Что меняется.</b> Таблица становится карточкой оффера. Все пятнадцать полей
+  на месте, но расставлены так, как читает клиент: заголовок → проблема →
+  результат → состав → цена → снятие риска → кнопка.</p>
+  <p><b>Что это ловит.</b> В таблице «Снятие риска» — просто ячейка, и пустая она
+  выглядит нормально. В карточке на её месте дыра прямо перед кнопкой, и это
+  видно сразу.</p>
+</div>
+
+<h2 class="sech">23 · Главная ставка и цели</h2>
+
+<div class="viz" style="border-color:color-mix(in srgb, var(--mid) 34%, var(--line))">
+  <div class="vh"><h2>Нового блока в отчёте не было</h2><span class="src">добавлен 11.09</span></div>
+  <p class="vn">Без него исследование заканчивается выводами, а между выводами и
+  работой остаётся разрыв: через три месяца невозможно ответить, сработало оно
+  или нет.</p>
+  <p class="vn">Ставка — это <b>одно</b> утверждение, от которого зависит
+  остальное, а не список намерений. Если кажется, что ставок несколько, берётся
+  та, без которой остальные не имеют смысла.</p>
+</div>
+
+<div class="viz">
+  <div class="vh"><h2>Главная ставка и цели</h2><span class="src">BLOCK 23 · добавлен 11.09</span></div>
+  <p class="vn">Между выводами исследования и работой не хватает звена: чего мы
+  добиваемся и как поймём, что получилось. Колонка «сейчас» у нового проекта почти
+  вся пустая — и это сам по себе результат: он показывает, что бизнес работает
+  вслепую и первая задача не в маркетинге, а в том, чтобы начать мерить.
+  Выдумывать туда числа нельзя.</p>
+  <div class="dtbl" style="--cols:236px 1fr" id="m5-bet"></div>
+  <div class="dtbl dt2" style="--cols:1.2fr 1.1fr 116px 176px 92px" id="m5-goals"></div>
+</div>
+
+<div class="verd">
+  <p><b>Колонка «текущее значение» — самая честная в отчёте.</b> Если числа нет
+  ни в брифе, ни в источниках, туда пишется «нет данных». Не среднее по отрасли,
+  не прикидка. У нового проекта она будет заполнена «нет данных» целиком — и это
+  сам по себе результат: бизнес работает вслепую, и первая задача не в
+  маркетинге, а в том, чтобы начать мерить.</p>
+  <p><b>Номер 23, а не 05.</b> Пятый занят указателем открытых источников в M1.
+  Взяла следующий свободный после 22: блок строится здесь, после гипотез, и
+  номер из первой пятёрки посреди семнадцатых читался бы как сбой порядка.</p>
+</div>
+
+
+
+<div class="viz" style="margin-top:22px">
+  <div class="vh"><h2>Итог по M5</h2><span class="src">что предлагаю решить</span></div>
+  <div class="dtbl" style="--cols:52px 1fr 210px" id="m5-todo"></div>
+</div>
+
+</div>
+
+<script>
+const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+const dtbl=(id,head,rows)=>{
+  const box=document.getElementById(id); if(!box) return;
+  const cell=c=>typeof c==='string'?esc(c):c.h;
+  box.innerHTML='<div class="th">'+head.map(h=>`<span>${esc(h)}</span>`).join('')+'</div>'+
+    rows.map(r=>'<div class="tr">'+r.map(c=>`<div>${cell(c)}</div>`).join('')+'</div>').join('');
+};
+const raw=(id,head,rows)=>{
+  const box=document.getElementById(id); if(!box) return;
+  box.innerHTML='<thead><tr>'+head.map(h=>`<th>${esc(h)}</th>`).join('')+'</tr></thead><tbody>'+
+    rows.map(r=>'<tr>'+r.map(c=>`<td>${esc(c)}</td>`).join('')+'</tr>').join('')+'</tbody>';
+};
+const L=(t,u)=>`<a class="rn2" href="${u}" target="_blank" rel="noopener">${t}</a>`;
+
+
+dtbl('m5-what',['Таблица','Что в ней','Строк','Колонок'],
+ [[{h:'<span class="nm">BLOCK 16</span>'},'Гипотезы: что тестируем, на ком, какой метрикой меряем','10–15',{h:'<span class="strong">16</span>'}],
+  [{h:'<span class="nm">BLOCK 17A</span>'},'Вход: что мы знаем о себе — компетенции, прайс, гарантии, тон','1',{h:'<span class="strong">14</span>'}],
+  [{h:'<span class="nm">BLOCK 17B</span>'},'Черновики офферов: хуки, боль, результат, механизм','5–8','10'],
+  [{h:'<span class="nm">BLOCK 17 FINAL</span>'},'Финальные офферы по сегментам — готовые к запуску','2–3',{h:'<span class="strong">15</span>'}]]);
+
+raw('raw-16',['Hypo_ID','Ниша','Persona_ID','Осведомл.','Источник инсайта','Формулировка гипотезы',
+  'Что тестируем','Для кого/где в CJM','Ожидаемый эффект','Метрика','MDE','Дизайн теста',
+  'Артефакты','Риски','Статус','Conf.'],
+ [['H1','Интернет-магазины','P1','L2','Боль из BLOCK 12: «не понимаю, куда уходят»',
+   'Если показать, сколько посетителей ушло без заявки, владелец поставит виджет',
+   'Экран со счётчиком потерь на главной','Владелец, этап «осознал проблему»',
+   'Рост заявок с демо +20%','Конверсия в демо','+3 п.п.','A/B, две недели',
+   'Макет экрана, текст','Счётчик напугает и оттолкнёт','не запущена','4'],
+  ['H2','Веб-студии','P2','L3','Возражение из BLOCK 12: «клиент не поймёт»',
+   'Если дать агентству отчёт под его логотипом для клиента, продление вырастет',
+   'Отчёт под логотипом агентства','Маркетолог, этап «сравнивает»',
+   'Продления +15%','Доля продлений','+5 п.п.','Когорты, квартал',
+   'Шаблон отчёта','Мало агентств в базе для значимости','не запущена','2']]);
+
+raw('raw-17a',['Seller_ID','Бренд/название','Компетенции','Отличия/УТП','Доказательства','Кейсы',
+  'Форматы продукта','Гео/расписание','Ограничения','Гарантии','Прайс/пакеты','Способы оплаты',
+  'Тон коммуникации','Запрещённые формулировки'],
+ [['S1','Ловец лидов','ИИ-подбор момента показа','Реагирует на поведение, а не на таймер',
+   '—','—','Виджет для сайта','Россия, круглосуточно','Нужен доступ к коду сайта',
+   'Возврат 14 дней','от 990 ₽/мес','Карта, счёт для юрлиц','Прямой, без жаргона',
+   '«взрывной рост», «гарантируем продажи»']]);
+
+raw('raw-17b',['Offer_ID','Ниша','Persona_ID','Осведомл.','Hook-кандидаты (3 варианта)','Боль',
+  'Желаемый результат','Механизм/почему работает','Доказательства','Источники'],
+ [['O1','Интернет-магазины','P1','L2',
+   '«96 из 100 уходят молча» / «Поймайте тех, кто уже уходит» / «Реклама оплачена — заявок нет»',
+   'Платит за рекламу, заявок мало','Больше заявок с того же трафика',
+   'Ловит момент ухода по поведению, а не по таймеру','—','vc.ru/…'],
+  ['O2','Веб-студии','P2','L3',
+   '«Результат клиенту — вашими руками» / «Отчёт под вашим логотипом» / «Продление без уговоров»',
+   'Нужен результат для клиента','Клиент продлевает договор',
+   'Даёт агентству измеримый прирост, который можно показать','—','—']]);
+
+raw('raw-17f',['Offer_ID','Сегмент','Осведомл.','Заголовок','Подзаголовок','Проблема','Результат',
+  'Формула оффера','Состав/пакет','Формат','Цена','Доказательства','Снятие риска',
+  'Призыв к действию','Куда ведёт'],
+ [['F1','Интернет-магазины','L2','Верните тех, кто уходит с сайта',
+   'Виджет ловит момент ухода и предлагает то, что человек искал',
+   '96 из 100 посетителей уходят без заявки','Больше заявок с той же рекламы',
+   'Больше заявок без роста бюджета','Виджет, настройка, 3 сценария','Подписка',
+   'от 990 ₽/мес','—','—','Попробовать бесплатно','Страница регистрации']]);
+
+dtbl('m5-adv',['Достоинство','Что это даёт клиенту','Когда не работает'],
+ [[{h:'<span class="nm">Ловит момент ухода по поведению</span>'},'Заявки с того же трафика, без роста бюджета',
+   'На сайтах с трафиком меньше 500 человек в месяц — не на чем учиться'],
+  [{h:'<span class="nm">Ставится без разработчика</span>'},'Запуск за вечер, не ждать подрядчика',
+   'Если сайт на редком движке без доступа к шаблонам'],
+  [{h:'<span class="nm">Сценарии под сегмент</span>'},'Разным людям — разное предложение',
+   'Пока сегменты не описаны, все видят одно и то же']]);
+
+/* ── Ввод для офферов: 14 полей с пометкой происхождения ──────────────────
+   Пометка — вся суть правки. «Из брифа» означает, что это написал человек;
+   «не задано» означает, что поле пустое и его надо спросить, а не заполнить
+   правдоподобным. Третьего состояния («модель предположила») тут быть не должно. */
+(function(){
+  const box=document.getElementById('m5-inp'); if(!box) return;
+  const D=[
+    ['Бренд/название','Ловец лидов','brief'],
+    ['Компетенции','ИИ-подбор момента показа','brief'],
+    ['Отличия / УТП','Реагирует на поведение, а не на таймер','brief'],
+    ['Доказательства','не задано — нужны цифры или кейс','none'],
+    ['Кейсы','не задано','none'],
+    ['Форматы продукта','Виджет для сайта','site'],
+    ['Гео и расписание','Россия, круглосуточно','site'],
+    ['Ограничения','Нужен доступ к коду сайта','site'],
+    ['Гарантии','не задано — в отчёте стояло «возврат 14 дней», источника нет','none'],
+    ['Прайс и пакеты','от 990 ₽/мес','site'],
+    ['Способы оплаты','Карта, счёт для юрлиц','site'],
+    ['Тон коммуникации','Прямой, без жаргона','brief'],
+    ['Запрещённые формулировки','«взрывной рост», «гарантируем продажи»','brief'],
+    ['Seller_ID','S1','brief'],
+  ];
+  const LBL={brief:'из брифа',site:'с сайта',none:'не задано'};
+  box.innerHTML=D.map(([k,v,o])=>`<div class="ir">
+    <span class="k">${esc(k)}</span>
+    <span class="v${o==='none'?' miss':''}">${esc(v)}</span>
+    <span class="o ${o}">${LBL[o]}</span></div>`).join('');
+})();
+
+/* ── Финальный оффер карточкой ───────────────────────────────────────────
+   Порядок полей — не из таблицы, а из того, как читает человек: сначала
+   обещание, потом почему это про него, потом что внутри, потом цена и риск,
+   и только затем кнопка. Пустое «снятие риска» специально оставлено видимым. */
+(function(){
+  const box=document.getElementById('m5-off'); if(!box) return;
+  const O={
+    seg:'Интернет-магазины · L2 — знает о проблеме',
+    h1:'Верните тех, кто уходит с сайта',
+    h2:'Виджет ловит момент ухода и предлагает то, что человек искал',
+    prob:'96 из 100 посетителей уходят без заявки',
+    res:'Больше заявок с той же рекламы',
+    pack:['Виджет на сайт','Настройка под ваши страницы','Три готовых сценария'],
+    price:'от 990 ₽/мес',
+    risk:null,
+    cta:'Попробовать бесплатно',
+    to:'Страница регистрации',
+  };
+  box.innerHTML=`
+   <div style="border:1px solid var(--line);border-radius:18px;padding:22px 24px;background:var(--card-solid)">
+    <div style="font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--ink-3);margin-bottom:12px">${esc(O.seg)}</div>
+    <div style="font-family:'Source Serif 4',Georgia,serif;font-size:25px;font-weight:600;line-height:1.2;color:var(--ink);margin-bottom:8px">${esc(O.h1)}</div>
+    <div style="font-size:14px;color:var(--ink-2);line-height:1.5;margin-bottom:18px;max-width:56ch">${esc(O.h2)}</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;padding:14px 0;border-top:1px solid var(--line-2);border-bottom:1px solid var(--line-2);margin-bottom:16px">
+      <div><div style="font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-3);margin-bottom:5px">Проблема</div>
+        <div style="font-size:12.5px;color:var(--ink-2);line-height:1.45">${esc(O.prob)}</div></div>
+      <div><div style="font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-3);margin-bottom:5px">Результат</div>
+        <div style="font-size:12.5px;color:var(--ink-2);line-height:1.45">${esc(O.res)}</div></div>
+    </div>
+    <div style="font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-3);margin-bottom:8px">Что входит</div>
+    <ul style="margin:0 0 18px;padding-left:18px;font-size:12.5px;color:var(--ink-2);line-height:1.9">
+      ${O.pack.map(p=>`<li>${esc(p)}</li>`).join('')}</ul>
+    <div style="display:flex;align-items:center;gap:18px;flex-wrap:wrap">
+      <div style="font-size:19px;font-weight:700;color:var(--ink)">${esc(O.price)}</div>
+      <div style="flex:1;min-width:180px;font-size:12px;line-height:1.4;${O.risk?'color:var(--ink-2)':'color:var(--ink-3);font-style:italic'}">
+        ${O.risk?esc(O.risk):'снятие риска не заполнено — здесь клиент решает, рисковать ли'}</div>
+      <div style="background:var(--ink);color:var(--mist-1);font-size:13px;font-weight:600;padding:11px 22px;border-radius:999px">${esc(O.cta)}</div>
+    </div>
+    <div style="margin-top:12px;font-size:11px;color:var(--ink-3)">Ведёт на: ${esc(O.to)}</div>
+   </div>`;
+})();
+
+dtbl('m5-todo',['№','Что предлагаю','Ваше решение'],
+ [['1',{h:'<span class="nm">Вернуть M5 в прогон</span>Сейчас модуль выключен: офферов в отчёте нет вовсе'},'вернуть / оставить по запросу'],
+  ['2',{h:'<span class="nm">Правило заземления для 17A</span>Без него модель выдумывает гарантии и прайс — и это не видно'},'добавить'],
+  ['3',{h:'<span class="nm">Метка происхождения в 17A</span>Из брифа · с сайта · не задано'},'да / нет'],
+  ['4',{h:'<span class="nm">Убрать MDE и «дизайн теста»</span>Модель считает их вслепую: вашего трафика у неё нет'},'убрать / оставить'],
+  ['5',{h:'<span class="nm">Гипотезы доской, офферы карточкой</span>Форматы из библиотеки, переношу как есть'},'согласовано?'],
+  ['6',{h:'<span class="nm">Колонка «когда не работает» в 17B</span>У каждого достоинства есть условие отказа'},'добавить']]);
+
+dtbl('m5-bet',
+  ['Элемент','Формулировка'],
+  [[{h:'<span class="nm">Ставка одной фразой</span>'},{h:'<span class="strong">Измеренные кейсы прироста конверсии разблокируют все каналы продаж</span>'}],
+   [{h:'<span class="nm">На чём она стоит</span>'},'Вывод BLOCK 06_1: обещание «+25%» пока ничем не подтверждено'],
+   [{h:'<span class="nm">Если ставка верна</span>'},'Цифры «до и после» становятся топливом видео, сравнений и рекламы'],
+   [{h:'<span class="nm">Если ставка неверна</span>'},'Обещание без доказательств вызывает недоверие, установки не растут'],
+   [{h:'<span class="nm">Какая гипотеза проверяет</span>'},'Н1 — замер A/B у пяти клиентов']]);
+dtbl('m5-goals',
+  ['Цель','Метрика','Сейчас','Целевое значение','Гипотезы'],
+  [[{h:'<span class="nm">Доказать обещание продукта</span>'},'Прирост конверсии в заявки, замер A/B',
+    {h:'<span class="no">нет данных</span>'},'+25% к таймерному попапу','Н1'],
+   [{h:'<span class="nm">Вырастить платную базу</span>'},'Число платных клиентов',
+    {h:'<span class="no">нет данных</span>'},'1 000 клиентов','Н2, Н3, Н5'],
+   [{h:'<span class="nm">Запустить поток установок</span>'},'Установки бесплатного тарифа в неделю',
+    {h:'<span class="no">нет данных</span>'},'50 в неделю','Н3, Н4'],
+   [{h:'<span class="nm">Поднять монетизацию базы</span>'},'Конверсия из бесплатного в платный',
+    {h:'<span class="no">нет данных</span>'},
+    {h:'<span class="no">задать после 4 недель замера</span>'},'Н2, Н7']]);
+</script>

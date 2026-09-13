@@ -11,6 +11,15 @@
 //
 // Запуск:  osascript -l JavaScript tools/build.js
 ObjC.import('Foundation');
+// В JXA есть console.log, но НЕТ console.error и console.warn. Babel зовёт
+// console.error, когда исходник переваливает за 500 КБ («деоптимизация
+// форматирования») — предупреждение безобидное, но сборка падала на нём
+// целиком. 11.09.2026: app.jsx перешагнул порог, когда в него встали стили
+// макета и библиотеки. Подставляем недостающие методы.
+if (typeof console !== 'undefined') {
+  if (!console.error) console.error = function(){};
+  if (!console.warn) console.warn = function(){};
+}
 var BASE = '/Users/apr/Projects/ca-research/';
 
 function rd(p) {

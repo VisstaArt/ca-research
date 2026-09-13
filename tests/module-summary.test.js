@@ -1,0 +1,46 @@
+ObjC.import('Foundation');
+// Итог модуля: вырезается из текста и показывается карточкой наверху.
+// Отдельно проверяем случай, когда раздела нет — тогда текст обязан остаться
+// целым: молча потерять хвост модуля хуже, чем не показать карточку.
+function readFile(p){return $.NSString.stringWithContentsOfFileEncodingError($(p),$.NSUTF8StringEncoding,null).js;}
+var ROOT=$.NSFileManager.defaultManager.currentDirectoryPath.js;
+var SRC=readFile(ROOT+'/app.jsx');
+function grab(n){
+  var i=SRC.indexOf('function '+n+'('); if(i<0) throw new Error('нет '+n);
+  var d=0;
+  for(var k=SRC.indexOf('{',i);k<SRC.length;k++){ if(SRC[k]==='{')d++; else if(SRC[k]==='}'){d--; if(!d) return SRC.slice(i,k+1);} }
+}
+console.log('tests/module-summary.test.js');
+eval(grab('escHtml')); eval(grab('mdInlineSafe'));
+eval(grab('splitModuleSummary')); eval(grab('renderModuleSummary'));
+var fails=0;
+function check(n,g,w){var ok=JSON.stringify(g)===JSON.stringify(w);
+ if(!ok){fails++;console.log('  FAIL '+n+' | ждали '+JSON.stringify(w)+' | факт '+JSON.stringify(g));}
+ else console.log('  ok   '+n);}
+
+var text='# Модуль\n\n## BLOCK 24 — Каналы\n\n| A |\n|---|\n| x |\n\n'
+ +'## ИТОГ МОДУЛЯ\n\n### Что узнали\n\n- Первое\n- Второе\n\n'
+ +'### Что это значит\n\n- Смысл\n\n### Что делаем дальше\n\n- Действие\n';
+var c=splitModuleSummary(text);
+check('пункты «что узнали»', c.summary.learned, ['Первое','Второе']);
+check('пункты «что это значит»', c.summary.means, ['Смысл']);
+check('пункты «что делаем»', c.summary.next, ['Действие']);
+check('итог убран из тела', /ИТОГ МОДУЛЯ|Первое/.test(c.body), false);
+check('таблица в теле осталась', /BLOCK 24/.test(c.body), true);
+
+var h=renderModuleSummary(c.summary);
+check('три подзаголовка', (h.match(/class="smh"/g)||[]).length, 3);
+check('заголовок блока на месте', /Что дал этот модуль/.test(h), true);
+check('существо дела отдельно от следствий', /sm-main[\s\S]*sm-col[\s\S]*sm-side/.test(h), true);
+check('пункты списком', (h.match(/<li>/g)||[]).length, 4);
+
+var plain='# Модуль\n\n## BLOCK 24 — Каналы\n\n| A |\n|---|\n| x |\n';
+var c2=splitModuleSummary(plain);
+check('без итога тело не тронуто', c2.body, plain);
+check('без итога карточки нет', renderModuleSummary(c2.summary), '');
+
+// Хвост после итога не должен потеряться
+var withTail=text+'\n## BLOCK 25 — Хвост\n\n| B |\n|---|\n| y |\n';
+check('хвост после итога сохранён', /BLOCK 25/.test(splitModuleSummary(withTail).body), true);
+
+console.log(fails? '\nПРОВАЛОВ: '+fails : '\nвсё сошлось');

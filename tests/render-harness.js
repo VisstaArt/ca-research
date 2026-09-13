@@ -1,0 +1,66 @@
+// Обвязка для проверок отрисовки: достаёт renderResearchHTML и его
+// зависимости прямо из app.jsx — тест проверяет живой код, а не копию.
+// CSS-константы отчёта сюда не тянем: разметка от них не зависит.
+function grab(n){
+  var i=SRC.indexOf('async function '+n+'('); if(i<0) i=SRC.indexOf('function '+n+'(');
+  if(i<0) throw new Error('нет функции '+n);
+  var d=0,j=SRC.indexOf('{',i);
+  for(var k=j;k<SRC.length;k++){ if(SRC[k]==='{')d++; else if(SRC[k]==='}'){d--; if(!d) return SRC.slice(i,k+1);} }
+}
+function grabConstBlock(name, openCh, closeCh){
+  var i=SRC.indexOf('const '+name); if(i<0) throw new Error('нет '+name);
+  var j=SRC.indexOf(openCh,i);
+  if(openCh===closeCh){ var e=SRC.indexOf(closeCh,j+1); return SRC.slice(i,e+1)+';'; }
+  var d=0;
+  for(var k=j;k<SRC.length;k++){ if(SRC[k]===openCh)d++; else if(SRC[k]===closeCh){d--; if(!d) return SRC.slice(i,k+1)+';'; } }
+}
+eval(readFile(ROOT+'/lib/contract.js'));
+var C=globalThis.CAContract;
+globalThis.nichesOf=C.nichesOf; globalThis.resKey=C.resKey;
+eval(grabConstBlock('MODULES','[',']').replace(/^const /,'var '));
+eval(grabConstBlock('LANG_SELF','{','}').replace(/^const /,'var '));
+globalThis.LANG_SELF=LANG_SELF;
+globalThis.langSelf=function(l){return LANG_SELF[l]||l;};
+eval(grabConstBlock('GEO_REGIONS','[',']').replace(/^const /,'var '));
+globalThis.GEO_REGIONS=GEO_REGIONS;
+// Строковые константы: ищем конец литерала с учётом экранирования, иначе
+// первая же кавычка внутри CSS обрывает захват.
+function grabStringConst(name){
+  var i=SRC.indexOf('const '+name+' = "'); if(i<0) throw new Error('нет '+name);
+  var j=SRC.indexOf('"',i+('const '+name+' = ').length);
+  for(var k=j+1;k<SRC.length;k++){
+    if(SRC[k]==='\\'){k++;continue;}
+    if(SRC[k]==='"') return SRC.slice(i,k+1)+';';
+  }
+  throw new Error('литерал не закрыт: '+name);
+}
+globalThis.MODULES=MODULES; globalThis.REPORT_CSS=REPORT_CSS;
+globalThis.dropOrphans=C.dropOrphans;  // живёт в контракте, не в app.jsx
+eval(grab('escHtml')); globalThis.escHtml=escHtml;
+// Счёт скобок на этой функции больше не работает: внутри неё лежат строки с
+// кодом рисования, где фигурные скобки встречаются в тексте. Режем по границам
+// объявлений — они однозначны.
+function slice2(a,b){ var i=SRC.indexOf(a), j=SRC.indexOf(b,i); return SRC.slice(i,j); }
+eval(slice2('function renderResearchHTML(','\nfunction generateHTMLReport('));
+globalThis.renderResearchHTML=renderResearchHTML;
+
+// Заглушки CSS-констант: renderResearchHTML их не использует (их вшивает
+// generateHTMLReport), но замыкание ссылается на имена — без объявления
+// движок падает на ReferenceError ещё до первой строки разметки.
+var REPORT_CSS = REPORT_SIDEBAR = REPORT_BLOCK_CSS = REPORT_M1_CSS = REPORT_M7_CSS = REPORT_M2_CSS = REPORT_M4_CSS = REPORT_LIB2_CSS = REPORT_LIB3_CSS = REPORT_COMP_CSS = REPORT_LIB4_CSS = REPORT_PERS_CSS = REPORT_M5_CSS = REPORT_DEMO_CSS = REPORT_M3_CSS = REPORT_RULES_CSS = '';
+globalThis.REPORT_CSS = '';
+globalThis.REPORT_SIDEBAR = '';
+globalThis.REPORT_BLOCK_CSS = '';
+globalThis.REPORT_M1_CSS = '';
+globalThis.REPORT_M7_CSS = '';
+globalThis.REPORT_M2_CSS = '';
+globalThis.REPORT_M4_CSS = '';
+globalThis.REPORT_LIB2_CSS = '';
+globalThis.REPORT_LIB3_CSS = '';
+globalThis.REPORT_COMP_CSS = '';
+globalThis.REPORT_LIB4_CSS = '';
+globalThis.REPORT_PERS_CSS = '';
+globalThis.REPORT_M5_CSS = '';
+globalThis.REPORT_DEMO_CSS = '';
+globalThis.REPORT_M3_CSS = '';
+globalThis.REPORT_RULES_CSS = '';

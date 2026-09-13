@@ -333,7 +333,7 @@ function Market({ client, market, onBack, theme, setTheme, onOut }) {
       </aside>
       <div className="main">
         <div className="wrap">
-          <Slot tab={tab} done={done} />
+          <Slot tab={tab} done={done} client={client} market={market} />
         </div>
       </div>
     </div>
@@ -342,7 +342,7 @@ function Market({ client, market, onBack, theme, setTheme, onOut }) {
 
 // Место, куда встанут модули. Оболочка сама ничего не считает и не генерирует —
 // она только даёт модулю площадку и говорит, кто вошёл, какой клиент и рынок.
-function Slot({ tab, done }) {
+function Slot({ tab, done, client, market }) {
   const mod = MODULES.find(m => m.id === tab);
   if (tab === 'research') return (
     <>
@@ -350,12 +350,15 @@ function Slot({ tab, done }) {
         <h1>Исследование ЦА</h1>
         <p>Первый модуль: он ни от чего не зависит и открыт всегда.</p>
       </div>
-      <div className="card">
-        <h2>Сюда встанет нынешний инструмент</h2>
-        <p className="lede">Бриф, карта ниш, прогон модулей и сводный отчёт —
-          то, что сейчас живёт отдельной страницей.</p>
-        <a className="btn" href="index.html">Открыть его как есть →</a>
-      </div>
+      {/* Инструмент стоит ВНУТРИ оболочки, а не по ссылке рядом. Ссылка
+          означала выход из платформы: терялись клиент, рынок и обратный путь,
+          и человеку приходилось держать в голове, где он. Рамка получает
+          клиента и рынок параметрами — инструмент знает, для кого работает. */}
+      <iframe className="modframe" title="Исследование целевой аудитории"
+        src={'index.html?embed=1' + (client ? '&client=' + encodeURIComponent(client.id) : '')
+             + (market ? '&market=' + encodeURIComponent(market.id || '')
+                       + '&country=' + encodeURIComponent(market.country_name || market.country || '')
+                       + '&lang=' + encodeURIComponent(market.lang || '') : '')}></iframe>
       {!done && (
         <div className="warn">
           <span className="rule"></span>

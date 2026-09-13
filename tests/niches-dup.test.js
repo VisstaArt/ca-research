@@ -1,0 +1,24 @@
+ObjC.import('Foundation');
+// Список ниш печатался дважды: карточками (04_2) и сырой таблицей (04_1).
+// Проверяем обе стороны: дубль убран, но если матрицы нет — таблица остаётся,
+// потому что потерять данные хуже, чем показать их дважды.
+function readFile(p){return $.NSString.stringWithContentsOfFileEncodingError($(p),$.NSUTF8StringEncoding,null).js;}
+var ROOT=$.NSFileManager.defaultManager.currentDirectoryPath.js;
+var SRC=readFile(ROOT+'/app.jsx');
+function slice2(a,b){var i=SRC.indexOf(a), j=SRC.indexOf(b,i); return SRC.slice(i,j);}
+console.log('tests/niches-dup.test.js');
+var fails=0;
+function check(n,g,w){var ok=JSON.stringify(g)===JSON.stringify(w);
+ if(!ok){fails++;console.log('  FAIL '+n+' | ждали '+JSON.stringify(w)+' | факт '+JSON.stringify(g));}
+ else console.log('  ok   '+n);}
+eval(readFile(ROOT+'/tests/render-harness.js'));
+var withMatrix = '## BLOCK 04_1 — Service Effectiveness\n| Ниша | Спрос |\n|---|---|\n| Магазины | высокий |\n\n'
+  + '## BLOCK 04_2 — Приоритет ниш\n| Ниша | Спрос (1-5) | Конкуренция (1-5) | Экономика (1-5) | Соответствие бизнесу (1-5) | ИТОГО | Вердикт |\n'
+  + '|---|---|---|---|---|---|---|\n| Магазины | 4 | 3 | 4 | 4 | 15 | Идём |\n';
+var noMatrix = '## BLOCK 04_1 — Service Effectiveness\n| Ниша | Спрос |\n|---|---|\n| Магазины | высокий |\n';
+var a = renderResearchHTML(withMatrix, {});
+var b = renderResearchHTML(noMatrix, {});
+check('с матрицей таблицы 04_1 нет', /<table/.test(a.html) && a.html.indexOf('высокий')>=0, false);
+check('карточки ниш собираются', (a.scripts||[]).join(' ').indexOf('renderNicheBoard')>=0, true);
+check('без матрицы таблица осталась', /<table/.test(b.html), true);
+console.log(fails? '\nПРОВАЛОВ: '+fails : '\nвсё сошлось');

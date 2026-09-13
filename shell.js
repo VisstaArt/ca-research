@@ -1,6 +1,6 @@
 // СОБРАНО АВТОМАТИЧЕСКИ из shell.jsx — не править руками.
 // Правки вносить в shell.jsx, затем: osascript -l JavaScript tools/build.js
-// отпечаток-исходника: 23ae3f948c109038
+// отпечаток-исходника: 19fc486963d041cb
 const {
   useState,
   useEffect,
@@ -484,7 +484,9 @@ function Market({
     className: "wrap"
   }, /*#__PURE__*/React.createElement(Slot, {
     tab: tab,
-    done: done
+    done: done,
+    client: client,
+    market: market
   }))));
 }
 
@@ -492,19 +494,18 @@ function Market({
 // она только даёт модулю площадку и говорит, кто вошёл, какой клиент и рынок.
 function Slot({
   tab,
-  done
+  done,
+  client,
+  market
 }) {
   const mod = MODULES.find(m => m.id === tab);
   if (tab === 'research') return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
     className: "hdr"
-  }, /*#__PURE__*/React.createElement("h1", null, "\u0418\u0441\u0441\u043B\u0435\u0434\u043E\u0432\u0430\u043D\u0438\u0435 \u0426\u0410"), /*#__PURE__*/React.createElement("p", null, "\u041F\u0435\u0440\u0432\u044B\u0439 \u043C\u043E\u0434\u0443\u043B\u044C: \u043E\u043D \u043D\u0438 \u043E\u0442 \u0447\u0435\u0433\u043E \u043D\u0435 \u0437\u0430\u0432\u0438\u0441\u0438\u0442 \u0438 \u043E\u0442\u043A\u0440\u044B\u0442 \u0432\u0441\u0435\u0433\u0434\u0430.")), /*#__PURE__*/React.createElement("div", {
-    className: "card"
-  }, /*#__PURE__*/React.createElement("h2", null, "\u0421\u044E\u0434\u0430 \u0432\u0441\u0442\u0430\u043D\u0435\u0442 \u043D\u044B\u043D\u0435\u0448\u043D\u0438\u0439 \u0438\u043D\u0441\u0442\u0440\u0443\u043C\u0435\u043D\u0442"), /*#__PURE__*/React.createElement("p", {
-    className: "lede"
-  }, "\u0411\u0440\u0438\u0444, \u043A\u0430\u0440\u0442\u0430 \u043D\u0438\u0448, \u043F\u0440\u043E\u0433\u043E\u043D \u043C\u043E\u0434\u0443\u043B\u0435\u0439 \u0438 \u0441\u0432\u043E\u0434\u043D\u044B\u0439 \u043E\u0442\u0447\u0451\u0442 \u2014 \u0442\u043E, \u0447\u0442\u043E \u0441\u0435\u0439\u0447\u0430\u0441 \u0436\u0438\u0432\u0451\u0442 \u043E\u0442\u0434\u0435\u043B\u044C\u043D\u043E\u0439 \u0441\u0442\u0440\u0430\u043D\u0438\u0446\u0435\u0439."), /*#__PURE__*/React.createElement("a", {
-    className: "btn",
-    href: "index.html"
-  }, "\u041E\u0442\u043A\u0440\u044B\u0442\u044C \u0435\u0433\u043E \u043A\u0430\u043A \u0435\u0441\u0442\u044C \u2192")), !done && /*#__PURE__*/React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("h1", null, "\u0418\u0441\u0441\u043B\u0435\u0434\u043E\u0432\u0430\u043D\u0438\u0435 \u0426\u0410"), /*#__PURE__*/React.createElement("p", null, "\u041F\u0435\u0440\u0432\u044B\u0439 \u043C\u043E\u0434\u0443\u043B\u044C: \u043E\u043D \u043D\u0438 \u043E\u0442 \u0447\u0435\u0433\u043E \u043D\u0435 \u0437\u0430\u0432\u0438\u0441\u0438\u0442 \u0438 \u043E\u0442\u043A\u0440\u044B\u0442 \u0432\u0441\u0435\u0433\u0434\u0430.")), /*#__PURE__*/React.createElement("iframe", {
+    className: "modframe",
+    title: "\u0418\u0441\u0441\u043B\u0435\u0434\u043E\u0432\u0430\u043D\u0438\u0435 \u0446\u0435\u043B\u0435\u0432\u043E\u0439 \u0430\u0443\u0434\u0438\u0442\u043E\u0440\u0438\u0438",
+    src: 'index.html?embed=1' + (client ? '&client=' + encodeURIComponent(client.id) : '') + (market ? '&market=' + encodeURIComponent(market.id || '') + '&country=' + encodeURIComponent(market.country_name || market.country || '') + '&lang=' + encodeURIComponent(market.lang || '') : '')
+  }), !done && /*#__PURE__*/React.createElement("div", {
     className: "warn"
   }, /*#__PURE__*/React.createElement("span", {
     className: "rule"

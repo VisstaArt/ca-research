@@ -1,0 +1,3039 @@
+<title>Библиотека визуализаций</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap">
+<style>
+/* ── Референс: ZIXO (Behance, скрины владелицы 08.09.2026), второй заход ─────
+   Первый заход взял общую идею (туман, монохром, веер карт) слишком грубо —
+   владелица: «мало дизайнерских решений». Пересмотрела все восемь скринов
+   заново и выписала конкретные приёмы, которых не было:
+   1. Навигация — не список, а СЕТКА иконок-плиток 2×N для основных разделов,
+      обычный список только для второстепенных пунктов (скрин 1).
+   2. Веер карт — ПЯТЬ карт, не три, дальние размыты (blur), это и даёт
+      ощущение глубины, а не только поворот (скрин 1, 4).
+   3. Волнистая лента — их «Monthly Overview» рисует две переплетённые
+      синусоиды вместо обычной линии; здесь — декоративный слой за геройной
+      зоной, не выдаю за данные (скрин 1).
+   4. Дуга-индикатор (полукруг) вместо полного пончика для одной ключевой
+      величины плюс два числа под ней (скрин 1, «Weekly Spending»).
+   5. Точечный спарклайн (dot-matrix) как альтернатива линии — используют для
+      «Card Usage» (скрин 4).
+   6. Тёмная плашка-подсказка, пришпиленная к пиковой точке графика пунктирной
+      линией (скрин 1, «+8.2%»).
+   7. Круглые цветные иконки-аватары в строках таблицы вместо текстовых меток
+      (скрин 1, Starbucks/Netflix).
+   8. Живая подпись под героем и точки-пагинация (скрин 4, «Choose the color
+      of your card!»).
+   9. У карточек — мягкий внутренний блик сверху (световой блик по границе),
+      не только внешняя тень.
+
+   СТАТУСЫ (идём/под вопросом/не идём, рост/падение) владелица попросила
+   09.09.2026 брать ИЗ ПАЛИТРЫ, не зелёный/красный со стороны. У каждой из
+   четырёх палитр — своя тройка, выведенная из её же трёх цветов (тёмный →
+   «идём», тёплый → «под вопросом», самый глубокий/тревожный → «не идём»),
+   продавлена по контрасту 4.5 именно под фон карточки этой страницы (он
+   светлее прежнего макета, старые значения не проходили) и разведена по
+   различимости при дальтонизме (порог 8.0 в OKLab), как и везде в проекте.
+
+   Шрифт «Roobert» кириллицы не имеет — Montserrat, проверен на три языка. */
+/* ── Второй дизайн-бриф того же дня ──────────────────────────────────────────
+   Владелица прислала разбор стиля ZIXO от ChatGPT и попросила «переодеть»
+   уже собранную панель, не строить отдельный сайт. Ключевая правка брифа —
+   фон должен быть тёплой слоновой костью, а не холодным серым туманом, и
+   акцент — тонким светом (линия, точка, свечение), а не плотной заливкой.
+   Из-за смены фона ВСЕ производные цвета текста (приглушённый, безопасный
+   акцентный, три статуса) пересчитаны заново — они были продавлены именно
+   под старый холодный фон #FCFCFB и на тёплом #FBF9F2 часть не проходила
+   (приглушённый текст держал 2.95 при норме 4.5). */
+:root{
+  /* Фон страницы заметно ГЛУБЖЕ карточек — это и есть причина, по которой в
+     референсе стекло видно, а у меня раньше нет. Замерила по скриншоту ZIXO:
+     фон там ~#C9C7C4, карта ~#F2F0EC, отношение светлот 1.48. У меня было
+     1.07 — белое стекло на почти белом фоне просто исчезало. Новый фон даёт
+     1.42, практически как в оригинале.
+     Правка того же дня: первый вариант фона был «слишком коричневым» —
+     мера теплоты (насколько красный канал превышает синий) была 28. Сейчас 10:
+     жемчужно-серый с лёгкой тёплой ноткой, не бежевый.
+     Вторая правка: «слишком серый, надо светлее» — фон поднят с #D6D4CE до
+     #DEDBD4. Контраст к стеклу упал с 1.42 до 1.33 (в референсе 1.48) — это
+     нижняя граница, при которой карточки ещё читаются как стекло; светлее
+     уже нельзя, они начнут растворяться.
+     Следствие: боковое меню больше не может лежать прямо на фоне (текст на
+     нём переставал проходить контраст) — в референсе оно и есть отдельная
+     светлая панель, сделала так же. */
+  --mist-1:#F6F4EE; --mist-2:#D2CFCA; --card:#FBF9F2cc; --card-solid:#FBF9F2;
+  /* Подложка под графиками и таблицами — СВЕТЛЕЕ обычной карточки.
+     Она лежит прямо на фотографии фона, а у той яркость доходит до 0.95:
+     слоновая кость на светлых участках сливалась с фоном полностью
+     (отношение 1.00 — панели просто не было видно). --raise поднимает её
+     и заодно добавляет тексту 0.2 контраста. Тон оставлен тёплым (R−B = 5),
+     чтобы панель не выпадала из слоновой кости в холодную белизну. */
+  --raise:#FDFCF8;
+  --bloom:rgba(255,255,255,.95); --tint-a:rgba(230,228,215,.55); --tint-b:rgba(210,207,202,.5);
+  /* ПРАВКА 10.09: «текст побледновато читается». Померила — вторичные
+     чернила были светлее третичных (5.27 против 5.88), то есть основной
+     текст абзацев читался ХУЖЕ мелких подписей. Выровнено и углублено. */
+  --ink:#171512; --ink-2:#5B5852; --ink-3:#63615B;
+  --line:rgba(23,21,18,.09); --line-2:rgba(23,21,18,.05);
+  --hi:rgba(255,255,255,.55);
+  /* Итоговые значения выбранной палитры. Копируя стили из макета, я взяла их
+     из более раннего состояния — там ещё стояла «Тиффани», а фирменный --mid
+     вообще задавался скриптом и сюда не попал. Из-за этого всё бирюзовое
+     рисовалось пустотой: полосы SWOT, точки карты, ступень «готовы купить»,
+     третий блок рынка. Здесь палитра одна, поэтому значения заданы прямо. */
+  --mid:#06BDBD;              /* фирменный — заливкой */
+  --acc-ink:#06BDBD;          /* он же в тексте */
+  --acc-strong:#06BDBD;       /* идём */
+  --acc-mid:#4D66F7;          /* под вопросом */
+  --acc-quiet:#6E6C66;        /* не идём */
+  --acc-strong-ink:#06BDBD; --acc-mid-ink:#4A62EE; --acc-quiet-ink:#5E5C57;
+  /* Четыре цвета SWOT. Голубой пришлось увести вглубь, а фиолетовый — сделать
+     настоящим фиолетовым: замерено, что светло-голубой и наша бирюза при
+     дальтонизме сливаются в один цвет (ΔE 0.0 — то есть неотличимы вовсе).
+     На этих значениях худшая пара держит 10.9 при норме 8. */
+  /* Четвёрка SWOT — строго из палитры, без притемнённых производных:
+     фирменная бирюза, голубой и фиолетовый из тех же вспомогательных, графит.
+     Цветом здесь работает только заливка (плашка иконки, рамка, точки списка);
+     буквами эти цвета не ставим — на слоновой кости они не добирают контраста,
+     а подкрашивать их «почти тем же» нельзя, получается чужой цвет. */
+  --sw-green:#06BDBD; --sw-blue:#4DD1F7; --sw-violet:#4D66F7; --sw-grey:#6E6C66;
+  --sans:Montserrat,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  --serif:'Source Serif 4',Georgia,'Times New Roman',serif;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --mist-1:#141210; --mist-2:#0E0C0A; --card:#252119cc; --card-solid:#252119;
+  --raise:#2C2820;
+    --raise:#2C2820;
+    --ink:#F4F1E8; --ink-2:#A6A29A; --ink-3:#A8A49D;
+    --line:rgba(255,255,255,.09); --line-2:rgba(255,255,255,.05);
+    --hi:rgba(255,255,255,.06);
+    --mid:#06BDBD; --acc-ink:#06BDBD;
+    --acc-strong:#06BDBD; --acc-mid:#8A9BFF; --acc-quiet:#9A978F;
+    --acc-strong-ink:#06BDBD; --acc-mid-ink:#8A9BFF; --acc-quiet-ink:#9A978F;
+    --sw-green:#06BDBD; --sw-blue:#4DD1F7; --sw-violet:#8A9BFF; --sw-grey:#9A978F;
+  }
+}
+:root[data-theme="dark"]{
+  --mist-1:#141210; --mist-2:#0E0C0A; --card:#252119cc; --card-solid:#252119;
+  --ink:#F4F1E8; --ink-2:#A6A29A; --ink-3:#A8A49D;
+  --line:rgba(255,255,255,.09); --line-2:rgba(255,255,255,.05);
+  --hi:rgba(255,255,255,.06);
+  --mid:#06BDBD; --acc-ink:#06BDBD;
+  --acc-strong:#06BDBD; --acc-mid:#8A9BFF; --acc-quiet:#9A978F;
+  --acc-strong-ink:#06BDBD; --acc-mid-ink:#8A9BFF; --acc-quiet-ink:#9A978F;
+  --sw-green:#06BDBD; --sw-blue:#4DD1F7; --sw-violet:#8A9BFF; --sw-grey:#9A978F;
+}
+
+/* ── Фон ─────────────────────────────────────────────────────────────────────
+   Решение владелицы 09.09.2026: «Жемчужный светлый оставляем».
+   Выбран рисунок «Серебра» (мягкие световые лучи), перекрашенный в жемчуг.
+   Переключатель фонов удалён — выбор сделан.
+   Перекрасила не подбором фильтра, а по-честному: взяла ЯРКОСТЬ исходника —
+   в ней и живёт весь световой рисунок — и раскрасила её заново тёплой
+   жемчужной гаммой.
+   Понадобился отдельный шаг: вся картинка лежала в узком диапазоне яркости
+   187–248, и раскраска «в лоб» вышла почти белой, стекло карточек на ней
+   пропадало. Растянула этот диапазон на полный 0–255, и глубина вернулась:
+   от #F9F7F1 в свету до #CAC5BA в тени, контраст к карточке 1.03–1.65 при
+   1.48 в референсе ZIXO.
+   Фирменный цвет вернулся к точному цвету логотипа: тёплый фон и холодная
+   бирюза лежат на противоположных сторонах круга, и это не спор, а контраст
+   температур — то, что и делает акцент заметным. */
+:root{ --bgimg:url("data:image/jpeg;base64,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qpFjM1kk0MzQzNDM1IixQAEoiwASkiwSiKMtQQAWKIESiLAAACLAAAAFSiKIAACLAAESiAAiiAiiAiiAiwSiCkogIsAAPbFJRFgAIAABAACWAAAAAEUSgAKRRKAAAACy1q4ox1ic50i4upDWbQyahEiFiBIWBCxlRm6iwABKRRlYgACUQEUQCUsCARYAAARRFEURRAAoEWAAEURYAAkWACUQCURRJRAASURZSUQEWAHtiwAFAiwiiKIIAiwAAAIKgqCpQABYKAtMtKy2MrCpDVwNsjbGkqKRIUVKMtDE6w5TpI5tQksIIEKhagoRLTLRcNQgEsQBKIACASlgQACLAAoiiAASiAABUoiwAASiLAESiASiAASiAiwSiASykogAPapZFEAACgRRJqEUQQlEUQCUSgKRRKpFUshpkVlFQAFEtCSFSlJVuaWKREbZtSaGbJGrgbmQlGJ0hzbhhUsABUqEtVABJpGZsYahlRARYAqUkURRFEURRAAQACURYAAAsURYAARYAiURYARYAARYJRJRFElElVAe4NRKIsiLAAAFAAgAIogAAgAAAAACUCCpQQsgWUFEQWDRC51C3GhNZKyLLTDWSEKgqQsCKjKiWFAAqCoSwUAAQAQQBAASwABYEAiwAAASiLAAFAiwAAiwABIsAEogAIsEogEsEogr2xqAAJRFkRRFgACgRRFglEURRFgEAAQABRKhYgAAKLkWIVBoE1kFydM52TNGahu86azqnObyQEAERYARRFigAAJYVAIVCAJYAAEAKBAgAEURYAAAARRFgAlLFgAlEWACUkWACUQCUQCWCWAHtDcAAAAAiiLIiiKIFAAiwqBLTKiKIqIqosBIAgAAAAIAg1c6IQqCag1nUIgAWDd50ueg5TeSCIKCAoIAAixQEoijKkgIogAIogAUCKSAAAASiKIAAACLABKWKIBKIogSKIBKIogIsIsAPYGpUoFAAAAAAJRFGWkZahFEURRFEUslEBFgERYJRFEAAgJYAXWaJYCFgXfOibwSwWAA1kdZjRM9Ycp0wQQFAAABAEUsABJoZUSUkURYARRAAAqURSRYAAAJRFEWACURRFgCxRFglEWAJFEAlEWCUQHrWNSgWCpQKAAAAAAAAAIioACFAILASwASyAEoiwSiAiiWUAQAANM6MNZAAAAG+dOsxsxO2TlNwyAAAAAAISiL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QlSTTu546w/4tg/yxx//AP8A/DDDDDDDDDDDD3//AP8A8sP/APDfD7D/AI3YQXYVfffffQz/AP8A/gAAAAEM88884EYyEqr/AAaZei7VRou2306wjrml98888wwwwwwwwwwwwww//wD/APDD/jD/AB6w/wAP0F2lX333333/AP8A8gAAADPPPMAAAAFPHKHhlyVVTThVS4j2yp5wqgnstrhnvsssvvjj3jjywww0/wD/APDD/wA0/wAO8P8ADpB9Bd999999AAAAAAAE8wAAEc88s8+u0oaL/VZ9KJJlB6vXHnniiS+W22uCCe6GKS62++uLDDD3/wD6w/7w/wAv+v8AL9B1p9999999AAAAAAM84AAc8888+8+q2iGGTpp9x+NpJTqTbv3Tqy+KW++uOy//AKkohgkvvrgww/8A+8Nf8vete9etcFWlX333330AAAATzzgATzz77Lb776pbxgKbM1FWavWVPsoN9tutc98988IIIIJJb8rLYpL64sPPf89PP8vcPeudO1G1H333330AAQzzjABzz77oII4oJKJL5zjJY/V3sRmG1M5asvteM8s9PPPPP/8APOf/APzktjktriw0/wC8NP8ATvL3LvxtRp199999A088gAEc8++qCe++++OCCW+8MGGnBzkLJlnT6m2T3DrTDPzzzzPPPzz3/wD6gkvjktvjy8/70/29y9w707dSdffffUPPKABPPPvognvuggguvrgsviBDMjQ77s4eVU88wrg5w96w/wDvMc/P88NPf+8IJLY4rLK4PO8vevMedudOXknX330BTwBDzz7qIZ76III5oL76oK7qgygYuvwofnklcYr5KZbuNOPc87K9v+8sPf8A/vCSy+OC2+PTvLzP3PzPvTtZN199MY0IE88+qCW+qCCCyiGayiO++OIO3QmQkCeBt5rvmKCOS/vPTPzvavD3/LDzzzzvKC2uKy2OD3PTvbzbvD/1ZJ19/vMAk4w+C2+qCOOOKS2uCCcQcEgaTl/g+8g7hFrHOujbCy+XvTvDvSvDD3vDz/LT/vKS2OKS2LTvT/LTvnbvVZJBrz//AAAMFILmsjnrilqmBALqvponivNNDhKKokp8Yeqtm6cZb0x+y9wk9/z387w/z09/7wstrgti09y9zy522422fTXR9/7wAAPDOPPPvvgghgoiisiqurththksjpxTTfY+7vvij3vuhtn4361/wv69/wAsNPf84Lb4ra4Pe9P8Pds9dM1HX10/Oc8gDCRzzzT7qL65KZaMbo4c/a4N5OUMJGn0OMfPb74pY7a/NfsM+oL+8vPf88sPPc9La5LYpPctO9s9dc8EFHHW20fuMgADQzjzS5jS6r7776Os0q+/Hu3kEMN0ukcEMMPa5qL8/O8vO84LP88sNPO888Pc9rI5LIvO9vM+ec/MsEUHH33103uc8sPPJgzSqZ7L6t9X2NcV08W1321McV8EEEEMPK45Lp/Oc/P+8pLPf88tPPc9vOc7IZ6Y/P8AfnbPnTjbVNJx99995xPDzOwMYU8W+amTJx5/dBBL199pBpijZdNNNBBDTmO2jLTrDDz/ALzgu9/zz2//AM//AL3/AN84534+z6HMio88TUcaUcdXbw5yFKFPPLjspuyySdRTWeYQQQQWaahwSw885zQ9rsjow0zz489/zwgsst9/94y9707y0306v8pHBMD8xwQQQQSQ04bVxMBGMMMOKrqm50bZfaeaddbfVbaZlvRTTQwyQ8zsvtz28/zy088889y49mtrk/y9707888rmsmBGJy5zwwwQwww85a5xCMMJOLjpor9eXdbXUa08cTScZZnoRccT4Rw8jsst/wA89PPPPe8sP85qYrI7M9PdOc8Y47pboyhhAfPc8sMMMMMHX13vu9Czj4oqcX0lHWmUPl/H200mHcM/EXV0csPY4ZbJ7/oLsvvOc8vM7bZqZOcPcvN77657ob6RwQyM+Kc8MMEFH33311soiCxZIvHm0EFWvesPPP30120lW8+llG+ctNPPP+W8OKKs8Net/crarK7e9PP7oMNPMa5KrKxgRjI8M8MMFHH333322NjhobeVG0EG1OMMMMNPONMMNNEHUlVU1GWEkH+9PMc99Kc/P9uevZ7Zvc/7qMN/+8/IbK7qQygTAd/K88HX3320nEddxIq+Vn2lU0MMGGEHEMOEEEEMfrJK47+8sPPPPc889vM/O9uds9qZqY7qMMP/AP8A+9z2xionsjvJGNyk6w0ffffbW7214Er9SdQdeSwQQQQQQQQww3vohvvvuv8A/v8Af/vvPPLzP7HTnfnfzaiODDDf/wD+wQUd7w/itmtrGDML85wwffffeSSk031p6SdSQfWyQQQQwwww3voggsuttqigsktotgjjrp24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") }
+*{box-sizing:border-box}
+html{-webkit-font-smoothing:antialiased}
+body{margin:0;color:var(--ink);font-family:var(--sans);font-size:14.5px;
+  line-height:1.55;font-variant-numeric:tabular-nums;
+  background:
+    radial-gradient(900px 620px at 46% 60%, color-mix(in srgb, var(--mid) 7%, transparent), transparent 62%),
+    var(--bgimg) center/cover no-repeat fixed,
+    linear-gradient(168deg, var(--mist-1), var(--mist-2))}
+h1,h2,h3{margin:0;font-weight:600;letter-spacing:-.02em;text-wrap:balance}
+svg{display:block}
+
+.page{max-width:1180px;margin:0 auto;padding:30px 24px 60px}
+.lede{max-width:66ch;margin-bottom:24px}
+.lede h1{font-size:29px;margin-bottom:10px}
+/* Вступление лежит ПРЯМО НА ФОТОГРАФИИ фона, а у неё яркость гуляет от 0.58
+   до 0.95. На тёмных участках вторичные чернила давали 3.35 при норме 4.5 —
+   вот это и читалось бледным. Текст поверх фона идёт основными чернилами:
+   на самом тёмном участке 11.0, на самом светлом ещё выше. Правило общее:
+   на фон-фотографию вторичный цвет не кладём, только основной. */
+.lede p{margin:0 0 10px;color:var(--ink);font-size:15px;line-height:1.65}
+.lede b{color:var(--ink)}
+
+/* ПРАВКА 10.09, владелица: «таблички бледно читаются на этом фоне».
+   Замерила: панель была полупрозрачной (80%), и фон просвечивал сквозь неё —
+   отделение панели от фона падало до 1.25 при задуманных 1.33 (в референсе
+   ZIXO 1.48). То есть стекло съедало ровно тот запас светлоты, который был
+   заложен, когда мы подбирали фон.
+   Панель с данными теперь СПЛОШНАЯ. Это то же правило, что с перламутром:
+   стекло и переливы — материал объектов, а под данными поверхность должна
+   быть ровной и не спорить с ними. Размытие убрано — под непрозрачной
+   заливкой оно всё равно ничего не делало, только грузило отрисовку. */
+.viz{background:var(--raise);
+  border:1px solid var(--line);border-radius:22px;padding:20px 22px;margin-bottom:12px;
+  box-shadow:inset 0 1px 0 var(--hi), 0 14px 30px -24px rgba(45,36,22,.3)}
+.vh{display:flex;align-items:baseline;justify-content:space-between;gap:12px;
+  flex-wrap:wrap;margin-bottom:6px}
+.vh h2{font-size:19px}
+.vh .src{font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;
+  color:var(--acc-ink)}
+.vn{margin:0 0 14px;font-size:12.5px;color:var(--ink-3);max-width:70ch;line-height:1.55}
+.two{display:grid;gap:12px;grid-template-columns:1fr 1fr}
+.axis{fill:var(--ink-3);font-size:10.5px;font-family:var(--sans)}
+.lbl{fill:var(--ink-2);font-size:12px;font-family:var(--sans)}
+.val{fill:var(--ink);font-size:11.5px;font-weight:700;font-family:var(--sans)}
+.gridln{stroke:var(--line-2);stroke-width:1}
+
+/* ── SWOT: четыре поля, различаются не цветом, а положением и весом ── */
+.swot{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.sw{border:1px solid var(--line);border-radius:16px;padding:16px 18px;
+  background:color-mix(in srgb, var(--ink) 2%, transparent)}
+.sw h3{font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;
+  color:var(--ink-3);margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.sw h3 i{width:16px;height:3px;border-radius:2px;display:block}
+.sw ul{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:7px}
+.sw li{font-size:13px;color:var(--ink-2);padding-left:14px;position:relative;line-height:1.5}
+.sw li::before{content:"";position:absolute;left:0;top:8px;width:5px;height:5px;
+  border-radius:50%;background:var(--ink-3)}
+
+/* ── Половозрастная пирамида ──────────────────────────────────────────────
+   Из присланного дашборда. Ценна тем, что показывает возраст и пол ОДНОЙ
+   картинкой: у нас это были две отдельные шкалы, и связь «кто именно в этом
+   возрасте» терялась. Столбцы расходятся от общей оси возрастов, поэтому
+   перекос между полами виден по форме, без чтения чисел. */
+/* ЭТАЛОН МЕРЫ — блок «Приоритет ниш», выбран владелицей 10.09.
+   Оттуда сняты три величины, и они теперь действуют на всей странице:
+   полоса 14px, между строками 13px, и под каждой полосой светлая ДОРОЖКА
+   во всю ширину. Дорожка тут не украшение — она показывает шкалу: без неё
+   короткая полоса висит в пустоте и не с чем сравнивать. */
+.pyr{display:flex;flex-direction:column;gap:13px}
+.pyr-head{display:grid;grid-template-columns:1fr 78px 1fr;align-items:center;
+  margin-bottom:14px;padding-bottom:11px;border-bottom:1px solid var(--line);gap:8px}
+/* ПРАВКА: значки стояли на ярких заливках — такого на странице больше нигде
+   нет, и они лезли вперёд содержания. Плашка теперь нейтральная, как у всех
+   остальных значков. Цвет ничего не теряет: сторону и так называют положение,
+   фигура и подпись, а сам цвет живёт в полосах, где он и кодирует пол.
+   И рисунок сменён с условного знака (♂/♀) на ФИГУРУ человека — значок
+   уместен там, где им нарисован образ, а не подставлен символ. */
+.pyr-head .t{font-size:16px;font-weight:700;letter-spacing:-.02em;color:var(--ink);
+  display:flex;align-items:center;gap:9px}
+.pyr-head .t.r{justify-content:flex-end}
+.pyr-head .t .sx{width:26px;height:26px;border-radius:8px;display:flex;
+  align-items:center;justify-content:center;flex:0 0 auto}
+.pyr-head .t .sx{background:var(--line-2)}
+.pyr-head .t .sx svg{width:17px;height:17px;fill:none;stroke:var(--ink-2);
+  stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;display:block}
+.pyr-head .c{text-align:center;font-size:10px;font-weight:700;letter-spacing:.07em;
+  text-transform:uppercase;color:var(--ink-3)}
+.pyrow{display:grid;grid-template-columns:1fr 78px 1fr;align-items:center;gap:8px}
+.pyrow .s{display:flex;align-items:center}
+.pyrow .s.l{justify-content:flex-end}
+/* ПРАВКА: столбцы были толстыми плашками с числом ВНУТРИ — на нашей странице
+   так не сделано больше нигде, оттого блок и выбивался. Приведено к тому же
+   строю, что «боли по частоте» и «достаток»: тонкая полоса, число снаружи
+   чернилами. Цвет остался только заливкой полосы — он тут кодирует пол. */
+.pyrow .rail{flex:1;height:14px;background:var(--line-2);display:flex}
+.pyrow .s.l .rail{justify-content:flex-end}
+.pyrow .bar{height:14px;flex:0 0 auto;min-width:3px}
+.pyrow .l .bar{background:var(--mid)}
+.pyrow .r .bar{background:var(--sw-violet)}
+.pyrow .s .v{font-size:11.5px;font-weight:700;color:var(--ink);
+  font-variant-numeric:tabular-nums;min-width:38px}
+.pyrow .s.l .v{text-align:right;margin-right:9px}
+.pyrow .s.r .v{text-align:left;margin-left:9px}
+.pyrow .age{text-align:center;font-size:11.5px;color:var(--ink-2);font-weight:600;
+  font-variant-numeric:tabular-nums}
+
+/* ── Тепловая карта активности: дни × часы ───────────────────────────────── */
+.hm{display:grid;grid-template-columns:38px repeat(8,1fr);gap:3px;
+  font-size:10.5px;font-variant-numeric:tabular-nums}
+.hm .hh{color:var(--ink-3);text-align:center;padding-bottom:3px}
+.hm .hl{color:var(--ink-3);display:flex;align-items:center;font-weight:600}
+.hm .hc{height:26px;border-radius:4px}
+.hm .hc.peak{box-shadow:inset 0 0 0 2px var(--ink)}
+.hmleg{display:flex;align-items:center;gap:7px;margin-top:12px;font-size:11px;
+  color:var(--ink-3)}
+.hmleg .sc{display:flex;gap:2px}
+.hmleg .sc i{width:22px;height:9px;border-radius:2px;display:block}
+
+/* ── География спроса ─────────────────────────────────────────────────────
+   Две величины в одной строке, но НЕ на одной шкале — это разные вопросы.
+   Слева объём: где людей больше. Справа плотность: где спрос выше, чем
+   положено по населению. Второе и решает бюджет — в Москве запросов больше
+   всегда, просто потому что там больше людей, а дешёвый лид даёт регион,
+   который перевешивает свой размер.
+   Плотность — расходящаяся шкала: у неё есть осмысленный ноль (единица,
+   «ровно по населению»), поэтому два тона и нейтральная середина, а не
+   светлота одного тона. */
+.geo{display:flex;flex-direction:column;gap:13px}
+.geohead,.grow{display:grid;grid-template-columns:196px 1fr 150px 52px;
+  align-items:center;gap:14px}
+.geohead{font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;
+  color:var(--ink-3);padding-bottom:8px;margin-bottom:3px;border-bottom:1px solid var(--line)}
+.geohead .r{text-align:right}
+.grow{padding:0}
+.grow .nm{font-size:12.5px;color:var(--ink-2);line-height:1.3}
+.grow.base .nm{font-weight:700;color:var(--ink)}
+.gvol{display:flex;align-items:center;gap:9px}
+.gvol .rail{flex:1;height:14px;background:var(--line-2);display:flex}
+.gvol .b{height:14px;background:var(--mid);flex:0 0 auto}
+.grow.base .gvol .b{background:color-mix(in srgb, var(--mid) 38%, var(--line-2))}
+.gvol .v{font-size:12px;font-weight:700;font-variant-numeric:tabular-nums}
+/* Расходящаяся полоса: середина — «ровно по населению» */
+.gden{position:relative;height:14px;background:var(--line-2)}
+.gden .mid0{position:absolute;left:50%;top:0;bottom:0;width:1px;
+  background:color-mix(in srgb, var(--ink) 28%, transparent)}
+.gden .d{position:absolute;top:0;height:14px}
+.gden .d.up{left:50%;background:var(--mid)}
+.gden .d.dn{right:50%;background:var(--sw-violet)}
+.gx{font-size:12px;font-weight:700;text-align:right;font-variant-numeric:tabular-nums}
+.gvol .v{min-width:52px;text-align:right}
+.gx.up{color:var(--acc-ink)} .gx.dn{color:var(--acc-mid-ink)} .gx.eq{color:var(--ink-3)}
+.geoleg{display:flex;gap:18px;flex-wrap:wrap;margin-top:14px;font-size:11.5px;
+  color:var(--ink-3)}
+.geoleg span{display:flex;align-items:center;gap:7px}
+.geoleg i{width:11px;height:9px;border-radius:2px;display:block}
+@media (max-width:760px){
+  .geohead{display:none}
+  .grow{grid-template-columns:1fr 52px;grid-template-areas:'nm x' 'vol vol' 'den den';gap:5px}
+  .grow .nm{grid-area:nm} .gvol{grid-area:vol} .gden{grid-area:den} .gx{grid-area:x}
+}
+
+/* ── Портрет B2B, вариант 2: то, что меряется, — измерить ──────────────────
+   Владелица: «можно ещё вариант, чтобы с графиками, а не просто текстом».
+   Разбор показал: из семи строк портрета четыре по своей природе ЧИСЛОВЫЕ —
+   сколько человек участвует в решении, сколько длится сделка, какой бюджет
+   без согласования, на каком уровне осведомлённости сегмент. Текстом они
+   выглядят как мнение, а шкалой — как замер.
+   Три остальные (боль, тормоз, свои слова) остаются словами: их числом не
+   выразить, и попытка была бы враньём. Поэтому вариант 2 — не «то же самое
+   с картинками», а разделение по природе данных. */
+.bmet{display:grid;grid-template-columns:repeat(4,1fr);gap:20px;padding:20px 22px;
+  border-bottom:1px solid var(--line)}
+.bmet h4{font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;
+  color:var(--ink-3);margin:0 0 11px}
+.bmet .big{font-size:19px;font-weight:700;letter-spacing:-.02em;line-height:1.15;
+  margin-bottom:3px}
+.bmet .sm{font-size:11.5px;color:var(--ink-3);line-height:1.45}
+/* фигурки: закрашенные = участвуют в решении */
+.ppl{display:flex;gap:5px;margin-bottom:9px}
+.ppl svg{width:17px;height:19px;display:block}
+/* дорожка со значением: диапазон заливкой, наша отметка штрихом */
+.trk{position:relative;height:14px;background:var(--line-2);margin:6px 0 8px}
+.trk .rg{position:absolute;top:0;bottom:0;background:var(--mid)}
+.trk .mk{position:absolute;top:-4px;bottom:-4px;width:2px;background:var(--ink)}
+.trk-ax{display:flex;justify-content:space-between;font-size:10px;color:var(--ink-3)}
+.mklbl{font-size:11px;color:var(--ink-2);margin-top:7px}
+.mklbl b{color:var(--ink)}
+/* пять ступеней осведомлённости */
+.aw5{display:flex;align-items:flex-end;gap:4px;height:46px;margin-bottom:8px}
+.aw5 div{flex:1;background:var(--mid);position:relative}
+.aw5 div span{position:absolute;left:-2px;right:-2px;bottom:-16px;text-align:center;
+  font-size:9px;color:var(--ink-3);white-space:nowrap}
+.bpain{padding:20px 22px;border-bottom:1px solid var(--line)}
+.bpain h4{font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;
+  color:var(--ink-3);margin:0 0 12px}
+.bpain .dbar{grid-template-columns:1fr 190px 58px}
+.chnside .dbar{grid-template-columns:1fr 84px 34px}
+.bpain .dbar .t{color:var(--ink-2)}
+.bpain .dbar .n{font-variant-numeric:tabular-nums}
+@media (max-width:820px){ .bmet{grid-template-columns:1fr 1fr} }
+
+/* ── Голос клиента: цитата как объект, а не ячейка таблицы ────────────────
+   У конкурента это таблица на тридцать строк, и её никто не дочитывает.
+   Цитата работает иначе: она должна ПРОЗВУЧАТЬ. Поэтому карточка, дословный
+   текст засечным шрифтом — единственное место на странице, где он уместен:
+   так видно, что это чужая речь, а не наш пересказ. Под цитатой — откуда
+   она и сколько раз эта боль встретилась во всём материале.
+
+   ПРАВКА: в макете платформы этот блок уже был сделан КАРУСЕЛЬЮ, а я собрала
+   его заново решёткой. Возвращено к макету — прокрутка вбок со стрелками и
+   привязкой к плашке. Так и правильнее по существу: цитат в отчёте бывает
+   сорок, решётка на сорок карточек занимает экран целиком и обесценивает
+   каждую; лента показывает несколько и не мешает читать дальше. */
+.vochead{display:flex;align-items:center;justify-content:space-between;gap:14px;
+  margin-bottom:12px}
+.vocnav{display:flex;gap:8px}
+/* Стрелки без кружков: кружок — кнопка, а тут не действие, а листание. */
+.qarrow{width:26px;height:26px;border:0;background:none;padding:0;
+  display:flex;align-items:center;justify-content:center;
+  color:var(--ink-3);flex:0 0 auto;cursor:pointer}
+.qarrow:hover{color:var(--ink)}
+.qarrow:disabled{opacity:.3;cursor:default}
+.qarrow svg{width:19px;height:19px;fill:none;stroke:currentColor;stroke-width:1.7;
+  stroke-linecap:round;stroke-linejoin:round}
+.voc{display:flex;gap:12px;overflow-x:auto;scroll-snap-type:x mandatory;
+  scrollbar-width:none;padding-bottom:2px}
+.voc::-webkit-scrollbar{display:none}
+.vq{flex:0 0 auto;width:268px;scroll-snap-align:start;
+  border:1px solid var(--line);background:var(--card-solid);padding:17px 19px;
+  border-radius:16px;display:flex;flex-direction:column;gap:12px;
+  justify-content:space-between}
+.vq blockquote{margin:0;font-family:var(--serif);font-style:italic;
+  font-size:14px;line-height:1.5;color:var(--ink)}
+/* Состояние цитаты приходит ОТ контент-машины, исследование его не хранит.
+   Три состояния различаются формой метки, а не только цветом: пустой кружок,
+   закрашенный фирменный, закрашенный серый. */
+.vq .vst{display:flex;align-items:center;gap:7px;font-size:10px;font-weight:700;
+  letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3)}
+.vq .vst i{width:9px;height:9px;border-radius:50%;display:block;flex:0 0 auto}
+.vq .vst.wait i{border:1.5px solid var(--ink-3)}
+.vq .vst.work i{background:var(--mid)}
+.vq .vst.done i{background:var(--ink-3)}
+.vq .vst.work{color:var(--ink)}
+.vq .vf{display:flex;justify-content:space-between;align-items:center;gap:12px;
+  padding-top:12px;border-top:1px solid var(--line-2)}
+.vq .vsrc{font-size:11px;color:var(--ink-3);line-height:1.4}
+.vq .vsrc b{display:block;color:var(--ink-2);font-weight:600;font-size:11.5px}
+.vq .vcnt{font-size:11px;font-weight:700;color:var(--ink);white-space:nowrap;
+  display:flex;align-items:center;gap:7px}
+.vq .vcnt i{width:8px;height:8px;background:var(--mid);display:block}
+
+/* ── Возражение и ответ ───────────────────────────────────────────────────
+   Страх и то, чем он снимается, ценны только вместе: по отдельности первое —
+   жалоба, второе — лозунг. Поэтому одна строка на пару.
+   ПРАВКА: подписи «что говорит клиент» и «чем снимаем» повторялись в каждой
+   строке. Приведено к тому же виду, что альтернативы, — шапка один раз.
+   Стрелка и заливки половин тоже убраны: направление задаёт порядок колонок,
+   а цвет здесь ничего не кодировал. */
+.obj{border:1px solid var(--line);border-radius:16px;overflow:hidden;max-width:940px}
+.ohead,.orow{display:grid;grid-template-columns:.92fr 1.08fr;gap:18px}
+.ohead{padding:11px 18px;font-size:10px;font-weight:700;letter-spacing:.07em;
+  text-transform:uppercase;color:var(--ink-3);
+  background:color-mix(in srgb, var(--ink) 3%, transparent)}
+.orow{padding:14px 18px;border-top:1px solid var(--line-2);align-items:start}
+.orow .of{font-family:var(--serif);font-style:italic;font-size:13.5px;
+  line-height:1.5;color:var(--ink)}
+.orow .oa{font-size:12.5px;color:var(--ink-2);line-height:1.5}
+
+/* ── Альтернативы: против чего мы на самом деле конкурируем ────────────────
+   Главный конкурент почти всегда «ничего не делать», и его надо выделить
+   графически, иначе его снова прочитают как строку в списке. */
+/* ПРАВКА: подписи «почему её выбирают» и «что мы говорим против» повторялись
+   в каждой строке — это и есть определение таблицы, только вывернутое
+   наизнанку. Написаны один раз в шапке, как в портрете сегмента. */
+.alt{border:1px solid var(--line);border-radius:16px;overflow:hidden}
+.ahead,.arow{display:grid;grid-template-columns:184px 1fr 1fr;gap:16px}
+.ahead{padding:11px 18px;font-size:10px;font-weight:700;letter-spacing:.07em;
+  text-transform:uppercase;color:var(--ink-3);
+  background:color-mix(in srgb, var(--ink) 3%, transparent)}
+.arow{align-items:start;padding:14px 18px;border-top:1px solid var(--line-2)}
+.arow .an{font-size:13.5px;font-weight:700;line-height:1.3}
+.arow .aty{display:inline-block;font-size:10px;font-weight:700;letter-spacing:.05em;
+  text-transform:uppercase;color:var(--ink-3);margin-top:5px}
+.arow .atx{font-size:12.5px;color:var(--ink-2);line-height:1.5}
+/* ПРАВКА: плашка «главный» стояла сразу за названием — толкала строку и
+   выглядела грубо. Выделение ушло вбок: полоса фирменного цвета по левому
+   краю плюс тихая надпись НАД названием. Строка читается ровно, а особый
+   статус виден раньше, чем начинаешь читать. */
+.arow.main{background:color-mix(in srgb, var(--mid) 6%, transparent);
+  border-top:0;padding-left:15px;box-shadow:inset 3px 0 0 var(--mid)}
+.arow .aeb{font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;
+  color:var(--ink-3);margin-bottom:5px}
+
+/* ── Где сидит аудитория ──────────────────────────────────────────────────
+   ПРАВКА: было пять колонок во всю ширину. В каждой ячейке две-три строки
+   текста, между ними метры пустоты — таблица выглядела растянутой и пустой,
+   хотя данных в ней достаточно. Причина в форме, а не в количестве: пять
+   узких колонок с разной длиной текста никогда не выровняются. Пересобрано
+   карточками — площадка тут ОБЪЕКТ, а не строка сравнения: их не читают
+   по колонкам сверху вниз, каждую рассматривают отдельно. */
+/* Сбоку — доли по площадкам. Важно, ЧТО именно тут измерено: это доля
+   собранного материала, а не доля аудитории. Второго числа у нас нет и
+   честно взять его неоткуда — «34% аудитории сидит на vc.ru» было бы
+   выдумкой. Зато первое число само по себе ценно: оно показывает перекос
+   выборки, о котором предупреждает приписка внизу. */
+.chnwrap{display:grid;grid-template-columns:1fr 268px;gap:22px;align-items:start}
+.chnside h4{font-size:10px;font-weight:700;letter-spacing:.07em;
+  text-transform:uppercase;color:var(--ink-3);margin:0 0 4px}
+.chnside .sub{font-size:11.5px;color:var(--ink-3);line-height:1.45;margin:0 0 14px}
+.chn{display:grid;grid-template-columns:repeat(auto-fit,minmax(296px,1fr));gap:12px}
+.ccard{border:1px solid var(--line);background:var(--card-solid);border-radius:16px;
+  padding:16px 18px;display:flex;flex-direction:column;gap:11px}
+.ccard .ch{display:flex;align-items:center;gap:11px}
+.ccard .ci{width:34px;height:34px;border-radius:11px;background:var(--line-2);
+  display:flex;align-items:center;justify-content:center;flex:0 0 auto}
+.ccard .ci svg{width:19px;height:19px;fill:none;stroke:var(--ink-2);stroke-width:1.6;
+  stroke-linecap:round;stroke-linejoin:round;display:block}
+.ccard .cn{font-size:14px;font-weight:700;line-height:1.25}
+.ccard .cn span{display:block;font-size:11px;font-weight:600;color:var(--ink-3);
+  margin-top:3px}
+.ccard .cd{font-size:12.5px;color:var(--ink-2);line-height:1.5}
+.ccard .cf{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;
+  padding-top:11px;border-top:1px solid var(--line-2);margin-top:auto}
+.ccard .cf div span{display:block;font-size:10px;font-weight:700;letter-spacing:.07em;
+  text-transform:uppercase;color:var(--ink-3);margin-bottom:3px}
+.ccard .cf div b{font-size:12px;font-weight:700;color:var(--ink)}
+.ccard .cf .r{text-align:right}
+@media (max-width:1000px){ .chnwrap{grid-template-columns:1fr} }
+@media (max-width:900px){
+  .ohead{display:none}
+  .orow{grid-template-columns:1fr;gap:8px}
+  .ahead{display:none}
+  .arow{grid-template-columns:1fr;gap:8px}
+  .ccard .cf{flex-direction:column;align-items:flex-start;gap:9px}
+  .ccard .cf .r{text-align:left}
+}
+
+/* ── Общая таблица отчёта ─────────────────────────────────────────────────
+   Владелица 10.09: подписи колонок пишутся ОДИН раз в шапке, а не повторяются
+   в каждой строке. Здесь это вынесено в один класс, чтобы все оставшиеся
+   блоки отчёта строились по одному образцу, а не расходились каждый по-своему.
+   Число колонок задаётся переменной --cols на месте. */
+.dtbl{border:1px solid var(--line);border-radius:16px;overflow:hidden}
+.dtbl .th,.dtbl .tr{display:grid;grid-template-columns:var(--cols);gap:18px}
+.dtbl .th{padding:11px 18px;font-size:10px;font-weight:700;letter-spacing:.07em;
+  text-transform:uppercase;color:var(--ink-3);
+  background:color-mix(in srgb, var(--ink) 3%, transparent)}
+.dtbl .tr{padding:14px 18px;border-top:1px solid var(--line-2);align-items:start;
+  font-size:12.5px;line-height:1.5;color:var(--ink-2)}
+/* ПРАВКА: перенос рвал слово где попало, вплоть до одной буквы. Виноват был
+   overflow-wrap:anywhere — он ломает строку в любом месте, не глядя на слоги.
+   Убран. Оставлен hyphens:auto, но он работает только когда браузер знает
+   язык — поэтому на .page стоит lang="ru", иначе словаря переносов нет и
+   ничего не переносится вовсе. И задан минимум: слово от 6 букв, не меньше
+   трёх до переноса и трёх после — одна буква на строке больше невозможна. */
+.dtbl .nm{font-size:13.5px;font-weight:700;color:var(--ink);line-height:1.3;display:block}
+.dtbl .tr>div{min-width:0}
+.page{hyphens:auto;-webkit-hyphens:auto;
+  hyphenate-limit-chars:6 3 3;-webkit-hyphenate-limit-before:3;-webkit-hyphenate-limit-after:3}
+/* Числа, коды и подписи осей не переносим никогда. */
+.val,.axis,.lbl,.gx,.dbar .n,.kpi .n,.pyrow .s .v,.gvol .v{hyphens:none;-webkit-hyphens:none}
+.dtbl .tag{display:inline-block;font-size:10px;font-weight:700;letter-spacing:.05em;
+  text-transform:uppercase;color:var(--ink-3);margin-top:5px}
+.dtbl .q{font-family:var(--serif);font-style:italic;font-size:13px;color:var(--ink);
+  line-height:1.5}
+.dtbl .no{color:var(--ink-3);font-style:italic}
+.dtbl .lead{box-shadow:inset 3px 0 0 var(--mid);padding-left:15px;
+  background:color-mix(in srgb, var(--mid) 5%, transparent)}
+.dtbl .eb{font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;
+  color:var(--ink-3);margin-bottom:5px}
+.dtbl .strong{color:var(--ink);font-weight:600}
+.dt2{margin-top:12px}
+@media (max-width:900px){
+  .dtbl .th{display:none}
+  .dtbl .tr{grid-template-columns:1fr!important;gap:8px}
+}
+
+/* ── Банк хуков ───────────────────────────────────────────────────────────
+   Это не цитаты заново: цитата описывает боль, хук — готовая ПЕРВАЯ СТРОКА.
+   Отбираются из уже собранных цитат, не сочиняются. Поэтому крупно и подряд,
+   как их и будут читать в ленте, а рядом — куда каждый годится. */
+.hooks{display:flex;flex-direction:column;gap:0}
+.hrow{display:grid;grid-template-columns:26px 1fr 190px;gap:16px;align-items:baseline;
+  padding:13px 0;border-top:1px solid var(--line-2)}
+.hrow:first-child{border-top:0}
+.hrow .hn{font-size:12px;font-weight:700;color:var(--ink-3);
+  font-variant-numeric:tabular-nums}
+.hrow .ht{font-family:var(--serif);font-size:15px;line-height:1.45;color:var(--ink)}
+.hrow .hu{font-size:11.5px;color:var(--ink-3);line-height:1.4;text-align:right}
+.hrow .hu b{display:block;color:var(--ink-2);font-weight:600;font-size:12px}
+
+/* ── Контент-система: рубрики и ритм ──────────────────────────────────────── */
+.rub{display:grid;grid-template-columns:repeat(auto-fit,minmax(238px,1fr));gap:12px}
+.rcard{border:1px solid var(--line);background:var(--card-solid);border-radius:16px;
+  padding:16px 18px;display:flex;flex-direction:column;gap:9px}
+.rcard .rn{font-size:14px;font-weight:700;line-height:1.25}
+.rcard .rj{font-size:12.5px;color:var(--ink-2);line-height:1.5}
+.rcard .rf{display:flex;justify-content:space-between;gap:10px;padding-top:10px;
+  border-top:1px solid var(--line-2);margin-top:auto;font-size:11.5px}
+.rcard .rf span{color:var(--ink-3)}
+.rcard .rf b{color:var(--ink);font-weight:700}
+.rhy{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-top:14px}
+.rhy .rd{border:1px solid var(--line);border-radius:12px;padding:11px 10px;
+  background:var(--card-solid);min-height:78px}
+.rhy .rd .dw{font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;
+  color:var(--ink-3);margin-bottom:7px}
+.rhy .rd .dt{font-size:11.5px;color:var(--ink);line-height:1.35;font-weight:600}
+.rhy .rd.off .dt{color:var(--ink-3);font-weight:400}
+.rhy .rd .dbar2{height:5px;margin-top:8px}
+
+/* ── ТЗ на лендинг: экраны по порядку ─────────────────────────────────────
+   Порядок здесь несёт смысл — это последовательность, в которой человек
+   читает страницу, а не список разделов. Поэтому нумерация и вертикальная
+   нить, а не решётка карточек. */
+.lnd{display:flex;flex-direction:column;gap:0;position:relative}
+.lstep{display:grid;grid-template-columns:52px 1fr 1fr;gap:18px;padding:15px 0;
+  border-top:1px solid var(--line-2);align-items:start}
+.lstep:first-child{border-top:0}
+.lstep .ln{font-size:19px;font-weight:700;color:var(--ink-3);letter-spacing:-.02em;
+  font-variant-numeric:tabular-nums;line-height:1.1}
+.lstep .lt{font-size:13.5px;font-weight:700;line-height:1.3}
+.lstep .lj{font-size:12px;color:var(--ink-3);line-height:1.45;margin-top:4px}
+.lstep .lc{font-size:12.5px;color:var(--ink-2);line-height:1.5}
+.lstep .lc b{display:block;font-size:10px;font-weight:700;letter-spacing:.07em;
+  text-transform:uppercase;color:var(--ink-3);margin-bottom:4px}
+@media (max-width:820px){
+  .hrow{grid-template-columns:26px 1fr}
+  .hrow .hu{grid-column:2;text-align:left}
+  .rhy{grid-template-columns:repeat(2,1fr)}
+  .lstep{grid-template-columns:40px 1fr}
+  .lstep .lc{grid-column:2}
+}
+
+/* ── Карта отчёта: что оформлено, чего не хватает ─────────────────────────
+   Тот же приём, что у проверки по 13 вопросам: не рассказывать словами,
+   а показать покрытие. Три состояния различаются и цветом, и формой метки. */
+.mapg{display:grid;grid-template-columns:repeat(auto-fill,minmax(232px,1fr));gap:8px}
+.mcell{display:flex;gap:10px;align-items:flex-start;padding:11px 13px;border-radius:12px;
+  border:1px solid var(--line);background:var(--card-solid);font-size:12.5px;
+  line-height:1.4}
+.mcell i{width:9px;height:9px;border-radius:50%;flex:0 0 auto;margin-top:4px;display:block}
+.mcell span{flex:1}
+.mcell span b{display:block;font-size:10px;font-weight:700;letter-spacing:.07em;
+  text-transform:uppercase;color:var(--ink-3);margin-top:3px}
+.mcell.have{background:color-mix(in srgb, var(--mid) 8%, var(--card-solid));
+  border-color:color-mix(in srgb, var(--mid) 30%, var(--line))}
+.mcell.have i{background:var(--mid)}
+.mcell.add i{border:1.5px solid var(--sw-violet)}
+.mcell.none i{background:var(--sw-grey)}
+.mcell.out{opacity:.72}
+.mcell.out i{background:var(--card-solid);border:1.5px solid var(--sw-grey)}
+.mlegend{display:flex;gap:18px;flex-wrap:wrap;margin-top:14px;font-size:11.5px;
+  color:var(--ink-3)}
+.mlegend span{display:flex;align-items:center;gap:8px}
+.mlegend i{width:9px;height:9px;border-radius:50%;display:block}
+
+/* ── Визуальная стратегия ─────────────────────────────────────────────────── */
+.vis{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.vis h4{font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;
+  color:var(--ink-3);margin:0 0 12px}
+.sw2{display:flex;gap:0;margin-bottom:8px}
+.sw2 div{flex:1;height:52px;display:flex;align-items:flex-end;padding:7px 9px;
+  font-size:10px;font-weight:700;font-variant-numeric:tabular-nums}
+.sw2 div small{font-size:9px;font-weight:600;opacity:.75;display:block}
+.visnote{font-size:12px;color:var(--ink-3);line-height:1.5;margin:0}
+.typo{border:1px solid var(--line);border-radius:14px;padding:16px 18px;
+  background:var(--card-solid)}
+.typo .t1{font-size:22px;font-weight:700;letter-spacing:-.02em;line-height:1.2}
+.typo .t2{font-family:var(--serif);font-size:14px;line-height:1.5;color:var(--ink-2);
+  margin-top:8px}
+.typo .t3{font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;
+  color:var(--ink-3);margin-top:12px}
+.rules{display:flex;flex-direction:column;gap:0}
+.rr{display:grid;grid-template-columns:1fr 1fr;gap:16px;padding:11px 0;
+  border-top:1px solid var(--line-2);font-size:12.5px;line-height:1.45}
+.rr:first-child{border-top:0}
+.rr .y{color:var(--ink)}
+.rr .n2{color:var(--ink-3)}
+.rr .lb2{display:block;font-size:10px;font-weight:700;letter-spacing:.07em;
+  text-transform:uppercase;color:var(--ink-3);margin-bottom:4px}
+@media (max-width:900px){ .vis,.acard .ag,.rr{grid-template-columns:1fr} }
+
+/* ── Ссылка на источник ───────────────────────────────────────────────────
+   Владелица 10.09: «нам надо всё давать, особенно голос клиента, конкурентов,
+   со ссылками, чтобы всё это можно было проверять».
+   Справедливо и это не мелочь: исследование без возможности проверить строку
+   превращается в мнение. Номер [n] ведёт в блок «Источники» внизу — та же
+   сквозная нумерация, что уже принята в отчёте. */
+/* Номера источников — те же ссылки, значит тот же вид: фирменный цвет плюс
+   постоянное подчёркивание. Размер поднят с 10.5 до 11.5: на бирюзе мелкий
+   кегль читается тяжелее всего, а уменьшать контраст здесь нечем. */
+.rn2{display:inline-block;font-size:11.5px;font-weight:700;color:var(--acc-mid-ink);
+  text-decoration:none;vertical-align:0;white-space:nowrap;hyphens:none;
+  border-bottom:1px solid color-mix(in srgb, var(--acc-mid-ink) 45%, transparent)}
+.rn2:hover{border-bottom-color:var(--acc-mid-ink)}
+
+/* ── Источники разведки ───────────────────────────────────────────────────
+   ПРАВКА 10.09, владелица: «после сайта сразу слеплена оценка — непонятно, что
+   это такое; и надо активные ссылки прямо на название сайта».
+   Обе правки по делу. Домен — настоящая ссылка: колонка URL в исходной таблице
+   есть, а кликнуть было нельзя, то есть проверить источник всё равно не
+   получалось. И «что взяли» отделено подписью — без неё строка читалась как
+   продолжение названия сайта.
+   Подчёркивание фирменным цветом, а сами буквы чернилами: бирюза текстом на
+   слоновой кости даёт 2.17 при норме 4.5. */
+.srcs{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:0 28px}
+.srow{display:grid;grid-template-columns:32px 1fr;gap:12px;padding:13px 0;
+  border-top:1px solid var(--line-2);align-items:baseline}
+.srow .sn{font-size:11.5px;font-weight:700;color:var(--acc-mid-ink);
+  font-variant-numeric:tabular-nums;hyphens:none}
+.srow .sd{font-size:12.5px;line-height:1.45;min-width:0}
+.srow .sd .dom{display:flex;align-items:baseline;justify-content:space-between;gap:12px}
+/* ССЫЛКИ — ОДИН вид на всё: синий плюс постоянное подчёркивание.
+   Решение владелицы 10.09: «прийти к одному знаменателю, лучше синим —
+   виднее; если всё бирюзовым, оно будет сливаться».
+   Так и есть, и цифры это подтверждают: синий на подложке даёт 4.79 при норме
+   4.5, бирюза — 2.27. Бирюза остаётся фирменным цветом ЗАЛИВОК (плашки, полосы,
+   секторы), синий — цветом всего кликабельного. Два цвета, две разные работы,
+   ни один не мешает другому.
+   Подчёркивание оставлено постоянным: оно отличает ссылку от просто цветного
+   слова, а на цвет одного этого мало. */
+.srow .sd .dom a{font-size:13.5px;font-weight:700;color:var(--acc-mid-ink);
+  text-decoration:none;border-bottom:1px solid color-mix(in srgb, var(--acc-mid-ink) 45%, transparent);
+  overflow-wrap:break-word;hyphens:none}
+.srow .sd .dom a:hover{border-bottom-color:var(--acc-mid-ink)}
+.srow .sd .dom a svg{width:10px;height:10px;display:inline-block;vertical-align:1px;
+  margin-left:5px;fill:none;stroke:currentColor;stroke-width:2}
+.srow .sd .dt{font-size:11px;color:var(--ink-3);white-space:nowrap;flex:0 0 auto;
+  hyphens:none}
+.srow .sd .took{margin-top:8px}
+.srow .sd .took span{display:block;font-size:10px;font-weight:700;letter-spacing:.07em;
+  text-transform:uppercase;color:var(--ink-3);margin-bottom:3px}
+.srow .sd .took em{font-style:normal;color:var(--ink-2);font-size:12.5px;line-height:1.45}
+
+/* ── Доля внимания ────────────────────────────────────────────────────────── */
+.att .dbar{grid-template-columns:172px 1fr 104px}
+.att .dbar .n{white-space:nowrap}
+
+/* ── Тепловая матрица ── */
+.heat{width:100%;border-collapse:separate;border-spacing:3px;font-size:12px}
+.heat th{font-weight:600;color:var(--ink-3);font-size:10.5px;letter-spacing:.05em;
+  text-transform:uppercase;padding:0 6px 6px;text-align:center;vertical-align:bottom}
+.heat th:first-child{text-align:left}
+.heat td{text-align:center;padding:9px 6px;border-radius:8px;font-weight:700;color:var(--ink)}
+.heat td:first-child{text-align:left;font-weight:600;color:var(--ink-2);
+  background:none;padding-left:0;white-space:nowrap}
+
+
+/* ── Канбан гипотез ── */
+.kan{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.kcol h3{font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;
+  color:var(--ink-3);margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid var(--line)}
+.kcard{border:1px solid var(--line);border-radius:14px;padding:13px 15px;margin-bottom:9px;
+  background:var(--card-solid)}
+.kcard b{display:block;font-size:12.5px;margin-bottom:4px}
+.kcard span{display:block;font-size:11.5px;color:var(--ink-3);line-height:1.5}
+.kcard .met{margin-top:8px;padding-top:8px;border-top:1px solid var(--line-2);
+  font-size:11px;color:var(--ink-2);font-weight:600}
+/* Критерий успеха — единственное, что в карточке фирменного цвета: карточка
+   существует ради него, а всё остальное в ней справочное. */
+.kcard .met u{text-decoration:none;color:var(--acc-ink);font-weight:700}
+
+/* ── Дерево ниш ── */
+.tree{display:flex;flex-direction:column;gap:5px}
+.tnode{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:12px;
+  background:color-mix(in srgb, var(--ink) 2.5%, transparent);font-size:13px}
+.tnode .bar{height:6px;border-radius:0;flex:0 0 auto}
+.tnode .nm{flex:1;color:var(--ink-2)}
+.tnode .sc{font-weight:700;font-size:12.5px;color:var(--ink)}
+.tnode.lead{background:color-mix(in srgb, var(--mid) 10%, transparent)}
+.tnode.lead .nm{color:var(--ink);font-weight:600}
+
+/* ── Плитки-числа ── */
+/* Плитки собраны так же, как в первом шаблоне: отдельные карточки с полями,
+   подпись сверху, число и график в одной строке, изменение снизу. Раньше они
+   были склеены в одну полосу и стояли иначе — это и было «сделано не так». */
+.kpi{display:grid;grid-template-columns:repeat(5,1fr);gap:14px}
+.kpi > div{background:var(--card-solid);border:1px solid var(--line);
+  border-radius:20px;padding:18px 20px}
+.kpi .k{font-size:12px;color:var(--ink-3);margin-bottom:8px}
+.kpi .row{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.kpi .n{font-size:25px;font-weight:700;letter-spacing:-.02em;line-height:1.1}
+.kpi svg{display:block;flex:0 0 auto}
+.kpi .d{font-size:11px;margin-top:7px;display:inline-flex;gap:5px;align-items:baseline}
+.kpi .d b{font-weight:700}
+.kpi .d b.up{color:var(--acc-ink)}       /* рост — фирменная бирюза */
+.kpi .d b.down{color:var(--acc-mid-ink)} /* падение — фиолетовый */
+.kpi .d b.flat{color:var(--ink-2)}       /* без изменений — тёмно-серый */
+.kpi .d span{color:var(--ink-2);font-weight:700}
+
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--ink-2);margin-top:14px}
+.legend i{width:11px;height:8px;display:inline-block;margin-right:6px}
+@media (max-width:1000px){ .kpi{grid-template-columns:repeat(2,1fr)} }
+@media (max-width:820px){ .two,.swot,.kan{grid-template-columns:1fr} }
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+
+/* ── Портрет сегмента ─────────────────────────────────────────────────────────
+   Владелица: «дала простую графику, не сильно яркую и не сильно красивую».
+   Справедливо — но лечится это не количеством цветов. В присланном колесе на
+   13 сегментов цвет ничего не кодирует, а 13 оттенков подряд глаз всё равно
+   не различает. Красоту там делают МАСШТАБ, форма и типографика.
+   Поэтому здесь: крупный знак сегмента, крупные числа, широкие поля, заметное
+   присутствие фирменного цвета — но по-прежнему один акцент, а не радуга.
+   Портрет ветвится по типу аудитории: у B2B решает роль и размер компании,
+   у B2C — возраст, пол, интересы. Это разные наборы полей, и сводить их в
+   одну таблицу нельзя. */
+.pers{display:grid;grid-template-columns:230px 1fr;gap:0;
+  border:1px solid var(--line);border-radius:20px;overflow:hidden;margin-bottom:14px}
+.pers-side{padding:24px;display:flex;flex-direction:column;gap:14px;
+  background:linear-gradient(165deg,
+    color-mix(in srgb, var(--mid) 22%, var(--card-solid)),
+    color-mix(in srgb, var(--mid) 6%, var(--card-solid)))}
+.pers-av{width:74px;height:74px;border-radius:22px;display:flex;align-items:center;
+  justify-content:center;font-size:25px;font-weight:800;letter-spacing:-.02em;
+  color:#12100D;background:linear-gradient(160deg,
+    color-mix(in srgb, var(--mid) 92%, white), color-mix(in srgb, var(--mid) 92%, black))}
+.pers-side .rl{font-size:10px;font-weight:700;letter-spacing:.07em;
+  text-transform:uppercase;color:var(--ink-3)}
+.pers-side h3{font-size:18px;line-height:1.25;letter-spacing:-.02em}
+.pers-side .one{font-size:12.5px;color:var(--ink-2);line-height:1.55}
+.pers-share{margin-top:auto;padding-top:14px;border-top:1px solid rgba(23,21,18,.1)}
+.pers-share b{display:block;font-size:32px;font-weight:700;letter-spacing:-.03em;line-height:1}
+.pers-share span{font-size:11.5px;color:var(--ink-3)}
+.pers-main{background:var(--card-solid)}
+.prow{display:grid;grid-template-columns:150px 1fr 1fr;gap:16px;
+  padding:12px 22px;border-top:1px solid var(--line-2);font-size:13px;line-height:1.5}
+.prow:first-child{border-top:0}
+.prow .p{color:var(--ink-3);font-size:11.5px;font-weight:600;padding-top:1px}
+.prow .v{color:var(--ink)}
+.prow .a{color:var(--acc-ink);font-weight:600}
+.prow-head{display:grid;grid-template-columns:150px 1fr 1fr;gap:16px;padding:11px 22px;
+  font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;
+  color:var(--ink-3);background:color-mix(in srgb, var(--ink) 3%, transparent)}
+
+/* B2C: демография полосами вместо круговых диаграмм */
+.demo{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;padding:18px 22px;
+  border-top:1px solid var(--line-2)}
+.demo h4{font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;
+  color:var(--ink-3);margin:0 0 10px}
+.dsplit{display:flex;height:26px;border-radius:0;overflow:hidden;margin-bottom:7px}
+.dsplit span{display:flex;align-items:center;justify-content:center;font-size:11px;
+  font-weight:700;color:#12100D}
+.dbars{display:flex;flex-direction:column;gap:13px}
+.dbar{display:grid;grid-template-columns:46px 1fr 30px;gap:8px;align-items:center;font-size:11.5px}
+.dbar .t{color:var(--ink-3)}
+.dbar .g{height:14px;background:var(--line-2)}
+.dbar .g i{display:block;height:100%;background:var(--mid)}
+.dbar .n{text-align:right;font-weight:700;color:var(--ink)}
+/* ── Интересы: иконка рисует ОБРАЗ, а не приклеена к подписи ───────────────
+   Владелица: иконка уместна там, где ею нарисована вещь, — так красивее, чем
+   одними словами; и неуместна как значок рядом с заголовком таблицы.
+   Здесь как раз первый случай: «маркетплейсы», «онлайн-курсы», «вечерний
+   Telegram» — это предметы и занятия, у каждого есть узнаваемый рисунок.
+   Поэтому не чипы-таблетки со словами, а плитка: рисунок сверху, слово под ним.
+
+   ПРАВКА: первый заход был бирюзовым — плитка в тон, кружок в тон, шесть
+   цветных пятен подряд. Владелица: «иконки это хорошо, но оформлены
+   неправильно, выбиваются из общей стилистики». Справедливо, и причина
+   считается: интересы НИЧЕГО не кодируют — это перечень, а не величина.
+   Цвет здесь был чистым украшением, а вокруг вся страница держит цвет только
+   там, где он что-то значит. Взяла рисунок иконки прямо из макета платформы
+   (.navtile .ic): нейтральный квадратик со скруглением, штрих графитом.
+
+   ПРАВКА 2: убраны рамки и подложка — «обводки лишние». Так и есть: рамка
+   очерчивает объект, а здесь объектов нет, есть перечень.
+   ПРАВКА 3: не плитки, а список — значок и текст в строку. Плитками короткие
+   подписи разбегались по центрам и читались вразнобой; списком глаз идёт по
+   одной левой кромке, как в остальных таблицах страницы. Два списка стоят
+   рядом и разделены вертикальной линией — это два разных вопроса. */
+.chips{display:flex;flex-direction:column;gap:11px}
+.chips figure{margin:0;display:flex;flex-direction:row;align-items:center;gap:11px;
+  text-align:left}
+.chips figure .disc{width:34px;height:34px;border-radius:11px;display:flex;
+  align-items:center;justify-content:center;background:var(--line-2)}
+.chips figure svg{width:19px;height:19px;fill:none;stroke:var(--ink-2);
+  stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;display:block}
+.chips figcaption{font-size:12.5px;font-weight:600;color:var(--ink-2);line-height:1.35}
+/* Два списка рядом: линия по середине показывает, что вопросы разные. */
+.demo.split{grid-template-columns:1fr 1fr;gap:0}
+.demo.split > div + div{border-left:1px solid var(--line);padding-left:24px}
+.demo.split > div:first-child{padding-right:24px}
+@media (max-width:820px){
+  .demo.split > div + div{border-left:0;border-top:1px solid var(--line);
+    padding-left:0;padding-top:18px}
+  .demo.split > div:first-child{padding-right:0}
+}
+
+/* Покрытие вопросов — вместо радужного колеса */
+.cov{display:grid;grid-template-columns:repeat(auto-fill,minmax(215px,1fr));gap:9px}
+.cq{display:flex;gap:11px;align-items:flex-start;padding:12px 14px;border-radius:13px;
+  border:1px solid var(--line);background:var(--card-solid);font-size:12.5px;line-height:1.45}
+.cq b{font-size:11px;font-weight:800;color:var(--ink-3);min-width:17px;letter-spacing:-.02em}
+.cq.yes{background:color-mix(in srgb, var(--mid) 9%, var(--card-solid));
+  border-color:color-mix(in srgb, var(--mid) 35%, var(--line))}
+.cq.yes b{color:var(--acc-ink)}
+.cq .src2{display:block;margin-top:4px;font-size:10.5px;font-weight:700;
+  letter-spacing:.05em;text-transform:uppercase;color:var(--acc-ink)}
+.cq.no .src2{color:var(--ink-3)}
+@media (max-width:820px){ .pers{grid-template-columns:1fr} .demo{grid-template-columns:1fr}
+  .prow,.prow-head{grid-template-columns:1fr} .prow .p{font-weight:700} }
+
+/* ── Плитки сводки: спарклайн заполняет пустоту справа ───────────────────────
+   Владелица: «слишком большие пробелы». Причина не в отступах, а в том, что
+   плитка широкая, а содержимого мало: число и две строки. В макете там же стоял
+   спарклайн — он и держал правую половину. Возвращаю. */
+
+
+/* ── Доли сегментов: кольцо с иконками ── */
+.seg{display:grid;grid-template-columns:230px 1fr;gap:26px;align-items:center}
+.seg-leg{display:flex;flex-direction:column;gap:9px}
+.sl{display:flex;align-items:center;gap:12px}
+.sl .ic{width:38px;height:38px;border-radius:12px;flex:0 0 auto;display:flex;
+  align-items:center;justify-content:center;border:1px solid var(--line)}
+.sl .ic svg{width:19px;height:19px;fill:none;stroke-width:1.6}
+.sl .nm{flex:1;font-size:12.5px;color:var(--ink-3);line-height:1.35}
+.sl .nm b{display:block;color:var(--ink);font-weight:700;font-size:13.5px}
+.sl .pc{font-size:17px;font-weight:700;letter-spacing:-.02em;min-width:44px;text-align:right}
+
+/* ── SWOT: четыре поля — четыре цвета ────────────────────────────────────────
+   Владелица попросила просто четыре разных цвета вместо кодировки оттенком.
+   Полоска сверху убрана: она спорила со скруглением, и одно из двух должно
+   было уйти. Цвет теперь несёт рамка, подложка, иконка и точки списка —
+   углы остаются круглыми. */
+.sw{position:relative}
+.sw-s{--c:var(--sw-green)}
+.sw-w{--c:var(--sw-violet)}
+.sw-o{--c:var(--sw-blue)}
+.sw-t{--c:var(--sw-grey)}
+.sw-s,.sw-w,.sw-o,.sw-t{
+  background:color-mix(in srgb, var(--c) 9%, transparent);
+  border-color:color-mix(in srgb, var(--c) 34%, var(--line))}
+.sw-s li::before,.sw-w li::before,.sw-o li::before,.sw-t li::before{background:var(--c)}
+.sw-note{grid-column:1/-1;font-size:11.5px;color:var(--ink-3);margin-top:2px;line-height:1.5}
+@media (max-width:820px){ .seg{grid-template-columns:1fr} }
+
+/* ── Путь клиента лесенкой ───────────────────────────────────────────────────
+   Формат из примера владелицы. Хорош он не видом, а устройством: каждый этап
+   сразу спарен с ДЕЙСТВИЕМ — «что делаем на этом этапе». Это тот же приём,
+   что и третья колонка в портрете сегмента: справка превращается в инструкцию.
+   Что взято: ступени полосами, крупный номер, стрелка вперёд, сужение слева.
+
+   ПРАВКА 10.09, владелица: «грубовато, выглядит сильно тяжело». Причин три.
+   1. Пять НАСЫЩЕННЫХ заливок подряд с белым текстом — самый контрастный из
+      возможных приёмов, отсюда тяжесть. Теперь одна бирюза по светлоте от
+      бледной к плотной, текст тёмный. Смысл тот же и даже точнее: продвижение
+      по пути — ОДНА величина, ей и положена одна шкала, а не пять тонов.
+   2. Три из пяти прежних цветов (#8E8C87, #6E76C9, #3FA9C9) вообще не из
+      палитры — остались с раннего захода. Их больше нет.
+   3. Острые углы и глубокий вырез. Углы скруглены, подписи мельче и без
+      разрядки — «техническая» жёсткость уходит.
+
+   ПРАВКА 2, тот же день: стрелка на конце убрана совсем — теперь просто косой
+   срез, и цветная часть придвинута к тексту. Владелица: «эта площадь у нас
+   очень большая закрашена». Так и было: полосы шли до 340px, и на пять рядов
+   набиралась заметная плашка цвета. Сузила до 250–175. Сужение к низу при этом
+   сохранилось — оно показывает, сколько людей доходит, — просто разница теперь
+   мягче, а точный процент всё равно стоит числом справа. */
+.lad{display:flex;flex-direction:column;gap:8px}
+.lrow{display:grid;grid-template-columns:var(--lw,300px) 1fr;gap:0;align-items:stretch}
+.lleft{position:relative;display:flex;align-items:center;gap:13px;
+  padding:14px 26px 14px 18px;color:var(--ink);border-radius:12px 0 0 12px;
+  /* один косой срез вместо стрелки: верх длиннее низа */
+  clip-path:polygon(0 0, 100% 0, calc(100% - 20px) 100%, 0 100%)}
+.lleft .num{font-size:19px;font-weight:700;letter-spacing:-.02em;opacity:.5;
+  min-width:28px;text-align:right}
+.lleft .nm{font-size:13px;font-weight:700;line-height:1.3;letter-spacing:-.01em}
+.lright{padding:14px 20px 14px 22px;margin-left:-14px;border-radius:0 12px 12px 0;
+  background:color-mix(in srgb, var(--ink) 2%, transparent);
+  display:flex;flex-direction:column;justify-content:center;gap:3px}
+.lright b{font-size:13px;font-weight:700;color:var(--ink);line-height:1.4}
+.lright span{font-size:12.5px;color:var(--ink-2);line-height:1.5}
+.lright .meta{margin-top:6px;font-size:11.5px;font-weight:600;
+  color:var(--ink-3);display:flex;gap:16px;flex-wrap:wrap}
+.lright .meta i{font-style:normal}
+.lright .meta i.rk-high{color:var(--acc-mid-ink)}
+.lright .meta i.rk-medium{color:var(--ink-3)}
+.lright .meta i.rk-low{color:var(--acc-ink)}
+.lright .meta i.rk::before{content:"";display:inline-block;width:6px;height:6px;
+  border-radius:50%;background:currentColor;margin-right:6px;vertical-align:1px}
+@media (max-width:820px){
+  .lrow{grid-template-columns:1fr}
+  .lleft{clip-path:none;padding-right:18px;border-radius:12px 12px 0 0}
+  .lright{margin-left:0;padding-left:20px}
+}
+
+<style>
+/* ── Разбор модуля: «как сейчас» рядом с «как предлагаю» ─────────────────── */
+.sech{font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--ink-3);margin:34px 0 14px;display:flex;align-items:center;gap:14px}
+.sech::after{content:"";flex:1;height:1px;background:var(--line)}
+.two2{display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:start}
+.two2 .viz{margin-bottom:0}
+/* Настоящая таблица отчёта — намеренно без украшений: она должна выглядеть
+   ровно так, как выглядит сегодня, иначе сравнение нечестное. */
+.rawwrap{overflow-x:auto}
+table.raw{border-collapse:collapse;width:100%;font-size:11.5px;line-height:1.4}
+table.raw th,table.raw td{border:1px solid var(--line);padding:6px 8px;
+  text-align:left;vertical-align:top;hyphens:none}
+table.raw th{background:color-mix(in srgb, var(--ink) 4%, transparent);
+  font-weight:700;color:var(--ink-3);font-size:10.5px;white-space:nowrap}
+table.raw td{color:var(--ink-2)}
+table.raw td.num{font-variant-numeric:tabular-nums;text-align:center;white-space:nowrap}
+.verd{background:color-mix(in srgb, var(--sw-violet) 5%, var(--raise));
+  border:1px solid color-mix(in srgb, var(--sw-violet) 24%, var(--line));
+  border-radius:16px;padding:16px 20px;margin:12px 0 0}
+.verd p{margin:0 0 9px;font-size:13px;line-height:1.55;color:var(--ink-2)}
+.verd p:last-child{margin-bottom:0}
+.verd b{color:var(--ink)}
+@media (max-width:1000px){ .two2{grid-template-columns:1fr} }
+
+
+
+
+<style>
+/* ── Карточка конкурента ──────────────────────────────────────────────────
+   BLOCK 06 отдаёт ВОСЕМНАДЦАТЬ колонок на 8–15 строк. Таблицей это не
+   читается ни на каком экране: строка уезжает вбок, и чтобы сравнить оффер
+   с ценой, приходится возить полосу прокрутки туда-сюда.
+   Конкурент — объект, а не строка сравнения. Поэтому карточка, и поля в ней
+   сгруппированы по смыслу: кто это → что предлагает → чем силён и слаб →
+   что мешает клиенту и как он это снимает → наша возможность.
+   Ни одно поле не выброшено: все восемнадцать на месте. */
+.comp{display:flex;flex-direction:column;gap:12px}
+.ccard2{border:1px solid var(--line);background:var(--card-solid);border-radius:18px;
+  overflow:hidden}
+.ccard2 .chead{display:grid;grid-template-columns:1fr auto;gap:16px;align-items:start;
+  padding:16px 20px;background:color-mix(in srgb, var(--ink) 3%, transparent);
+  border-bottom:1px solid var(--line)}
+.ccard2 .cid{font-size:10.5px;font-weight:700;letter-spacing:.06em;color:var(--ink-3);
+  hyphens:none}
+.ccard2 .cnm{font-size:16px;font-weight:700;letter-spacing:-.02em;margin:3px 0 4px}
+.ccard2 .cmeta{display:flex;gap:8px;flex-wrap:wrap;align-items:center;font-size:11.5px;
+  color:var(--ink-3)}
+.ccard2 .scale{display:inline-block;font-size:10px;font-weight:700;letter-spacing:.05em;
+  text-transform:uppercase;padding:2px 8px;border-radius:999px;background:var(--line-2);
+  color:var(--ink-2);hyphens:none}
+.ccard2 .price{text-align:right}
+.ccard2 .price b{display:block;font-size:16px;font-weight:700;letter-spacing:-.02em}
+.ccard2 .price span{display:block;font-size:10.5px;color:var(--ink-3);margin-top:2px}
+.cgrid{display:grid;grid-template-columns:1fr 1fr;gap:0}
+.cbox{padding:15px 20px;border-top:1px solid var(--line-2)}
+.cbox:nth-child(odd){border-right:1px solid var(--line-2)}
+.cbox h5{margin:0 0 8px;font-size:10px;font-weight:700;letter-spacing:.07em;
+  text-transform:uppercase;color:var(--ink-3)}
+.cbox p{margin:0;font-size:12.5px;line-height:1.5;color:var(--ink-2)}
+.cbox p+p{margin-top:7px}
+.cbox ul{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:6px}
+.cbox li{font-size:12.5px;line-height:1.45;color:var(--ink-2);padding-left:14px;
+  position:relative}
+.cbox li::before{content:"";position:absolute;left:0;top:7px;width:5px;height:5px;
+  background:var(--ink-3)}
+.cbox.pro li::before{background:var(--mid)}
+.cbox.con li::before{background:var(--sw-violet)}
+.cbox.full{grid-column:1/-1;border-right:0}
+.cbox.gap2{grid-column:1/-1;border-right:0;
+  background:color-mix(in srgb, var(--mid) 5%, transparent)}
+.cbox.gap2 p{color:var(--ink)}
+
+/* ── Гэп-анализ, сгруппированный по статусу ───────────────────────────────
+   Главное здесь — не «что у нас лучше», а НА ЧЁМ это утверждение стоит.
+   Поэтому «Основание статуса» вынесено на видное место, а не спрятано
+   одиннадцатой колонкой, куда никто не долистает. */
+/* Секция статуса/эмоции — отдельная карточка: шапка, под ней шапка колонок,
+   под ней ряды. Заголовок, стоящий просто строкой над рядами, сливается с
+   таблицей — владелица поймала это на M2. */
+.gap{display:flex;flex-direction:column;gap:14px}
+.gsec{border:1px solid var(--line);border-radius:16px;overflow:hidden;
+  background:var(--card-solid)}
+.gsec h4{margin:0;padding:14px 18px;font-size:12px;font-weight:700;letter-spacing:.08em;
+  text-transform:uppercase;color:var(--ink);display:flex;align-items:center;gap:14px;
+  border-bottom:1px solid var(--line)}
+/* Заголовок с эмоцией: крупный значок слева, рядом название и подсказка в две
+   строки — блок начинается с образа, а не с полоски текста. */
+.gsec h4.wemo .etxt{display:flex;flex-direction:column;gap:3px;min-width:0}
+.gsec h4.wemo .etxt b{font-size:15px;font-weight:700;letter-spacing:-.01em;
+  text-transform:none;color:var(--ink)}
+.gsec h4.wemo .etxt span{font-size:11.5px;font-weight:600;letter-spacing:0;
+  text-transform:none;color:var(--ink-3)}
+.gsec h4 .cnt{margin-left:auto;font-size:11px;font-weight:700;color:var(--ink-2);
+  letter-spacing:0;text-transform:none;hyphens:none;white-space:nowrap}
+.grow2{display:grid;grid-template-columns:186px 1fr 1fr 1fr;gap:16px;
+  padding:12px 18px;border-top:1px solid var(--line-2);align-items:start;font-size:12.5px;
+  line-height:1.45}
+.grow2:first-of-type{border-top:0}
+.grow2 .kk{font-weight:700;color:var(--ink);font-size:13px}
+.grow2 .vv{color:var(--ink-2)}
+.grow2 .vv b{color:var(--ink);font-weight:600}
+.ghead{display:grid;grid-template-columns:186px 1fr 1fr 1fr;gap:16px;
+  padding:10px 18px;font-size:10px;font-weight:700;letter-spacing:.07em;
+  text-transform:uppercase;color:var(--ink-3);
+  background:color-mix(in srgb, var(--ink) 3%, transparent);
+  border-bottom:1px solid var(--line)}
+.warn{background:color-mix(in srgb, var(--sw-violet) 7%, var(--raise));
+  border:1px solid color-mix(in srgb, var(--sw-violet) 28%, var(--line));
+  border-radius:16px;padding:16px 20px;margin:12px 0 0}
+.warn p{margin:0 0 9px;font-size:13px;line-height:1.55;color:var(--ink-2)}
+.warn p:last-child{margin-bottom:0}
+.warn b{color:var(--ink)}
+@media (max-width:900px){
+  .cgrid,.grow2,.ghead{grid-template-columns:1fr}
+  .cbox:nth-child(odd){border-right:0}
+  .ghead{display:none}
+}
+
+
+/* ── Метка проверки цитаты ────────────────────────────────────────────────
+   Самое ценное в M3 — не оформление, а то, что цитаты УЖЕ проверяются
+   машиной: страница скачивается и в ней ищется точное совпадение подстроки.
+   Непрошедшие удаляются из отчёта. Читатель об этом не знает вообще.
+   Метка возвращает ему это знание: цитата со «сверено с источником» стоит
+   дороже той же цитаты без метки, а стоит нам это ноль — работа уже сделана. */
+.vmark{display:inline-flex;align-items:center;gap:6px;font-size:10.5px;font-weight:700;
+  letter-spacing:.04em;text-transform:uppercase;hyphens:none}
+.vmark i{width:9px;height:9px;border-radius:50%;display:block;flex:0 0 auto}
+.vmark.ok{color:var(--ink-2)} .vmark.ok i{background:var(--mid)}
+.vmark.nopage{color:var(--ink-3)} .vmark.nopage i{border:1.5px solid var(--sw-violet)}
+.vmark.gone{color:var(--ink-3)} .vmark.gone i{background:var(--sw-grey)}
+/* ── Карточка цитаты ──────────────────────────────────────────────────────
+   ПРАВКА: владелица — «тема, сегмент, источник, всё одним цветом, всё
+   сливается; и палочка силы боли непонятная и некрасивая».
+   Оба замечания об одном: в карточке не было ИЕРАРХИИ. Шесть полей стояли
+   одинаковым кеглем и одинаковым цветом, хотя важность у них разная.
+   Разложено по весу: тема — заголовок под цитатой, сегмент — плашкой,
+   источник уходит вниз и тише всех, числа отделены линией.
+   Сила боли показана той же конструкцией, что все меры на платформе:
+   дорожка плюс заливка. Три отдельных штриха были чужой формой — такой
+   больше нигде нет, оттого и «непонятно и некрасиво». */
+.vq2{border:1px solid var(--line);background:var(--card-solid);border-radius:16px;
+  padding:0;display:flex;flex-direction:column;overflow:hidden}
+.vq2 .vtop{padding:15px 18px 0}
+.vq2 blockquote{margin:12px 0 0;font-family:var(--serif);font-style:italic;
+  font-size:15px;line-height:1.5;color:var(--ink)}
+.vq2 .vtheme{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;
+  margin:14px 0 0;padding:0 18px}
+.vq2 .vtheme b{font-size:13.5px;font-weight:700;color:var(--ink);letter-spacing:-.01em}
+.vq2 .seg2{display:inline-block;font-size:10px;font-weight:700;letter-spacing:.05em;
+  text-transform:uppercase;color:var(--ink-2);background:var(--line-2);
+  padding:3px 9px;border-radius:999px;hyphens:none}
+.vq2 .vsrc2{padding:5px 18px 0;font-size:11.5px;color:var(--ink-3)}
+.vq2 .vnums{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:14px;
+  padding:12px 18px;border-top:1px solid var(--line-2);
+  background:color-mix(in srgb, var(--ink) 2%, transparent)}
+.vq2 .vnums .lab{display:block;font-size:10px;font-weight:700;letter-spacing:.07em;
+  text-transform:uppercase;color:var(--ink-3);margin-bottom:5px}
+.vq2 .vnums .big2{font-size:15px;font-weight:700;color:var(--ink);letter-spacing:-.02em}
+.vq2 .vnums .big2 em{font-style:normal;font-size:11.5px;font-weight:600;
+  color:var(--ink-3);margin-left:4px}
+/* Мера силы — дорожка и заливка, как у всех полос на платформе. */
+.pain{display:flex;align-items:center;gap:9px;margin-top:2px}
+.pain .rail2{flex:1;max-width:78px;height:9px;background:var(--line-2)}
+.pain .rail2 i{display:block;height:100%;background:var(--mid)}
+.pain b{font-size:12.5px;font-weight:700;color:var(--ink)}
+.vq2 .vans{padding:13px 18px;border-top:1px solid var(--line-2);font-size:12.5px;
+  line-height:1.45;color:var(--ink)}
+.vq2 .vans span{display:block;font-size:10px;font-weight:700;letter-spacing:.07em;
+  text-transform:uppercase;color:var(--ink-3);margin-bottom:3px}
+.vgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:12px}
+/* ── Значок эмоции ────────────────────────────────────────────────────────
+   ВОССТАНОВЛЕНО. Правила значка я снесла, когда переписывала блок банка языка
+   целиком: пропали fill:none и stroke:currentColor. Без них браузер рисует
+   svg по умолчанию — заливает чёрным и не рисует контур вовсе. Владелица это
+   и увидела: «опять всё чёрное». Это была поломка, а не оформление.
+   Контур, без заливки, цвет наследуется от родителя — то есть от эмоции. */
+.emo{flex:0 0 auto;display:flex;align-items:center}
+.emo svg{fill:none;stroke:currentColor;stroke-width:1.6;
+  stroke-linecap:round;stroke-linejoin:round;display:block}
+
+/* ── Банк языка: одна карточка, внутри полосы с разрывами ─────────────────
+   Владелица: «а если не скруглённые плашки, а как у наших графиков — собрать
+   линией; общее скруглённое, а внутри разделено по эмоциям с небольшим
+   разрывом, как в диаграмме».
+   Так и сделано, и это оказалось точнее, чем плашки. Цветная подложка была
+   чужим приёмом: у нас цвет живёт ЗАЛИВКОЙ ПОЛОСЫ, а не подкрашенным полем.
+   Здесь полоса делает три работы сразу — отделяет эмоцию, называет её цветом
+   и ПОКАЗЫВАЕТ ОБЪЁМ: высота равна доле реплик этой эмоции. Разрывы между
+   полосами те же 3px, что между секторами кольца. */
+.lang{border:1px solid var(--line);border-radius:18px;background:var(--card-solid);
+  max-width:900px;padding:6px 0}
+.lrow2{display:grid;grid-template-columns:7px 236px 1fr;gap:0;align-items:stretch}
+.lbar{margin:3px 0 3px 10px}
+/* Значок эмоции — крупный, в цвет своей полосы, слева от всего текстового
+   столбика: названия, подсказки и чисел. Владелица просила именно так:
+   «во всю высоту заголовка». Размер здесь и есть смысл — эмоция должна
+   узнаваться раньше, чем прочитано слово, а на 36px рисунок этого не давал. */
+/* ПРАВКА, владелица: «надо сделать линию — восемь из двенадцати — и вот это
+   цветное; тогда никаких иконок не нужно».
+   Так и вышло лучше. Значок был украшением и трижды не давался; линия —
+   измерение, она работает. Дорожка равна всему банку, заливка — доле этой
+   эмоции. Число рядом даёт точность, длина — сравнение без чтения.
+   Значков в блоке больше нет. */
+.ltag{display:flex;flex-direction:column;gap:8px;padding:16px 18px 16px 16px}
+.lmeter{display:flex;align-items:center;gap:10px;margin-top:2px}
+.lmeter .rail3{flex:1;height:9px;background:var(--line-2)}
+.lmeter .rail3 i{display:block;height:100%}
+.lmeter b{font-size:11.5px;font-weight:700;color:var(--ink);white-space:nowrap;
+  hyphens:none}
+.ltag .ename{font-size:14.5px;font-weight:700;color:var(--ink);line-height:1.25}
+.ltag .ename span{display:block;font-size:11px;font-weight:600;color:var(--ink-3);
+  margin-top:4px}
+.llist{display:flex;flex-direction:column;gap:8px;padding:16px 18px 16px 6px}
+.llist div{font-family:var(--serif);font-size:13.5px;line-height:1.45;color:var(--ink);
+  padding-left:16px;position:relative}
+.llist div::before{content:"";position:absolute;left:0;top:7.5px;width:5px;height:5px;
+  /* Было «--c2» — такой переменной в файле нет вовсе, и точки рисовались
+     прозрачными, то есть их не было видно. Ставим ту же бирюзу заливкой, что у
+     всех круглых маркеров списков на платформе. */
+  border-radius:50%;background:var(--mid)}
+.llist div span{font-family:var(--sans);font-size:11px;color:var(--ink-3);
+  margin-left:8px;white-space:nowrap}
+@media (max-width:760px){
+  .lrow2{grid-template-columns:7px 1fr}
+  .llist{grid-column:2;padding:0 18px 14px 6px}
+}
+
+/* ── Варианты значка эмоции ───────────────────────────────────────────────
+   Лица я нарисовала дважды и дважды мимо. Рисовать выразительное лицо вслепую
+   я проверить не могу: вижу координаты, а не результат. Поэтому вместо третьей
+   попытки того же — четыре РАЗНЫХ направления сразу, чтобы выбрать глазами. */
+.vars{display:flex;flex-direction:column;gap:0}
+.vrow{display:grid;grid-template-columns:236px 1fr;gap:20px;padding:18px 0;
+  border-top:1px solid var(--line-2);align-items:center}
+.vrow:first-child{border-top:0}
+.vrow .vinfo b{display:block;font-size:14px;font-weight:700;color:var(--ink);
+  letter-spacing:-.01em;margin-bottom:5px}
+.vrow .vinfo span{font-size:12px;color:var(--ink-2);line-height:1.45}
+.vset{display:flex;align-items:center;gap:26px;flex-wrap:wrap}
+.vset figure{margin:0;display:flex;flex-direction:column;align-items:center;gap:7px}
+.vset figcaption{font-size:10px;font-weight:700;letter-spacing:.07em;
+  text-transform:uppercase;color:var(--ink-3)}
+.vset svg{display:block;fill:none;stroke-linecap:round;stroke-linejoin:round}
+
+/* ── Проба маскота ────────────────────────────────────────────────────────
+   Владелица прислала птичек и женщин, сделанных ChatGPT, и спросила, подойдут
+   ли. Отвечаю пробой, а не словами: перерисовала птицу под наш вес линии —
+   без круга, без заливок, тёмными чернилами, а фирменный цвет остался только
+   в признаке эмоции. Рядом стоит текущий значок, чтобы сравнивать вживую. */
+.mtest{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:0 22px}
+.mcol{padding:16px 0;border-top:1px solid var(--line-2)}
+.mcol h5{margin:0 0 12px;font-size:10px;font-weight:700;letter-spacing:.07em;
+  text-transform:uppercase;color:var(--ink-3)}
+.mrow3{display:flex;align-items:center;gap:18px;flex-wrap:wrap}
+.mrow3 figure{margin:0;display:flex;flex-direction:column;align-items:center;gap:8px}
+.mrow3 svg{display:block;fill:none;stroke-linecap:round;stroke-linejoin:round}
+.mrow3 figcaption{font-size:11px;color:var(--ink-3)}
+.msize{display:flex;align-items:flex-end;gap:16px;margin-top:14px;padding-top:12px;
+  border-top:1px solid var(--line-2)}
+
+.bias{background:color-mix(in srgb, var(--sw-grey) 8%, var(--raise));
+  border:1px solid var(--line);border-radius:14px;padding:14px 18px;margin-top:14px;
+  font-size:12.5px;line-height:1.55;color:var(--ink-2)}
+.bias b{color:var(--ink)}
+
+/* ── Своё для этой страницы ─────────────────────────────────── */
+.sw-help{box-shadow:inset 3px 0 0 var(--mid)}
+.sw-help h3{color:var(--ink)}
+.sw-help li::before{background:var(--acc-strong)}
+
+/* ── Карта рынка — перенесена из разбора M2, где уцелела ── */
+.mkt{display:grid;grid-template-columns:112px repeat(4,1fr);gap:3px}
+.mkt .hd{font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;
+  color:var(--ink-3);display:flex;align-items:flex-end;justify-content:center;
+  padding-bottom:7px;text-align:center;line-height:1.3}
+.mkt .rw{font-size:11.5px;font-weight:700;color:var(--ink-2);display:flex;
+  align-items:center;justify-content:flex-end;padding-right:12px;text-align:right;
+  line-height:1.3}
+.mkt .cell{background:var(--line-2);min-height:74px;padding:9px;display:flex;
+  flex-direction:column;gap:7px}
+.mkt .cell.ours{background:color-mix(in srgb, var(--mid) 12%, var(--line-2));
+  box-shadow:inset 0 0 0 2px color-mix(in srgb, var(--mid) 55%, transparent)}
+.mkt .cell .dots{display:flex;flex-wrap:wrap;gap:4px;align-content:flex-start}
+.mktwrap{position:relative}
+.mkt .dot{width:15px;height:15px;display:grid;place-items:center;padding:0;border:0;
+  background:none;cursor:pointer;border-radius:50%}
+.mkt .dot i{width:9px;height:9px;border-radius:50%;background:var(--sw-grey);display:block;
+  transition:transform .12s ease,opacity .12s ease}
+.mkt .dot i.us{background:var(--mid);box-shadow:0 0 0 2px var(--card-solid),
+  0 0 0 4px color-mix(in srgb, var(--mid) 60%, transparent)}
+.mkt .dot:focus-visible{outline:2px solid var(--mid);outline-offset:2px}
+.mkt.seek .dot i{opacity:.22}
+.mkt.seek .dot.hit i{opacity:1;transform:scale(1.7)}
+.mkt.seek .cell{opacity:.55}
+.mkt.seek .cell.hit{opacity:1}
+.mkttip{position:absolute;z-index:5;pointer-events:none;opacity:0;transform:translate(-50%,-100%);
+  background:var(--card-solid);border:1px solid var(--line);padding:10px 12px;min-width:186px;
+  max-width:260px;box-shadow:0 6px 20px rgba(0,0,0,.12);transition:opacity .12s ease}
+.mkttip.on{opacity:1}
+.mkttip b{display:block;font-size:13px;font-weight:700;color:var(--ink);margin-bottom:7px;line-height:1.25}
+.mkttip dl{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;margin:0;font-size:11.5px}
+.mkttip dt{color:var(--ink-3)}
+.mkttip dd{margin:0;color:var(--ink-2);font-weight:600;font-variant-numeric:tabular-nums;text-align:right}
+.mktlist{margin-top:20px;padding-top:14px;border-top:1px solid var(--line)}
+.mktlist h4{margin:0 0 4px;font-size:10px;font-weight:700;letter-spacing:.07em;
+  text-transform:uppercase;color:var(--ink-3)}
+.mktlist .hint{margin:0 0 10px;font-size:12px;color:var(--ink-3)}
+.mktlist .hdr,.mktlist .r{display:grid;grid-template-columns:1fr 112px 108px 96px;
+  gap:14px;padding:7px 8px;align-items:baseline}
+.mktlist .hdr{font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;
+  color:var(--ink-3);padding-bottom:4px}
+.mktlist .r{border-top:1px solid var(--line-2);font-size:12.5px;cursor:default}
+.mktlist .r:hover,.mktlist .r.on{background:var(--line-2)}
+.mktlist .r:focus-visible{outline:2px solid var(--mid);outline-offset:-2px}
+.mktlist .r b{font-weight:600;color:var(--ink)}
+.mktlist .r.mine{background:color-mix(in srgb, var(--mid) 10%, transparent)}
+.mktlist .r.mine b{font-weight:700}
+.mktlist .r .g{color:var(--ink-2)}
+.mktlist .r .num{text-align:right;font-variant-numeric:tabular-nums;color:var(--ink-2);
+  font-weight:600}
+.mktlist .r .num.no{font-weight:400;color:var(--ink-3)}
+.mkt .cell .n{margin-top:auto;font-size:11px;font-weight:700;color:var(--ink-2);
+  font-variant-numeric:tabular-nums}
+.mkt .cell.empty .n{color:var(--ink-3);font-weight:600}
+.mktleg{display:flex;gap:18px;flex-wrap:wrap;margin-top:14px;padding-top:12px;
+  border-top:1px solid var(--line);font-size:11.5px;color:var(--ink-3)}
+.mktleg span{display:flex;align-items:center;gap:8px}
+.mktleg i{width:9px;height:9px;border-radius:50%;display:block}
+
+/* ── SWOT — утверждено владелицей 11.09 (вариант «рейл») ─────────────────────
+   Переопределяет старые правила оболочки выше: там четыре поля были четырёх
+   разных цветов. Плашки равной высоты, рейл слева у всех четырёх, цветом
+   различается сторона: бирюза «работает на нас», фиолетовый «против».
+   Квадранты различают ПОДПИСИ ОСЕЙ, а не заливки. */
+.swot{display:grid;grid-template-columns:74px 1fr 1fr;gap:10px;align-items:stretch}
+.swot .cor{font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;
+  color:var(--ink-3);display:flex;align-items:flex-end;justify-content:center;
+  padding-bottom:8px;line-height:1.3}
+.swot .cor.r{align-items:center;justify-content:flex-end;text-align:right;padding:0 10px 0 0}
+.swot .sw{border:1px solid var(--line);border-radius:16px;padding:16px 18px;
+  background:var(--card-solid);display:flex;flex-direction:column;
+  box-shadow:inset 3px 0 0 var(--acc-mid)}
+.swot .sw h3{font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;
+  color:var(--ink-3);margin:0 0 10px;display:block}
+.swot .sw ul{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:7px}
+.swot .sw li{font-size:13px;color:var(--ink-2);padding-left:14px;position:relative;line-height:1.5}
+.swot .sw li::before{content:"";position:absolute;left:0;top:8px;width:5px;height:5px;
+  border-radius:50%;background:var(--acc-mid)}
+.swot .sw-help{box-shadow:inset 3px 0 0 var(--mid)}
+.swot .sw-help h3{color:var(--ink)}
+.swot .sw-help li::before{background:var(--acc-strong)}
+.swot .sw-note{grid-column:1/-1;font-size:11.5px;color:var(--ink-3);margin-top:4px;line-height:1.5}
+@media (max-width:820px){ .swot{grid-template-columns:1fr} .swot .cor{display:none} }
+</style>
+<div class="page" lang="ru">
+
+<div class="lede">
+  <h1>Библиотека визуализаций</h1>
+  <p>Из 31 примера, которые вы собрали, я вынула <b>типы</b> подачи, а не оформление:
+  собранные картинки сделаны в очень разной эстетике — от трёхмерных диаграмм до
+  Power BI, — и смешивать их нельзя.</p>
+  <p>Здесь каждый тип пересобран в <b>нашем</b> оформлении и на <b>наших</b> данных.
+  Под каждым — из какого блока исследования он берётся.</p>
+  <p><b>Строк в каждом блоке здесь по три-пять — это образцы формата, а не объём.</b>
+  В настоящем отчёте их столько, сколько нашло исследование: сорок цитат, восемь
+  конкурентов, тридцать запросов. Формат обязан показывать <b>все</b> строки и
+  <b>все</b> колонки исходной таблицы: сокращать данные ради красоты нельзя,
+  и единственное исключение — хвост мелких кластеров в «Структуре спроса», где
+  свёрнутые строки всё равно показаны общим весом.</p>
+  <p>У каждой строки, которая на чём-то основана, стоит номер источника —
+  он ведёт в «Источники» внизу страницы. Без него строку нечем проверить.</p>
+  <p>Пометка <b>«предлагаю BLOCK …»</b> означает, что данных у нас пока нет, но
+  собрать их можно: что именно и как — расписано в <b>ТЗ-НЕДОСТАЮЩИЕ-БЛОКИ-ИССЛЕДОВАНИЯ</b>,
+  готовые тексты запросов к модели — в <b>ПРОМПТЫ-НОВЫХ-БЛОКОВ</b>.
+  Пометка <b>«нечем собрать»</b> — другое дело: такие данные нашими средствами не
+  добываются вовсе, нужны подключения к аналитике клиента. Разница важная, и в
+  отчёте её надо сохранять: пустая честная ячейка полезнее правдоподобной выдумки.</p>
+</div>
+
+<div class="viz">
+  <div class="vh"><h2>Сводка исследования</h2><span class="src">M1 · M2 · M7</span></div>
+  <p class="vn">Плитки с числами — то, что в собранных примерах занимало верх дашборда.
+  Графики чернилами, цвет только на величине изменения.</p>
+  <div class="kpi" id="v-kpi"></div>
+</div>
+
+
+<div class="viz">
+  <div class="vh"><h2>Доли сегментов</h2><span class="src">BLOCK 04</span></div>
+  <p class="vn">Из вашего примера с сегментированием: кольцо долей и иконка у каждого
+  сегмента. Круговую диаграмму заменила кольцом — подписи выносятся вбок и не
+  наезжают, а мелкие доли по 4% в «пироге» вообще нечитаемы.</p>
+  <div class="seg">
+    <div id="v-donut"></div>
+    <div class="seg-leg" id="v-donut-leg"></div>
+  </div>
+</div>
+
+<div class="viz">
+  <div class="vh"><h2>Портрет сегмента · B2B</h2><span class="src">BLOCK 09 · расширить</span></div>
+  <p class="vn">Портрет разделён по природе данных. Четыре строки по сути числовые —
+  сколько человек участвует в решении, сколько длится сделка, какой бюджет проходит без
+  согласования, насколько сегмент осведомлён. Текстом они читаются как чьё-то мнение,
+  шкалой — как замер. Остальные три остаются словами: болью и живой фразой число не
+  заменить. Правая колонка «что из этого следует» — то, чего у нас сейчас нет; именно
+  она превращает справку в инструкцию.</p>
+  <p class="vn">Здесь же две последние строки — <b>«что заходит» и «что отталкивает»</b>.
+  Раньше они жили отдельным блоком «Архетипы персон», и владелица верно заметила, что
+  он дублирует портрет: там был тот же человек, только описанный со стороны речи.
+  Один блок вместо двух — и вопрос «как с ним разговаривать» стоит рядом с тем,
+  кто он такой, а не через страницу.</p>
+  <div class="pers">
+    <div class="pers-side">
+      <div class="pers-av">ПТ</div>
+      <div><div class="rl">Сегмент 1 · B2B</div>
+        <h3>Предприниматель с платным трафиком</h3></div>
+      <div class="one">Владелец малого бизнеса, льющий рекламу на свой сайт</div>
+      <div class="pers-share"><b>34%</b><span>доля в аудитории</span></div>
+    </div>
+    <div class="pers-main">
+      <div class="bmet">
+        <div><h4>Кто участвует в решении</h4>
+          <div class="ppl" id="v-b-ppl"></div>
+          <div class="big">Решает один</div>
+          <div class="sm">Собственник или директор. Блок «как согласовать с руководством» не нужен.</div>
+        </div>
+        <div><h4>Цикл сделки</h4>
+          <div class="big">3–7 дней</div>
+          <div class="trk"><span class="rg" style="left:10%;width:13.3%"></span></div>
+          <div class="trk-ax"><span>0</span><span>15</span><span>30 дней</span></div>
+          <div class="sm" style="margin-top:7px">Решение быстрое — длинная цепочка писем не успеет отработать.</div>
+        </div>
+        <div><h4>Бюджет без согласования</h4>
+          <div class="big">до 5 000 ₽ / мес</div>
+          <div class="trk"><span class="rg" style="left:0;width:50%"></span><span class="mk" style="left:8.9%"></span></div>
+          <div class="trk-ax"><span>0</span><span>5 000</span><span>10 000 ₽</span></div>
+          <div class="mklbl">Наша подписка <b>890 ₽</b> — проходит без обсуждения</div>
+        </div>
+        <div><h4>Осведомлённость</h4>
+          <div class="aw5" id="v-b-aw"></div>
+          <div class="sm" style="margin-top:21px">54% ещё не связывают потерю заявок с сайтом — начинать надо с проблемы, а не с продукта.</div>
+        </div>
+      </div>
+      <div class="bpain">
+        <h4>Боли по частоте упоминания <span style="font-weight:600;letter-spacing:0;text-transform:none">· из 41 цитаты, BLOCK 07</span></h4>
+        <div class="dbars" id="v-b-pain"></div>
+      </div>
+      <div class="prow-head"><span>Параметр</span><span>Значение</span><span>Что из этого следует</span></div>
+      <div class="prow"><span class="p">Главная боль</span><span class="v">96–98% оплаченных посетителей уходят без заявки</span><span class="a">Заголовок про потерю оплаченного трафика</span></div>
+      <div class="prow"><span class="p">Что тормозит</span><span class="v">Страх, что попап отпугнёт и добавит спама</span><span class="a">Возражение и ответ вынести на первый экран</span></div>
+      <div class="prow"><span class="p">Своими словами</span><span class="v">«Слил бюджет, а заявок кот наплакал»</span><span class="a">Использовать дословно как заголовок</span></div>
+      <div class="prow"><span class="p">Что заходит</span><span class="v">Цифры потери, короткие выводы, отсутствие терминов</span><span class="a">Считать деньги в первом абзаце, не объяснять технологию</span></div>
+      <div class="prow"><span class="p">Что отталкивает</span><span class="v">Разговоры про технологию и длинные объяснения</span><span class="a">Слово «нейросеть» не выносить на первый экран</span></div>
+    </div>
+  </div>
+</div>
+
+<div class="viz">
+  <div class="vh"><h2>Портрет сегмента · B2C</h2><span class="src">предлагаю BLOCK 09B · M4</span></div>
+  <p class="vn">Тот же блок, но поля другие: у частного лица решает не роль в компании,
+  а возраст, достаток и интересы. Сводить B2B и B2C в одну таблицу нельзя — половина
+  полей окажется пустой. Тип аудитории задаётся в брифе, набор полей идёт за ним.</p>
+  <div class="pers">
+    <div class="pers-side">
+      <div class="pers-av">МС</div>
+      <div><div class="rl">Сегмент 2 · B2C</div>
+        <h3>Мама со школьником</h3></div>
+      <div class="one">Ищет репетитора, решает быстро, доверяет отзывам</div>
+      <div class="pers-share"><b>41%</b><span>доля в аудитории</span></div>
+    </div>
+    <div class="pers-main">
+      <div class="demo">
+        <div><h4>Пол</h4>
+          <div class="dsplit">
+            <span style="width:72%;background:var(--mid)">Ж 72%</span>
+            <span style="width:28%;background:var(--line-2);color:var(--ink-2)">М 28%</span>
+          </div></div>
+        <div><h4>Возраст</h4>
+          <div class="dbars" id="v-age"></div></div>
+        <div><h4>Достаток</h4>
+          <div class="dbars" id="v-inc"></div></div>
+      </div>
+      <div class="demo split">
+        <div><h4>Интересы и образ жизни</h4>
+          <div class="chips" id="v-chips-life"></div></div>
+        <div><h4>Где получает информацию <span style="font-weight:600;letter-spacing:0;text-transform:none">· BLOCK 08A</span></h4>
+          <div class="chips" id="v-chips-info"></div></div>
+      </div>
+      <div class="prow-head"><span>Параметр</span><span>Значение</span><span>Что из этого следует</span></div>
+      <div class="prow"><span class="p">Кто решает</span><span class="v">Мать, но советуется с ребёнком</span><span class="a">Два адресата в тексте: выгода и «не скучно»</span></div>
+      <div class="prow"><span class="p">Когда возникает</span><span class="v">Первая тройка в четверти</span><span class="a">Пик спроса — октябрь и февраль</span></div>
+      <div class="prow"><span class="p">Что тормозит</span><span class="v">Страх, что «онлайн — это несерьёзно»</span><span class="a">Показывать преподавателя лицом, а не платформу</span></div>
+    </div>
+  </div>
+</div>
+
+<div class="two">
+  <div class="viz">
+    <div class="vh"><h2>Возраст и пол</h2><span class="src">предлагаю BLOCK 09B · нужен рекламный кабинет</span></div>
+    <p class="vn">Из присланного дашборда. Одна картинка вместо двух шкал: видно
+    не только «сколько кому лет», но и как пол распределён внутри каждого
+    возраста. Перекос читается по форме, числа нужны только для точности.</p>
+    <div class="pyr-head">
+      <div class="t l"><span class="sx"><svg viewBox="0 0 24 24">
+        <circle cx="12" cy="5.2" r="3"/>
+        <path d="M6.8 21v-6.4a5.2 5.2 0 0110.4 0V21"/>
+        <path d="M9.6 21v-3.8M14.4 21v-3.8"/></svg></span>М 28%</div>
+      <div class="c">возраст</div>
+      <div class="t r"><span class="sx"><svg viewBox="0 0 24 24">
+        <circle cx="12" cy="5.2" r="3"/>
+        <path d="M7.4 17.4L9.6 10a2.5 2.5 0 014.8 0l2.2 7.4z"/>
+        <path d="M10.3 17.4V21M13.7 17.4V21"/></svg></span>Ж 72%</div>
+    </div>
+    <div class="pyr" id="v-pyr"></div>
+  </div>
+
+  <div class="viz">
+    <div class="vh"><h2>Когда аудитория активна</h2><span class="src">нечем собрать — нужна Метрика клиента</span></div>
+    <p class="vn">Дни по вертикали, часы по горизонтали. Для нас это не украшение:
+    отсюда напрямую берётся расписание публикаций — тёмное поле показывает, когда
+    человек вообще открывает телефон. Обведённые клетки — пик.</p>
+    <div class="hm" id="v-hm"></div>
+    <div class="hmleg"><span>реже</span><span class="sc" id="v-hm-leg"></span><span>чаще</span></div>
+  </div>
+</div>
+
+<div class="viz">
+  <div class="vh"><h2>Голос клиента</h2><span class="src">BLOCK 07 · BLOCK 07A</span></div>
+  <p class="vn">У конкурента это таблица на тридцать строк, и её не дочитывают. Цитата
+  работает иначе — она должна прозвучать. Дословный текст набран засечным шрифтом:
+  это единственное место на странице, где он уместен, и по нему сразу видно, что
+  говорит клиент, а не мы. Под цитатой — откуда она и сколько раз эта боль встретилась
+  во всём собранном материале.</p>
+  <p class="vn">Сверху у каждой цитаты — <b>что с ней сделала контент-машина</b>:
+  ждёт, в работе или уже использована. Это состояние приходит ОТ неё, исследование
+  его не хранит: прогон — снимок на дату, и повторный запуск затёр бы всю историю.
+  Метки различаются формой, а не только цветом, — пустой кружок, закрашенный, серый.</p>
+  <div class="vochead">
+    <span class="src">41 цитата с 9 площадок</span>
+    <span class="vocnav">
+      <button class="qarrow" id="v-qprev" aria-label="Назад"><svg viewBox="0 0 20 20"><path d="M17 10H3"/><path d="M8 5l-5 5 5 5"/></svg></button>
+      <button class="qarrow" id="v-qnext" aria-label="Вперёд"><svg viewBox="0 0 20 20"><path d="M3 10h14"/><path d="M12 5l5 5-5 5"/></svg></button>
+    </span>
+  </div>
+  <div class="voc" id="v-voc"></div>
+</div>
+
+<div class="viz">
+  <div class="vh"><h2>Возражения и ответы</h2><span class="src">BLOCK 12 · BLOCK 12B</span></div>
+  <p class="vn">Страх и то, чем он снимается, ценны только вместе. По отдельности первое —
+  жалоба, второе — лозунг. Поэтому одна строка на пару: слева дословно то, что говорит
+  клиент, справа — конкретный артефакт, который это снимает. Правая колонка уходит
+  в GUARDRAILS и реально ограничивает генератор.</p>
+  <div class="obj" id="v-obj"></div>
+</div>
+
+<div class="viz">
+  <div class="vh"><h2>Альтернативы: против чего конкурируем</h2><span class="src">BLOCK 07C</span></div>
+  <p class="vn">Это не список конкурентов — там компании, продающие похожее. Здесь ответ
+  на вопрос «что человек делает сейчас, не купив ничего». Главный конкурент почти всегда
+  «ничего не делать», и он выделен, иначе его снова прочитают как строку в списке.
+  Против бездействия и против конкурента работают разные аргументы.</p>
+  <div class="alt" id="v-alt"></div>
+</div>
+
+<div class="viz">
+  <div class="vh"><h2>Где сидит аудитория</h2><span class="src">BLOCK 08A</span></div>
+  <p class="vn">Отвечает сразу на два вопроса: где публиковаться и с кем сотрудничать.
+  Только площадки, реально встретившиеся в поиске, — не «наверное, они в Telegram».
+  Признак живости обязателен: без него список превращается в перечисление известного.</p>
+  <div class="chnwrap">
+    <div class="chn" id="v-chn"></div>
+    <div class="chnside">
+      <h4>Откуда набран материал</h4>
+      <p class="sub">Доля собранных цитат по площадкам. Это мера нашего корпуса,
+      а не доли аудитории — второго числа у нас нет.</p>
+      <div class="dbars" id="v-chn-share"></div>
+    </div>
+  </div>
+  <p class="vn" style="margin:16px 0 0">Правый столбец сразу показывает перекос:
+  поиск шёл по жалобам и отзывам, поэтому площадки жалоб представлены сильнее, чем
+  места, где аудитория просто живёт. Это надо писать прямо в отчёте, а не умалчивать.</p>
+</div>
+
+<div class="viz">
+  <div class="vh"><h2>Что мы обязаны знать об аудитории</h2><span class="src">проверка полноты</span></div>
+  <p class="vn">Тринадцать вопросов из вашего примера. Радужное колесо заменено списком:
+  цвет там ничего не кодировал, а тринадцать оттенков подряд глаз всё равно не
+  различает. Здесь цвет несёт смысл — <b>подсвечено то, на что исследование уже
+  отвечает</b>, бледное показывает пробелы.</p>
+  <div class="cov" id="v-cov"></div>
+</div>
+
+<div class="two">
+  <div class="viz">
+    <div class="vh"><h2>Приоритет ниш</h2><span class="src">BLOCK 04_2</span></div>
+    <p class="vn">Вместо таблицы с оценками — полосы. Длина это оценка, лидер выделен
+    фирменным цветом, остальные графитом.</p>
+    <div id="v-niches"></div>
+  </div>
+
+  <div class="viz">
+    <div class="vh"><h2>Осведомлённость</h2><span class="src">BLOCK 11</span></div>
+    <p class="vn">Круговые диаграммы из примеров заменены дугой: доли читаются так же,
+    но подписи не наезжают друг на друга, а ключевая ступень выделена.</p>
+    <div style="display:flex;justify-content:center"><div id="v-arc"></div></div>
+    <div class="legend" id="v-arc-leg"></div>
+  </div>
+</div>
+
+
+<div class="viz">
+  <div class="vh"><h2>Доля внимания</h2><span class="src">M2 · M7 · считаем сами</span></div>
+  <p class="vn"><b>Это не доля рынка.</b> Выручку российских частных сервисов никто
+  не публикует, а всё, что попадается в статьях, — их собственные заявления.
+  Зато присутствие измеримо: сколько людей ищет бренд по имени. Число берётся
+  из того же Wordstat, что и семантика, — то есть считается, а не оценивается.</p>
+  <div class="dbars att" id="v-attn"></div>
+  <p class="vn" style="margin:16px 0 0">Что отсюда следует и чего не следует.
+  Следует: с кем нас будут сравнивать и чьё имя уже вбивают в поиск — по этим
+  брендам стоит делать сравнительные страницы. Не следует: кто больше зарабатывает.
+  Известность и выручка расходятся, и подменять одно другим нельзя.</p>
+</div>
+
+<div class="viz">
+  <div class="vh"><h2>Позиционирование по сегментам</h2><span class="src">предлагаю BLOCK 06_3 · M2</span></div>
+  <p class="vn">Здесь стояла карта позиционирования — точки на двух осях. Убрала её (картинку, не блок),
+  и вот почему: <b>оси выбирает модель</b>, и от их выбора меняется вся картинка.
+  Возьмите «цена / простота» — мы в одном углу, «скорость / глубина» — в другом.
+  Точки при этом расставляются на глаз, замерить их нечем. Для клиента выглядит
+  убедительно и ничем не подкреплено.</p>
+  <p class="vn">Вместо неё то, ради чего блок и нужен: как мы звучим против конкурентов
+  <b>для каждого сегмента отдельно</b>. Одно и то же отличие продукта разным людям
+  продаётся разными словами — и это готовые формулировки для текстов, а не картинка.</p>
+  <div class="dtbl" style="--cols:172px 148px 1fr 1fr 148px" id="v-posi"></div>
+</div>
+
+<div class="two">
+  <div class="viz">
+    <div class="vh"><h2>Матрица возможностей</h2><span class="src">BLOCK 06_1 · расширить</span></div>
+    <p class="vn">Тепловая карта вместо таблицы с галочками. Насыщенность = наличие
+    функции. Пустые столбцы сразу показывают, где мы одни.</p>
+    <div style="overflow-x:auto"><table class="heat" id="v-heat"></table></div>
+  </div>
+
+  <div class="viz">
+    <div class="vh"><h2>SWOT</h2><span class="src">предлагаю BLOCK 06_2 · M2</span></div>
+      <p class="vn">Четыре поля — это пересечение двух вопросов: <b>помогает или
+    мешает</b> и <b>наше или внешнее</b>. Подписи по краям — не украшение: без них
+    SWOT превращается в четыре списка, между которыми нет связи.</p>
+    <div class="swot">
+      <div class="cor"></div>
+      <div class="cor">помогает</div>
+      <div class="cor">мешает</div>
+
+      <div class="cor r">наше</div>
+      <div class="sw sw-help"><h3>Сильные стороны</h3><ul>
+        <li>Единственные с ИИ-заголовком под страницу</li>
+        <li>Бесплатный тариф без лимита на лиды</li>
+        <li>Настройка за 3–5 минут без панели</li></ul></div>
+      <div class="sw"><h3>Слабые стороны</h3><ul>
+        <li>Нет публичных кейсов с цифрами</li>
+        <li>Обещание +25% ничем не подтверждено</li>
+        <li>Узнаваемость ниже, чем у Envybox</li></ul></div>
+
+      <div class="cor r">внешнее</div>
+      <div class="sw sw-help"><h3>Возможности</h3><ul>
+        <li>Агентства дают выход к десяткам сайтов</li>
+        <li>Рост цены клика толкает искать решение</li>
+        <li>Спрос по бренду конкурентов не занят</li></ul></div>
+      <div class="sw"><h3>Угрозы</h3><ul>
+        <li>Функцию скопируют — она несложная</li>
+        <li>Ужесточение правил по персональным данным</li>
+        <li>Демпинг тяжёлых игроков вниз по тарифу</li></ul></div>
+
+      <p class="sw-note">Верхний ряд — то, на что мы влияем сами. Нижний происходит
+      независимо от наших решений: на него можно только успеть среагировать.</p>
+    </div>
+  </div>
+</div>
+
+<div class="viz">
+  <div class="vh"><h2>Путь клиента</h2><span class="src">BLOCK 14 · BLOCK 11</span></div>
+  <p class="vn">Формат из вашего примера. Ценен он не видом, а устройством: каждый
+  этап сразу спарен с действием — «что делаем на этом этапе». Сужение слева
+  показывает, сколько людей доходит; насыщенность растёт по мере движения
+  к «готов купить».</p>
+  <div class="lad" id="v-lad"></div>
+</div>
+
+<div class="two">
+  <div class="viz">
+    <div class="vh"><h2>Семантика с сезонностью</h2><span class="src">M7</span></div>
+    <p class="vn">Частотность полосами, сезонность линией поверх. В примерах это были
+    два отдельных графика — здесь одна картина, потому что решение принимается по
+    обоим числам сразу.</p>
+    <div id="v-seo"></div>
+  </div>
+
+  <div class="viz">
+    <div class="vh"><h2>Размер рынка</h2><span class="src">BLOCK 03</span></div>
+    <p class="vn">Тот же смысл воронкой: ширина сужается, и видно не «три числа», а
+    как рынок ужимается до реально достижимого. Проценты показывают, сколько
+    остаётся от предыдущей ступени, — это отвечает на вопрос «почему так мало»
+    точнее, чем доля от целого.</p>
+    <div id="v-tam2"></div>
+  </div>
+
+  <div class="viz">
+    <div class="vh"><h2>Структура спроса</h2><span class="src">M7</span></div>
+    <p class="vn">Плитки площадью по частотности. Полосы отвечают «какой запрос больше»,
+    а это — «из чего состоит спрос целиком»: видно, что половину занимают два кластера.
+    Здесь <b>кластеры намерений, а не отдельные запросы</b> — ключей в M7 бывает и триста,
+    сто плиток читать нечем. Показываем девять крупнейших, весь хвост сворачиваем в одну
+    плитку «ещё N», чтобы его общий вес всё равно был виден.</p>
+    <div id="v-tree"></div>
+  </div>
+
+</div>
+
+<div class="viz">
+  <div class="vh"><h2>География спроса</h2><span class="src">M7 · предлагаю SEO-06</span></div>
+  <p class="vn">Вопрос «где он живёт» из проверки полноты. Wordstat умеет отвечать на него
+  числами — параметр региона у него есть, мы просто всегда спрашивали по стране целиком.
+  Слева объём: где людей больше. Справа плотность: где спрос <b>выше, чем положено по
+  населению</b>. Второе и решает бюджет — в Москве запросов больше всегда, просто потому
+  что там больше людей.</p>
+  <div class="geohead">
+    <div>Регион</div><div>Запросов в месяц · доля от России</div>
+    <div>Плотность спроса</div><div class="r">×</div>
+  </div>
+  <div class="geo" id="v-geo"></div>
+  <div class="geoleg">
+    <span><i style="background:var(--mid)"></i>спрос выше ожидаемого по населению</span>
+    <span><i style="background:var(--sw-violet)"></i>ниже ожидаемого</span>
+    <span><i style="background:color-mix(in srgb, var(--ink) 28%, transparent)"></i>середина — ровно по населению</span>
+  </div>
+  <p class="vn" style="margin:16px 0 0">Что из этого следует: Екатеринбург и Новосибирск
+  перевешивают свой размер почти как Петербург, а рекламы там кратно меньше — с них дешевле
+  начинать. Татарстан и вся остальная Россия недобирают: туда не идём, пока не закрыты первые.</p>
+</div>
+
+
+<div class="viz">
+  <div class="vh"><h2>Карта рынка</h2><span class="src">BLOCK 06 · две измеримые оси</span></div>
+  <p class="vn">Из чего состоит рынок — на одном экране. По горизонтали <b>цена</b>,
+  по вертикали <b>известность</b>. Это <b>независимые</b> оси: маленькая студия может
+  работать в VIP, а федеральный гигант — в масс-маркете. Крупный не значит дорогой.</p>
+  <p class="vn">Обе оси измеримы, и в этом вся разница с обычной картой позиционирования:
+  цена берётся из <b>опубликованных прайсов</b>, известность мы <b>меряем сами</b> —
+  брендовым спросом в поиске. Ни одну не выбирает модель, поэтому картинку нельзя
+  подкрутить под удобный вывод.</p>
+  <div class="mktwrap"><div class="mkt" id="v-mkt"></div></div>
+  <div class="mktleg">
+    <span><i style="background:var(--mid)"></i>мы</span>
+    <span><i style="background:var(--sw-grey)"></i>игрок рынка</span>
+    <span>подсвечена клетка нашего ценового уровня — <b>сравнение идёт внутри неё</b></span>
+  </div>
+  <div class="mktlist" id="v-mkt-col"></div>
+  <p class="vn" style="margin:16px 0 0">Глубокий разбор идёт по нашему <b>ценовому</b>
+  уровню, независимо от известности: цена определяет, кто платит и какими словами с ним
+  говорят. Лидер и нишевый игрок одной цены решают одну задачу для одного кошелька.
+  Если в столбце больше восьми — вглубь берутся <b>5–8 ближайших</b>, остальные остаются
+  списком: карточка на каждого из девяти уже не читается. Никто не исчезает —
+  все на карте, и по ним же строится «куда расти».</p>
+</div>
+
+<div class="viz">
+  <div class="vh"><h2>Карта конкурентов</h2><span class="src">BLOCK 06 · BLOCK 06_1</span></div>
+  <p class="vn">Собрана с собственных сайтов конкурентов, а не со страниц-подборок:
+  подборки пишут ради ссылок и врут в ценах. Колонка «слабое место» — не злорадство,
+  а рабочий материал: именно она превращается в наши сравнительные страницы.</p>
+  <div class="dtbl" style="--cols:206px 108px 1.2fr 122px 1.2fr" id="v-comp"></div>
+</div>
+
+<div class="two">
+  <div class="viz">
+    <div class="vh"><h2>Достоинства продукта</h2><span class="src">BLOCK 17B</span></div>
+    <p class="vn">Третья колонка — «когда не работает» — обычно отсутствует, и зря.
+    У каждого достоинства есть условие, при котором оно не срабатывает; из этих
+    условий прямо вырастает список «кому не продаём» справа.</p>
+    <div class="dtbl" style="--cols:1fr 1fr 1fr" id="v-adv"></div>
+  </div>
+
+  <div class="viz">
+    <div class="vh"><h2>Кому не продаём</h2><span class="src">предлагаю BLOCK 07D · M3</span></div>
+    <p class="vn">Обратная сторона портрета клиента. Правая колонка рабочая:
+    признак должен проверяться до разговора, иначе строка бесполезна. Четыре строки
+    здесь экономят недели работы продаж и снимают половину плохих отзывов —
+    тех, что пишут люди, которым продукт не мог помочь изначально.</p>
+    <div class="dtbl" style="--cols:1fr 1fr 1fr" id="v-nots"></div>
+  </div>
+</div>
+
+<div class="viz">
+  <div class="vh"><h2>Архетип бренда</h2><span class="src">предлагаю BLOCK 18B · M6</span></div>
+  <p class="vn">Не архетипы персон — там кто покупает, здесь кто говорит. Из всего
+  списка недостающих блоков этот даёт больше всего: он влияет на каждый
+  сгенерированный текст. Архетип берётся по <b>свободной зоне</b>, а не по симпатии,
+  поэтому колонка «занят соперниками» обязательна и заполняется именами.</p>
+  <div class="dtbl" style="--cols:146px 132px 1.1fr 1.1fr 1fr" id="v-arch"></div>
+  <div class="dtbl dt2" style="--cols:150px 1.1fr 1.2fr 1fr" id="v-arch2"></div>
+</div>
+
+<div class="viz">
+  <div class="vh"><h2>Главная ставка и цели</h2><span class="src">предлагаю BLOCK 23 · проектный уровень</span></div>
+  <p class="vn">Между выводами исследования и работой не хватает звена: чего мы
+  добиваемся и как поймём, что получилось. Колонка «сейчас» у нового проекта почти
+  вся пустая — и это сам по себе результат: он показывает, что бизнес работает
+  вслепую и первая задача не в маркетинге, а в том, чтобы начать мерить.
+  Выдумывать туда числа нельзя.</p>
+  <div class="dtbl" style="--cols:236px 1fr" id="v-bet"></div>
+  <div class="dtbl dt2" style="--cols:1.2fr 1.1fr 116px 176px 92px" id="v-goals"></div>
+</div>
+
+<div class="viz">
+  <div class="vh"><h2>Банк хуков</h2><span class="src">BLOCK 07B</span></div>
+  <p class="vn">Не цитаты заново. Цитата описывает боль, хук — готовая <b>первая строка</b>
+  поста или обложки. Отбираются из уже собранных цитат, не сочиняются: если строка не
+  прослеживается до дословной фразы в BLOCK 07, её тут быть не должно. Подрезать длинную
+  цитату до ядра можно, придумывать новую формулировку — нет.</p>
+  <div class="hooks" id="v-hooks"></div>
+</div>
+
+<div class="viz">
+  <div class="vh"><h2>Когнитивные тактики</h2><span class="src">BLOCK 15</span></div>
+  <p class="vn">Что именно сказать человеку в конкретной точке пути. Ценность блока
+  в том, что принцип подтверждён исследованием <b>этой</b> аудитории, а не взят из общей
+  теории копирайтинга: в колонке «на чём основано» стоит ссылка на находку, иначе
+  строка не берётся.</p>
+  <div class="dtbl" style="--cols:132px 96px 118px 1fr 1fr" id="v-tact"></div>
+</div>
+
+
+
+
+<div class="viz">
+  <div class="vh"><h2>Гипотезы</h2><span class="src">BLOCK 16 · вернуть M5 в прогон</span></div>
+  <p class="vn">У конкурента это девять карточек по 30 строк таблицы каждая. В виде
+  доски видно то, чего в таблицах не видно вовсе: сколько всего проверяется
+  одновременно и что уже сдвинулось.</p>
+  <div class="kan">
+    <div class="kcol"><h3>Ждут проверки</h3>
+      <div class="kcard"><b>Сравнительные страницы</b><span>«Мы против Envybox» под сравнительный запрос</span><div class="met"><u>Успех</u> — 200 визитов в месяц</div></div>
+      <div class="kcard"><b>Партнёрская посадочная</b><span>Отдельная страница для агентств и студий</span><div class="met"><u>Успех</u> — 5 партнёров за квартал</div></div>
+    </div>
+    <div class="kcol"><h3>В работе</h3>
+      <div class="kcard"><b>Замер прироста у пяти клиентов</b><span>A/B на живом трафике, до и после</span><div class="met"><u>Успех</u> — +25% к таймерному попапу</div></div>
+    </div>
+    <div class="kcol"><h3>Проверены</h3>
+      <div class="kcard"><b>Письма активации</b><span>Цепочка после установки виджета</span><div class="met"><u>Итог</u> — доходимость 34% против 19%</div></div>
+    </div>
+  </div>
+</div>
+
+
+
+
+<div class="viz">
+  <div class="vh"><h2>Карта отчёта</h2><span class="src">итог по оформлению</span></div>
+  <p class="vn">Чтобы не считать по памяти. Бирюзовым — блоки, которые исследование
+  собирает и которые здесь оформлены. Фиолетовым контуром — те, что мы предлагаем
+  добавить: промпты для них написаны, оформление готово, ждут включения в прогон.
+  Серым — то, чего нашими источниками собрать нельзя. Полым контуром — то, что
+  вынесено из исследования в контент-завод: генерировать это в каждом отчёте
+  незачем, оно нужно только по потребности.</p>
+  <div class="mapg" id="v-map"></div>
+  <div class="mlegend" id="v-map-leg">
+    <span><i style="background:var(--mid)"></i>собираем и оформлено</span>
+    <span><i style="border:1.5px solid var(--sw-violet)"></i>предлагаем добавить</span>
+    <span><i style="background:var(--sw-grey)"></i>нечем собрать</span>
+    <span><i style="background:var(--card-solid);border:1.5px solid var(--sw-grey)"></i>не исследование — контент-завод</span>
+  </div>
+</div>
+
+<div class="lede" style="max-width:74ch;margin:46px 0 20px;padding-top:26px;
+  border-top:2px solid var(--line)">
+  <h1 style="font-size:23px">Не в исследовании · форматы для контент-завода</h1>
+  <p>Владелица 10.09: «эти штуки я думала убрать — они должны генерироваться
+  внутри модулей контент-завода, по потребности». Согласна, и вот почему это
+  не вопрос вкуса.</p>
+  <p><b>Исследование заканчивается на M7</b> — семантике. Всё, что дальше, уже
+  не исследование, а <b>работа по его результатам</b>. ТЗ на лендинг нужно
+  только тогда, когда воронка показала, что лендинг вообще нужен; контент-план
+  строится на месяц с календарём и площадками, а не одной таблицей рубрик.
+  Генерировать их в каждом отчёте — тратить деньги на то, что в половине
+  случаев не понадобится.</p>
+  <p>Форматы ниже <b>не удалены</b>: они пригодятся там, где эти вещи
+  действительно делаются. Но в отчёте исследования их быть не должно, и в
+  «Карте отчёта» выше они не считаются.</p>
+</div>
+
+<div class="viz">
+  <div class="vh"><h2>Контент-система</h2><span class="src">BLOCK 20</span></div>
+  <p class="vn">Рубрики — не темы, а <b>повторяемые форматы</b>: тема кончается через
+  месяц, рубрика живёт год. У каждой своя работа, и вместе они должны покрывать все
+  уровни осведомлённости, иначе весь контент разговаривает с одной третью аудитории.</p>
+  <div class="rub" id="v-rub"></div>
+  <h4 style="font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;
+    color:var(--ink-3);margin:22px 0 0">Ритм недели</h4>
+  <div class="rhy" id="v-rhy"></div>
+  <p class="vn" style="margin:14px 0 0">Ритм важнее объёма: три материала в неделю
+  без пропусков работают лучше, чем десять раз в месяц рывками. Пустые дни оставлены
+  пустыми намеренно — план, забитый под завязку, не переживает первую же занятую неделю.</p>
+</div>
+
+<div class="viz">
+  <div class="vh"><h2>ТЗ на лендинг</h2><span class="src">BLOCK 22</span></div>
+  <p class="vn">Порядок экранов здесь несёт смысл: это последовательность, в которой
+  человек читает страницу, а не список разделов. Каждый экран отвечает на один вопрос
+  и снимает одно возражение — те самые, что собраны в BLOCK 12.</p>
+  <div class="lnd" id="v-lnd"></div>
+</div>
+
+<div class="viz">
+  <div class="vh"><h2>Креативные брифы</h2><span class="src">BLOCK 21</span></div>
+  <p class="vn">Вход для генерации баннеров и обложек. Колонка «чего избегаем» —
+  не вкусовщина: она собрана из страхов аудитории и из формулировок, уже занятых
+  конкурентами, и уходит в ограничения генератора.</p>
+  <div class="dtbl" style="--cols:158px 1fr 1fr 1fr" id="v-brief"></div>
+</div>
+
+<div class="viz">
+  <div class="vh"><h2>Визуальная стратегия</h2><span class="src">BLOCK 19 · BLOCK 19A</span></div>
+  <p class="vn">Дизайн-система каруселей и баннеров <b>клиента</b> — не наша.
+  Здесь она показана на «Ловце лидов», и цвета в ней его, а не бирюза платформы:
+  оформление отчёта и оформление клиентского контента не должны сливаться, иначе
+  заказчик решит, что мы предлагаем ему свой фирменный стиль.</p>
+  <div class="vis">
+    <div>
+      <h4>Палитра клиента</h4>
+      <div class="sw2" id="v-vis-sw"></div>
+      <p class="visnote">Один акцент и два нейтральных. Акцент — только на действии
+      и на цифре результата, нигде больше: на обложке, где всё цветное, глаз не
+      находит, куда смотреть.</p>
+      <h4 style="margin-top:22px">Композиция</h4>
+      <div class="rules" id="v-vis-rules"></div>
+    </div>
+    <div>
+      <h4>Шрифтовая пара</h4>
+      <div class="typo">
+        <div class="t1">Клики есть, заявок нет</div>
+        <div class="t2">«Слил бюджет, а заявок кот наплакал» — так это звучит
+        у самого клиента, и так же должно стоять на обложке.</div>
+        <div class="t3">Заголовок — гротеск · Цитата — антиква</div>
+      </div>
+      <p class="visnote" style="margin-top:10px">Две гарнитуры, не больше. Цитата
+      набирается антиквой всегда: по начертанию видно, что это чужая речь, ещё
+      до чтения кавычек.</p>
+      <h4 style="margin-top:22px">Чего не делаем</h4>
+      <div class="rules" id="v-vis-no"></div>
+    </div>
+  </div>
+</div>
+
+<div class="viz" id="src">
+  <div class="vh"><h2>Источники</h2><span class="src">BLOCK 04_0 · сквозная нумерация</span></div>
+  <p class="vn">Тот самый список, в который ведут все номера со страницы. Он и делает
+  отчёт проверяемым: <b>название сайта — живая ссылка</b>, по ней сразу открывается
+  источник. Раньше адрес лежал отдельной колонкой текстом, и проверить строку всё
+  равно не получалось. Справа от домена — дата, ниже — «что взяли», то есть зачем
+  этот источник вообще понадобился.
+  В настоящем отчёте здесь столько строк, сколько источников нашло исследование, —
+  обычно от двадцати до сорока.</p>
+  <div class="srcs" id="v-srcs"></div>
+</div>
+
+
+
+
+
+</div>
+
+<script>
+const el=(n,a)=>{const e=document.createElementNS('http://www.w3.org/2000/svg',n);
+  for(const k in a)e.setAttribute(k,a[k]);return e;};
+const INK=['#EBE9E3','#D7D5CF','#BCBBB5','#94928E','#171512'];
+const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+
+/* ── приоритет ниш: тот же рисунок, что в макете ── */
+(function(){
+  const rows=[['интернет-магазины',17],['онлайн-сервисы/SaaS',17],['B2B-услуги',17],
+    ['медицинские клиники',16],['онлайн-образование',15],['юридические фирмы',15],
+    ['строительство/ремонт',15],['автосервисы',14]];
+  const W=520,padL=170,padR=44,rowH=27,top=4,H=top+rows.length*rowH+4,max=20;
+  const x=v=>padL+(W-padL-padR)*(v/max);
+  const svg=el('svg',{viewBox:`0 0 ${W} ${H}`,width:'100%',height:H});
+  rows.forEach(([n,v],i)=>{
+    const y=top+i*rowH;
+    const t=el('text',{x:padL-10,y:y+14,class:'lbl','text-anchor':'end'});
+    t.textContent=n; svg.appendChild(t);
+    svg.appendChild(el('rect',{x:padL,y:y+3,width:W-padL-padR,height:14,fill:'var(--line-2)'}));
+    const bw=Math.max(x(v)-padL,3);
+    svg.appendChild(el('rect',{x:padL,y:y+3,width:bw,height:14,
+      fill:i===0?'var(--mid)':INK[3]}));
+    const val=el('text',{x:padL+bw+8,y:y+14,class:'val'}); val.textContent=v; svg.appendChild(val);
+  });
+  document.getElementById('v-niches').appendChild(svg);
+})();
+
+/* ── дуга осведомлённости ── */
+(function(){
+  const parts=[['Не знает',20],['Знает проблему',40],['Знает о решениях',25],
+               ['Сравнивает',10],['Готов купить',5]];
+  const total=parts.reduce((s,[,v])=>s+v,0);
+  const R=76,CX=110,CY=100,SW=17,GAP=.012;
+  const pt=a=>[CX+R*Math.cos(a*Math.PI/180),CY+R*Math.sin(a*Math.PI/180)];
+  const svg=el('svg',{viewBox:'0 0 220 118',width:220,height:118});
+  let a0=180;
+  parts.forEach(([label,v],i)=>{
+    const a1=a0+v/total*180, g0=a0+GAP*180, g1=a1-GAP*180;
+    if(g1>g0){
+      const p0=pt(g0),p1=pt(g1);
+      svg.appendChild(el('path',{d:`M ${p0[0]} ${p0[1]} A ${R} ${R} 0 ${(g1-g0)>180?1:0} 1 ${p1[0]} ${p1[1]}`,
+        fill:'none',stroke:i===parts.length-1?'var(--mid)':INK[i],'stroke-width':SW,'stroke-linecap':'butt'}));
+    }
+    a0=a1;
+  });
+  const t=el('text',{x:CX,y:CY-4,'text-anchor':'middle',class:'val',style:'font-size:23px'});
+  t.textContent='5%'; svg.appendChild(t);
+  const t2=el('text',{x:CX,y:CY+13,'text-anchor':'middle',class:'axis'});
+  t2.textContent='готовы купить'; svg.appendChild(t2);
+  document.getElementById('v-arc').appendChild(svg);
+  document.getElementById('v-arc-leg').innerHTML=parts.map(([l,v],i)=>
+    `<span><i style="background:${i===parts.length-1?'var(--mid)':INK[i]}"></i>${l} ${v}%</span>`).join('');
+})();
+
+
+/* ── матрица возможностей ── */
+(function(){
+  const cols=['Мы','Envybox','Marquiz','Neiros','Roistat'];
+  const rows=[['ИИ-заголовок под страницу',[3,0,0,0,0]],
+              ['Ловля на выходе',[3,2,0,2,1]],
+              ['Рейтинг из карт',[3,0,0,0,0]],
+              ['Настройка в мессенджере',[3,0,0,0,0]],
+              ['Бесплатно навсегда',[3,1,0,0,0]],
+              ['Сквозная аналитика',[0,1,0,1,3]]];
+  const tint=v=>v===0?'color-mix(in srgb, var(--ink) 3%, transparent)'
+    :`color-mix(in srgb, var(--mid) ${v*22}%, var(--card-solid))`;
+  document.getElementById('v-heat').innerHTML =
+    '<thead><tr><th></th>'+cols.map(c=>`<th>${c}</th>`).join('')+'</tr></thead><tbody>'+
+    rows.map(([n,vs])=>`<tr><td>${esc(n)}</td>`+
+      vs.map(v=>`<td style="background:${tint(v)}">${v?'':'—'}</td>`).join('')+'</tr>').join('')+
+    '</tbody>';
+})();
+
+
+/* ── семантика: полосы + сезонность ── */
+(function(){
+  const rows=[['попап для сайта',156],['форма обратного звонка',151],
+              ['попап что это',137],['форма на сайт',37],['закажи звонок',11]];
+  const season=[.5,.45,.55,.6,.5,.42,.38,.45,.6,.72,.85,1];
+  const W=560,rowH=26,top=8,H=top+rows.length*rowH+70,padL=170,padR=54;
+  const max=Math.max(...rows.map(r=>r[1]));
+  const svg=el('svg',{viewBox:`0 0 ${W} ${H}`,width:'100%',height:H});
+  rows.forEach(([n,v],i)=>{
+    const y=top+i*rowH;
+    const t=el('text',{x:padL-10,y:y+13,class:'lbl','text-anchor':'end'}); t.textContent=n; svg.appendChild(t);
+    svg.appendChild(el('rect',{x:padL,y:y+3,width:W-padL-padR,height:13,fill:'var(--line-2)'}));
+    const bw=Math.max((W-padL-padR)*v/max,2);
+    svg.appendChild(el('rect',{x:padL,y:y+3,width:bw,height:13,fill:i===0?'var(--mid)':INK[3]}));
+    const val=el('text',{x:padL+bw+7,y:y+13,class:'val'}); val.textContent=v; svg.appendChild(val);
+  });
+  const sy=top+rows.length*rowH+22, sh=40;
+  const cap=el('text',{x:padL,y:sy-4,class:'axis'}); cap.textContent='сезонность лидера по месяцам';
+  svg.appendChild(cap);
+  const sx=v=>padL+(W-padL-padR)*v/(season.length-1);
+  const d=season.map((v,i)=>(i?'L':'M')+sx(i).toFixed(1)+','+(sy+sh-v*sh).toFixed(1)).join(' ');
+  svg.appendChild(el('path',{d,fill:'none',stroke:'var(--mid)','stroke-width':2}));
+  const pk=season.indexOf(Math.max(...season));
+  svg.appendChild(el('circle',{cx:sx(pk),cy:sy+sh-season[pk]*sh,r:3.5,fill:'var(--mid)'}));
+  const pt=el('text',{x:sx(pk),y:sy+sh-season[pk]*sh-8,class:'val','text-anchor':'middle'});
+  pt.textContent='декабрь'; svg.appendChild(pt);
+  document.getElementById('v-seo').appendChild(svg);
+})();
+
+/* ── демография B2C ── */
+(function(){
+  const age=[['25–34',22],['35–44',48],['45–54',24],['55+',6]];
+  const inc=[['ниже ср.',18],['средний',54],['выше ср.',28]];
+  const draw=(id,rows)=>{const m=Math.max(...rows.map(r=>r[1]));
+    document.getElementById(id).innerHTML=rows.map(([t,v])=>
+      `<div class="dbar"><span class="t">${t}</span><span class="g"><i style="width:${v/m*100}%"></i></span><span class="n">${v}%</span></div>`).join('');};
+  draw('v-age',age); draw('v-inc',inc);
+})();
+
+/* ── покрытие вопросов ── */
+(function(){
+  const q=[['Чем занимается клиент','BLOCK 09'],['Сколько ему лет',''],
+    ['Семейное положение и достаток',''],['Есть ли хобби',''],
+    ['Поведенческие особенности','BLOCK 15'],['В чём его слабости','BLOCK 12'],
+    ['Где он живёт','BLOCK 01'],['Чем руководствуется при покупке','BLOCK 13'],
+    ['С какими трудностями сталкивается','BLOCK 07'],
+    ['Где ищет решение','BLOCK 08A'],['Достоинства продукта','BLOCK 17B'],
+    ['Что точно не купит','BLOCK 07C'],['Кто ближайшие конкуренты','BLOCK 06']];
+  document.getElementById('v-cov').innerHTML=q.map(([t,src],i)=>
+    `<div class="cq ${src?'yes':'no'}"><b>${String(i+1).padStart(2,'0')}</b>
+      <span>${t}<span class="src2">${src||'не собираем'}</span></span></div>`).join('');
+})();
+
+/* ── Иконки: тонкие монохромные контуры, как просит бриф ──────────────────── */
+const ICON={
+  up:'<path d="M3 13l4-5 3 3 5-6"/><path d="M11 5h4v4"/>',
+  down:'<path d="M3 5l4 5 3-3 5 6"/><path d="M11 13h4V9"/>',
+  star:'<path d="M9 2l2 4.5 5 .6-3.6 3.3.9 4.9L9 12.9 4.7 15.3l.9-4.9L2 7.1l5-.6z"/>',
+  alert:'<path d="M9 2l7 13H2z"/><path d="M9 7v3.5"/><path d="M9 12.6v.1"/>',
+  boss:'<circle cx="9" cy="5.5" r="2.8"/><path d="M3 15c0-3.3 2.7-5 6-5s6 1.7 6 5"/>',
+  shop:'<path d="M3 6h12l-1 8H4z"/><path d="M6.5 6V4.2a2.5 2.5 0 015 0V6"/>',
+  team:'<circle cx="6.5" cy="6" r="2.3"/><circle cx="12" cy="7" r="1.9"/><path d="M2 14c0-2.6 2-4 4.5-4s4.5 1.4 4.5 4"/><path d="M11.5 10.6c2 .2 3.5 1.4 3.5 3.4"/>',
+  mkt:'<path d="M3 12V8M7 12V5M11 12V9M15 12V3"/><path d="M2 15h14"/>',
+  site:'<rect x="2.5" y="3.5" width="13" height="11" rx="2"/><path d="M2.5 7h13"/>',
+  clock:'<circle cx="9" cy="9" r="6.5"/><path d="M9 5.2V9l2.6 1.6"/>',
+  loop:'<path d="M15 9a6 6 0 11-1.9-4.4"/><path d="M15.4 2.6V6h-3.4"/>',
+  check:'<circle cx="9" cy="9" r="6.5"/><path d="M5.8 9.2l2.2 2.2 4.2-4.6"/>',
+  target:'<circle cx="9" cy="9" r="6.3"/><circle cx="9" cy="9" r="2.6"/><path d="M9 .8v2.4M9 14.8v2.4M.8 9h2.4M14.8 9h2.4"/>',
+};
+const icon=k=>`<svg viewBox="0 0 18 18">${ICON[k]||''}</svg>`;
+document.querySelectorAll('.ic[data-i]').forEach(e=>e.innerHTML=icon(e.dataset.i));
+
+/* ── Плитки сводки со спарклайнами ── */
+(function(){
+  const spark=(pts,accent)=>{
+    const w=58,h=26,mx=Math.max(...pts),mn=Math.min(...pts);
+    const X=i=>i/(pts.length-1)*w, Y=v=>h-2-((v-mn)/(mx-mn||1))*(h-4);
+    const d=pts.map((v,i)=>(i?'L':'M')+X(i).toFixed(1)+','+Y(v).toFixed(1)).join(' ');
+    return `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}">
+      <path d="${d}" fill="none" stroke="var(--ink)"
+        stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+  };
+  const dots=v=>{const cols=v.length,rows=4,cw=7,ch=4,g=2;
+    let o='';
+    v.forEach((val,ci)=>{const on=Math.round(val*rows);
+      for(let r=0;r<rows;r++) o+=`<rect x="${ci*cw}" y="${r*(ch+g)}" width="${cw-2}" height="${ch}"
+        fill="${r>=rows-on?'var(--ink)':'var(--line)'}"/>`;});
+    return `<svg width="${cols*cw}" height="${rows*(ch+g)}" viewBox="0 0 ${cols*cw} ${rows*(ch+g)}">${o}</svg>`;};
+  const items=[
+    {n:'15',k:'ниш оценено',cls:'up',mark:'▲ +3',word:'за неделю',pts:[4,6,5,8,7,9,15],acc:1},
+    {n:'2',k:'взяты в работу',cls:'flat',mark:'▲',word:'без изменений',pts:[2,2,2,2,2,2,2]},
+    {n:'8',k:'конкурентов',cls:'up',mark:'▲ +2',word:'за неделю',pts:[3,4,4,5,6,7,8],acc:1},
+    {n:'6',k:'кластеров с замером',cls:'down',mark:'▼ −1',word:'без данных',dot:[.3,.5,.4,.7,.6,.9,.5]},
+    {n:'12&thinsp;400',k:'запросов в месяц',cls:'up',mark:'▲',word:'пик в декабре',pts:[.5,.45,.55,.6,.5,.42,1],acc:1},
+  ];
+  document.getElementById('v-kpi').innerHTML=items.map(s=>`
+    <div><div class="k">${s.k}</div>
+      <div class="row"><span class="n">${s.n}</span>${s.dot?dots(s.dot):spark(s.pts,s.acc)}</div>
+      <div class="d"><b class="${s.cls}">${s.mark}</b><span>${s.word}</span></div></div>`).join('');
+})();
+
+/* ── Доли сегментов кольцом ── */
+(function(){
+  const segs=[['Предприниматель с платным трафиком','боссы платят сами',34,'boss'],
+              ['Бизнес в нишах с дорогим лидом',    'одна заявка окупает год',26,'shop'],
+              ['Агентство и веб-студия',            'выход к десяткам сайтов',18,'team'],
+              ['Наёмный маркетолог',                'решает не он, но советует',14,'mkt'],
+              ['Владелец сайта без рекламы',        'трафика нет — эффекта нет',8,'site']];
+  const TINT=[100,62,40,24,13];
+  const R=84,SW=26,CX=115,CY=115,GAP=.008;
+  const total=segs.reduce((s,x)=>s+x[2],0);
+  const pt=a=>[CX+R*Math.cos(a*Math.PI/180),CY+R*Math.sin(a*Math.PI/180)];
+  const svg=el('svg',{viewBox:'0 0 230 230',width:230,height:230});
+  let a0=-90;
+  segs.forEach(([,,v],i)=>{
+    const a1=a0+v/total*360, g0=a0+GAP*360, g1=a1-GAP*360;
+    if(g1>g0){
+      const p0=pt(g0),p1=pt(g1);
+      svg.appendChild(el('path',{d:`M ${p0[0]} ${p0[1]} A ${R} ${R} 0 ${(g1-g0)>180?1:0} 1 ${p1[0]} ${p1[1]}`,
+        fill:'none',stroke:`color-mix(in srgb, var(--mid) ${TINT[i]}%, var(--line-2))`,
+        'stroke-width':SW,'stroke-linecap':'butt'}));
+    }
+    a0=a1;
+  });
+  const t=el('text',{x:CX,y:CY-2,'text-anchor':'middle',class:'val',style:'font-size:30px'});
+  t.textContent='5'; svg.appendChild(t);
+  const t2=el('text',{x:CX,y:CY+17,'text-anchor':'middle',class:'axis'});
+  t2.textContent='сегментов'; svg.appendChild(t2);
+  document.getElementById('v-donut').appendChild(svg);
+  document.getElementById('v-donut-leg').innerHTML=segs.map(([n,sub,v,ik],i)=>
+    `<div class="sl">
+       <span class="ic" style="background:color-mix(in srgb, var(--mid) ${(TINT[i]*0.30).toFixed(0)}%, #FFFFFF)">
+         ${icon(ik).replace('<svg','<svg stroke="var(--ink)"')}</span>
+       <span class="nm"><b>${n}</b>${sub}</span>
+       <span class="pc">${v}%</span></div>`).join('');
+})();
+
+/* ── Размер рынка: воронка ────────────────────────────────────────────────
+   Первый вариант показывает вложенность площадей. Этот — сужение: видно не
+   «три числа», а насколько рынок ужимается на каждом шаге. Проценты здесь от
+   ПРЕДЫДУЩЕЙ ступени, а не от целого: они отвечают на вопрос «почему так
+   мало» точнее, чем доля от TAM. */
+(function(){
+  const d=[['TAM','весь рынок России','4,2 млрд ₽',1.0,''],
+           ['SAM','кому реально можем продать','610 млн ₽',.42,'15% от TAM'],
+           ['SOM','наша доля за три года','48 млн ₽',.17,'8% от SAM']];
+  const W=520,H=250,P=16,gapY=8;
+  const svg=el('svg',{viewBox:`0 0 ${W} ${H}`,width:'100%',height:H});
+  const bandH=(H-P*2-gapY*2-22)/3, maxW=W-P*2-150;
+  d.forEach(([code,note,val,k,rel],i)=>{
+    const w=maxW*k, x=P+(maxW-w)/2, y=P+i*(bandH+gapY);
+    /* Три оттенка одного фирменного, а не три разных цвета: три цвета здесь
+       читались как три РАЗНЫХ вещи, тогда как это одна величина, которая
+       ужимается. Оттенок сам показывает движение к нашему. */
+    const fill=i===2?'var(--mid)'
+      :`color-mix(in srgb, var(--mid) ${[26,50][i]}%, var(--line-2))`;
+    svg.appendChild(el('path',{d:`M ${x} ${y} H ${x+w} L ${x+w-10} ${y+bandH} H ${x+10} Z`,fill}));
+    /* Тёмная надпись на всех трёх заливках: слабейший контраст 8.16. */
+    const c=el('text',{x:x+w/2,y:y+bandH/2+5,'text-anchor':'middle',class:'val',
+      style:'font-size:15px;fill:#12100D'}); c.textContent=code; svg.appendChild(c);
+    const vt=el('text',{x:P+maxW+20,y:y+bandH/2-2,class:'val',style:'font-size:15px'});
+    vt.textContent=val; svg.appendChild(vt);
+    const nt=el('text',{x:P+maxW+20,y:y+bandH/2+14,class:'axis'});
+    nt.textContent=note; svg.appendChild(nt);
+    if(rel){
+      const rt=el('text',{x:x-8,y:y+bandH/2+4,class:'axis','text-anchor':'end'});
+      rt.textContent=rel; svg.appendChild(rt);
+    }
+  });
+  const note=el('text',{x:P,y:H-6,class:'axis'});
+  note.textContent='от всего рынка остаётся 1,1% — это и есть реальная цель';
+  svg.appendChild(note);
+  document.getElementById('v-tam2').appendChild(svg);
+})();
+
+/* ── Путь клиента лесенкой ── */
+(function(){
+  /* Одна шкала светлоты вместо пяти тонов: продвижение по пути — одна
+     величина. Тёмные чернила держат контраст на всех пяти ступенях,
+     слабейшая 7.83 при норме 4.5 — проверено. */
+  const STEP=[16,32,52,74,100];
+  const COL=STEP.map(k=>k>=100?'var(--mid)'
+    :`color-mix(in srgb, var(--mid) ${k}%, var(--line-2))`);
+  const st=[
+    ['Не знает о проблеме',100,'high',
+     'Показываем, что проблема вообще есть',
+     'Человек не связывает потерю заявок с сайтом. Сначала называем проблему его словами, о продукте не говорим.'],
+    ['Осознание проблемы',68,'high',
+     'Даём цифры, которыми он померит свою потерю',
+     'Проблему видит, но не знает её размера. Считаем деньги: сколько уходит с оплаченного трафика.'],
+    ['Поиск решения',44,'medium',
+     'Объясняем, какие вообще бывают способы',
+     'Ищет варианты и сравнивает подходы, а не марки. Обзорный материал здесь работает лучше рекламы.'],
+    ['Сравнение',27,'medium',
+     'Отвечаем на возражение до того, как его задали',
+     'Смотрит на нас рядом с конкурентами. Сравнительная страница и честное «чего мы не делаем».'],
+    ['Готов купить',13,'low',
+     'Убираем последнее трение перед действием',
+     'Решение принято, мешает мелочь: цена, установка, риск. Бесплатный тариф снимает всё разом.'],
+  ];
+  const RISK={high:'высокий риск потери',medium:'средний риск',low:'низкий риск'};
+  const maxW=250, minW=175;
+  document.getElementById('v-lad').innerHTML=st.map(([nm,pct,risk,act,desc],i)=>{
+    const w=Math.round(maxW-(maxW-minW)*(i/(st.length-1)));
+    return `<div class="lrow" style="--lw:${w}px">
+      <div class="lleft" style="background:${COL[i]}">
+        <span class="num">${String(i).padStart(2,'0')}</span>
+        <span class="nm">${nm}</span>
+      </div>
+      <div class="lright">
+        <b>${act}</b>
+        <span>${desc}</span>
+        <span class="meta"><i>доходит ${pct}%</i><i class="rk rk-${risk}">${RISK[risk]}</i></span>
+      </div>
+    </div>`;
+  }).join('');
+})();
+
+/* ── Половозрастная пирамида ──────────────────────────────────────────────
+   Столбцы обеих сторон меряются ОДНОЙ шкалой — от общего максимума, а не
+   каждая сторона от своего. Иначе меньшая половина растянулась бы на всю
+   ширину и перекос между полами пропал бы именно там, ради чего график и
+   строят. */
+(function(){
+  const rows=[['55+',   1.1, 2.4],
+              ['50–54', 1.8, 4.1],
+              ['45–49', 2.6, 6.8],
+              ['40–44', 4.9,13.2],
+              ['35–39', 7.4,19.6],
+              ['30–34', 6.1,16.3],
+              ['25–29', 3.2, 7.4],
+              ['18–24', 0.9, 2.2]];
+  const mx=Math.max(...rows.flatMap(r=>[r[1],r[2]]));
+  document.getElementById('v-pyr').innerHTML=rows.map(([a,m,f])=>
+    `<div class="pyrow">
+       <div class="s l"><span class="v">${String(m).replace('.',',')}%</span><span class="rail"><span class="bar" style="width:${(m/mx*100).toFixed(1)}%"></span></span></div>
+       <div class="age">${a}</div>
+       <div class="s r"><span class="rail"><span class="bar" style="width:${(f/mx*100).toFixed(1)}%"></span></span><span class="v">${String(f).replace('.',',')}%</span></div>
+     </div>`).join('');
+})();
+
+/* ── Активность по дням и часам ───────────────────────────────────────────
+   Один цвет, пять ступеней светлоты. Правило простое: величина кодируется
+   светлотой одного тона, а не разными тонами — разные тона читались бы как
+   разные ВЕЩИ, тогда как здесь всё одна величина. */
+(function(){
+  const STEP=[8,26,46,68,100];
+  const tint=k=>k>=4?'var(--mid)'
+    :`color-mix(in srgb, var(--mid) ${STEP[k]}%, var(--line-2))`;
+  const hrs=['0–3','3–6','6–9','9–12','12–15','15–18','18–21','21–24'];
+  const days=[['ПН',[0,0,1,2,2,2,3,2]],['ВТ',[0,0,1,2,2,2,3,2]],
+              ['СР',[0,0,1,2,2,3,3,2]],['ЧТ',[0,0,1,2,2,3,3,2]],
+              ['ПТ',[0,0,1,2,3,3,4,3]],['СБ',[1,0,0,1,3,4,4,3]],
+              ['ВС',[1,0,0,1,2,3,4,4]]];
+  let h='<div></div>'+hrs.map(x=>`<div class="hh">${x}</div>`).join('');
+  days.forEach(([d,v])=>{
+    h+=`<div class="hl">${d}</div>`;
+    v.forEach(k=>{h+=`<div class="hc${k===4?' peak':''}" style="background:${tint(k)}"></div>`;});
+  });
+  document.getElementById('v-hm').innerHTML=h;
+  document.getElementById('v-hm-leg').innerHTML=
+    STEP.map((_,k)=>`<i style="background:${tint(k)}"></i>`).join('');
+})();
+
+/* ── Структура спроса: плитки площадью по частотности ─────────────────────
+   Раскладка squarified — плитки подгоняются к квадрату, потому что вытянутые
+   полоски глазом не сравниваются по площади. Подпись ставится только туда,
+   где она физически помещается; остальное читается по порядку и наведению. */
+(function(){
+  /* На плитки идут КЛАСТЕРЫ намерений, а не отдельные запросы. Ключей в M7
+     бывает и сто, и триста — сто плиток нечитаемы, площадь мельче ногтя
+     сравнивать нечем. Правило: девять крупнейших кластеров показываем, весь
+     хвост сворачиваем в одну плитку «ещё N». Хвост при этом не прячется — его
+     общий вес виден, и сразу понятно, стоит ли в него вообще идти. */
+  const raw=[['попап для сайта',3100],['форма захвата лидов',2300],
+           ['онлайн-консультант',1900],['квиз на сайт',1400],
+           ['обратный звонок',1100],['виджет на сайт',860],
+           ['увеличить конверсию',720],['envybox',540],
+           ['поймать уход с сайта',310],['lead capture',170],
+           ['всплывающее окно заказа',95],['чат-бот на сайт',72],
+           ['сбор контактов сайт',38],['выход из вкладки триггер',24],
+           ['попап без разработчика',18],['виджет обратной связи',12]];
+  const TOP=9;
+  const head=raw.slice(0,TOP), tail=raw.slice(TOP);
+  const tailSum=tail.reduce((a,b)=>a+b[1],0);
+  const d=tail.length?head.concat([[`ещё ${tail.length} кластеров`,tailSum]]):head;
+  const W=560,H=290, total=d.reduce((a,b)=>a+b[1],0);
+  const scale=(W*H)/total;
+  const items=d.map(([n,v],i)=>({n,v,a:v*scale,i}));
+  const worst=(row,len)=>{const s=row.reduce((a,b)=>a+b.a,0);
+    const mx=Math.max(...row.map(r=>r.a)), mn=Math.min(...row.map(r=>r.a));
+    return Math.max(len*len*mx/(s*s), s*s/(len*len*mn));};
+  const out=[];
+  (function lay(list,x,y,w,h){
+    if(!list.length||w<=0||h<=0) return;
+    const short=Math.min(w,h);
+    let row=[],k=0;
+    while(k<list.length){
+      const cur=row.concat([list[k]]);
+      if(!row.length||worst(cur,short)<=worst(row,short)){row=cur;k++;}
+      else break;
+    }
+    const s=row.reduce((a,b)=>a+b.a,0);
+    if(w>=h){
+      const rw=s/h; let cy=y;
+      row.forEach(it=>{const rh=it.a/rw; out.push({...it,x,y:cy,w:rw,h:rh}); cy+=rh;});
+      lay(list.slice(row.length),x+rw,y,w-rw,h);
+    }else{
+      const rh=s/w; let cx=x;
+      row.forEach(it=>{const rw2=it.a/rh; out.push({...it,x:cx,y,w:rw2,h:rh}); cx+=rw2;});
+      lay(list.slice(row.length),x,y+rh,w,h-rh);
+    }
+  })(items,0,0,W,H);
+
+  const svg=el('svg',{viewBox:`0 0 ${W} ${H}`,width:'100%',height:H});
+  const n=items.length;
+  out.forEach(t=>{
+    const k=1-t.i/(n-1);                    // самый крупный — плотный, хвост — светлый
+    const pct=Math.round(t.v/total*100);
+    svg.appendChild(el('rect',{x:t.x+1,y:t.y+1,width:Math.max(0,t.w-2),
+      height:Math.max(0,t.h-2),rx:4,
+      fill:k>=.99?'var(--mid)':`color-mix(in srgb, var(--mid) ${(10+k*88).toFixed(0)}%, var(--line-2))`}));
+    /* Подписи всегда тёмными: на плотной бирюзе серый даёт 2.66 при норме 4.5,
+       а чернила — 7.83. Название переносится по словам, иначе оно вылезает за
+       край узкой плитки — SVG сам текст не переносит. */
+    const fs = t.w>150?12:10.5;
+    const per = Math.floor((t.w-18)/(fs*0.52));
+    const lines=[]; let cur='';
+    t.n.split(' ').forEach(w=>{
+      if(!cur) cur=w;
+      else if((cur+' '+w).length<=per) cur+=' '+w;
+      else {lines.push(cur); cur=w;}
+    });
+    if(cur) lines.push(cur);
+    const need = lines.length*(fs+2)+16;
+    if(t.w>68 && t.h>need){
+      lines.forEach((ln,li)=>{
+        const a=el('text',{x:t.x+9,y:t.y+15+li*(fs+2),class:'val',
+          style:`font-size:${fs}px`});
+        a.textContent=ln; svg.appendChild(a);
+      });
+      const b=el('text',{x:t.x+9,y:t.y+15+lines.length*(fs+2)+3,class:'val',
+        style:'font-size:10.5px;font-weight:400;opacity:.72'});
+      b.textContent=(t.w>110? t.v.toLocaleString('ru-RU')+' · ':'')+pct+'%';
+      svg.appendChild(b);
+    }else if(t.w>34&&t.h>18){
+      const b=el('text',{x:t.x+8,y:t.y+16,class:'val',style:'font-size:11px'});
+      b.textContent=pct+'%'; svg.appendChild(b);
+    }
+  });
+  document.getElementById('v-tree').appendChild(svg);
+})();
+
+/* ── География спроса ─────────────────────────────────────────────────────
+   Плотность = доля региона в запросах, делённая на его долю в населении.
+   Единица означает «ровно по населению». Считаем здесь, а не берём готовой:
+   в отчёте это тоже должно считаться, а не приходить числом от модели. */
+(function(){
+  const rows=[['Москва и область',4340,15.1],
+              ['Санкт-Петербург и область',1240,5.8],
+              ['Свердловская область',545,2.9],
+              ['Новосибирская область',360,1.9],
+              ['Краснодарский край',495,4.0],
+              ['Татарстан',260,2.7],
+              ['Остальная Россия',5160,67.6]];
+  const total=rows.reduce((a,r)=>a+r[1],0);
+  const d=rows.map(([n,v,pop])=>({n,v,pop,k:(v/total*100)/pop}));
+  /* Полосы меряются от России целиком, а не от крупнейшего региона: иначе
+     строка «Россия» и строка «Москва» получили бы одинаковую длину, хотя одна
+     втрое больше другой. Заодно длина полосы прямо читается как доля от страны. */
+  const maxDev=Math.max(...d.map(x=>Math.abs(x.k-1)))*1.06;  // запас, чтобы полоса не упиралась
+  const fmt=n=>n.toLocaleString('ru-RU');
+  document.getElementById('v-geo').innerHTML=
+    [`<div class="grow base">
+        <div class="nm">Россия целиком</div>
+        <div class="gvol"><span class="rail"><span class="b" style="width:100%"></span></span><span class="v">${fmt(total)}</span></div>
+        <div class="gden"><span class="mid0"></span></div>
+        <div class="gx eq">1,00</div>
+      </div>`]
+    .concat(d.map(x=>{
+      const up=x.k>=1.005, eq=Math.abs(x.k-1)<.005;
+      const w=Math.abs(x.k-1)/maxDev*50;
+      const bar=eq?'':`<span class="d ${up?'up':'dn'}" style="width:${w.toFixed(1)}%"></span>`;
+      return `<div class="grow">
+        <div class="nm">${x.n}</div>
+        <div class="gvol"><span class="rail"><span class="b" style="width:${Math.max(1.2,x.v/total*100).toFixed(1)}%"></span></span><span class="v">${fmt(x.v)}</span></div>
+        <div class="gden"><span class="mid0"></span>${bar}</div>
+        <div class="gx ${eq?'eq':(up?'up':'dn')}">${x.k.toFixed(2).replace('.',',')}</div>
+      </div>`;
+    })).join('');
+})();
+
+/* ── Портрет B2B, вариант 2 ─────────────────────────────────────────────── */
+(function(){
+  const box=document.getElementById('v-b-ppl');
+  if(!box) return;
+  const person=on=>`<svg viewBox="0 0 17 19" fill="none"
+      stroke="${on?'var(--mid)':'var(--line)'}" stroke-width="1.7">
+      <circle cx="8.5" cy="5" r="3.3" fill="${on?'var(--mid)':'none'}"/>
+      <path d="M2 17.5c0-3.6 2.9-5.6 6.5-5.6s6.5 2 6.5 5.6"
+        fill="${on?'var(--mid)':'none'}"/></svg>`;
+  /* Из трёх возможных участников решения занят один — это и есть содержание
+     строки «решает один», показанное, а не пересказанное. */
+  box.innerHTML=[1,0,0].map(v=>person(v)).join('');
+
+  /* Осведомлённость: пять уровней Шварца, высота = доля сегмента.
+     Насыщенность растёт вместе с уровнем — та же шкала, что у лесенки пути,
+     чтобы «дальше по пути» выглядело одинаково в двух местах. */
+  const aw=[['L1',54],['L2',24],['L3',13],['L4',6],['L5',3]];
+  const mx=Math.max(...aw.map(a=>a[1]));
+  document.getElementById('v-b-aw').innerHTML=aw.map(([n,v],i)=>{
+    const k=[16,32,52,74,100][i];
+    const bg=k>=100?'var(--mid)':`color-mix(in srgb, var(--mid) ${k}%, var(--line-2))`;
+    return `<div style="height:${Math.max(6,v/mx*100)}%;background:${bg}"><span>${n} · ${v}%</span></div>`;
+  }).join('');
+
+  /* Боли по частоте: сколько РАЗ боль встретилась в собранных цитатах.
+     Это единственное честное число про боль — не «важность» на глаз, а счёт. */
+  const pain=[['Плачу за клики, а заявок нет',17],
+              ['Не понимаю, куда уходят люди',11],
+              ['Форма длинная — бросают',7],
+              ['Попапы раздражают клиентов',4],
+              ['Некому настроить',2]];
+  const pmx=Math.max(...pain.map(x=>x[1]));
+  document.getElementById('v-b-pain').innerHTML=pain.map(([t,v])=>
+    `<div class="dbar"><span class="t">${t}</span>
+       <span class="g"><i style="width:${(v/pmx*100).toFixed(0)}%"></i></span>
+       <span class="n">${v} из 41</span></div>`).join('');
+})();
+
+/* ── Интересы и каналы: рисунок вместо слова ──────────────────────────────
+   Разделено на два вопроса, потому что это РАЗНЫЕ вещи и используются
+   по-разному. «Чем живёт» отвечает, о чём с человеком говорить. «Где получает
+   информацию» отвечает, куда это нести, и берётся из BLOCK 08A. В одном
+   списке они мешались: «маркетплейсы» и «школьные чаты» стояли рядом, хотя
+   первое — интерес, а второе — площадка. */
+(function(){
+  const G={
+    bag:'<path d="M4 8h16l-1.3 12.5H5.3z"/><path d="M8.5 8V5.8a3.5 3.5 0 017 0V8"/>',
+    play:'<rect x="2.5" y="4" width="19" height="13" rx="2.5"/><path d="M10 8.4l4.6 2.6-4.6 2.6z"/><path d="M8 20.5h8"/>',
+    trip:'<path d="M2.5 19.5h19"/><path d="M4 13.9l2.7-.7 3-5.2 2.6-.7-1.4 5.2 4-1.1 1.3-2.2 2-.5-.9 3.3.9 3.3-2-.5-1.3-2.2-4-1.1 1.4 5.2-2.6-.7-3-5.2z"/>',
+    heart:'<path d="M12 20.5S3.8 15.2 3.8 9.6A4.6 4.6 0 0112 7.3a4.6 4.6 0 018.2 2.3c0 5.6-8.2 10.9-8.2 10.9z"/>',
+    chat:'<path d="M3 6.5A2.5 2.5 0 015.5 4h13A2.5 2.5 0 0121 6.5v7a2.5 2.5 0 01-2.5 2.5H9l-5 4v-4H5.5A2.5 2.5 0 013 13.5z"/><path d="M8 8.5h8M8 12h5"/>',
+    map:'<path d="M12 21s7-6.3 7-11a7 7 0 10-14 0c0 4.7 7 11 7 11z"/><circle cx="12" cy="10" r="2.6"/>',
+    phone:'<rect x="6" y="2.5" width="12" height="19" rx="2.6"/><path d="M14.6 9.6a3.4 3.4 0 11-3.9-3.4 2.7 2.7 0 003.9 3.4z"/>',
+    video:'<path d="M3 7.5A2.5 2.5 0 015.5 5h8A2.5 2.5 0 0116 7.5v9a2.5 2.5 0 01-2.5 2.5h-8A2.5 2.5 0 013 16.5z"/><path d="M16 10.6l5-2.6v8l-5-2.6z"/>',
+  };
+  const draw=(id,items)=>{
+    const box=document.getElementById(id);
+    if(!box) return;
+    box.innerHTML=items.map(([k,t])=>
+      `<figure><span class="disc"><svg viewBox="0 0 24 24">${G[k]}</svg></span>
+         <figcaption>${t}</figcaption></figure>`).join('');
+  };
+  draw('v-chips-life',[['bag','покупает на маркетплейсах'],['play','сама учится онлайн'],
+                       ['trip','поездки с детьми'],['heart','подписки на детское']]);
+  draw('v-chips-info',[['chat','школьные чаты'],['map','отзывы на картах'],
+                       ['phone','Telegram по вечерам'],['video','видео с разборами']]);
+})();
+
+/* ── Возражения парами ───────────────────────────────────────────────────── */
+(function(){
+  const box=document.getElementById('v-obj');
+  if(!box) return;
+  const d=[['«Попапы бесят, я сам их закрываю»',
+            'Показ только уходящему по триггеру, а не по таймеру. Механику вынести на первый экран.'],
+           ['«Добавит спама в заявки»',
+            'Антиспам-фильтр форм. Показать в цифрах долю мусорных заявок до и после.'],
+           ['«Обещание +25% ничем не подтверждено»',
+            'Три кейса с замером A/B. Без них число из обещаний убрать.'],
+           ['«Некому это настраивать»',
+            'Установка за 5 минут через бота, без разработчика. Снять видео экрана.']];
+  box.innerHTML='<div class="ohead"><span>Что говорит клиент</span>'+
+    '<span>Чем снимаем</span></div>'+
+    d.map(([f,a])=>
+    `<div class="orow"><div class="of">${f}</div><div class="oa">${a}</div></div>`).join('');
+})();
+
+/* ── Альтернативы ─────────────────────────────────────────────────────────
+   Пять типов рассматриваются всегда, и первый — «ничего не делать». Он редко
+   называется прямо, но виден по фразам «да мы и так справляемся», «руки не
+   доходят». Это и есть отказ от покупки. */
+(function(){
+  const box=document.getElementById('v-alt');
+  if(!box) return;
+  const d=[['Ничего не делать','бездействие',
+            'Проблема не настолько болит, разбираться некогда, и нет веры, что это вообще решаемо.',
+            'Считать деньги: сколько уходит с оплаченного трафика за месяц. Спорить с бездействием цифрой, а не сравнением.',1],
+           ['Сделать своими силами','руками',
+            'Собрать форму на конструкторе или попросить своего программиста.',
+            'Показать, чего самодельная форма не умеет: триггер ухода и подстановку под страницу.',0],
+           ['Нанять человека','подрядчик',
+            'Отдать сайт агентству целиком, чтобы «они там сами разобрались».',
+            'Считать не цену инструмента, а цену часа подрядчика на ту же задачу.',0],
+           ['Соседняя категория','другой класс',
+            'Онлайн-консультант или чат-бот — та же боль, другой инструмент.',
+            'Развести по моменту: чат ловит пришедшего, мы — уходящего.',0],
+           ['Прямой конкурент','конкурент',
+            'Envybox и подобные — подробности в карте конкурентов.',
+            'Только там, где аудитория сама объясняет, почему выбрала его.',0]];
+  box.innerHTML='<div class="ahead"><span>Альтернатива</span>'+
+    '<span>Почему её выбирают</span><span>Что мы говорим против</span></div>'+
+    d.map(([n,ty,why,say,main])=>
+    `<div class="arow${main?' main':''}">
+       <div>${main?'<div class="aeb">главный конкурент</div>':''}
+         <div class="an">${n}</div><div class="aty">${ty}</div></div>
+       <div class="atx">${why}</div>
+       <div class="atx">${say}</div>
+     </div>`).join('');
+})();
+
+/* ── Где сидит аудитория ─────────────────────────────────────────────────── */
+(function(){
+  const box=document.getElementById('v-chn');
+  if(!box) return;
+  const G={
+    forum:'<path d="M3 6.5A2.5 2.5 0 015.5 4h13A2.5 2.5 0 0121 6.5v7a2.5 2.5 0 01-2.5 2.5H9l-5 4v-4H5.5A2.5 2.5 0 013 13.5z"/>',
+    star:'<path d="M12 3l2.7 5.9 6.3.7-4.7 4.3 1.3 6.2L12 17l-5.6 3.1 1.3-6.2L3 9.6l6.3-.7z"/>',
+    tg:'<rect x="6" y="2.5" width="12" height="19" rx="2.6"/><path d="M9 9h6M9 12.5h4"/>',
+    video:'<path d="M3 7.5A2.5 2.5 0 015.5 5h8A2.5 2.5 0 0116 7.5v9a2.5 2.5 0 01-2.5 2.5h-8A2.5 2.5 0 013 16.5z"/><path d="M16 10.6l5-2.6v8l-5-2.6z"/>',
+    news:'<rect x="3" y="4.5" width="18" height="15" rx="2.2"/><path d="M7 9h6M7 12.5h10M7 16h10"/>',
+  };
+  const d=[['vc.ru','отраслевое медиа','forum',
+            'Разбирают провалы рекламы, спорят в комментариях',
+            'посты за неделю','публиковаться',4],
+           ['oborot.ru','форум владельцев','news',
+            'Спрашивают, чем догнать ушедшего посетителя',
+            'ответы за 2 дня','участвовать',7],
+           ['Отзывы на картах','отзовик','star',
+            'Читают отзывы перед выбором подрядчика',
+            '87 отзывов','собирать VoC',11],
+           ['Telegram-чаты','мессенджер','tg',
+            'Маркетологи обсуждают инструменты и цены',
+            'сообщения сегодня','искать партнёрство',15],
+           ['YouTube-разборы','видео','video',
+            'Смотрят настройку по шагам, а не рекламу',
+            'ролик за месяц','сотрудничать с автором',18]];
+  box.innerHTML=d.map(([n,ty,ic,what,live,use,ref])=>
+    `<div class="ccard">
+       <div class="ch">
+         <span class="ci"><svg viewBox="0 0 24 24">${G[ic]}</svg></span>
+         <div class="cn">${n} <a class="rn2" href="#src">[${ref}]</a><span>${ty}</span></div>
+       </div>
+       <div class="cd">${what}</div>
+       <div class="cf">
+         <div><span>признак живости</span><b>${live}</b></div>
+         <div class="r"><span>как использовать</span><b>${use}</b></div>
+       </div>
+     </div>`).join('');
+
+  /* Доли по площадкам — те же 41 цитата, разложенные по источникам. */
+  const sh=[['vc.ru',14],['oborot.ru',9],['Отзывы на картах',8],
+            ['Telegram-чаты',6],['YouTube-разборы',4]];
+  const tot=sh.reduce((a,b)=>a+b[1],0), mx=Math.max(...sh.map(x=>x[1]));
+  /* Округляем по наибольшему остатку, а не каждое число по отдельности:
+     при обычном округлении сумма даёт 101%, и это первое, что бросается
+     в глаза в отчёте. */
+  const ex=sh.map(([n,v])=>({n,v,f:Math.floor(v/tot*100),r:(v/tot*100)%1}));
+  let left=100-ex.reduce((a,b)=>a+b.f,0);
+  ex.slice().sort((a,b)=>b.r-a.r).forEach(o=>{ if(left>0){o.f++;left--;} });
+  document.getElementById('v-chn-share').innerHTML=ex.map(o=>
+    `<div class="dbar"><span class="t">${o.n}</span>
+       <span class="g"><i style="width:${(o.v/mx*100).toFixed(0)}%"></i></span>
+       <span class="n">${o.f}%</span></div>`).join('');
+})();
+
+/* ── Голос клиента лентой — как в макете платформы ────────────────────────── */
+(function(){
+  const strip=document.getElementById('v-voc');
+  if(!strip) return;
+  const ST={wait:'ждёт',work:'в работе',done:'использована'};
+  const Q=[
+    ['«В рекламу вкладываю, а заказов нет. Сливаю бюджет непонятно куда.»',
+     'vc.ru','обсуждение контекстной рекламы',17,'done',4],
+    ['«Люди заходят, смотрят и уходят. Куда — не понимаю, аналитику читать некогда.»',
+     'oborot.ru','форум владельцев магазинов',11,'work',7],
+    ['«Много полей — закрываю вкладку. Мне проще позвонить, чем это заполнять.»',
+     'otzovik','отзыв на сервис форм',7,'wait',12],
+    ['«Эти всплывашки бесят. Сам закрываю, не читая, и клиенты так же будут.»',
+     'Telegram-чат','сообщество маркетологов',4,'wait',15],
+    ['«Платим за клик по двести рублей, а из ста человек оставляет заявку один.»',
+     'vc.ru','разбор рекламного кабинета',9,'work',5],
+    ['«Пробовали таймер — люди уходили раньше, чем он срабатывал.»',
+     'awdee','обсуждение виджетов',6,'wait',9],
+  ];
+  strip.innerHTML=Q.map(([t,src,sub,n,st,ref])=>
+    `<div class="vq">
+       <div class="vst ${st}"><i></i>${ST[st]}</div>
+       <blockquote>${t}</blockquote>
+       <div class="vf">
+         <div class="vsrc"><b>${src} <a class="rn2" href="#src">[${ref}]</a></b>${sub}</div>
+         <div class="vcnt"><i></i>${n} из 41</div>
+       </div></div>`).join('');
+  const step=(268+12)*2;   // ширина плашки + зазор, листаем по две
+  document.getElementById('v-qnext').addEventListener('click',()=>
+    strip.scrollBy({left:step,behavior:'smooth'}));
+  document.getElementById('v-qprev').addEventListener('click',()=>
+    strip.scrollBy({left:-step,behavior:'smooth'}));
+})();
+
+/* ── Общий сборщик таблиц отчёта ──────────────────────────────────────────
+   head — подписи колонок, rows — массивы ячеек. Ячейка может быть строкой
+   или объектом {h:'<html>'} — так строки не превращаются в кашу из тегов. */
+const dtbl=(id,head,rows,rowCls)=>{
+  const box=document.getElementById(id);
+  if(!box) return;
+  const cell=c=>typeof c==='string'?esc(c):c.h;
+  box.innerHTML='<div class="th">'+head.map(h=>`<span>${esc(h)}</span>`).join('')+'</div>'+
+    rows.map((r,i)=>`<div class="tr${rowCls&&rowCls(i)?' '+rowCls(i):''}">`+
+      r.map(c=>`<div>${cell(c)}</div>`).join('')+'</div>').join('');
+};
+
+/* ── Карта конкурентов ───────────────────────────────────────────────────── */
+dtbl('v-comp',
+  ['Конкурент · источник','Масштаб','Чем берёт','Цена','Слабое место'],
+  [[{h:'<span class="nm">Envybox</span><span class="tag">envybox.ru <a class="rn2" href="#src">[2]</a></span>'},'крупный',
+    'Узнаваемость и широкий набор виджетов в одной подписке','от 1 400 ₽/мес',
+    'Показ по таймеру, а не по уходу. Бесплатный период всего 8 дней'],
+   [{h:'<span class="nm">Neiros</span><span class="tag">neiros.ru <a class="rn2" href="#src">[3]</a></span>'},'средний',
+    'Шаблонный ловец лидов, быстрый старт','от 990 ₽/мес',
+    'Шаблоны не подстраиваются под нишу клиента'],
+   [{h:'<span class="nm">Marquiz</span><span class="tag">marquiz.ru <a class="rn2" href="#src">[6]</a></span>'},'крупный',
+    'Квизы вместо форм, сильный бренд у маркетологов','от 1 100 ₽/мес',
+    'Решает другую задачу: вовлекает пришедшего, не удерживает уходящего'],
+   [{h:'<span class="nm">Callibri</span><span class="tag">callibri.ru <a class="rn2" href="#src">[8]</a></span>'},'крупный',
+    'Аналитика обращений и сквозные отчёты','от 1 000 ₽/мес',
+    'Тяжёлый для малого бизнеса без маркетолога'],
+   [{h:'<span class="nm">Конструкторы форм</span><span class="tag">без единого сайта</span>'},'—',
+    'Уже входят в тариф хостинга или CMS','включено',
+    'Нет триггера ухода и подстановки текста под страницу']]);
+
+/* ── Достоинства продукта ────────────────────────────────────────────────── */
+dtbl('v-adv',
+  ['Достоинство','Чем подтверждено','Когда не работает'],
+  [[{h:'<span class="nm">ИИ-заголовок под страницу</span>'},
+    'Демонстрация на своём сайте, [4]',
+    'Если на сайте одна страница — подставлять нечего'],
+   [{h:'<span class="nm">Триггер ухода вместо таймера</span>'},
+    'Описание механики ExitSense, [4]',
+    'На мобильных уход ловится хуже: нет курсора'],
+   [{h:'<span class="nm">Бесплатно без лимита на лиды</span>'},
+    'Тарифная страница, [4]',
+    'Не аргумент там, где лидов единицы в месяц'],
+   [{h:'<span class="nm">Установка за 5 минут</span>'},
+    'Видео установки, [11]',
+    'Нужен доступ к коду страниц']]);
+
+/* ── Кому не продаём ─────────────────────────────────────────────────────── */
+dtbl('v-nots',
+  ['Кто','Почему невыгоден','Признак заранее'],
+  [[{h:'<span class="nm">Без своего сайта</span>'},
+    'Виджету некуда встать, ценность не возникает',
+    'Работает только на маркетплейсе или в соцсетях'],
+   [{h:'<span class="nm">Сайт почти без трафика</span>'},
+    'Ловить некого, эффект нулевой, быстрый отток',
+    'Меньше 300 посетителей в месяц по словам клиента'],
+   [{h:'<span class="nm">Серые и 18+ ниши</span>'},
+    'Риск блокировок и спорный сбор персональных данных',
+    'Тематика из запрещённых категорий'],
+   [{h:'<span class="nm">Против всплывающих окон</span>'},
+    'Отказ от формата убивает работу продукта',
+    'Прямо говорит «попапы не ставим»']]);
+
+/* ── Архетип бренда ──────────────────────────────────────────────────────── */
+dtbl('v-arch',
+  ['Роль','Архетип','Почему подходит нам','Занят соперниками','Чем рискуем'],
+  [[{h:'<span class="nm">Основной</span>'},{h:'<span class="strong">Волшебник</span>'},
+    'ИИ ловит уходящего и подбирает сообщение — потери превращаются в заявки',
+    'Правитель занят Envybox, Мудрец — Callibri, Творец — Marquiz',
+    'Обещание «магии» без кейсов вызовет недоверие. Снимаем цифрами прироста'],
+   [{h:'<span class="nm">Поддерживающий</span>'},{h:'<span class="strong">Заботливый</span>'},
+    'Бесплатно без лимита, установка за 5 минут, защита дорогого трафика',
+    'Прямые соперники заботу не заявляют — зона свободна',
+    'Может звучать мягко для сегмента с дорогим лидом. Усиливаем деньгами за заявку']]);
+
+dtbl('v-arch2',
+  ['Элемент','Как проявляется','Пример формулировки','Чего избегаем'],
+  [[{h:'<span class="nm">Тон речи</span>'},'Уверенно и про результат, без технического жаргона',
+    {h:'<span class="q">«Уходящий посетитель превращается в заявку, пока вы спите»</span>'},
+    'Терминов про модели и алгоритмы на первом экране'],
+   [{h:'<span class="nm">Герой в кадре</span>'},'Сам продукт и экран с растущими заявками',
+    {h:'<span class="q">«Смотрите, что показывает ИИ уходящему клиенту»</span>'},
+    'Говорящей головы основателя как главного героя'],
+   [{h:'<span class="nm">Темы материалов</span>'},'Как ловится уходящий, экономия бюджета, разборы ниш',
+    {h:'<span class="q">«Почему 96% посетителей уходят без заявки»</span>'},
+    'Рассуждений про искусственный интеллект вообще'],
+   [{h:'<span class="nm">Отношение к аудитории</span>'},'Помощник, который берёт рутину на себя',
+    {h:'<span class="q">«Настроит и поймает заявку за вас, без разработчиков»</span>'},
+    'Снисходительного тона эксперта сверху вниз'],
+   [{h:'<span class="nm">Реакция на возражения</span>'},'Спокойно показываем механику против страха',
+    {h:'<span class="q">«Срабатывает только на уходящем, а не по таймеру»</span>'},
+    'Спора и обесценивания опасений клиента']]);
+
+/* ── Главная ставка и цели ───────────────────────────────────────────────── */
+dtbl('v-bet',
+  ['Элемент','Формулировка'],
+  [['Ставка одной фразой',{h:'<span class="strong">Измеренные кейсы прироста конверсии разблокируют все каналы продаж</span>'}],
+   ['На чём она стоит','Вывод BLOCK 06_1: обещание «+25%» пока ничем не подтверждено'],
+   ['Если ставка верна','Цифры «до и после» становятся топливом видео, сравнений и рекламы'],
+   ['Если ставка неверна','Обещание без доказательств вызывает недоверие, установки не растут'],
+   ['Какая гипотеза проверяет','Н1 — замер A/B у пяти клиентов']]);
+
+dtbl('v-goals',
+  ['Цель','Метрика','Сейчас','Целевое значение','Гипотезы'],
+  [['Доказать обещание продукта','Прирост конверсии в заявки, замер A/B',
+    {h:'<span class="no">нет данных</span>'},'+25% к таймерному попапу','Н1'],
+   ['Вырастить платную базу','Число платных клиентов',
+    {h:'<span class="no">нет данных</span>'},'1 000 клиентов','Н2, Н3, Н5'],
+   ['Запустить поток установок','Установки бесплатного тарифа в неделю',
+    {h:'<span class="no">нет данных</span>'},'50 в неделю','Н3, Н4'],
+   ['Поднять монетизацию базы','Конверсия из бесплатного в платный',
+    {h:'<span class="no">нет данных</span>'},
+    {h:'<span class="no">задать после 4 недель замера</span>'},'Н2, Н7']]);
+
+/* ── Банк хуков ──────────────────────────────────────────────────────────── */
+(function(){
+  const box=document.getElementById('v-hooks');
+  if(!box) return;
+  const d=[['«Слил бюджет, а заявок кот наплакал»','обложка карусели','дословно из BLOCK 07'],
+           ['«Плачу за клик двести рублей. Из ста человек заявку оставляет один»','первая строка поста','подрезано до ядра'],
+           ['«Люди заходят, смотрят и уходят»','заголовок статьи','дословно'],
+           ['«Мне проще позвонить, чем заполнять вашу форму»','обложка видео','дословно'],
+           ['«Попробовали таймер — уходили раньше, чем он срабатывал»','первая строка поста','подрезано до ядра']];
+  box.innerHTML=d.map(([t,use,how],i)=>
+    `<div class="hrow">
+       <span class="hn">${String(i+1).padStart(2,'0')}</span>
+       <span class="ht">${t}</span>
+       <span class="hu"><b>${use}</b>${how}</span>
+     </div>`).join('');
+})();
+
+/* ── Когнитивные тактики ─────────────────────────────────────────────────── */
+dtbl('v-tact',
+  ['Сегмент','Уровень','Этап пути','Тактика','На чём основано'],
+  [[{h:'<span class="nm">Предприниматель</span>'},'L1 не знает','Не знает о проблеме',
+    'Назвать проблему его словами и посчитать её в деньгах, о продукте молчать',
+    'BLOCK 07: «слил бюджет, а заявок кот наплакал» — говорит о бюджете, не о конверсии'],
+   [{h:'<span class="nm">Предприниматель</span>'},'L2 осознаёт','Поиск решения',
+    'Показать, какие вообще бывают способы, включая ручные',
+    'BLOCK 07C: главная альтернатива — ничего не делать, а не конкурент'],
+   [{h:'<span class="nm">Агентство</span>'},'L3 сравнивает','Сравнение',
+    'Ответить на возражение до того, как его задали: механика показа против таймера',
+    'BLOCK 12: страх «попапы бесят» встречается у 4 из 41'],
+   [{h:'<span class="nm">Бизнес с дорогим лидом</span>'},'L4 знает нас','Готов купить',
+    'Убрать последнее трение: бесплатный тариф без лимита на лиды',
+    'BLOCK 17B: вход без оплаты — единственное отличие, не занятое конкурентами']]);
+
+/* ── Контент-система ─────────────────────────────────────────────────────── */
+(function(){
+  const box=document.getElementById('v-rub');
+  if(!box) return;
+  const d=[['Разбор потери','Считаем в деньгах, сколько уходит с оплаченного трафика','статья','2 раза в месяц','L1'],
+           ['Против таймера','Механика показа: чем уход отличается от минуты ожидания','карусель','еженедельно','L3'],
+           ['Ниша под лупой','Как задача выглядит у магазинов, клиник, школ','статья','раз в месяц','L2'],
+           ['Отвечаем на страх','Один страх из отзывов — один короткий ответ','пост','еженедельно','L3'],
+           ['Цифры до и после','Замер у клиента, честно и с оговорками','кейс','по мере готовности','L4']];
+  box.innerHTML=d.map(([n,j,f,c,lv])=>
+    `<div class="rcard"><div class="rn">${n}</div><div class="rj">${j}</div>
+       <div class="rf"><span>${f} · ${c}</span><b>${lv}</b></div></div>`).join('');
+
+  /* Ритм: цвет полоски — тот же язык, что у ступеней пути, насыщенность
+     растёт с уровнем осведомлённости, на который работает материал. */
+  const TINT={L1:16,L2:32,L3:52,L4:74,L5:100};
+  const w=[['ПН','Отвечаем на страх','L3'],['ВТ','',''],['СР','Против таймера','L3'],
+           ['ЧТ','',''],['ПТ','Разбор потери','L1'],['СБ','',''],['ВС','','']];
+  document.getElementById('v-rhy').innerHTML=w.map(([d2,t,lv])=>{
+    const k=TINT[lv];
+    const bar=lv?`<div class="dbar2" style="background:${k>=100?'var(--mid)':`color-mix(in srgb, var(--mid) ${k}%, var(--line-2))`}"></div>`:'';
+    return `<div class="rd${t?'':' off'}"><div class="dw">${d2}</div>
+      <div class="dt">${t||'—'}</div>${bar}</div>`;
+  }).join('');
+})();
+
+/* ── ТЗ на лендинг ───────────────────────────────────────────────────────── */
+(function(){
+  const box=document.getElementById('v-lnd');
+  if(!box) return;
+  const d=[['Первый экран','Назвать проблему его словами','Заголовок из BLOCK 07 дословно: «клики есть, заявок нет». Кнопка — бесплатный старт, без формы.'],
+           ['Цена бездействия','Показать потерю в деньгах','Счётчик: сколько уходит с оплаченного трафика в месяц при их цифрах.'],
+           ['Как это работает','Снять страх механикой','Три шага с экранами продукта. Прямо здесь — ответ на «попапы бесят».'],
+           ['Против альтернатив','Сравнить с тем, что делают сейчас','Таблица против таймерного попапа и против самодельной формы, а не только против конкурента.'],
+           ['Доказательства','Дать цифры и голоса','Кейсы с замером A/B. Пока их нет — отзывы дословно, без обещания «+25%».'],
+           ['Кому не подойдёт','Отсечь заранее','Четыре строки из BLOCK 07D. Экономит поддержке недели и снимает плохие отзывы.'],
+           ['Действие','Убрать последнее трение','Бесплатно без лимита, установка за 5 минут, без разработчика.']];
+  box.innerHTML=d.map(([t,j,c],i)=>
+    `<div class="lstep">
+       <span class="ln">${String(i+1).padStart(2,'0')}</span>
+       <div><div class="lt">${t}</div><div class="lj">${j}</div></div>
+       <div class="lc"><b>что на экране</b>${c}</div>
+     </div>`).join('');
+})();
+
+/* ── Креативные брифы ────────────────────────────────────────────────────── */
+dtbl('v-brief',
+  ['Формат','Сообщение','Что в кадре','Чего избегаем'],
+  [[{h:'<span class="nm">Обложка карусели</span><span class="tag">1080×1350</span>'},
+    {h:'<span class="q">«Слил бюджет, а заявок кот наплакал»</span>'},
+    'Экран рекламного кабинета с расходом и пустой список заявок рядом',
+    'Стоковых улыбок и абстрактных нейросетей'],
+   [{h:'<span class="nm">Баннер в статью</span><span class="tag">1200×628</span>'},
+    {h:'<span class="q">«Ловит уходящего, а не показывает по таймеру»</span>'},
+    'Момент ухода: курсор у крестика вкладки, всплывающее сообщение',
+    'Слова «искусственный интеллект» на первом плане'],
+   [{h:'<span class="nm">Обложка видео</span><span class="tag">1280×720</span>'},
+    {h:'<span class="q">«Настроили за пять минут, без разработчика»</span>'},
+    'Реальный экран установки, таймер в углу',
+    'Говорящей головы основателя как главного героя']]);
+
+/* ── Карта отчёта ────────────────────────────────────────────────────────── */
+(function(){
+  const box=document.getElementById('v-map');
+  if(!box) return;
+  const d=[
+    ['have','Сводка исследования','M1 · M2 · M7'],
+    ['have','Приоритет ниш','BLOCK 04_2'],
+    ['have','Доли сегментов','BLOCK 04'],
+    ['have','Размер рынка','BLOCK 03'],
+    ['have','Портрет сегмента B2B','BLOCK 09'],
+    ['have','Карта конкурентов','BLOCK 06 · 06_1'],
+    ['have','Матрица возможностей','BLOCK 06_1'],
+    ['have','Источники','BLOCK 04_0'],
+    ['have','Доля внимания','M2 · M7'],
+    ['have','Голос клиента','BLOCK 07 · 07A'],
+    ['have','Банк хуков','BLOCK 07B'],
+    ['have','Альтернативы','BLOCK 07C'],
+    ['have','Где сидит аудитория','BLOCK 08A'],
+    ['have','Осведомлённость','BLOCK 11'],
+    ['have','Возражения и ответы','BLOCK 12 · 12B'],
+    ['have','Путь клиента','BLOCK 14 · 11'],
+    ['have','Когнитивные тактики','BLOCK 15'],
+    ['have','Достоинства продукта','BLOCK 17B'],
+    ['have','Семантика с сезонностью','M7'],
+    ['have','Структура спроса','M7'],
+    ['add','SWOT','предлагаем BLOCK 06_2'],
+    ['add','Позиционирование по сегментам','предлагаем BLOCK 06_3'],
+    ['add','Кому не продаём','предлагаем BLOCK 07D'],
+    ['add','Портрет B2C и демография','предлагаем BLOCK 09B'],
+    ['add','Архетип бренда','предлагаем BLOCK 18B'],
+    ['add','Главная ставка и цели','предлагаем BLOCK 23'],
+    ['add','Реестр гипотез','BLOCK 16 — вернуть M5'],
+    ['add','География спроса','предлагаем SEO-06'],
+    ['none','Возраст и пол в числах','нужен рекламный кабинет'],
+    ['none','Активность по дням и часам','нужна Метрика клиента'],
+    ['out','Контент-система','BLOCK 20 → контент-завод'],
+    ['out','Креативные брифы','BLOCK 21 → контент-завод'],
+    ['out','ТЗ на лендинг','BLOCK 22 → контент-завод'],
+    ['out','Визуальная стратегия','BLOCK 19 → контент-завод'],
+    ['add','Мониторинг контента конкурентов','M9 — уже расписан в ТЗ'],
+  ];
+  box.innerHTML=d.map(([st,n,src])=>
+    `<div class="mcell ${st}"><i></i><span>${n}<b>${src}</b></span></div>`).join('');
+  const c=k=>d.filter(x=>x[0]===k).length;
+  const leg=document.getElementById('v-map-leg');
+  if(leg) leg.innerHTML+=
+    `<span style="margin-left:auto;color:var(--ink-2);font-weight:600">`+
+    `${c('have')} оформлено · ${c('add')} ждут включения · ${c('none')} вне наших источников`+
+    ` · ${c('out')} вынесены в контент-завод</span>`;
+})();
+
+
+/* ── Визуальная стратегия ────────────────────────────────────────────────── */
+(function(){
+  const box=document.getElementById('v-vis-sw');
+  if(!box) return;
+  /* Цвета клиента, а не платформы. Цвет подписи выбран по замеру: белая на
+     #1F6FEB даёт 4.63, на тёмном 17.96, тёмная на светлых — 16 и выше. */
+  const sw=[['#1F6FEB','акцент','#FFFFFF'],['#0E1726','основной','#FFFFFF'],
+            ['#E8EDF5','фон','#12100D'],['#FFFFFF','поле','#12100D']];
+  box.innerHTML=sw.map(([hex,n,ink])=>
+    `<div style="background:${hex};color:${ink}">${hex}<small>${n}</small></div>`).join('');
+
+  const R=[['Обложка — одна мысль','Два тезиса на обложке читаются как ни одного'],
+           ['Продукт в кадре','Экран интерфейса, а не стоковая улыбка'],
+           ['Цифра крупнее текста','За неё цепляется глаз в ленте'],
+           ['Поля не меньше 8% стороны','Тесная обложка выглядит дешёвой']];
+  document.getElementById('v-vis-rules').innerHTML=R.map(([a,b])=>
+    `<div class="rr"><div class="y"><span class="lb2">правило</span>${a}</div>
+       <div class="n2"><span class="lb2">почему</span>${b}</div></div>`).join('');
+
+  const N=[['Градиентов из трёх и более цветов','Занято половиной рынка, различить нас невозможно'],
+           ['Абстрактных нейросетей и мозгов','Аудитория говорит про заявки, а не про ИИ'],
+           ['Мелкого текста на обложке','В ленте он не читается, а место занимает'],
+           ['Слова «магия» рядом с обещанием','Без кейсов оно вызывает недоверие — из BLOCK 12']];
+  document.getElementById('v-vis-no').innerHTML=N.map(([a,b])=>
+    `<div class="rr"><div class="y"><span class="lb2">не делаем</span>${a}</div>
+       <div class="n2"><span class="lb2">почему</span>${b}</div></div>`).join('');
+})();
+
+/* ── Позиционирование по сегментам ───────────────────────────────────────── */
+dtbl('v-posi',
+  ['Сегмент','Категория, в которой нас понимают','Ключевая выгода','Отличие','Против чего'],
+  [[{h:'<span class="nm">Предприниматель с платным трафиком</span>'},
+    'Инструмент повышения конверсии сайта',
+    'Больше заявок с того же рекламного бюджета',
+    'Ловит только уходящего и пишет ему под страницу',
+    {h:'Envybox — показ по таймеру <span class="tag">BLOCK 06</span>'}],
+   [{h:'<span class="nm">Бизнес с дорогим лидом</span>'},
+    'Защита дорогого трафика от потери',
+    'Возврат посетителя, чья заявка стоит тысячи',
+    'Перехват до закрытия вкладки, а не пассивное окно',
+    {h:'Ручная форма на конструкторе <span class="tag">BLOCK 07C</span>'}],
+   [{h:'<span class="nm">Агентство и веб-студия</span>'},
+    'Готовая услуга роста заявок для клиентов',
+    'Результат клиенту чужими руками плюс доход с партнёрства',
+    'Контент под нишу клиента, который вручную не собрать',
+    {h:'Neiros — шаблонный ловец <span class="tag">BLOCK 06</span>'}],
+   [{h:'<span class="nm">Владелец сайта без рекламы</span>'},
+    {h:'<span class="no">не наш сегмент</span>'},
+    {h:'<span class="no">трафика нет — ловить некого</span>'},
+    {h:'<span class="no">—</span>'},
+    {h:'<span class="no">см. «Кому не продаём»</span>'}]]);
+
+/* ── Доля внимания ────────────────────────────────────────────────────────
+   Мера — брендовый спрос: сколько раз в месяц имя вбивают в поиск. Единственное
+   число про присутствие, которое можно ПОСЧИТАТЬ, а не оценить на глаз. */
+(function(){
+  const box=document.getElementById('v-attn');
+  if(!box) return;
+  const d=[['Marquiz',12400,510],['Envybox',8100,340],['Callibri',3300,210],
+           ['Neiros',720,40],['Ловец-Лидов',90,12]];
+  const tot=d.reduce((a,b)=>a+b[1],0), mx=Math.max(...d.map(x=>x[1]));
+  const ex=d.map(([n,v,r])=>({n,v,r,f:Math.floor(v/tot*100),rem:(v/tot*100)%1}));
+  let left=100-ex.reduce((a,b)=>a+b.f,0);
+  ex.slice().sort((a,b)=>b.rem-a.rem).forEach(o=>{ if(left>0){o.f++;left--;} });
+  box.innerHTML=ex.map(o=>
+    `<div class="dbar"><span class="t">${o.n}</span>
+       <span class="g"><i style="width:${(o.v/mx*100).toFixed(0)}%;${o.n==='Ловец-Лидов'?'background:var(--sw-violet)':''}"></i></span>
+       <span class="n">${o.f}% · ${o.v.toLocaleString('ru-RU')}/мес</span></div>`).join('');
+})();
+
+/* ── Источники ───────────────────────────────────────────────────────────── */
+(function(){
+  const box=document.getElementById('v-srcs');
+  if(!box) return;
+  const d=[[2,'envybox.ru','Тарифы и описание виджетов','M2 · BLOCK 06','https://envybox.ru/pricing/'],
+           [3,'neiros.ru','Тарифы, страница «Ловец лидов»','M2 · BLOCK 06','https://neiros.ru/'],
+           [4,'vc.ru','«Почему реклама съедает бюджет, а заявок нет»','M3 · BLOCK 07 · 08A','https://vc.ru/marketing'],
+           [5,'vc.ru','Разбор рекламного кабинета, комментарии','M3 · BLOCK 07','https://vc.ru/marketing'],
+           [6,'marquiz.ru','Тарифы и примеры квизов','M2 · BLOCK 06','https://marquiz.ru/'],
+           [7,'oborot.ru','Ветка «чем догнать ушедшего посетителя»','M3 · BLOCK 07 · 08A','https://oborot.ru/'],
+           [8,'callibri.ru','Тарифы, описание МультиТрекинга','M2 · BLOCK 06','https://callibri.ru/'],
+           [9,'awdee.ru','Обсуждение виджетов захвата','M3 · BLOCK 07','https://awdee.ru/'],
+           [11,'Яндекс.Карты','87 отзывов о подрядчиках по сайтам','M3 · BLOCK 08A','https://yandex.ru/maps/'],
+           [12,'otzovik.com','Отзыв на сервис форм','M3 · BLOCK 07','https://otzovik.com/'],
+           [15,'Telegram','Чат маркетологов, обсуждение цен','M3 · BLOCK 07 · 08A','https://t.me/'],
+           [18,'YouTube','Разбор настройки попапов по шагам','M3 · BLOCK 08A','https://youtube.com/']];
+  const ext='<svg viewBox="0 0 12 12"><path d="M4.5 2h5.5v5.5"/><path d="M10 2L4.5 7.5"/><path d="M8 8.5V10H2V4h1.5"/></svg>';
+  box.innerHTML=d.map(([n,dom,t,use,url])=>
+    `<div class="srow"><span class="sn">[${n}]</span>
+       <span class="sd">
+         <span class="dom"><a href="${url}" target="_blank" rel="noopener">${dom}${ext}</a>
+           <span class="dt">${use}</span></span>
+         <span class="took"><span>что взяли</span><em>${t}</em></span>
+       </span></div>`).join('');
+})();
+
+/* ── Карта рынка ─────────────────────────────────────────────────────────── */
+(function(){
+  const box=document.getElementById('v-mkt'); if(!box) return;
+  const PRICE=['масс-маркет','средний','дорогой','VIP'];
+  const FAME=['лидер','заметный','нишевый'];
+  /* [название, цена 0-3, известность 0-2, брендовый спрос в месяц, мы?] */
+  const P=[
+   ['Jivo',1,0,41300],['Envybox',1,0,18700],['Marquiz',1,0,12900],
+   ['Callibri',2,0,9400],['Mindbox',3,0,8100],['Carrot quest',2,1,6200],
+   ['Roistat',3,1,5800],['Chat2Desk',2,1,3900],['Retail Rocket',3,1,3100],
+   ['Dashly',2,1,2600],['Talk-Me',0,1,2400],['Neiros',0,1,2100],
+   ['Popmechanic',1,1,1900],['LPgenerator',1,2,1400],['Flexbe',1,2,1200],
+   ['Yagla',2,2,980],['LeadBack',0,2,860],['Venyoo',0,2,640],
+   ['Verbox',0,2,520],['Hoversignal',0,2,410],['WitGet',0,2,280],
+   ['Stripo-формы',1,2,190],['Формы CMS',0,2,null],['Ловец-Лидов',0,2,90,true],
+  ];
+  const ourPrice=P.find(x=>x[4])[1];
+  const top=Math.max(...P.map(x=>x[3]||0));
+  const fmt=n=>String(n).replace(/\B(?=(\d{3})+(?!\d))/g,'\u00A0');
+
+  let h='<div></div>'+PRICE.map(n=>`<div class="hd">${n}</div>`).join('');
+  FAME.forEach((f,fi)=>{
+    h+=`<div class="rw">${f}</div>`;
+    PRICE.forEach((pr,pi)=>{
+      const list=P.filter(x=>x[1]===pi&&x[2]===fi);
+      h+=`<div class="cell${pi===ourPrice?' ours':''}${list.length?'':' empty'}" data-c="${fi}-${pi}">
+        <span class="dots">${list.map(x=>
+          `<button type="button" class="dot" data-i="${P.indexOf(x)}"
+            aria-label="${x[0]}: ${PRICE[x[1]]}, ${FAME[x[2]]}"><i class="${x[4]?'us':''}"></i></button>`
+        ).join('')}</span>
+        <span class="n">${list.length||'—'}</span></div>`;
+    });
+  });
+  box.innerHTML=h;
+
+  /* Список под картой — он и есть орган управления: наводишь на название и
+     видишь, где этот игрок стоит. Сама точка подписи не несёт, поэтому искать
+     конкретного конкурента по карте невозможно — только по списку. */
+  const listBox=document.getElementById('v-mkt-col');
+  const order=P.map((x,i)=>[x,i]).sort((a,b)=>(b[0][3]||-1)-(a[0][3]||-1));
+  listBox.innerHTML=
+    `<h4>Кто где стоит · ${P.length} игроков</h4>`+
+    `<p class="hint">Наведите на название — на карте загорится его точка. И наоборот: наведите на точку — подсветится строка и всплывёт карточка.</p>`+
+    `<div class="hdr"><span>Название</span><span>Цена</span><span>Известность</span>`+
+    `<span style="text-align:right">Брендовый спрос</span></div>`+
+    order.map(([x,i])=>`<div class="r${x[4]?' mine':''}" data-i="${i}" tabindex="0">
+      <b>${x[0]}${x[4]?' — мы':''}</b>
+      <span class="g">${PRICE[x[1]]}</span>
+      <span class="g">${FAME[x[2]]}</span>
+      <span class="num${x[3]?'':' no'}">${x[3]?fmt(x[3])+'/мес':'не замерено'}</span>
+    </div>`).join('');
+
+  /* Подсказка у точки — владелица попросила оставить: на карте у кружка нет
+     подписи, и без неё непонятно, на кого навёл. Держим её внутри обёртки,
+     чтобы координаты считались от одного элемента и она не убегала при прокрутке. */
+  const wrap=box.parentNode, tip=document.createElement('div');
+  tip.className='mkttip'; tip.setAttribute('role','status'); wrap.appendChild(tip);
+  const showTip=(btn,x)=>{
+    const pct=x[3]?x[3]/top*100:null;
+    const share=pct===null?null:(pct<1?'&lt;1':Math.round(pct));
+    tip.innerHTML=`<b>${x[0]}${x[4]?' — мы':''}</b><dl>`+
+      `<dt>Цена</dt><dd>${PRICE[x[1]]}</dd>`+
+      `<dt>Известность</dt><dd>${FAME[x[2]]}</dd>`+
+      `<dt>Ищут название в месяц</dt><dd>${x[3]?fmt(x[3]):'не замерено'}</dd>`+
+      (share!==null?`<dt>Доля от лидера рынка</dt><dd>${share}%</dd>`:'')+
+      `</dl>`;
+    const b=btn.getBoundingClientRect(), w=wrap.getBoundingClientRect();
+    tip.style.left=(b.left-w.left+b.width/2)+'px';
+    tip.style.top=(b.top-w.top-8)+'px';
+    tip.classList.add('on');
+  };
+  const hideTip=()=>tip.classList.remove('on');
+
+  const dots=[...box.querySelectorAll('.dot')];
+  const rows=[...listBox.querySelectorAll('.r')];
+  const seek=i=>{
+    box.classList.add('seek');
+    dots.forEach(d=>{
+      const on=+d.dataset.i===i;
+      d.classList.toggle('hit',on);
+      if(on&&d.parentNode&&d.parentNode.parentNode) d.parentNode.parentNode.classList.add('hit');
+    });
+    box.querySelectorAll('.cell').forEach(c=>{
+      if(!c.querySelector('.dot.hit')) c.classList.remove('hit');
+    });
+    rows.forEach(r=>r.classList.toggle('on',+r.dataset.i===i));
+  };
+  const rest=()=>{
+    box.classList.remove('seek');
+    dots.forEach(d=>d.classList.remove('hit'));
+    box.querySelectorAll('.cell').forEach(c=>c.classList.remove('hit'));
+    rows.forEach(r=>r.classList.remove('on'));
+  };
+  /* Связь в обе стороны: со списка на карту (главное, ради чего это делалось)
+     и с карты на список — чтобы у точки, на которую случайно навёл, нашлось имя. */
+  listBox.addEventListener('mouseover',e=>{const r=e.target.closest('.r'); if(r) seek(+r.dataset.i);});
+  listBox.addEventListener('mouseleave',rest);
+  listBox.addEventListener('focusin',e=>{const r=e.target.closest('.r'); if(r) seek(+r.dataset.i);});
+  listBox.addEventListener('focusout',rest);
+  const onDot=d=>{ const i=+d.dataset.i; seek(i); showTip(d,P[i]); };
+  box.addEventListener('mouseover',e=>{const d=e.target.closest('.dot'); if(d) onDot(d);});
+  box.addEventListener('mouseleave',()=>{rest(); hideTip();});
+  box.addEventListener('focusin',e=>{const d=e.target.closest('.dot'); if(d) onDot(d);});
+  box.addEventListener('focusout',()=>{rest(); hideTip();});
+})();
+</script>
