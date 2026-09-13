@@ -22,7 +22,7 @@ export default async function handler(req, res) {
   if (!auth) return;
 
   const headers = auth.pgHeaders;
-  const SELECT = 'id,name,domain,one_liner,created_at,'
+  const SELECT = 'id,name,domain,one_liner,billing_mode,created_at,'
     + 'markets(id,country,country_name,lang,price_range,audience_note,result_promise)';
 
   try {

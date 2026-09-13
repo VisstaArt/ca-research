@@ -128,15 +128,69 @@
     if (лого && window.CALogo) лого.src = window.CALogo;
     var ава = document.querySelector('.cm-ava');
     if (ава) ава.textContent = МЕТКА(имя || 'Вы');
-    // Кредиты: показываем ПОТРАЧЕННОЕ. Знаменателя «из 1000» в базе нет —
-    // тариф не назначен, и рисовать его в рабочей платформе нельзя.
+    // Расход. В макете тут «412 / 1000» и три проекта — это показательные
+    // числа, их надо заменить настоящими, иначе владелица считает по ним.
+    // Знаменателя нет: сколько кредитов в тарифе, ещё не решено. У проекта на
+    // своих ключах кредиты вообще не тратятся — там расход и есть ответ.
+    var всего = клиенты.reduce(function (a, c) { return a + ((c.usage && c.usage.cost_cents) || 0); }, 0);
     var деньгиКн = document.querySelector('.cm-money');
     if (деньгиКн) {
-      var всего = клиенты.reduce(function (a, c) { return a + ((c.usage && c.usage.cost_cents) || 0); }, 0);
       var b = деньгиКн.querySelector('b'), i = деньгиКн.querySelector('i');
       if (b) b.textContent = деньги(всего);
       if (i) i.textContent = 'за месяц';
     }
+    var панель = document.querySelector('[data-panel="money"]');
+    if (панель) {
+      var строки = клиенты.map(function (c) {
+        return '<a><span class="cm-mark">' + МЕТКА(c.name) + '</span>'
+          + '<b>' + (c.domain || c.name) + '</b>'
+          + '<i>' + ((c.markets || []).map(function (m) { return m.country_name || ''; })
+              .filter(Boolean).join(', ') || '—') + '</i>'
+          + '<span>' + деньги((c.usage && c.usage.cost_cents) || 0) + '</span></a>';
+      });
+      панель.innerHTML =
+        '<div class="cm-user"><b>Расход за месяц</b>'
+        + '<span>по настоящим вызовам моделей и поиска</span></div>'
+        + (строки.join('') || '<a><span>Пока ни одного проекта</span></a>')
+        + '<div class="cm-sep"></div>'
+        + '<a><b>Всего</b><span>' + деньги(всего) + '</span></a>';
+    }
+  }
+
+  function уведомления() {
+    var п = document.querySelector('[data-panel="bell"]');
+    if (!п) return;
+    // В макете здесь три события из демонстрации. Настоящих пока неоткуда
+    // взять — очередь заданий на стороне контент-машины. Пустое состояние
+    // честнее выдуманных «карусель готова».
+    п.innerHTML = '<div class="cm-user"><b>Уведомления</b>'
+      + '<span>события прогонов и генерации</span></div>'
+      + '<a><span>Пока ничего не происходило</span></a>';
+    var значок = document.querySelector('[data-drop="bell"] b');
+    if (значок) значок.remove();
+  }
+
+  function кабинет(почта) {
+    var п = document.querySelector('[data-panel="me"]');
+    if (!п) return;
+    var всего = клиенты.reduce(function (a, c) { return a + ((c.usage && c.usage.cost_cents) || 0); }, 0);
+    var имя = (почта || '').split('@')[0];
+    // Тариф не назначен, и писать «разработчик · 1000 в месяц» нельзя: это
+    // число из макета, в базе его нет. Режим берём из проекта — он настоящий.
+    var режимПроекта = текущий && текущий.billing_mode === 'own_keys'
+      ? 'свои ключи' : 'подписка';
+    п.innerHTML =
+      '<div class="cm-user"><b>' + (имя || 'Вы') + '</b><span>' + (почта || '') + '</span></div>'
+      + '<a>Все проекты<span>' + клиенты.length + '</span></a>'
+      + '<a>Расход<span>' + деньги(всего) + ' за месяц</span></a>'
+      + '<a>Режим оплаты<span>' + режимПроекта + '</span></a>'
+      + '<a>Доступы<span>1 человек</span></a>'
+      + '<a>Язык интерфейса<span>Русский</span></a>'
+      + '<a>Поддержка</a>'
+      + '<div class="cm-sep"></div>'
+      + '<a id="logout">Выйти</a>';
+    var в = document.getElementById('logout');
+    if (в) в.addEventListener('click', function () { A.clearTokens(); location.reload(); });
   }
 
   function исследование() {
@@ -177,7 +231,8 @@
   function старт() {
     показать('app');
     загрузить().then(function () {
-      шапкаДанные(почтаИзТокена());
+      var почта = почтаИзТокена();
+      шапкаДанные(почта); кабинет(почта); уведомления();
       строкаПроекта(); списокПроектов(); исследование();
     });
   }
