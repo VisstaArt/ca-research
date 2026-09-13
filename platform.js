@@ -102,10 +102,15 @@
     меню.innerHTML = (строки.join('') || '<a><span>Пока ни одного проекта</span></a>')
       + '<div class="cm-sep"></div><a class="cm-add" id="new-project">+ Создать проект</a>';
     меню.querySelectorAll('[data-client]').forEach(function (a) {
-      a.addEventListener('click', function () {
+      a.addEventListener('click', function (соб) {
+        соб.stopPropagation();
         текущий = клиенты.filter(function (c) { return c.id === a.dataset.client; })[0] || null;
         рынок = текущий && (текущий.markets || []).filter(function (m) { return m.id === a.dataset.market; })[0] || null;
         строкаПроекта(); списокПроектов(); исследование();
+        // Список закрываем сами: он наш, и переключение.js о наших строках
+        // не знает — иначе выбранный проект остаётся под открытой панелью.
+        var п = document.querySelector('.cm-side-proj [data-panel]');
+        if (п) п.hidden = true;
       });
     });
   }
@@ -177,20 +182,10 @@
     });
   }
 
-  // Выпадающие списки шапки и меню: один открыт за раз, клик мимо закрывает.
-  document.addEventListener('click', function (e) {
-    var кн = e.target.closest('[data-drop]');
-    var внутри = e.target.closest('.cm-menu');
-    document.querySelectorAll('.cm-menu').forEach(function (m) {
-      if (внутри === m) return;
-      m.hidden = !(кн && m.dataset.panel === кн.dataset.drop && m.hidden);
-    });
-    var проектКн = e.target.closest('.cm-proj');
-    if (проектКн) {
-      var м = проектКн.parentNode.querySelector('.cm-menu');
-      if (м) м.hidden = !м.hidden;
-    }
-  });
+  // Выпадающими списками занимается переключение.js со страницы — свой
+  // обработчик здесь спорил бы с ним: два слушателя на один клик открывают и
+  // тут же закрывают панель. Единственное, что нужно здесь, — перерисовать
+  // список проектов заново, потому что строки в нём мои.
 
   if (A.getRefreshToken()) {
     A.refreshTokens().then(function (ok) { ok ? старт() : показать('login'); })

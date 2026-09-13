@@ -3006,6 +3006,11 @@ pre.mermaid{background:var(--card-solid);border:1px solid var(--line);
 /* Своё — только рамка инструмента: экран исследования у нас живой, а не макет. */
 .modframe{display:block;width:100%;height:calc(100vh - 190px);min-height:540px;
   border:0;border-radius:18px;background:var(--card-solid)}
+/* Правило display у класса СИЛЬНЕЕ браузерного [hidden] — из-за этого экран
+   входа оставался поверх платформы после успешного входа: нажали «Войти», а
+   «никакой реакции». Возвращаем hidden его силу явно, один раз на всю
+   страницу: это касается любого элемента, который мы прячем атрибутом. */
+[hidden]{display:none!important}
 .login{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px}
 .login .card{width:100%;max-width:400px}
 .login img{display:block;width:150px;margin:0 auto 18px}
