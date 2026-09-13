@@ -1,6 +1,6 @@
 // СОБРАНО АВТОМАТИЧЕСКИ из shell.jsx — не править руками.
 // Правки вносить в shell.jsx, затем: osascript -l JavaScript tools/build.js
-// отпечаток-исходника: e853d380697c64d6
+// отпечаток-исходника: d0f330b70842b271
 function _extends() { return _extends = Object.assign ? Object.assign.bind() : function (n) { for (var e = 1; e < arguments.length; e++) { var t = arguments[e]; for (var r in t) ({}).hasOwnProperty.call(t, r) && (n[r] = t[r]); } return n; }, _extends.apply(null, arguments); }
 const {
   useState,
@@ -697,6 +697,178 @@ function Market({
 
 // Место, куда встанут модули. Оболочка сама ничего не считает и не генерирует —
 // она только даёт модулю площадку и говорит, кто вошёл, какой клиент и рынок.
+
+// ─────────────────────────────────────────────────────────────────────────────
+// КЛЮЧИ ПРОВАЙДЕРОВ
+//
+// Режим «свои ключи»: маркетолог вставляет ключ клиента, и вызовы моделей идут
+// за его счёт, а не с кредитов платформы. Ключ НЕ проходит через наш сервер —
+// браузер кладёт его прямо в хранилище базы вызовом set_provider_key; обратно
+// не возвращается никогда, наружу видны только четыре последних знака.
+//
+// Экран открывается и до применения миграции — тогда честно говорит, чего не
+// хватает, вместо пустой страницы с молчаливой ошибкой.
+// ─────────────────────────────────────────────────────────────────────────────
+const PROVIDERS = [['openai', 'OpenAI — GPT'], ['anthropic', 'Anthropic — Claude'], ['openrouter', 'OpenRouter'], ['google', 'Google — Gemini'], ['tavily', 'Tavily — поиск'], ['telegram', 'Telegram — публикация']];
+const PURPOSES = [['', 'для всего'], ['writing', 'тексты'], ['judge', 'проверка'], ['image', 'картинки'], ['video', 'видео'], ['search', 'поиск'], ['publish', 'публикация']];
+function Keys({
+  client
+}) {
+  const [rows, setRows] = useState(null);
+  const [err, setErr] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [f, setF] = useState({
+    name: '',
+    provider: 'openai',
+    purpose: '',
+    secret: ''
+  });
+  const {
+    SUPABASE_URL,
+    SUPABASE_ANON_KEY,
+    getAccessToken
+  } = window.CAAuth;
+  const зов = useCallback(async (путь, тело) => {
+    const t = getAccessToken();
+    const r = await fetch(SUPABASE_URL + '/rest/v1/' + путь, {
+      method: тело ? 'POST' : 'GET',
+      headers: {
+        apikey: SUPABASE_ANON_KEY,
+        Authorization: 'Bearer ' + t,
+        'Content-Type': 'application/json'
+      },
+      body: тело ? JSON.stringify(тело) : undefined
+    });
+    const d = await r.json().catch(() => null);
+    if (!r.ok) {
+      const m = d && (d.message || d.hint) || '';
+      // Функции нет — значит миграция ещё не применена. Это не поломка
+      // экрана, а недостающий шаг, и сказать надо именно так.
+      throw new Error(/does not exist|schema cache/i.test(m) ? 'Хранилище ключей в базе ещё не заведено. Нужно применить миграцию ' + 'schema/002_provider_keys_self_service.sql — её применяет владелица базы, ' + 'права на хранилище секретов есть только у неё. До этого работа идёт на ключах платформы.' : m || 'Не получилось');
+    }
+    return d;
+  }, [SUPABASE_URL, SUPABASE_ANON_KEY, getAccessToken]);
+  const обновить = useCallback(() => {
+    setErr('');
+    зов('provider_keys?select=name,provider,purpose,hint,verified,verified_at' + '&client_id=eq.' + encodeURIComponent(client.id)).then(d => setRows(Array.isArray(d) ? d : [])).catch(e => {
+      setRows([]);
+      setErr(e.message);
+    });
+  }, [зов, client.id]);
+  useEffect(() => {
+    обновить();
+  }, [обновить]);
+  const добавить = async e => {
+    e.preventDefault();
+    if (!f.secret.trim() || !f.name.trim()) return;
+    setBusy(true);
+    setErr('');
+    try {
+      await зов('rpc/set_provider_key', {
+        p_client: client.id,
+        p_name: f.name.trim(),
+        p_provider: f.provider,
+        p_secret: f.secret.trim(),
+        p_purpose: f.purpose
+      });
+      setF({
+        ...f,
+        name: '',
+        secret: ''
+      });
+      обновить();
+    } catch (e2) {
+      setErr(e2.message);
+    }
+    setBusy(false);
+  };
+  const убрать = async name => {
+    setBusy(true);
+    setErr('');
+    try {
+      await зов('rpc/drop_provider_key', {
+        p_client: client.id,
+        p_name: name
+      });
+      обновить();
+    } catch (e2) {
+      setErr(e2.message);
+    }
+    setBusy(false);
+  };
+  return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
+    className: "hdr"
+  }, /*#__PURE__*/React.createElement("h1", null, "\u041A\u043B\u044E\u0447\u0438 \u0438 \u0434\u043E\u0441\u0442\u0443\u043F\u044B"), /*#__PURE__*/React.createElement("p", null, "\u0421\u0432\u043E\u0438 \u043A\u043B\u044E\u0447\u0438 \u0434\u043B\u044F \xAB", client.name, "\xBB. \u041F\u043E\u043A\u0430 \u0438\u0445 \u043D\u0435\u0442, \u0440\u0430\u0431\u043E\u0442\u0430 \u0438\u0434\u0451\u0442 \u043D\u0430 \u043A\u043B\u044E\u0447\u0430\u0445 \u043F\u043B\u0430\u0442\u0444\u043E\u0440\u043C\u044B \u0438 \u0442\u0440\u0430\u0442\u0438\u0442 \u043A\u0440\u0435\u0434\u0438\u0442\u044B.")), /*#__PURE__*/React.createElement("div", {
+    className: "card"
+  }, /*#__PURE__*/React.createElement("h2", null, "\u0414\u043E\u0431\u0430\u0432\u0438\u0442\u044C \u043A\u043B\u044E\u0447"), /*#__PURE__*/React.createElement("form", {
+    onSubmit: добавить
+  }, /*#__PURE__*/React.createElement("label", null, /*#__PURE__*/React.createElement("span", {
+    className: "lab"
+  }, "\u041D\u0430\u0437\u0432\u0430\u043D\u0438\u0435"), /*#__PURE__*/React.createElement("input", {
+    value: f.name,
+    onChange: e => setF({
+      ...f,
+      name: e.target.value
+    }),
+    placeholder: "\u043D\u0430\u043F\u0440\u0438\u043C\u0435\u0440, GPT \u043A\u043B\u0438\u0435\u043D\u0442\u0430",
+    required: true
+  })), /*#__PURE__*/React.createElement("label", null, /*#__PURE__*/React.createElement("span", {
+    className: "lab"
+  }, "\u041F\u0440\u043E\u0432\u0430\u0439\u0434\u0435\u0440"), /*#__PURE__*/React.createElement("select", {
+    value: f.provider,
+    onChange: e => setF({
+      ...f,
+      provider: e.target.value
+    })
+  }, PROVIDERS.map(([v, n]) => /*#__PURE__*/React.createElement("option", {
+    key: v,
+    value: v
+  }, n)))), /*#__PURE__*/React.createElement("label", null, /*#__PURE__*/React.createElement("span", {
+    className: "lab"
+  }, "\u0414\u043B\u044F \u0447\u0435\u0433\u043E"), /*#__PURE__*/React.createElement("select", {
+    value: f.purpose,
+    onChange: e => setF({
+      ...f,
+      purpose: e.target.value
+    })
+  }, PURPOSES.map(([v, n]) => /*#__PURE__*/React.createElement("option", {
+    key: v,
+    value: v
+  }, n)))), /*#__PURE__*/React.createElement("label", null, /*#__PURE__*/React.createElement("span", {
+    className: "lab"
+  }, "\u041A\u043B\u044E\u0447"), /*#__PURE__*/React.createElement("input", {
+    type: "password",
+    value: f.secret,
+    autoComplete: "new-password",
+    onChange: e => setF({
+      ...f,
+      secret: e.target.value
+    }),
+    placeholder: "\u0432\u0441\u0442\u0430\u0432\u044C\u0442\u0435 \u0441\u044E\u0434\u0430",
+    required: true
+  })), /*#__PURE__*/React.createElement("p", {
+    className: "lede"
+  }, "\u041A\u043B\u044E\u0447 \u0443\u0445\u043E\u0434\u0438\u0442 \u043F\u0440\u044F\u043C\u043E \u0432 \u0445\u0440\u0430\u043D\u0438\u043B\u0438\u0449\u0435 \u0431\u0430\u0437\u044B, \u043C\u0438\u043D\u0443\u044F \u043D\u0430\u0448 \u0441\u0435\u0440\u0432\u0435\u0440. \u041E\u0431\u0440\u0430\u0442\u043D\u043E \u043E\u043D \u043D\u0435 \u043F\u043E\u043A\u0430\u0437\u044B\u0432\u0430\u0435\u0442\u0441\u044F \u043D\u0438\u043A\u043E\u0433\u0434\u0430 \u2014 \u0442\u043E\u043B\u044C\u043A\u043E \u0447\u0435\u0442\u044B\u0440\u0435 \u043F\u043E\u0441\u043B\u0435\u0434\u043D\u0438\u0445 \u0437\u043D\u0430\u043A\u0430."), /*#__PURE__*/React.createElement("button", {
+    className: "btn btn-primary",
+    disabled: busy
+  }, busy ? 'Сохраняю…' : 'Сохранить ключ')), err && /*#__PURE__*/React.createElement("p", {
+    className: "err"
+  }, err)), /*#__PURE__*/React.createElement("div", {
+    className: "card"
+  }, /*#__PURE__*/React.createElement("h2", null, "\u0417\u0430\u0432\u0435\u0434\u0451\u043D\u043D\u044B\u0435 \u043A\u043B\u044E\u0447\u0438"), rows === null && /*#__PURE__*/React.createElement("p", {
+    className: "lede"
+  }, "\u0421\u043C\u043E\u0442\u0440\u044E\u2026"), rows && !rows.length && /*#__PURE__*/React.createElement("p", {
+    className: "lede"
+  }, "\u041D\u0438 \u043E\u0434\u043D\u043E\u0433\u043E. \u0420\u0430\u0431\u043E\u0442\u0430 \u0438\u0434\u0451\u0442 \u043D\u0430 \u043A\u043B\u044E\u0447\u0430\u0445 \u043F\u043B\u0430\u0442\u0444\u043E\u0440\u043C\u044B."), rows && rows.map(r => /*#__PURE__*/React.createElement("div", {
+    key: r.name,
+    className: "krow"
+  }, /*#__PURE__*/React.createElement("b", null, r.name), /*#__PURE__*/React.createElement("span", null, (PROVIDERS.find(p => p[0] === r.provider) || [])[1] || r.provider, r.purpose ? ' · ' + ((PURPOSES.find(p => p[0] === r.purpose) || [])[1] || r.purpose) : ''), /*#__PURE__*/React.createElement("span", null, "\u2026", r.hint), /*#__PURE__*/React.createElement("span", null, r.verified ? 'проверен' : 'не проверен'), /*#__PURE__*/React.createElement("button", {
+    className: "cm-btn cm-btn-quiet",
+    onClick: () => убрать(r.name),
+    disabled: busy
+  }, "\u0423\u0431\u0440\u0430\u0442\u044C")))));
+}
+
 // Площадка раздела. Оболочка сама ничего не считает и не генерирует — она
 // только даёт место и говорит, кто вошёл, какой клиент и рынок.
 function Slot({
@@ -715,6 +887,9 @@ function Slot({
       src: q
     }));
   }
+  if (part === 'keys') return /*#__PURE__*/React.createElement(Keys, {
+    client: client
+  });
   const sec = SECTIONS.find(x => x.id === section);
   const name = sec && (sec.parts.find(p => p[0] === part) || [])[1] || (sec ? sec.name : '');
   return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {

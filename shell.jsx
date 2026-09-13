@@ -475,6 +475,139 @@ function Market({ client, market, clients, onPick, onBack, theme, setTheme, onOu
 
 // Место, куда встанут модули. Оболочка сама ничего не считает и не генерирует —
 // она только даёт модулю площадку и говорит, кто вошёл, какой клиент и рынок.
+
+// ─────────────────────────────────────────────────────────────────────────────
+// КЛЮЧИ ПРОВАЙДЕРОВ
+//
+// Режим «свои ключи»: маркетолог вставляет ключ клиента, и вызовы моделей идут
+// за его счёт, а не с кредитов платформы. Ключ НЕ проходит через наш сервер —
+// браузер кладёт его прямо в хранилище базы вызовом set_provider_key; обратно
+// не возвращается никогда, наружу видны только четыре последних знака.
+//
+// Экран открывается и до применения миграции — тогда честно говорит, чего не
+// хватает, вместо пустой страницы с молчаливой ошибкой.
+// ─────────────────────────────────────────────────────────────────────────────
+const PROVIDERS = [
+  ['openai', 'OpenAI — GPT'], ['anthropic', 'Anthropic — Claude'],
+  ['openrouter', 'OpenRouter'], ['google', 'Google — Gemini'],
+  ['tavily', 'Tavily — поиск'], ['telegram', 'Telegram — публикация'],
+];
+const PURPOSES = [
+  ['', 'для всего'], ['writing', 'тексты'], ['judge', 'проверка'],
+  ['image', 'картинки'], ['video', 'видео'], ['search', 'поиск'], ['publish', 'публикация'],
+];
+
+function Keys({ client }) {
+  const [rows, setRows] = useState(null);
+  const [err, setErr] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [f, setF] = useState({ name:'', provider:'openai', purpose:'', secret:'' });
+  const { SUPABASE_URL, SUPABASE_ANON_KEY, getAccessToken } = window.CAAuth;
+
+  const зов = useCallback(async (путь, тело) => {
+    const t = getAccessToken();
+    const r = await fetch(SUPABASE_URL + '/rest/v1/' + путь, {
+      method: тело ? 'POST' : 'GET',
+      headers: { apikey: SUPABASE_ANON_KEY, Authorization: 'Bearer ' + t,
+                 'Content-Type': 'application/json' },
+      body: тело ? JSON.stringify(тело) : undefined,
+    });
+    const d = await r.json().catch(() => null);
+    if (!r.ok) {
+      const m = (d && (d.message || d.hint)) || '';
+      // Функции нет — значит миграция ещё не применена. Это не поломка
+      // экрана, а недостающий шаг, и сказать надо именно так.
+      throw new Error(/does not exist|schema cache/i.test(m)
+        ? 'Хранилище ключей в базе ещё не заведено. Нужно применить миграцию '
+          + 'schema/002_provider_keys_self_service.sql — её применяет владелица базы, '
+          + 'права на хранилище секретов есть только у неё. До этого работа идёт на ключах платформы.'
+        : (m || 'Не получилось'));
+    }
+    return d;
+  }, [SUPABASE_URL, SUPABASE_ANON_KEY, getAccessToken]);
+
+  const обновить = useCallback(() => {
+    setErr('');
+    зов('provider_keys?select=name,provider,purpose,hint,verified,verified_at'
+        + '&client_id=eq.' + encodeURIComponent(client.id))
+      .then(d => setRows(Array.isArray(d) ? d : []))
+      .catch(e => { setRows([]); setErr(e.message); });
+  }, [зов, client.id]);
+  useEffect(() => { обновить(); }, [обновить]);
+
+  const добавить = async e => {
+    e.preventDefault();
+    if (!f.secret.trim() || !f.name.trim()) return;
+    setBusy(true); setErr('');
+    try {
+      await зов('rpc/set_provider_key', { p_client: client.id, p_name: f.name.trim(),
+        p_provider: f.provider, p_secret: f.secret.trim(), p_purpose: f.purpose });
+      setF({ ...f, name:'', secret:'' });
+      обновить();
+    } catch (e2) { setErr(e2.message); }
+    setBusy(false);
+  };
+
+  const убрать = async name => {
+    setBusy(true); setErr('');
+    try { await зов('rpc/drop_provider_key', { p_client: client.id, p_name: name }); обновить(); }
+    catch (e2) { setErr(e2.message); }
+    setBusy(false);
+  };
+
+  return (
+    <>
+      <div className="hdr">
+        <h1>Ключи и доступы</h1>
+        <p>Свои ключи для «{client.name}». Пока их нет, работа идёт на ключах
+          платформы и тратит кредиты.</p>
+      </div>
+
+      <div className="card">
+        <h2>Добавить ключ</h2>
+        <form onSubmit={добавить}>
+          <label><span className="lab">Название</span>
+            <input value={f.name} onChange={e=>setF({...f, name:e.target.value})}
+              placeholder="например, GPT клиента" required /></label>
+          <label><span className="lab">Провайдер</span>
+            <select value={f.provider} onChange={e=>setF({...f, provider:e.target.value})}>
+              {PROVIDERS.map(([v,n]) => <option key={v} value={v}>{n}</option>)}
+            </select></label>
+          <label><span className="lab">Для чего</span>
+            <select value={f.purpose} onChange={e=>setF({...f, purpose:e.target.value})}>
+              {PURPOSES.map(([v,n]) => <option key={v} value={v}>{n}</option>)}
+            </select></label>
+          <label><span className="lab">Ключ</span>
+            <input type="password" value={f.secret} autoComplete="new-password"
+              onChange={e=>setF({...f, secret:e.target.value})}
+              placeholder="вставьте сюда" required /></label>
+          <p className="lede">Ключ уходит прямо в хранилище базы, минуя наш сервер.
+            Обратно он не показывается никогда — только четыре последних знака.</p>
+          <button className="btn btn-primary" disabled={busy}>
+            {busy ? 'Сохраняю…' : 'Сохранить ключ'}</button>
+        </form>
+        {err && <p className="err">{err}</p>}
+      </div>
+
+      <div className="card">
+        <h2>Заведённые ключи</h2>
+        {rows === null && <p className="lede">Смотрю…</p>}
+        {rows && !rows.length && <p className="lede">Ни одного. Работа идёт на ключах платформы.</p>}
+        {rows && rows.map(r => (
+          <div key={r.name} className="krow">
+            <b>{r.name}</b>
+            <span>{(PROVIDERS.find(p=>p[0]===r.provider)||[])[1] || r.provider}
+              {r.purpose ? ' · ' + ((PURPOSES.find(p=>p[0]===r.purpose)||[])[1] || r.purpose) : ''}</span>
+            <span>…{r.hint}</span>
+            <span>{r.verified ? 'проверен' : 'не проверен'}</span>
+            <button className="cm-btn cm-btn-quiet" onClick={()=>убрать(r.name)} disabled={busy}>Убрать</button>
+          </div>
+        ))}
+      </div>
+    </>
+  );
+}
+
 // Площадка раздела. Оболочка сама ничего не считает и не генерирует — она
 // только даёт место и говорит, кто вошёл, какой клиент и рынок.
 function Slot({ section, part, client, market }) {
@@ -496,6 +629,7 @@ function Slot({ section, part, client, market }) {
       </>
     );
   }
+  if (part === 'keys') return <Keys client={client} />;
   const sec = SECTIONS.find(x => x.id === section);
   const name = (sec && (sec.parts.find(p => p[0] === part) || [])[1]) || (sec ? sec.name : '');
   return (

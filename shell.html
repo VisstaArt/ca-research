@@ -248,6 +248,16 @@ input:focus,select:focus{border-color:var(--mid);outline:none;
 .modframe{display:block;width:100%;height:calc(100vh - 120px);min-height:560px;
   border:0;border-radius:18px;background:var(--card-solid)}
 @media (max-width:900px){.modframe{height:calc(100vh - 96px)}}
+
+/* Строка ключа: имя, провайдер, подсказка из последних знаков, состояние.
+   Ключ здесь не показывается и показан быть не может — наружу выходят только
+   четыре знака, по которым человек узнаёт свой же ключ. */
+.krow{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1.4fr) 90px 110px auto;
+  gap:14px;align-items:center;padding:12px 0;border-top:1px solid var(--line-2);font-size:12.5px}
+.krow:first-of-type{border-top:0}
+.krow b{font-size:13.5px;color:var(--ink)}
+.krow span{color:var(--ink-3)}
+@media (max-width:860px){.krow{grid-template-columns:1fr auto;gap:6px 12px}}
 </style>
 <div id="root"></div>
-<script src="shell.js?v=e853d380"></script>
+<script src="shell.js?v=d0f330b7"></script>

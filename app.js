@@ -1,6 +1,6 @@
 // СОБРАНО АВТОМАТИЧЕСКИ из app.jsx — не править руками.
 // Правки вносить в app.jsx, затем: osascript -l JavaScript tools/build.js
-// отпечаток-исходника: a2a3c9f1e0b3a3b7
+// отпечаток-исходника: 9eba47c6bbf28392
 // Функции контракта живут в lib/contract.js. Разбираем их сюда, чтобы весь
 // остальной код обращался к ним по прежним именам и не менялся.
 const{GLOBAL_MODS,isPerNiche,dropOrphans,nichesOf,resKey,splitMdRow,isMdSeparator,parseMdTables,buildModuleEntry,pickTable,pickColumn,withStableIds}=CAContract;// Название модуля берётся из MODULES — это конфиг ИНТЕРФЕЙСА, и сборщик
@@ -70,7 +70,11 @@ let keywordCallCount=0;// Склонение числительных. Выне�
 // написала условие «n<10 || n>20» — и оно врало на 21 («21 запросов») и на 81
 // («81 запросов»). Правило на самом деле такое: 11–14 в пределах СОТНИ всегда
 // множественное, дальше смотрим последнюю цифру.
-function plural(n,one,few,many){const h=Math.abs(n)%100,t=h%10;if(h>10&&h<20)return many;if(t===1)return one;if(t>=2&&t<=4)return few;return many;}async function callGPT(system,user,temperature,maxTokens){lastGptUsage=null;const res=await authFetch('/api/proxy',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:MODEL,max_tokens:maxTokens||8000,stream:false,...(temperature!=null?{temperature}:{}),messages:[{role:'system',content:system},{role:'user',content:user}]})});// Читаем тело ошибки, а не бросаем сразу «API 429». Без причины невозможно
+function plural(n,one,few,many){const h=Math.abs(n)%100,t=h%10;if(h>10&&h<20)return many;if(t===1)return one;if(t>=2&&t<=4)return few;return many;}// Клиент, за счёт которого идёт работа. Приходит из оболочки параметром
+// адреса: по нему прокси возьмёт ключ клиента, если он заведён, — тогда вызовы
+// не тратят кредиты платформы. Открыт инструмент сам по себе — пусто, работаем
+// на ключе платформы, как раньше.
+const clientIdFromUrl=(()=>{try{return new URLSearchParams(location.search).get('client')||'';}catch{return'';}})();async function callGPT(system,user,temperature,maxTokens){lastGptUsage=null;const res=await authFetch('/api/proxy',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:MODEL,max_tokens:maxTokens||8000,stream:false,...(clientIdFromUrl?{client_id:clientIdFromUrl}:{}),...(temperature!=null?{temperature}:{}),messages:[{role:'system',content:system},{role:'user',content:user}]})});// Читаем тело ошибки, а не бросаем сразу «API 429». Без причины невозможно
 // отличить два совершенно разных случая с одинаковым кодом: кончились деньги
 // на счету OpenAI (insufficient_quota — повторять бесполезно, надо пополнить)
 // и слишком частые запросы (rate_limit_exceeded — повтор как раз помогает).

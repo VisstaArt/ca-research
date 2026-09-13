@@ -489,11 +489,21 @@ function plural(n, one, few, many) {
   if (t >= 2 && t <= 4) return few;
   return many;
 }
+// Клиент, за счёт которого идёт работа. Приходит из оболочки параметром
+// адреса: по нему прокси возьмёт ключ клиента, если он заведён, — тогда вызовы
+// не тратят кредиты платформы. Открыт инструмент сам по себе — пусто, работаем
+// на ключе платформы, как раньше.
+const clientIdFromUrl = (() => {
+  try { return new URLSearchParams(location.search).get('client') || ''; }
+  catch { return ''; }
+})();
+
 async function callGPT(system, user, temperature, maxTokens) {
   lastGptUsage = null;
   const res = await authFetch('/api/proxy', {
     method: 'POST', headers: {'Content-Type':'application/json'},
     body: JSON.stringify({model:MODEL, max_tokens: maxTokens || 8000, stream:false,
+      ...(clientIdFromUrl ? { client_id: clientIdFromUrl } : {}),
       ...(temperature != null ? { temperature } : {}),
       messages:[{role:'system',content:system},{role:'user',content:user}]}),
   });
