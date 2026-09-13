@@ -427,9 +427,90 @@ function Slot({ tab, done, client, market }) {
   );
 }
 
+
+// ─────────────────────────────────────────────────────────────────────────────
+// ШАПКА ПЛАТФОРМЫ
+//
+// Согласована с владелицей 12.09.2026 и собрана вместе с контент-машиной:
+// разметка их, стили общие (lib/platform.css из PLATFORM_CSS). Шапка личная,
+// а не проектная — знак, приветствие с датой, поиск, «Создать», кредиты,
+// поддержка, профиль. Поэтому стоит на КАЖДОМ экране, включая список клиентов:
+// раньше человек входил и видел голый список без единого признака платформы.
+// ─────────────────────────────────────────────────────────────────────────────
+function Top({ email, onOut, theme, setTheme }) {
+  const [open, setOpen] = useState('');
+  // Один список открыт за раз, клик мимо закрывает — правило оболочки.
+  useEffect(() => {
+    if (!open) return;
+    const off = e => { if (!e.target.closest('.cm-drop')) setOpen(''); };
+    document.addEventListener('click', off);
+    return () => document.removeEventListener('click', off);
+  }, [open]);
+  const ico = d => ({ onClick: e => { e.stopPropagation(); setOpen(open === d ? '' : d); } });
+  const now = new Date();
+  const день = now.toLocaleDateString('ru-RU', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
+  const час = now.getHours();
+  const привет = час < 5 ? 'Доброй ночи' : час < 12 ? 'Доброе утро' : час < 18 ? 'Добрый день' : 'Добрый вечер';
+  const имя = (email || '').split('@')[0];
+  return (
+    <div className="cm-top">
+      <img className="cm-logo" src={LOGO} alt="bulbul lab" />
+      <div className="cm-hello">
+        <b>{привет}{имя ? ', ' + имя : ''}</b>
+        <i>{день}</i>
+      </div>
+      <div className="cm-rt">
+        <div className="cm-drop">
+          <button className="cm-ico" {...ico('find')} aria-label="Поиск">
+            <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6"/><path d="M20 20l-4.5-4.5"/></svg>
+          </button>
+          {open === 'find' && (
+            <div className="cm-menu wide">
+              <div className="cm-find">
+                <svg className="cm-ic" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6"/><path d="M20 20l-4.5-4.5"/></svg>
+                <input className="t" placeholder="Клиенты, рынки, ниши" />
+              </div>
+              <p className="cm-hint">Поиск по клиентам и рынкам. По содержимому
+                исследования заработает, когда появится первый прогон.</p>
+            </div>
+          )}
+        </div>
+        <div className="cm-drop">
+          <button className="cm-ico" {...ico('user')} aria-label="Профиль">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="8.5" r="3.5"/>
+              <path d="M5 19c1.2-3.2 4-4.8 7-4.8s5.8 1.6 7 4.8"/></svg>
+          </button>
+          {open === 'user' && (
+            <div className="cm-menu">
+              <div className="cm-user"><b>{email || 'Вы вошли'}</b><span>аккаунт платформы</span></div>
+              <div className="cm-sep"></div>
+              <div className="cm-user"><b>Оформление</b><span>светлое, тёмное или как в системе</span></div>
+              {[['light','Светлая'],['dark','Тёмная'],['system','Как в системе']].map(([v,l]) => (
+                <a key={v} onClick={()=>setTheme(v)} aria-current={theme===v ? 'true' : undefined}>{l}</a>
+              ))}
+              <div className="cm-sep"></div>
+              <a onClick={onOut}>Выйти</a>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 function App() {
   const [ready, setReady] = useState(false);
+  // Почта вошедшего — для приветствия и меню профиля. Берём из токена: свой
+  // запрос ради одной строки был бы лишним обращением на каждом открытии.
+  const email = (() => {
+    try {
+      const t = window.CAAuth.getAccessToken && window.CAAuth.getAccessToken();
+      if (!t) return '';
+      const p = JSON.parse(atob(t.split('.')[1].replace(/-/g,'+').replace(/_/g,'/')));
+      return p.email || '';
+    } catch { return ''; }
+  })();
   const [inside, setInside] = useState(false);
   const [data, setData] = useState(store.read);
   const [clientId, setClientId] = useState(null);
@@ -526,24 +607,17 @@ function App() {
   if (!ready) return null;
   if (!inside) return <Login onIn={()=>setInside(true)} />;
 
+  // Шапка платформы стоит на всех экранах. Полосы состояния — под ней:
+  // они сообщают о происходящем, а не заменяют оформление, как было раньше.
   const bar = (
     <>
-    {importing && <div className="top" style={{justifyContent:'center',color:'var(--ink-3)',fontSize:12.5}}>
-      Переношу проекты из инструмента…
-    </div>}
-    {saveErr && <div className="top" style={{justifyContent:'center',color:'var(--ink-2)',fontSize:12.5}}>
-      {saveErr}
-    </div>}
-    <div className="top">
-      <div className="sp"></div>
-      {[['light','Светлая'],['dark','Тёмная'],['system','Как в системе']].map(([v,l]) => (
-        <button key={v} className="tbtn" aria-pressed={theme === v}
-                onClick={()=>setTheme(v)}>{l}</button>
-      ))}
-      <button className="tbtn" onClick={()=>{ clearTokens(); setInside(false); }}>Выйти</button>
-    </div>
+      <Top email={email} theme={theme} setTheme={setTheme}
+           onOut={()=>{ clearTokens(); setInside(false); }} />
+      {importing && <div className="cm-lane">Переношу проекты из инструмента…</div>}
+      {saveErr && <div className="cm-lane">{saveErr}</div>}
     </>
   );
+
 
   if (market) return (
     <Market client={client} market={market} theme={theme} setTheme={setTheme}

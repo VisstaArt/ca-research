@@ -74,4 +74,26 @@ TARGETS.forEach(function (t) {
   console.log('  ' + t.src + ' → ' + t.out + '  (' + Math.round(code.length / 1024) + ' КБ, версия ' + fp + ')');
   built++;
 });
+
+// Стили платформы отдельным файлом. Источник один — константа PLATFORM_CSS в
+// app.jsx: оболочка и контент-машина берут ОДНО И ТО ЖЕ, а не две копии,
+// которые разъедутся в первый же день. Отчёт этот файл не тянет — в выгрузку
+// платформенные правила не попадают, они там мёртвый вес.
+(function () {
+  var src = rd(BASE + 'app.jsx');
+  var i = src.indexOf('const PLATFORM_CSS = "');
+  if (i < 0) { console.log('  PLATFORM_CSS не найден — пропускаю'); return; }
+  var j = src.indexOf('"', i + 'const PLATFORM_CSS = '.length);
+  var end = -1;
+  for (var k = j + 1; k < src.length; k++) {
+    if (src[k] === '\\') { k++; continue; }
+    if (src[k] === '"') { end = k; break; }
+  }
+  if (end < 0) throw new Error('литерал PLATFORM_CSS не закрыт');
+  var css = JSON.parse(src.slice(j, end + 1));
+  var head = '/* Собрано из PLATFORM_CSS в app.jsx. Не править руками:\n'
+    + '   правка здесь потеряется при следующей сборке. */\n';
+  wr(BASE + 'lib/platform.css', head + css + '\n');
+  console.log('  app.jsx → lib/platform.css  (' + Math.round(css.length / 1024) + ' КБ)');
+})();
 console.log('собрано файлов: ' + built);

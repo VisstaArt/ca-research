@@ -1,6 +1,7 @@
 // СОБРАНО АВТОМАТИЧЕСКИ из shell.jsx — не править руками.
 // Правки вносить в shell.jsx, затем: osascript -l JavaScript tools/build.js
-// отпечаток-исходника: e1425366329cf964
+// отпечаток-исходника: 189a7ce41734de46
+function _extends() { return _extends = Object.assign ? Object.assign.bind() : function (n) { for (var e = 1; e < arguments.length; e++) { var t = arguments[e]; for (var r in t) ({}).hasOwnProperty.call(t, r) && (n[r] = t[r]); } return n; }, _extends.apply(null, arguments); }
 const {
   useState,
   useEffect,
@@ -591,8 +592,136 @@ function Slot({
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// ШАПКА ПЛАТФОРМЫ
+//
+// Согласована с владелицей 12.09.2026 и собрана вместе с контент-машиной:
+// разметка их, стили общие (lib/platform.css из PLATFORM_CSS). Шапка личная,
+// а не проектная — знак, приветствие с датой, поиск, «Создать», кредиты,
+// поддержка, профиль. Поэтому стоит на КАЖДОМ экране, включая список клиентов:
+// раньше человек входил и видел голый список без единого признака платформы.
+// ─────────────────────────────────────────────────────────────────────────────
+function Top({
+  email,
+  onOut,
+  theme,
+  setTheme
+}) {
+  const [open, setOpen] = useState('');
+  // Один список открыт за раз, клик мимо закрывает — правило оболочки.
+  useEffect(() => {
+    if (!open) return;
+    const off = e => {
+      if (!e.target.closest('.cm-drop')) setOpen('');
+    };
+    document.addEventListener('click', off);
+    return () => document.removeEventListener('click', off);
+  }, [open]);
+  const ico = d => ({
+    onClick: e => {
+      e.stopPropagation();
+      setOpen(open === d ? '' : d);
+    }
+  });
+  const now = new Date();
+  const день = now.toLocaleDateString('ru-RU', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric'
+  });
+  const час = now.getHours();
+  const привет = час < 5 ? 'Доброй ночи' : час < 12 ? 'Доброе утро' : час < 18 ? 'Добрый день' : 'Добрый вечер';
+  const имя = (email || '').split('@')[0];
+  return /*#__PURE__*/React.createElement("div", {
+    className: "cm-top"
+  }, /*#__PURE__*/React.createElement("img", {
+    className: "cm-logo",
+    src: LOGO,
+    alt: "bulbul lab"
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "cm-hello"
+  }, /*#__PURE__*/React.createElement("b", null, привет, имя ? ', ' + имя : ''), /*#__PURE__*/React.createElement("i", null, день)), /*#__PURE__*/React.createElement("div", {
+    className: "cm-rt"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "cm-drop"
+  }, /*#__PURE__*/React.createElement("button", _extends({
+    className: "cm-ico"
+  }, ico('find'), {
+    "aria-label": "\u041F\u043E\u0438\u0441\u043A"
+  }), /*#__PURE__*/React.createElement("svg", {
+    viewBox: "0 0 24 24"
+  }, /*#__PURE__*/React.createElement("circle", {
+    cx: "11",
+    cy: "11",
+    r: "6"
+  }), /*#__PURE__*/React.createElement("path", {
+    d: "M20 20l-4.5-4.5"
+  }))), open === 'find' && /*#__PURE__*/React.createElement("div", {
+    className: "cm-menu wide"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "cm-find"
+  }, /*#__PURE__*/React.createElement("svg", {
+    className: "cm-ic",
+    viewBox: "0 0 24 24"
+  }, /*#__PURE__*/React.createElement("circle", {
+    cx: "11",
+    cy: "11",
+    r: "6"
+  }), /*#__PURE__*/React.createElement("path", {
+    d: "M20 20l-4.5-4.5"
+  })), /*#__PURE__*/React.createElement("input", {
+    className: "t",
+    placeholder: "\u041A\u043B\u0438\u0435\u043D\u0442\u044B, \u0440\u044B\u043D\u043A\u0438, \u043D\u0438\u0448\u0438"
+  })), /*#__PURE__*/React.createElement("p", {
+    className: "cm-hint"
+  }, "\u041F\u043E\u0438\u0441\u043A \u043F\u043E \u043A\u043B\u0438\u0435\u043D\u0442\u0430\u043C \u0438 \u0440\u044B\u043D\u043A\u0430\u043C. \u041F\u043E \u0441\u043E\u0434\u0435\u0440\u0436\u0438\u043C\u043E\u043C\u0443 \u0438\u0441\u0441\u043B\u0435\u0434\u043E\u0432\u0430\u043D\u0438\u044F \u0437\u0430\u0440\u0430\u0431\u043E\u0442\u0430\u0435\u0442, \u043A\u043E\u0433\u0434\u0430 \u043F\u043E\u044F\u0432\u0438\u0442\u0441\u044F \u043F\u0435\u0440\u0432\u044B\u0439 \u043F\u0440\u043E\u0433\u043E\u043D."))), /*#__PURE__*/React.createElement("div", {
+    className: "cm-drop"
+  }, /*#__PURE__*/React.createElement("button", _extends({
+    className: "cm-ico"
+  }, ico('user'), {
+    "aria-label": "\u041F\u0440\u043E\u0444\u0438\u043B\u044C"
+  }), /*#__PURE__*/React.createElement("svg", {
+    viewBox: "0 0 24 24"
+  }, /*#__PURE__*/React.createElement("circle", {
+    cx: "12",
+    cy: "8.5",
+    r: "3.5"
+  }), /*#__PURE__*/React.createElement("path", {
+    d: "M5 19c1.2-3.2 4-4.8 7-4.8s5.8 1.6 7 4.8"
+  }))), open === 'user' && /*#__PURE__*/React.createElement("div", {
+    className: "cm-menu"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "cm-user"
+  }, /*#__PURE__*/React.createElement("b", null, email || 'Вы вошли'), /*#__PURE__*/React.createElement("span", null, "\u0430\u043A\u043A\u0430\u0443\u043D\u0442 \u043F\u043B\u0430\u0442\u0444\u043E\u0440\u043C\u044B")), /*#__PURE__*/React.createElement("div", {
+    className: "cm-sep"
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "cm-user"
+  }, /*#__PURE__*/React.createElement("b", null, "\u041E\u0444\u043E\u0440\u043C\u043B\u0435\u043D\u0438\u0435"), /*#__PURE__*/React.createElement("span", null, "\u0441\u0432\u0435\u0442\u043B\u043E\u0435, \u0442\u0451\u043C\u043D\u043E\u0435 \u0438\u043B\u0438 \u043A\u0430\u043A \u0432 \u0441\u0438\u0441\u0442\u0435\u043C\u0435")), [['light', 'Светлая'], ['dark', 'Тёмная'], ['system', 'Как в системе']].map(([v, l]) => /*#__PURE__*/React.createElement("a", {
+    key: v,
+    onClick: () => setTheme(v),
+    "aria-current": theme === v ? 'true' : undefined
+  }, l)), /*#__PURE__*/React.createElement("div", {
+    className: "cm-sep"
+  }), /*#__PURE__*/React.createElement("a", {
+    onClick: onOut
+  }, "\u0412\u044B\u0439\u0442\u0438")))));
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 function App() {
   const [ready, setReady] = useState(false);
+  // Почта вошедшего — для приветствия и меню профиля. Берём из токена: свой
+  // запрос ради одной строки был бы лишним обращением на каждом открытии.
+  const email = (() => {
+    try {
+      const t = window.CAAuth.getAccessToken && window.CAAuth.getAccessToken();
+      if (!t) return '';
+      const p = JSON.parse(atob(t.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')));
+      return p.email || '';
+    } catch {
+      return '';
+    }
+  })();
   const [inside, setInside] = useState(false);
   const [data, setData] = useState(store.read);
   const [clientId, setClientId] = useState(null);
@@ -753,36 +882,22 @@ function App() {
   if (!inside) return /*#__PURE__*/React.createElement(Login, {
     onIn: () => setInside(true)
   });
-  const bar = /*#__PURE__*/React.createElement(React.Fragment, null, importing && /*#__PURE__*/React.createElement("div", {
-    className: "top",
-    style: {
-      justifyContent: 'center',
-      color: 'var(--ink-3)',
-      fontSize: 12.5
-    }
-  }, "\u041F\u0435\u0440\u0435\u043D\u043E\u0448\u0443 \u043F\u0440\u043E\u0435\u043A\u0442\u044B \u0438\u0437 \u0438\u043D\u0441\u0442\u0440\u0443\u043C\u0435\u043D\u0442\u0430\u2026"), saveErr && /*#__PURE__*/React.createElement("div", {
-    className: "top",
-    style: {
-      justifyContent: 'center',
-      color: 'var(--ink-2)',
-      fontSize: 12.5
-    }
-  }, saveErr), /*#__PURE__*/React.createElement("div", {
-    className: "top"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "sp"
-  }), [['light', 'Светлая'], ['dark', 'Тёмная'], ['system', 'Как в системе']].map(([v, l]) => /*#__PURE__*/React.createElement("button", {
-    key: v,
-    className: "tbtn",
-    "aria-pressed": theme === v,
-    onClick: () => setTheme(v)
-  }, l)), /*#__PURE__*/React.createElement("button", {
-    className: "tbtn",
-    onClick: () => {
+
+  // Шапка платформы стоит на всех экранах. Полосы состояния — под ней:
+  // они сообщают о происходящем, а не заменяют оформление, как было раньше.
+  const bar = /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(Top, {
+    email: email,
+    theme: theme,
+    setTheme: setTheme,
+    onOut: () => {
       clearTokens();
       setInside(false);
     }
-  }, "\u0412\u044B\u0439\u0442\u0438")));
+  }), importing && /*#__PURE__*/React.createElement("div", {
+    className: "cm-lane"
+  }, "\u041F\u0435\u0440\u0435\u043D\u043E\u0448\u0443 \u043F\u0440\u043E\u0435\u043A\u0442\u044B \u0438\u0437 \u0438\u043D\u0441\u0442\u0440\u0443\u043C\u0435\u043D\u0442\u0430\u2026"), saveErr && /*#__PURE__*/React.createElement("div", {
+    className: "cm-lane"
+  }, saveErr));
   if (market) return /*#__PURE__*/React.createElement(Market, {
     client: client,
     market: market,
