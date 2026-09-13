@@ -4942,6 +4942,47 @@ function mdToHtml(text) {
   return { html, scripts: blockScripts, js: BLOCK_JS };
 }
 
+// Обложка исследования — ровно та, что в отчёте: перламутровая шапка с
+// меткой, полем брифа и плашками модулей. Одна функция на выгрузку и на
+// экраны этапов сайта: владелица показала отчёт и сказала «в этом стиле
+// сделать этапы» — стиль берём не пересказом, а тем же кодом.
+function buildCoverHTML(brief, results, lang, mark) {
+  const esc = escHtml;
+  const date = new Date().toLocaleDateString('ru-RU', { day:'numeric', month:'long', year:'numeric' });
+  const coverRow = (k, v) => v ? '<div><dt>'+esc(k)+'</dt><dd>'+esc(v)+'</dd></div>' : '';
+  const badges = MODULES.filter(m => !m.disabled && m.id !== 'CONTENT').map(m => {
+    const done = (results || []).find(r => r.id === m.id && r.content && !r.failed);
+    return done ? '<a class="on">'+m.id+' ✓</a>' : '<span>'+m.id+'</span>';
+  }).join('');
+  // Сводка ниш: какие отработаны, какие в работе, какие не начаты. Отработана —
+  // все выбранные по-нишевые модули на месте; частично — хоть один есть.
+  const ниши = String(brief.selectedNiche || '').split(',').map(x => x.trim()).filter(Boolean);
+  const поНишам = ниши.map(н => {
+    const свои = (results || []).filter(r => (r.niche || '') === н && r.content && !r.failed);
+    const ждут = MODULES.filter(m => !m.disabled && !m.offChain && m.id !== 'CONTENT'
+      && CAContract.isPerNiche(m.id)).length;
+    const cls = свои.length >= ждут ? 'kchip-go' : (свои.length ? 'kchip-mb' : 'kchip-no');
+    const word = свои.length >= ждут ? 'готова' : (свои.length ? свои.length + ' из ' + ждут : 'не начата');
+    return '<span class="kchip '+cls+'"><span class="d"></span>'+esc(н)+' · '+word+'</span>';
+  }).join(' ');
+  return '<div class="card nacre cover">'
+    +'<div class="chead"><div>'
+    +'<span class="kchip kchip-go rpt-mark"><span class="d"></span>'+esc(mark || 'Отчёт')+'</span>'
+    +'<span class="eyebrow">Исследование целевой аудитории</span>'
+    +'<h1 class="covername">'+esc(brief.name||'—')+'</h1>'
+    +'<p class="coversub">'+esc([brief.niche, brief.geoMarket||brief.geo].filter(Boolean).join(' · '))+'</p></div>'
+    +'<div class="coveract"><span class="note">'+esc(date)+'</span></div></div>'
+    +'<dl class="coverdl">'
+    + coverRow('Рынок', brief.geoMarket||brief.geo)
+    + coverRow('География компании', brief.geoCompany)
+    + coverRow('Язык отчёта', langSelf(lang))
+    + coverRow('Формат', brief.format)
+    +'</dl>'
+    + (ниши.length ? '<div class="mods" style="gap:8px">'+поНишам+'</div>' : '')
+    +'<div class="mods">'+badges+'</div>'
+    +'</div>';
+}
+
 // Разметка внутри пункта итога: жирное и ссылки. Полный mdInline живёт
 // внутри сборщика отчёта и наружу не выходит, а тащить его копию ради двух
 // правил — заводить второй источник правды.
@@ -7044,6 +7085,10 @@ function App() {
   // ── FORM
   if (sc === 'form') return (
     <div>
+      {embedded && proj && (
+        <div className="rview" style={{marginBottom:14}} dangerouslySetInnerHTML={{__html:
+          buildCoverHTML(brief, proj?.results, lang, 'Бриф')}}/>
+      )}
       {!embedded && <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:'1.5rem'}}>
         <button onClick={()=>proj ? setSc('work') : setSc('list')}>{proj ? t.backToProject : t.backBtn}</button>
         <h2 style={{fontSize:20,fontWeight:500}}>{proj ? t.editBriefTitle+': '+brief.name : t.newProjectTitle}</h2>
@@ -7452,7 +7497,13 @@ function App() {
           их здесь — навал (замечание владелицы 14.09). Внутри платформы
           остаётся только строка действий; вне платформы — прежняя шапка. */}
       {embedded ? (
-        <div style={{display:'flex',gap:8,flexWrap:'wrap',alignItems:'center',marginBottom:'1rem'}}>
+        <>
+        {/* Обложка — та же, что в отчёте: перламутр, поля брифа, сводка ниш
+            (какие готовы, какие в работе) и плашки модулей. Один код с
+            выгрузкой — стиль не разъедется. */}
+        <div className="rview" dangerouslySetInnerHTML={{__html:
+          buildCoverHTML(brief, proj?.results, lang, isRun ? 'Прогон' : 'Исследование')}}/>
+        <div style={{display:'flex',gap:8,flexWrap:'wrap',alignItems:'center',margin:'12px 0 1rem'}}>
           {!isRun && pending.length > 0 && (
             <button className="btn-primary" onClick={()=>run()}>▶ Прогнать: {pending.map(m=>m.id).join(', ')}</button>
           )}
@@ -7465,8 +7516,15 @@ function App() {
               ＋ Добавить ниши
             </button>
           )}
+          {!isRun && doneCount > 0 && (
+            <button onClick={()=>dlMd(buildFullMd())} style={{fontSize:12,padding:'7px 12px'}}
+              title="Полный отчёт по всем пройденным нишам, файлом">
+              ⤓ Выгрузить отчёт
+            </button>
+          )}
           <span className="tag" style={{marginLeft:'auto'}}>{lang} · {MODEL}</span>
         </div>
+        </>
       ) : (
       <div className="card nacre" style={{marginBottom:'1rem'}}>
         <div style={{display:'flex',alignItems:'flex-start',justifyContent:'space-between',gap:14,flexWrap:'wrap'}}>
@@ -7540,16 +7598,17 @@ function App() {
         return (
           <React.Fragment key={resKey(r)}>
             {showNicheHeader && (
-              <div style={{display:'flex',alignItems:'center',gap:8,margin:'18px 0 8px'}}>
-                <span style={{fontSize:11,fontWeight:700,color:'var(--acc-strong-ink)',textTransform:'uppercase',letterSpacing:'0.05em',background:'color-mix(in srgb, var(--mid) 8%, var(--card-solid))',border:'1px solid #A8CE6E',borderRadius:6,padding:'3px 10px'}}>Ниша: {r.niche}</span>
-                <div style={{flex:1,height:1,background:'var(--line)'}}/>
+              <div style={{display:'flex',alignItems:'baseline',gap:10,margin:'26px 0 10px'}}>
+                <span className="tag">Ниша</span>
+                <span style={{fontSize:21,fontWeight:600,letterSpacing:'-.02em',color:'var(--ink)'}}>{r.niche}</span>
+                <div style={{flex:1,height:1,background:'var(--line)',alignSelf:'center'}}/>
               </div>
             )}
-            <div style={{marginBottom:8,border:'1px solid '+m.border,borderRadius:12,overflow:'hidden'}}>
-              <div style={{display:'flex',alignItems:'center',background:m.bg}}>
-                <div onClick={()=>setExp(e=>({...e,[resKey(r)]:!e[resKey(r)]}))} style={{display:'flex',alignItems:'center',gap:9,padding:'11px 14px',cursor:'pointer',flex:1}}>
-                  <span className="tag" style={{background:m.color,color:'var(--card-solid)',borderColor:m.color}}>{m.id}</span>
-                  <span style={{flex:1,fontSize:13,fontWeight:500,color:m.dark}}>{m.title}</span>
+            <div className="card" style={{marginBottom:14,padding:0,overflow:'hidden'}}>
+              <div style={{display:'flex',alignItems:'center'}}>
+                <div onClick={()=>setExp(e=>({...e,[resKey(r)]:!e[resKey(r)]}))} style={{display:'flex',alignItems:'center',gap:10,padding:'15px 20px',cursor:'pointer',flex:1}}>
+                  <span style={{flex:1,fontSize:16,fontWeight:600,color:'var(--ink)'}}>{m.titleRu||m.title}</span>
+                  <span className="tag">{m.id}</span>
                   {r.usage && <span style={{fontSize:10,color:'var(--ink-3)',marginRight:8}} title={'запрос '+r.usage.prompt.toLocaleString('ru-RU')+' + ответ '+r.usage.completion.toLocaleString('ru-RU')+' токенов'}>≈{(r.usage.total/1000).toFixed(1)}k т.</span>}
                   <span style={{fontSize:10,color:'var(--ink-3)',marginRight:4}}>{r.at?new Date(r.at).toLocaleDateString():''}</span>
                   <span style={{fontSize:12,color:m.color}}>{open?'▲':'▼'}</span>
@@ -7626,7 +7685,7 @@ function App() {
                 </div>
               )}
               {open && (
-                <div style={{padding:'14px 16px',background:'var(--card-solid)',borderTop:'1px solid '+m.border}}>
+                <div style={{padding:'20px 24px 24px',background:'var(--card-solid)',borderTop:'1px solid var(--line)'}}>
                   {editKey === resKey(r) ? (
                     <div>
                       <p style={{fontSize:11,color:'var(--ink-2)',marginBottom:6}}>Правка вручную — сохраняется сразу, без вызова модели. График/диаграмма (если есть) построены по исходной генерации и ручной правкой текста не пересчитываются.</p>
