@@ -1,0 +1,7 @@
+/* Токены эталона, собрано из app.jsx. Не править руками. */
+:root{--back:#4D66F7;--back-fg:#FFFFFF;--mid:#06BDBD;--mid-fg:#12100D;--front:#5CD0D0;--front-fg:#12100D;--maybe-bg:rgba(23,21,18,.05);--acc-strong:#06BDBD;--acc-mid:#4D66F7;--acc-quiet:#6E6C66;--acc-ink:#06BDBD;--acc-strong-ink:#06BDBD;--acc-mid-ink:#4A62EE;--acc-quiet-ink:#5E5C57;--sw-green:#06BDBD;--sw-blue:#4DD1F7;--sw-violet:#4D66F7;--sw-grey:#6E6C66}
+:root{--mid-deep:#078282}
+:root{--raise:var(--card-solid)}
+:root{--glow:#06BDBD}
+:root{--fs-read:14.5px}
+:root{--fs-label:10px;--fs-caption:11.5px;--fs-ui:12px;--fs-small:12.5px;--fs-base:13px;--fs-body:13.5px;--fs-sub:14px;--fs-item:15px;--fs-block:16px;--fs-num:19px;--fs-module:21px;--fs-display:30px;--fs-hero:34px}

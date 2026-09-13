@@ -90,6 +90,25 @@ TARGETS.forEach(function (t) {
   }
   if (end < 0) throw new Error('литерал REPORT_CSS не закрыт');
   var css = JSON.parse(src.slice(j, end + 1));
+  // Полный стиль отчёта, а не только страничная константа. Половина вида
+  // блоков (итог модуля, карточки, полосы, единая шапка таблиц) живёт
+  // инлайн-строками в хвосте сборки и константами REPORT_*_CSS — без них
+  // файл эталона описывал страницу, но не блоки, и инструмент рисовал
+  // «половину не так» (слова владелицы, 14.09.2026).
+  function grabConst(name) {
+    var gi = src.indexOf('const ' + name + ' = "');
+    if (gi < 0) return '';
+    var gj = src.indexOf('"', gi + ('const ' + name + ' = ').length), ge = -1;
+    for (var gk = gj + 1; gk < src.length; gk++) {
+      if (src[gk] === '\\') { gk++; continue; }
+      if (src[gk] === '"') { ge = gk; break; }
+    }
+    return ge < 0 ? '' : JSON.parse(src.slice(gj, ge + 1));
+  }
+  ['REPORT_BLOCK_CSS','REPORT_M1_CSS','REPORT_M7_CSS','REPORT_M2_CSS','REPORT_M4_CSS',
+   'REPORT_LIB2_CSS','REPORT_LIB3_CSS','REPORT_COMP_CSS','REPORT_LIB4_CSS','REPORT_PERS_CSS',
+   'REPORT_M5_CSS','REPORT_DEMO_CSS','REPORT_M3_CSS','REPORT_RULES_CSS'
+  ].forEach(function (n2) { css += '\n' + grabConst(n2); });
   // Токены, которые выгрузка отчёта добавляет ПОСЛЕ константы (палитра,
   // шкала кеглей, --raise): без них файл эталона неполный — инструмент,
   // подключающий его, оставался без --mid и --fs-*. Достаём те же строки,
@@ -106,12 +125,21 @@ TARGETS.forEach(function (t) {
     while ((fq = rf.exec(хвост)))
       сборка += fq[1].replace(/\\n/g, '\n').replace(/\\'/g, "'").replace(/\\"/g, '"');
   }
+  // Хвост декодирован целиком — это и есть инлайн-добавки; в файл они идут
+  // все, отдельным куском ниже констант. «<style>» из первого фрагмента
+  // отрезаем. Токены дополнительно складываем в свой файл — инструменту
+  // нужны они, а не страничная часть отчёта.
+  сборка = сборка.replace(/^\s*<style>/, '');
   var токены = '';
   var rt = /:root\{[^{}]*\}/g, tq;
   while ((tq = rt.exec(сборка)))
     if (tq[0].indexOf('--') >= 0 && tq[0].indexOf('--nacre-img') < 0) токены += tq[0] + '\n';
+  wr(BASE + 'lib/tokens.css',
+    '/* Токены эталона, собрано из app.jsx. Не править руками. */\n' + токены);
+  console.log('  app.jsx → lib/tokens.css  (' + Math.round(токены.length / 1024) + ' КБ)');
   wr(BASE + 'lib/report.css',
-    '/* Собрано из REPORT_CSS в app.jsx. Не править руками. */\n' + css + '\n' + токены);
+    '/* Полный стиль отчёта, собрано из app.jsx. Не править руками. */\n'
+    + css + '\n' + сборка + '\n');
   console.log('  app.jsx → lib/report.css  (' + Math.round(css.length / 1024) + ' КБ)');
 })();
 

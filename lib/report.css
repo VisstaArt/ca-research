@@ -1,4 +1,4 @@
-/* Собрано из REPORT_CSS в app.jsx. Не править руками. */
+/* Полный стиль отчёта, собрано из app.jsx. Не править руками. */
 
 /* ── Референс: ZIXO (Behance, скрины владелицы 08.09.2026), второй заход ─────
    Первый заход взял общую идею (туман, монохром, веер карт) слишком грубо —
@@ -676,9 +676,1953 @@ td b{color:var(--ink);font-weight:600}
 }
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 
+
+.page{max-width:1180px;margin:0 auto;padding:30px 24px 60px}
+.lede{max-width:66ch;margin-bottom:24px}
+.lede h1{font-size:29px;margin-bottom:10px}
+/* Вступление лежит ПРЯМО НА ФОТОГРАФИИ фона, а у неё яркость гуляет от 0.58
+   до 0.95. На тёмных участках вторичные чернила давали 3.35 при норме 4.5 —
+   вот это и читалось бледным. Текст поверх фона идёт основными чернилами:
+   на самом тёмном участке 11.0, на самом светлом ещё выше. Правило общее:
+   на фон-фотографию вторичный цвет не кладём, только основной. */
+.lede p{margin:0 0 10px;color:var(--ink);font-size:15px;line-height:1.65}
+.lede b{color:var(--ink)}
+
+/* ПРАВКА 10.09, владелица: «таблички бледно читаются на этом фоне».
+   Замерила: панель была полупрозрачной (80%), и фон просвечивал сквозь неё —
+   отделение панели от фона падало до 1.25 при задуманных 1.33 (в референсе
+   ZIXO 1.48). То есть стекло съедало ровно тот запас светлоты, который был
+   заложен, когда мы подбирали фон.
+   Панель с данными теперь СПЛОШНАЯ. Это то же правило, что с перламутром:
+   стекло и переливы — материал объектов, а под данными поверхность должна
+   быть ровной и не спорить с ними. Размытие убрано — под непрозрачной
+   заливкой оно всё равно ничего не делало, только грузило отрисовку. */
+.viz{background:var(--raise);
+  border:1px solid var(--line);border-radius:22px;padding:20px 22px;margin-bottom:12px;
+  box-shadow:inset 0 1px 0 var(--hi), 0 14px 30px -24px rgba(45,36,22,.3)}
+.vh{display:flex;align-items:baseline;justify-content:space-between;gap:12px;
+  flex-wrap:wrap;margin-bottom:6px}
+.vh h2{font-size:19px}
+.vh .src{font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;
+  color:var(--acc-ink)}
+.vn{margin:0 0 14px;font-size:12.5px;color:var(--ink-3);max-width:70ch;line-height:1.55}
+.two{display:grid;gap:12px;grid-template-columns:1fr 1fr}
+.axis{fill:var(--ink-3);font-size:10.5px;font-family:var(--sans)}
+.lbl{fill:var(--ink-2);font-size:12px;font-family:var(--sans)}
+.val{fill:var(--ink);font-size:11.5px;font-weight:700;font-family:var(--sans)}
+.gridln{stroke:var(--line-2);stroke-width:1}
+
+/* ── SWOT: четыре поля, различаются не цветом, а положением и весом ── */
+.swot{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.sw{border:1px solid var(--line);border-radius:16px;padding:16px 18px;
+  background:color-mix(in srgb, var(--ink) 2%, transparent)}
+.sw h3{font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;
+  color:var(--ink-3);margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.sw h3 i{width:16px;height:3px;border-radius:2px;display:block}
+.sw ul{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:7px}
+.sw li{font-size:13px;color:var(--ink-2);padding-left:14px;position:relative;line-height:1.5}
+.sw li::before{content:"";position:absolute;left:0;top:8px;width:5px;height:5px;
+  border-radius:50%;background:var(--ink-3)}
+
+/* ── Половозрастная пирамида ──────────────────────────────────────────────
+   Из присланного дашборда. Ценна тем, что показывает возраст и пол ОДНОЙ
+   картинкой: у нас это были две отдельные шкалы, и связь «кто именно в этом
+   возрасте» терялась. Столбцы расходятся от общей оси возрастов, поэтому
+   перекос между полами виден по форме, без чтения чисел. */
+/* ЭТАЛОН МЕРЫ — блок «Приоритет ниш», выбран владелицей 10.09.
+   Оттуда сняты три величины, и они теперь действуют на всей странице:
+   полоса 14px, между строками 13px, и под каждой полосой светлая ДОРОЖКА
+   во всю ширину. Дорожка тут не украшение — она показывает шкалу: без неё
+   короткая полоса висит в пустоте и не с чем сравнивать. */
+.pyr{display:flex;flex-direction:column;gap:13px}
+.pyr-head{display:grid;grid-template-columns:1fr 78px 1fr;align-items:center;
+  margin-bottom:14px;padding-bottom:11px;border-bottom:1px solid var(--line);gap:8px}
+/* ПРАВКА: значки стояли на ярких заливках — такого на странице больше нигде
+   нет, и они лезли вперёд содержания. Плашка теперь нейтральная, как у всех
+   остальных значков. Цвет ничего не теряет: сторону и так называют положение,
+   фигура и подпись, а сам цвет живёт в полосах, где он и кодирует пол.
+   И рисунок сменён с условного знака (♂/♀) на ФИГУРУ человека — значок
+   уместен там, где им нарисован образ, а не подставлен символ. */
+.pyr-head .t{font-size:16px;font-weight:700;letter-spacing:-.02em;color:var(--ink);
+  display:flex;align-items:center;gap:9px}
+.pyr-head .t.r{justify-content:flex-end}
+.pyr-head .t .sx{width:26px;height:26px;border-radius:8px;display:flex;
+  align-items:center;justify-content:center;flex:0 0 auto}
+.pyr-head .t .sx{background:var(--line-2)}
+.pyr-head .t .sx svg{width:17px;height:17px;fill:none;stroke:var(--ink-2);
+  stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;display:block}
+.pyr-head .c{text-align:center;font-size:10px;font-weight:700;letter-spacing:.07em;
+  text-transform:uppercase;color:var(--ink-3)}
+.pyrow{display:grid;grid-template-columns:1fr 78px 1fr;align-items:center;gap:8px}
+.pyrow .s{display:flex;align-items:center}
+.pyrow .s.l{justify-content:flex-end}
+/* ПРАВКА: столбцы были толстыми плашками с числом ВНУТРИ — на нашей странице
+   так не сделано больше нигде, оттого блок и выбивался. Приведено к тому же
+   строю, что «боли по частоте» и «достаток»: тонкая полоса, число снаружи
+   чернилами. Цвет остался только заливкой полосы — он тут кодирует пол. */
+.pyrow .rail{flex:1;height:14px;background:var(--line-2);display:flex}
+.pyrow .s.l .rail{justify-content:flex-end}
+.pyrow .bar{height:14px;flex:0 0 auto;min-width:3px}
+.pyrow .l .bar{background:var(--mid)}
+.pyrow .r .bar{background:var(--sw-violet)}
+.pyrow .s .v{font-size:11.5px;font-weight:700;color:var(--ink);
+  font-variant-numeric:tabular-nums;min-width:38px}
+.pyrow .s.l .v{text-align:right;margin-right:9px}
+.pyrow .s.r .v{text-align:left;margin-left:9px}
+.pyrow .age{text-align:center;font-size:11.5px;color:var(--ink-2);font-weight:600;
+  font-variant-numeric:tabular-nums}
+
+/* ── Тепловая карта активности: дни × часы ───────────────────────────────── */
+.hm{display:grid;grid-template-columns:38px repeat(8,1fr);gap:3px;
+  font-size:10.5px;font-variant-numeric:tabular-nums}
+.hm .hh{color:var(--ink-3);text-align:center;padding-bottom:3px}
+.hm .hl{color:var(--ink-3);display:flex;align-items:center;font-weight:600}
+.hm .hc{height:26px;border-radius:4px}
+.hm .hc.peak{box-shadow:inset 0 0 0 2px var(--ink)}
+.hmleg{display:flex;align-items:center;gap:7px;margin-top:12px;font-size:11px;
+  color:var(--ink-3)}
+.hmleg .sc{display:flex;gap:2px}
+.hmleg .sc i{width:22px;height:9px;border-radius:2px;display:block}
+
+/* ── География спроса ─────────────────────────────────────────────────────
+   Две величины в одной строке, но НЕ на одной шкале — это разные вопросы.
+   Слева объём: где людей больше. Справа плотность: где спрос выше, чем
+   положено по населению. Второе и решает бюджет — в Москве запросов больше
+   всегда, просто потому что там больше людей, а дешёвый лид даёт регион,
+   который перевешивает свой размер.
+   Плотность — расходящаяся шкала: у неё есть осмысленный ноль (единица,
+   «ровно по населению»), поэтому два тона и нейтральная середина, а не
+   светлота одного тона. */
+.geo{display:flex;flex-direction:column;gap:13px}
+.geohead,.grow{display:grid;grid-template-columns:196px 1fr 150px 52px;
+  align-items:center;gap:14px}
+.geohead{font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;
+  color:var(--ink-3);padding-bottom:8px;margin-bottom:3px;border-bottom:1px solid var(--line)}
+.geohead .r{text-align:right}
+.grow{padding:0}
+.grow .nm{font-size:12.5px;color:var(--ink-2);line-height:1.3}
+.grow.base .nm{font-weight:700;color:var(--ink)}
+.gvol{display:flex;align-items:center;gap:9px}
+.gvol .rail{flex:1;height:14px;background:var(--line-2);display:flex}
+.gvol .b{height:14px;background:var(--mid);flex:0 0 auto}
+.grow.base .gvol .b{background:color-mix(in srgb, var(--mid) 38%, var(--line-2))}
+.gvol .v{font-size:12px;font-weight:700;font-variant-numeric:tabular-nums}
+/* Расходящаяся полоса: середина — «ровно по населению» */
+.gden{position:relative;height:14px;background:var(--line-2)}
+.gden .mid0{position:absolute;left:50%;top:0;bottom:0;width:1px;
+  background:color-mix(in srgb, var(--ink) 28%, transparent)}
+.gden .d{position:absolute;top:0;height:14px}
+.gden .d.up{left:50%;background:var(--mid)}
+.gden .d.dn{right:50%;background:var(--sw-violet)}
+.gx{font-size:12px;font-weight:700;text-align:right;font-variant-numeric:tabular-nums}
+.gvol .v{min-width:52px;text-align:right}
+.gx.up{color:var(--acc-ink)} .gx.dn{color:var(--acc-mid-ink)} .gx.eq{color:var(--ink-3)}
+.geoleg{display:flex;gap:18px;flex-wrap:wrap;margin-top:14px;font-size:11.5px;
+  color:var(--ink-3)}
+.geoleg span{display:flex;align-items:center;gap:7px}
+.geoleg i{width:11px;height:9px;border-radius:2px;display:block}
+@media (max-width:760px){
+  .geohead{display:none}
+  .grow{grid-template-columns:1fr 52px;grid-template-areas:'nm x' 'vol vol' 'den den';gap:5px}
+  .grow .nm{grid-area:nm} .gvol{grid-area:vol} .gden{grid-area:den} .gx{grid-area:x}
+}
+
+/* ── Портрет B2B, вариант 2: то, что меряется, — измерить ──────────────────
+   Владелица: «можно ещё вариант, чтобы с графиками, а не просто текстом».
+   Разбор показал: из семи строк портрета четыре по своей природе ЧИСЛОВЫЕ —
+   сколько человек участвует в решении, сколько длится сделка, какой бюджет
+   без согласования, на каком уровне осведомлённости сегмент. Текстом они
+   выглядят как мнение, а шкалой — как замер.
+   Три остальные (боль, тормоз, свои слова) остаются словами: их числом не
+   выразить, и попытка была бы враньём. Поэтому вариант 2 — не «то же самое
+   с картинками», а разделение по природе данных. */
+.bmet{display:grid;grid-template-columns:repeat(4,1fr);gap:20px;padding:20px 22px;
+  border-bottom:1px solid var(--line)}
+.bmet h4{font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;
+  color:var(--ink-3);margin:0 0 11px}
+.bmet .big{font-size:19px;font-weight:700;letter-spacing:-.02em;line-height:1.15;
+  margin-bottom:3px}
+.bmet .sm{font-size:11.5px;color:var(--ink-3);line-height:1.45}
+/* фигурки: закрашенные = участвуют в решении */
+.ppl{display:flex;gap:5px;margin-bottom:9px}
+.ppl svg{width:17px;height:19px;display:block}
+/* дорожка со значением: диапазон заливкой, наша отметка штрихом */
+.trk{position:relative;height:14px;background:var(--line-2);margin:6px 0 8px}
+.trk .rg{position:absolute;top:0;bottom:0;background:var(--mid)}
+.trk .mk{position:absolute;top:-4px;bottom:-4px;width:2px;background:var(--ink)}
+.trk-ax{display:flex;justify-content:space-between;font-size:10px;color:var(--ink-3)}
+.mklbl{font-size:11px;color:var(--ink-2);margin-top:7px}
+.mklbl b{color:var(--ink)}
+/* пять ступеней осведомлённости */
+.aw5{display:flex;align-items:flex-end;gap:4px;height:46px;margin-bottom:8px}
+.aw5 div{flex:1;background:var(--mid);position:relative}
+.aw5 div span{position:absolute;left:-2px;right:-2px;bottom:-16px;text-align:center;
+  font-size:9px;color:var(--ink-3);white-space:nowrap}
+.bpain{padding:20px 22px;border-bottom:1px solid var(--line)}
+.bpain h4{font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;
+  color:var(--ink-3);margin:0 0 12px}
+.bpain .dbar{grid-template-columns:1fr 190px 58px}
+.chnside .dbar{grid-template-columns:1fr 84px 34px}
+.bpain .dbar .t{color:var(--ink-2)}
+.bpain .dbar .n{font-variant-numeric:tabular-nums}
+@media (max-width:820px){ .bmet{grid-template-columns:1fr 1fr} }
+
+/* ── Голос клиента: цитата как объект, а не ячейка таблицы ────────────────
+   У конкурента это таблица на тридцать строк, и её никто не дочитывает.
+   Цитата работает иначе: она должна ПРОЗВУЧАТЬ. Поэтому карточка, дословный
+   текст засечным шрифтом — единственное место на странице, где он уместен:
+   так видно, что это чужая речь, а не наш пересказ. Под цитатой — откуда
+   она и сколько раз эта боль встретилась во всём материале.
+
+   ПРАВКА: в макете платформы этот блок уже был сделан КАРУСЕЛЬЮ, а я собрала
+   его заново решёткой. Возвращено к макету — прокрутка вбок со стрелками и
+   привязкой к плашке. Так и правильнее по существу: цитат в отчёте бывает
+   сорок, решётка на сорок карточек занимает экран целиком и обесценивает
+   каждую; лента показывает несколько и не мешает читать дальше. */
+.vochead{display:flex;align-items:center;justify-content:space-between;gap:14px;
+  margin-bottom:12px}
+.vocnav{display:flex;gap:8px}
+/* Стрелки без кружков: кружок — кнопка, а тут не действие, а листание. */
+.qarrow{width:26px;height:26px;border:0;background:none;padding:0;
+  display:flex;align-items:center;justify-content:center;
+  color:var(--ink-3);flex:0 0 auto;cursor:pointer}
+.qarrow:hover{color:var(--ink)}
+.qarrow:disabled{opacity:.3;cursor:default}
+.qarrow svg{width:19px;height:19px;fill:none;stroke:currentColor;stroke-width:1.7;
+  stroke-linecap:round;stroke-linejoin:round}
+.voc{display:flex;gap:12px;overflow-x:auto;scroll-snap-type:x mandatory;
+  scrollbar-width:none;padding-bottom:2px}
+.voc::-webkit-scrollbar{display:none}
+.vq{flex:0 0 auto;width:268px;scroll-snap-align:start;
+  border:1px solid var(--line);background:var(--card-solid);padding:17px 19px;
+  border-radius:16px;display:flex;flex-direction:column;gap:12px;
+  justify-content:space-between}
+.vq blockquote{margin:0;font-family:var(--serif);font-style:italic;
+  font-size:14px;line-height:1.5;color:var(--ink)}
+/* Состояние цитаты приходит ОТ контент-машины, исследование его не хранит.
+   Три состояния различаются формой метки, а не только цветом: пустой кружок,
+   закрашенный фирменный, закрашенный серый. */
+.vq .vst{display:flex;align-items:center;gap:7px;font-size:10px;font-weight:700;
+  letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3)}
+.vq .vst i{width:9px;height:9px;border-radius:50%;display:block;flex:0 0 auto}
+.vq .vst.wait i{border:1.5px solid var(--ink-3)}
+.vq .vst.work i{background:var(--mid)}
+.vq .vst.done i{background:var(--ink-3)}
+.vq .vst.work{color:var(--ink)}
+.vq .vf{display:flex;justify-content:space-between;align-items:center;gap:12px;
+  padding-top:12px;border-top:1px solid var(--line-2)}
+.vq .vsrc{font-size:11px;color:var(--ink-3);line-height:1.4}
+.vq .vsrc b{display:block;color:var(--ink-2);font-weight:600;font-size:11.5px}
+.vq .vcnt{font-size:11px;font-weight:700;color:var(--ink);white-space:nowrap;
+  display:flex;align-items:center;gap:7px}
+.vq .vcnt i{width:8px;height:8px;background:var(--mid);display:block}
+
+/* ── Возражение и ответ ───────────────────────────────────────────────────
+   Страх и то, чем он снимается, ценны только вместе: по отдельности первое —
+   жалоба, второе — лозунг. Поэтому одна строка на пару.
+   ПРАВКА: подписи «что говорит клиент» и «чем снимаем» повторялись в каждой
+   строке. Приведено к тому же виду, что альтернативы, — шапка один раз.
+   Стрелка и заливки половин тоже убраны: направление задаёт порядок колонок,
+   а цвет здесь ничего не кодировал. */
+.obj{border:1px solid var(--line);border-radius:16px;overflow:hidden;max-width:940px}
+.ohead,.orow{display:grid;grid-template-columns:.92fr 1.08fr;gap:18px}
+.ohead{padding:11px 18px;font-size:10px;font-weight:700;letter-spacing:.07em;
+  text-transform:uppercase;color:var(--ink-3);
+  background:color-mix(in srgb, var(--ink) 3%, transparent)}
+.orow{padding:14px 18px;border-top:1px solid var(--line-2);align-items:start}
+.orow .of{font-family:var(--serif);font-style:italic;font-size:13.5px;
+  line-height:1.5;color:var(--ink)}
+.orow .oa{font-size:12.5px;color:var(--ink-2);line-height:1.5}
+
+/* ── Альтернативы: против чего мы на самом деле конкурируем ────────────────
+   Главный конкурент почти всегда «ничего не делать», и его надо выделить
+   графически, иначе его снова прочитают как строку в списке. */
+/* ПРАВКА: подписи «почему её выбирают» и «что мы говорим против» повторялись
+   в каждой строке — это и есть определение таблицы, только вывернутое
+   наизнанку. Написаны один раз в шапке, как в портрете сегмента. */
+.alt{border:1px solid var(--line);border-radius:16px;overflow:hidden}
+.ahead,.arow{display:grid;grid-template-columns:184px 1fr 1fr;gap:16px}
+.ahead{padding:11px 18px;font-size:10px;font-weight:700;letter-spacing:.07em;
+  text-transform:uppercase;color:var(--ink-3);
+  background:color-mix(in srgb, var(--ink) 3%, transparent)}
+.arow{align-items:start;padding:14px 18px;border-top:1px solid var(--line-2)}
+.arow .an{font-size:13.5px;font-weight:700;line-height:1.3}
+.arow .aty{display:inline-block;font-size:10px;font-weight:700;letter-spacing:.05em;
+  text-transform:uppercase;color:var(--ink-3);margin-top:5px}
+.arow .atx{font-size:12.5px;color:var(--ink-2);line-height:1.5}
+/* ПРАВКА: плашка «главный» стояла сразу за названием — толкала строку и
+   выглядела грубо. Выделение ушло вбок: полоса фирменного цвета по левому
+   краю плюс тихая надпись НАД названием. Строка читается ровно, а особый
+   статус виден раньше, чем начинаешь читать. */
+.arow.main{background:color-mix(in srgb, var(--mid) 6%, transparent);
+  border-top:0;padding-left:15px;box-shadow:inset 3px 0 0 var(--mid)}
+.arow .aeb{font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;
+  color:var(--ink-3);margin-bottom:5px}
+
+/* ── Где сидит аудитория ──────────────────────────────────────────────────
+   ПРАВКА: было пять колонок во всю ширину. В каждой ячейке две-три строки
+   текста, между ними метры пустоты — таблица выглядела растянутой и пустой,
+   хотя данных в ней достаточно. Причина в форме, а не в количестве: пять
+   узких колонок с разной длиной текста никогда не выровняются. Пересобрано
+   карточками — площадка тут ОБЪЕКТ, а не строка сравнения: их не читают
+   по колонкам сверху вниз, каждую рассматривают отдельно. */
+/* Сбоку — доли по площадкам. Важно, ЧТО именно тут измерено: это доля
+   собранного материала, а не доля аудитории. Второго числа у нас нет и
+   честно взять его неоткуда — «34% аудитории сидит на vc.ru» было бы
+   выдумкой. Зато первое число само по себе ценно: оно показывает перекос
+   выборки, о котором предупреждает приписка внизу. */
+.chnwrap{display:grid;grid-template-columns:1fr 268px;gap:22px;align-items:start}
+.chnside h4{font-size:10px;font-weight:700;letter-spacing:.07em;
+  text-transform:uppercase;color:var(--ink-3);margin:0 0 4px}
+.chnside .sub{font-size:11.5px;color:var(--ink-3);line-height:1.45;margin:0 0 14px}
+.chn{display:grid;grid-template-columns:repeat(auto-fit,minmax(296px,1fr));gap:12px}
+.ccard{border:1px solid var(--line);background:var(--card-solid);border-radius:16px;
+  padding:16px 18px;display:flex;flex-direction:column;gap:11px}
+.ccard .ch{display:flex;align-items:center;gap:11px}
+.ccard .ci{width:34px;height:34px;border-radius:11px;background:var(--line-2);
+  display:flex;align-items:center;justify-content:center;flex:0 0 auto}
+.ccard .ci svg{width:19px;height:19px;fill:none;stroke:var(--ink-2);stroke-width:1.6;
+  stroke-linecap:round;stroke-linejoin:round;display:block}
+.ccard .cn{font-size:14px;font-weight:700;line-height:1.25}
+.ccard .cn span{display:block;font-size:11px;font-weight:600;color:var(--ink-3);
+  margin-top:3px}
+.ccard .cd{font-size:12.5px;color:var(--ink-2);line-height:1.5}
+.ccard .cf{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;
+  padding-top:11px;border-top:1px solid var(--line-2);margin-top:auto}
+.ccard .cf div span{display:block;font-size:10px;font-weight:700;letter-spacing:.07em;
+  text-transform:uppercase;color:var(--ink-3);margin-bottom:3px}
+.ccard .cf div b{font-size:12px;font-weight:700;color:var(--ink)}
+.ccard .cf .r{text-align:right}
+@media (max-width:1000px){ .chnwrap{grid-template-columns:1fr} }
+@media (max-width:900px){
+  .ohead{display:none}
+  .orow{grid-template-columns:1fr;gap:8px}
+  .ahead{display:none}
+  .arow{grid-template-columns:1fr;gap:8px}
+  .ccard .cf{flex-direction:column;align-items:flex-start;gap:9px}
+  .ccard .cf .r{text-align:left}
+}
+
+/* ── Общая таблица отчёта ─────────────────────────────────────────────────
+   Владелица 10.09: подписи колонок пишутся ОДИН раз в шапке, а не повторяются
+   в каждой строке. Здесь это вынесено в один класс, чтобы все оставшиеся
+   блоки отчёта строились по одному образцу, а не расходились каждый по-своему.
+   Число колонок задаётся переменной --cols на месте. */
+.dtbl{border:1px solid var(--line);border-radius:16px;overflow:hidden}
+.dtbl .th,.dtbl .tr{display:grid;grid-template-columns:var(--cols);gap:18px}
+.dtbl .th{padding:11px 18px;font-size:10px;font-weight:700;letter-spacing:.07em;
+  text-transform:uppercase;color:var(--ink-3);
+  background:color-mix(in srgb, var(--ink) 3%, transparent)}
+.dtbl .tr{padding:14px 18px;border-top:1px solid var(--line-2);align-items:start;
+  font-size:12.5px;line-height:1.5;color:var(--ink-2)}
+/* ПРАВКА: перенос рвал слово где попало, вплоть до одной буквы. Виноват был
+   overflow-wrap:anywhere — он ломает строку в любом месте, не глядя на слоги.
+   Убран. Оставлен hyphens:auto, но он работает только когда браузер знает
+   язык — поэтому на .page стоит lang="ru", иначе словаря переносов нет и
+   ничего не переносится вовсе. И задан минимум: слово от 6 букв, не меньше
+   трёх до переноса и трёх после — одна буква на строке больше невозможна. */
+.dtbl .nm{font-size:13.5px;font-weight:700;color:var(--ink);line-height:1.3;display:block}
+.dtbl .tr>div{min-width:0}
+.page{hyphens:auto;-webkit-hyphens:auto;
+  hyphenate-limit-chars:6 3 3;-webkit-hyphenate-limit-before:3;-webkit-hyphenate-limit-after:3}
+/* Числа, коды и подписи осей не переносим никогда. */
+.val,.axis,.lbl,.gx,.dbar .n,.kpi .n,.pyrow .s .v,.gvol .v{hyphens:none;-webkit-hyphens:none}
+.dtbl .tag{display:inline-block;font-size:10px;font-weight:700;letter-spacing:.05em;
+  text-transform:uppercase;color:var(--ink-3);margin-top:5px}
+.dtbl .q{font-family:var(--serif);font-style:italic;font-size:13px;color:var(--ink);
+  line-height:1.5}
+.dtbl .no{color:var(--ink-3);font-style:italic}
+.dtbl .lead{box-shadow:inset 3px 0 0 var(--mid);padding-left:15px;
+  background:color-mix(in srgb, var(--mid) 5%, transparent)}
+.dtbl .eb{font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;
+  color:var(--ink-3);margin-bottom:5px}
+.dtbl .strong{color:var(--ink);font-weight:600}
+.dt2{margin-top:12px}
+@media (max-width:900px){
+  .dtbl .th{display:none}
+  .dtbl .tr{grid-template-columns:1fr!important;gap:8px}
+}
+
+/* ── Банк хуков ───────────────────────────────────────────────────────────
+   Это не цитаты заново: цитата описывает боль, хук — готовая ПЕРВАЯ СТРОКА.
+   Отбираются из уже собранных цитат, не сочиняются. Поэтому крупно и подряд,
+   как их и будут читать в ленте, а рядом — куда каждый годится. */
+.hooks{display:flex;flex-direction:column;gap:0}
+.hrow{display:grid;grid-template-columns:26px 1fr 190px;gap:16px;align-items:baseline;
+  padding:13px 0;border-top:1px solid var(--line-2)}
+.hrow:first-child{border-top:0}
+.hrow .hn{font-size:12px;font-weight:700;color:var(--ink-3);
+  font-variant-numeric:tabular-nums}
+.hrow .ht{font-family:var(--serif);font-size:15px;line-height:1.45;color:var(--ink)}
+.hrow .hu{font-size:11.5px;color:var(--ink-3);line-height:1.4;text-align:right}
+.hrow .hu b{display:block;color:var(--ink-2);font-weight:600;font-size:12px}
+
+/* ── Контент-система: рубрики и ритм ──────────────────────────────────────── */
+.rub{display:grid;grid-template-columns:repeat(auto-fit,minmax(238px,1fr));gap:12px}
+.rcard{border:1px solid var(--line);background:var(--card-solid);border-radius:16px;
+  padding:16px 18px;display:flex;flex-direction:column;gap:9px}
+.rcard .rn{font-size:14px;font-weight:700;line-height:1.25}
+.rcard .rj{font-size:12.5px;color:var(--ink-2);line-height:1.5}
+.rcard .rf{display:flex;justify-content:space-between;gap:10px;padding-top:10px;
+  border-top:1px solid var(--line-2);margin-top:auto;font-size:11.5px}
+.rcard .rf span{color:var(--ink-3)}
+.rcard .rf b{color:var(--ink);font-weight:700}
+.rhy{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-top:14px}
+.rhy .rd{border:1px solid var(--line);border-radius:12px;padding:11px 10px;
+  background:var(--card-solid);min-height:78px}
+.rhy .rd .dw{font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;
+  color:var(--ink-3);margin-bottom:7px}
+.rhy .rd .dt{font-size:11.5px;color:var(--ink);line-height:1.35;font-weight:600}
+.rhy .rd.off .dt{color:var(--ink-3);font-weight:400}
+.rhy .rd .dbar2{height:5px;margin-top:8px}
+
+/* ── ТЗ на лендинг: экраны по порядку ─────────────────────────────────────
+   Порядок здесь несёт смысл — это последовательность, в которой человек
+   читает страницу, а не список разделов. Поэтому нумерация и вертикальная
+   нить, а не решётка карточек. */
+.lnd{display:flex;flex-direction:column;gap:0;position:relative}
+.lstep{display:grid;grid-template-columns:52px 1fr 1fr;gap:18px;padding:15px 0;
+  border-top:1px solid var(--line-2);align-items:start}
+.lstep:first-child{border-top:0}
+.lstep .ln{font-size:19px;font-weight:700;color:var(--ink-3);letter-spacing:-.02em;
+  font-variant-numeric:tabular-nums;line-height:1.1}
+.lstep .lt{font-size:13.5px;font-weight:700;line-height:1.3}
+.lstep .lj{font-size:12px;color:var(--ink-3);line-height:1.45;margin-top:4px}
+.lstep .lc{font-size:12.5px;color:var(--ink-2);line-height:1.5}
+.lstep .lc b{display:block;font-size:10px;font-weight:700;letter-spacing:.07em;
+  text-transform:uppercase;color:var(--ink-3);margin-bottom:4px}
+@media (max-width:820px){
+  .hrow{grid-template-columns:26px 1fr}
+  .hrow .hu{grid-column:2;text-align:left}
+  .rhy{grid-template-columns:repeat(2,1fr)}
+  .lstep{grid-template-columns:40px 1fr}
+  .lstep .lc{grid-column:2}
+}
+
+/* ── Карта отчёта: что оформлено, чего не хватает ─────────────────────────
+   Тот же приём, что у проверки по 13 вопросам: не рассказывать словами,
+   а показать покрытие. Три состояния различаются и цветом, и формой метки. */
+.mapg{display:grid;grid-template-columns:repeat(auto-fill,minmax(232px,1fr));gap:8px}
+.mcell{display:flex;gap:10px;align-items:flex-start;padding:11px 13px;border-radius:12px;
+  border:1px solid var(--line);background:var(--card-solid);font-size:12.5px;
+  line-height:1.4}
+.mcell i{width:9px;height:9px;border-radius:50%;flex:0 0 auto;margin-top:4px;display:block}
+.mcell span{flex:1}
+.mcell span b{display:block;font-size:10px;font-weight:700;letter-spacing:.07em;
+  text-transform:uppercase;color:var(--ink-3);margin-top:3px}
+.mcell.have{background:color-mix(in srgb, var(--mid) 8%, var(--card-solid));
+  border-color:color-mix(in srgb, var(--mid) 30%, var(--line))}
+.mcell.have i{background:var(--mid)}
+.mcell.add i{border:1.5px solid var(--sw-violet)}
+.mcell.none i{background:var(--sw-grey)}
+.mcell.out{opacity:.72}
+.mcell.out i{background:var(--card-solid);border:1.5px solid var(--sw-grey)}
+.mlegend{display:flex;gap:18px;flex-wrap:wrap;margin-top:14px;font-size:11.5px;
+  color:var(--ink-3)}
+.mlegend span{display:flex;align-items:center;gap:8px}
+.mlegend i{width:9px;height:9px;border-radius:50%;display:block}
+
+/* ── Визуальная стратегия ─────────────────────────────────────────────────── */
+.vis{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.vis h4{font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;
+  color:var(--ink-3);margin:0 0 12px}
+.sw2{display:flex;gap:0;margin-bottom:8px}
+.sw2 div{flex:1;height:52px;display:flex;align-items:flex-end;padding:7px 9px;
+  font-size:10px;font-weight:700;font-variant-numeric:tabular-nums}
+.sw2 div small{font-size:9px;font-weight:600;opacity:.75;display:block}
+.visnote{font-size:12px;color:var(--ink-3);line-height:1.5;margin:0}
+.typo{border:1px solid var(--line);border-radius:14px;padding:16px 18px;
+  background:var(--card-solid)}
+.typo .t1{font-size:22px;font-weight:700;letter-spacing:-.02em;line-height:1.2}
+.typo .t2{font-family:var(--serif);font-size:14px;line-height:1.5;color:var(--ink-2);
+  margin-top:8px}
+.typo .t3{font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;
+  color:var(--ink-3);margin-top:12px}
+.rules{display:flex;flex-direction:column;gap:0}
+.rr{display:grid;grid-template-columns:1fr 1fr;gap:16px;padding:11px 0;
+  border-top:1px solid var(--line-2);font-size:12.5px;line-height:1.45}
+.rr:first-child{border-top:0}
+.rr .y{color:var(--ink)}
+.rr .n2{color:var(--ink-3)}
+.rr .lb2{display:block;font-size:10px;font-weight:700;letter-spacing:.07em;
+  text-transform:uppercase;color:var(--ink-3);margin-bottom:4px}
+@media (max-width:900px){ .vis,.acard .ag,.rr{grid-template-columns:1fr} }
+
+/* ── Ссылка на источник ───────────────────────────────────────────────────
+   Владелица 10.09: «нам надо всё давать, особенно голос клиента, конкурентов,
+   со ссылками, чтобы всё это можно было проверять».
+   Справедливо и это не мелочь: исследование без возможности проверить строку
+   превращается в мнение. Номер [n] ведёт в блок «Источники» внизу — та же
+   сквозная нумерация, что уже принята в отчёте. */
+/* Номера источников — те же ссылки, значит тот же вид: фирменный цвет плюс
+   постоянное подчёркивание. Размер поднят с 10.5 до 11.5: на бирюзе мелкий
+   кегль читается тяжелее всего, а уменьшать контраст здесь нечем. */
+.rn2{display:inline-block;font-size:11.5px;font-weight:700;color:var(--acc-mid-ink);
+  text-decoration:none;vertical-align:0;white-space:nowrap;hyphens:none;
+  border-bottom:1px solid color-mix(in srgb, var(--acc-mid-ink) 45%, transparent)}
+.rn2:hover{border-bottom-color:var(--acc-mid-ink)}
+
+/* ── Источники разведки ───────────────────────────────────────────────────
+   ПРАВКА 10.09, владелица: «после сайта сразу слеплена оценка — непонятно, что
+   это такое; и надо активные ссылки прямо на название сайта».
+   Обе правки по делу. Домен — настоящая ссылка: колонка URL в исходной таблице
+   есть, а кликнуть было нельзя, то есть проверить источник всё равно не
+   получалось. И «что взяли» отделено подписью — без неё строка читалась как
+   продолжение названия сайта.
+   Подчёркивание фирменным цветом, а сами буквы чернилами: бирюза текстом на
+   слоновой кости даёт 2.17 при норме 4.5. */
+.srcs{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:0 28px}
+.srow{display:grid;grid-template-columns:32px 1fr;gap:12px;padding:13px 0;
+  border-top:1px solid var(--line-2);align-items:baseline}
+.srow .sn{font-size:11.5px;font-weight:700;color:var(--acc-mid-ink);
+  font-variant-numeric:tabular-nums;hyphens:none}
+.srow .sd{font-size:12.5px;line-height:1.45;min-width:0}
+.srow .sd .dom{display:flex;align-items:baseline;justify-content:space-between;gap:12px}
+/* ССЫЛКИ — ОДИН вид на всё: синий плюс постоянное подчёркивание.
+   Решение владелицы 10.09: «прийти к одному знаменателю, лучше синим —
+   виднее; если всё бирюзовым, оно будет сливаться».
+   Так и есть, и цифры это подтверждают: синий на подложке даёт 4.79 при норме
+   4.5, бирюза — 2.27. Бирюза остаётся фирменным цветом ЗАЛИВОК (плашки, полосы,
+   секторы), синий — цветом всего кликабельного. Два цвета, две разные работы,
+   ни один не мешает другому.
+   Подчёркивание оставлено постоянным: оно отличает ссылку от просто цветного
+   слова, а на цвет одного этого мало. */
+.srow .sd .dom a{font-size:13.5px;font-weight:700;color:var(--acc-mid-ink);
+  text-decoration:none;border-bottom:1px solid color-mix(in srgb, var(--acc-mid-ink) 45%, transparent);
+  overflow-wrap:break-word;hyphens:none}
+.srow .sd .dom a:hover{border-bottom-color:var(--acc-mid-ink)}
+.srow .sd .dom a svg{width:10px;height:10px;display:inline-block;vertical-align:1px;
+  margin-left:5px;fill:none;stroke:currentColor;stroke-width:2}
+.srow .sd .dt{font-size:11px;color:var(--ink-3);white-space:nowrap;flex:0 0 auto;
+  hyphens:none}
+.srow .sd .took{margin-top:8px}
+.srow .sd .took span{display:block;font-size:10px;font-weight:700;letter-spacing:.07em;
+  text-transform:uppercase;color:var(--ink-3);margin-bottom:3px}
+.srow .sd .took em{font-style:normal;color:var(--ink-2);font-size:12.5px;line-height:1.45}
+
+/* ── Доля внимания ────────────────────────────────────────────────────────── */
+.att .dbar{grid-template-columns:172px 1fr 104px}
+.att .dbar .n{white-space:nowrap}
+
+/* ── Тепловая матрица ── */
+.heat{width:100%;border-collapse:separate;border-spacing:3px;font-size:12px}
+.heat th{font-weight:600;color:var(--ink-3);font-size:10.5px;letter-spacing:.05em;
+  text-transform:uppercase;padding:0 6px 6px;text-align:center;vertical-align:bottom}
+.heat th:first-child{text-align:left}
+.heat td{text-align:center;padding:9px 6px;border-radius:8px;font-weight:700;color:var(--ink)}
+.heat td:first-child{text-align:left;font-weight:600;color:var(--ink-2);
+  background:none;padding-left:0;white-space:nowrap}
+
+
+/* ── Канбан гипотез ── */
+.kan{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.kcol h3{font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;
+  color:var(--ink-3);margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid var(--line)}
+.kcard{border:1px solid var(--line);border-radius:14px;padding:13px 15px;margin-bottom:9px;
+  background:var(--card-solid)}
+.kcard b{display:block;font-size:12.5px;margin-bottom:4px}
+.kcard span{display:block;font-size:11.5px;color:var(--ink-3);line-height:1.5}
+.kcard .met{margin-top:8px;padding-top:8px;border-top:1px solid var(--line-2);
+  font-size:11px;color:var(--ink-2);font-weight:600}
+/* Критерий успеха — единственное, что в карточке фирменного цвета: карточка
+   существует ради него, а всё остальное в ней справочное. */
+.kcard .met u{text-decoration:none;color:var(--acc-ink);font-weight:700}
+
+/* ── Дерево ниш ── */
+.tree{display:flex;flex-direction:column;gap:5px}
+.tnode{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:12px;
+  background:color-mix(in srgb, var(--ink) 2.5%, transparent);font-size:13px}
+.tnode .bar{height:6px;border-radius:0;flex:0 0 auto}
+.tnode .nm{flex:1;color:var(--ink-2)}
+.tnode .sc{font-weight:700;font-size:12.5px;color:var(--ink)}
+.tnode.lead{background:color-mix(in srgb, var(--mid) 10%, transparent)}
+.tnode.lead .nm{color:var(--ink);font-weight:600}
+
+/* ── Плитки-числа ── */
+/* Плитки собраны так же, как в первом шаблоне: отдельные карточки с полями,
+   подпись сверху, число и график в одной строке, изменение снизу. Раньше они
+   были склеены в одну полосу и стояли иначе — это и было «сделано не так». */
+.kpi{display:grid;grid-template-columns:repeat(5,1fr);gap:14px}
+.kpi > div{background:var(--card-solid);border:1px solid var(--line);
+  border-radius:20px;padding:18px 20px}
+.kpi .k{font-size:12px;color:var(--ink-3);margin-bottom:8px}
+.kpi .row{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.kpi .n{font-size:25px;font-weight:700;letter-spacing:-.02em;line-height:1.1}
+.kpi svg{display:block;flex:0 0 auto}
+.kpi .d{font-size:11px;margin-top:7px;display:inline-flex;gap:5px;align-items:baseline}
+.kpi .d b{font-weight:700}
+.kpi .d b.up{color:var(--acc-ink)}       /* рост — фирменная бирюза */
+.kpi .d b.down{color:var(--acc-mid-ink)} /* падение — фиолетовый */
+.kpi .d b.flat{color:var(--ink-2)}       /* без изменений — тёмно-серый */
+.kpi .d span{color:var(--ink-2);font-weight:700}
+
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--ink-2);margin-top:14px}
+.legend i{width:11px;height:8px;display:inline-block;margin-right:6px}
+@media (max-width:1000px){ .kpi{grid-template-columns:repeat(2,1fr)} }
+@media (max-width:820px){ .two,.swot,.kan{grid-template-columns:1fr} }
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+
+/* ── Портрет сегмента ─────────────────────────────────────────────────────────
+   Владелица: «дала простую графику, не сильно яркую и не сильно красивую».
+   Справедливо — но лечится это не количеством цветов. В присланном колесе на
+   13 сегментов цвет ничего не кодирует, а 13 оттенков подряд глаз всё равно
+   не различает. Красоту там делают МАСШТАБ, форма и типографика.
+   Поэтому здесь: крупный знак сегмента, крупные числа, широкие поля, заметное
+   присутствие фирменного цвета — но по-прежнему один акцент, а не радуга.
+   Портрет ветвится по типу аудитории: у B2B решает роль и размер компании,
+   у B2C — возраст, пол, интересы. Это разные наборы полей, и сводить их в
+   одну таблицу нельзя. */
+.pers{display:grid;grid-template-columns:230px 1fr;gap:0;
+  border:1px solid var(--line);border-radius:20px;overflow:hidden;margin-bottom:14px}
+.pers-side{padding:24px;display:flex;flex-direction:column;gap:14px;
+  background:linear-gradient(165deg,
+    color-mix(in srgb, var(--mid) 22%, var(--card-solid)),
+    color-mix(in srgb, var(--mid) 6%, var(--card-solid)))}
+.pers-av{width:74px;height:74px;border-radius:22px;display:flex;align-items:center;
+  justify-content:center;font-size:25px;font-weight:800;letter-spacing:-.02em;
+  color:#12100D;background:linear-gradient(160deg,
+    color-mix(in srgb, var(--mid) 92%, white), color-mix(in srgb, var(--mid) 92%, black))}
+.pers-side .rl{font-size:10px;font-weight:700;letter-spacing:.07em;
+  text-transform:uppercase;color:var(--ink-3)}
+.pers-side h3{font-size:18px;line-height:1.25;letter-spacing:-.02em}
+.pers-side .one{font-size:12.5px;color:var(--ink-2);line-height:1.55}
+.pers-share{margin-top:auto;padding-top:14px;border-top:1px solid rgba(23,21,18,.1)}
+.pers-share b{display:block;font-size:32px;font-weight:700;letter-spacing:-.03em;line-height:1}
+.pers-share span{font-size:11.5px;color:var(--ink-3)}
+.pers-main{background:var(--card-solid)}
+.prow{display:grid;grid-template-columns:150px 1fr 1fr;gap:16px;
+  padding:12px 22px;border-top:1px solid var(--line-2);font-size:13px;line-height:1.5}
+.prow:first-child{border-top:0}
+.prow .p{color:var(--ink-3);font-size:11.5px;font-weight:600;padding-top:1px}
+.prow .v{color:var(--ink)}
+.prow .a{color:var(--acc-ink);font-weight:600}
+.prow-head{display:grid;grid-template-columns:150px 1fr 1fr;gap:16px;padding:11px 22px;
+  font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;
+  color:var(--ink-3);background:color-mix(in srgb, var(--ink) 3%, transparent)}
+
+/* B2C: демография полосами вместо круговых диаграмм */
+.demo{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;padding:18px 22px;
+  border-top:1px solid var(--line-2)}
+.demo h4{font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;
+  color:var(--ink-3);margin:0 0 10px}
+.dsplit{display:flex;height:26px;border-radius:0;overflow:hidden;margin-bottom:7px}
+.dsplit span{display:flex;align-items:center;justify-content:center;font-size:11px;
+  font-weight:700;color:#12100D}
+.dbars{display:flex;flex-direction:column;gap:13px}
+.dbar{display:grid;grid-template-columns:46px 1fr 30px;gap:8px;align-items:center;font-size:11.5px}
+.dbar .t{color:var(--ink-3)}
+.dbar .g{height:14px;background:var(--line-2)}
+.dbar .g i{display:block;height:100%;background:var(--mid)}
+.dbar .n{text-align:right;font-weight:700;color:var(--ink)}
+/* ── Интересы: иконка рисует ОБРАЗ, а не приклеена к подписи ───────────────
+   Владелица: иконка уместна там, где ею нарисована вещь, — так красивее, чем
+   одними словами; и неуместна как значок рядом с заголовком таблицы.
+   Здесь как раз первый случай: «маркетплейсы», «онлайн-курсы», «вечерний
+   Telegram» — это предметы и занятия, у каждого есть узнаваемый рисунок.
+   Поэтому не чипы-таблетки со словами, а плитка: рисунок сверху, слово под ним.
+
+   ПРАВКА: первый заход был бирюзовым — плитка в тон, кружок в тон, шесть
+   цветных пятен подряд. Владелица: «иконки это хорошо, но оформлены
+   неправильно, выбиваются из общей стилистики». Справедливо, и причина
+   считается: интересы НИЧЕГО не кодируют — это перечень, а не величина.
+   Цвет здесь был чистым украшением, а вокруг вся страница держит цвет только
+   там, где он что-то значит. Взяла рисунок иконки прямо из макета платформы
+   (.navtile .ic): нейтральный квадратик со скруглением, штрих графитом.
+
+   ПРАВКА 2: убраны рамки и подложка — «обводки лишние». Так и есть: рамка
+   очерчивает объект, а здесь объектов нет, есть перечень.
+   ПРАВКА 3: не плитки, а список — значок и текст в строку. Плитками короткие
+   подписи разбегались по центрам и читались вразнобой; списком глаз идёт по
+   одной левой кромке, как в остальных таблицах страницы. Два списка стоят
+   рядом и разделены вертикальной линией — это два разных вопроса. */
+.chips{display:flex;flex-direction:column;gap:11px}
+.chips figure{margin:0;display:flex;flex-direction:row;align-items:center;gap:11px;
+  text-align:left}
+.chips figure .disc{width:34px;height:34px;border-radius:11px;display:flex;
+  align-items:center;justify-content:center;background:var(--line-2)}
+.chips figure svg{width:19px;height:19px;fill:none;stroke:var(--ink-2);
+  stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;display:block}
+.chips figcaption{font-size:12.5px;font-weight:600;color:var(--ink-2);line-height:1.35}
+/* Два списка рядом: линия по середине показывает, что вопросы разные. */
+.demo.split{grid-template-columns:1fr 1fr;gap:0}
+.demo.split > div + div{border-left:1px solid var(--line);padding-left:24px}
+.demo.split > div:first-child{padding-right:24px}
+@media (max-width:820px){
+  .demo.split > div + div{border-left:0;border-top:1px solid var(--line);
+    padding-left:0;padding-top:18px}
+  .demo.split > div:first-child{padding-right:0}
+}
+
+/* Покрытие вопросов — вместо радужного колеса */
+.cov{display:grid;grid-template-columns:repeat(auto-fill,minmax(215px,1fr));gap:9px}
+.cq{display:flex;gap:11px;align-items:flex-start;padding:12px 14px;border-radius:13px;
+  border:1px solid var(--line);background:var(--card-solid);font-size:12.5px;line-height:1.45}
+.cq b{font-size:11px;font-weight:800;color:var(--ink-3);min-width:17px;letter-spacing:-.02em}
+.cq.yes{background:color-mix(in srgb, var(--mid) 9%, var(--card-solid));
+  border-color:color-mix(in srgb, var(--mid) 35%, var(--line))}
+.cq.yes b{color:var(--acc-ink)}
+.cq .src2{display:block;margin-top:4px;font-size:10.5px;font-weight:700;
+  letter-spacing:.05em;text-transform:uppercase;color:var(--acc-ink)}
+.cq.no .src2{color:var(--ink-3)}
+@media (max-width:820px){ .pers{grid-template-columns:1fr} .demo{grid-template-columns:1fr}
+  .prow,.prow-head{grid-template-columns:1fr} .prow .p{font-weight:700} }
+
+/* ── Плитки сводки: спарклайн заполняет пустоту справа ───────────────────────
+   Владелица: «слишком большие пробелы». Причина не в отступах, а в том, что
+   плитка широкая, а содержимого мало: число и две строки. В макете там же стоял
+   спарклайн — он и держал правую половину. Возвращаю. */
+
+
+/* ── Доли сегментов: кольцо с иконками ── */
+.seg{display:grid;grid-template-columns:230px 1fr;gap:26px;align-items:center}
+.seg-leg{display:flex;flex-direction:column;gap:9px}
+.sl{display:flex;align-items:center;gap:12px}
+.sl .ic{width:38px;height:38px;border-radius:12px;flex:0 0 auto;display:flex;
+  align-items:center;justify-content:center;border:1px solid var(--line)}
+.sl .ic svg{width:19px;height:19px;fill:none;stroke-width:1.6}
+.sl .nm{flex:1;font-size:12.5px;color:var(--ink-3);line-height:1.35}
+.sl .nm b{display:block;color:var(--ink);font-weight:700;font-size:13.5px}
+.sl .pc{font-size:17px;font-weight:700;letter-spacing:-.02em;min-width:44px;text-align:right}
+
+/* ── SWOT: четыре поля — четыре цвета ────────────────────────────────────────
+   Владелица попросила просто четыре разных цвета вместо кодировки оттенком.
+   Полоска сверху убрана: она спорила со скруглением, и одно из двух должно
+   было уйти. Цвет теперь несёт рамка, подложка, иконка и точки списка —
+   углы остаются круглыми. */
+.sw{position:relative}
+.sw-s{--c:var(--sw-green)}
+.sw-w{--c:var(--sw-violet)}
+.sw-o{--c:var(--sw-blue)}
+.sw-t{--c:var(--sw-grey)}
+.sw-s,.sw-w,.sw-o,.sw-t{
+  background:color-mix(in srgb, var(--c) 9%, transparent);
+  border-color:color-mix(in srgb, var(--c) 34%, var(--line))}
+.sw-s li::before,.sw-w li::before,.sw-o li::before,.sw-t li::before{background:var(--c)}
+.sw-note{grid-column:1/-1;font-size:11.5px;color:var(--ink-3);margin-top:2px;line-height:1.5}
+@media (max-width:820px){ .seg{grid-template-columns:1fr} }
+
+/* ── Путь клиента лесенкой ───────────────────────────────────────────────────
+   Формат из примера владелицы. Хорош он не видом, а устройством: каждый этап
+   сразу спарен с ДЕЙСТВИЕМ — «что делаем на этом этапе». Это тот же приём,
+   что и третья колонка в портрете сегмента: справка превращается в инструкцию.
+   Что взято: ступени полосами, крупный номер, стрелка вперёд, сужение слева.
+
+   ПРАВКА 10.09, владелица: «грубовато, выглядит сильно тяжело». Причин три.
+   1. Пять НАСЫЩЕННЫХ заливок подряд с белым текстом — самый контрастный из
+      возможных приёмов, отсюда тяжесть. Теперь одна бирюза по светлоте от
+      бледной к плотной, текст тёмный. Смысл тот же и даже точнее: продвижение
+      по пути — ОДНА величина, ей и положена одна шкала, а не пять тонов.
+   2. Три из пяти прежних цветов (#8E8C87, #6E76C9, #3FA9C9) вообще не из
+      палитры — остались с раннего захода. Их больше нет.
+   3. Острые углы и глубокий вырез. Углы скруглены, подписи мельче и без
+      разрядки — «техническая» жёсткость уходит.
+
+   ПРАВКА 2, тот же день: стрелка на конце убрана совсем — теперь просто косой
+   срез, и цветная часть придвинута к тексту. Владелица: «эта площадь у нас
+   очень большая закрашена». Так и было: полосы шли до 340px, и на пять рядов
+   набиралась заметная плашка цвета. Сузила до 250–175. Сужение к низу при этом
+   сохранилось — оно показывает, сколько людей доходит, — просто разница теперь
+   мягче, а точный процент всё равно стоит числом справа. */
+.lad{display:flex;flex-direction:column;gap:8px}
+.lrow{display:grid;grid-template-columns:var(--lw,300px) 1fr;gap:0;align-items:stretch}
+.lleft{position:relative;display:flex;align-items:center;gap:13px;
+  padding:14px 26px 14px 18px;color:var(--ink);border-radius:12px 0 0 12px;
+  /* один косой срез вместо стрелки: верх длиннее низа */
+  clip-path:polygon(0 0, 100% 0, calc(100% - 20px) 100%, 0 100%)}
+.lleft .num{font-size:19px;font-weight:700;letter-spacing:-.02em;opacity:.5;
+  min-width:28px;text-align:right}
+.lleft .nm{font-size:13px;font-weight:700;line-height:1.3;letter-spacing:-.01em}
+.lright{padding:14px 20px 14px 22px;margin-left:-14px;border-radius:0 12px 12px 0;
+  background:color-mix(in srgb, var(--ink) 2%, transparent);
+  display:flex;flex-direction:column;justify-content:center;gap:3px}
+.lright b{font-size:13px;font-weight:700;color:var(--ink);line-height:1.4}
+.lright span{font-size:12.5px;color:var(--ink-2);line-height:1.5}
+.lright .meta{margin-top:6px;font-size:11.5px;font-weight:600;
+  color:var(--ink-3);display:flex;gap:16px;flex-wrap:wrap}
+.lright .meta i{font-style:normal}
+.lright .meta i.rk-high{color:var(--acc-mid-ink)}
+.lright .meta i.rk-medium{color:var(--ink-3)}
+.lright .meta i.rk-low{color:var(--acc-ink)}
+.lright .meta i.rk::before{content:"";display:inline-block;width:6px;height:6px;
+  border-radius:50%;background:currentColor;margin-right:6px;vertical-align:1px}
+@media (max-width:820px){
+  .lrow{grid-template-columns:1fr}
+  .lleft{clip-path:none;padding-right:18px;border-radius:12px 12px 0 0}
+  .lright{margin-left:0;padding-left:20px}
+}
+
+<style>
+/* ── Разбор модуля: «как сейчас» рядом с «как предлагаю» ─────────────────── */
+.sech{font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--ink-3);margin:34px 0 14px;display:flex;align-items:center;gap:14px}
+.sech::after{content:"";flex:1;height:1px;background:var(--line)}
+.two2{display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:start}
+.two2 .viz{margin-bottom:0}
+/* Настоящая таблица отчёта — намеренно без украшений: она должна выглядеть
+   ровно так, как выглядит сегодня, иначе сравнение нечестное. */
+.rawwrap{overflow-x:auto}
+table.raw{border-collapse:collapse;width:100%;font-size:11.5px;line-height:1.4}
+table.raw th,table.raw td{border:1px solid var(--line);padding:6px 8px;
+  text-align:left;vertical-align:top;hyphens:none}
+table.raw th{background:color-mix(in srgb, var(--ink) 4%, transparent);
+  font-weight:700;color:var(--ink-3);font-size:10.5px;white-space:nowrap}
+table.raw td{color:var(--ink-2)}
+table.raw td.num{font-variant-numeric:tabular-nums;text-align:center;white-space:nowrap}
+.verd{background:color-mix(in srgb, var(--sw-violet) 5%, var(--raise));
+  border:1px solid color-mix(in srgb, var(--sw-violet) 24%, var(--line));
+  border-radius:16px;padding:16px 20px;margin:12px 0 0}
+.verd p{margin:0 0 9px;font-size:13px;line-height:1.55;color:var(--ink-2)}
+.verd p:last-child{margin-bottom:0}
+.verd b{color:var(--ink)}
+@media (max-width:1000px){ .two2{grid-template-columns:1fr} }
+
+
+
+
+<style>
+/* ── Карточка конкурента ──────────────────────────────────────────────────
+   BLOCK 06 отдаёт ВОСЕМНАДЦАТЬ колонок на 8–15 строк. Таблицей это не
+   читается ни на каком экране: строка уезжает вбок, и чтобы сравнить оффер
+   с ценой, приходится возить полосу прокрутки туда-сюда.
+   Конкурент — объект, а не строка сравнения. Поэтому карточка, и поля в ней
+   сгруппированы по смыслу: кто это → что предлагает → чем силён и слаб →
+   что мешает клиенту и как он это снимает → наша возможность.
+   Ни одно поле не выброшено: все восемнадцать на месте. */
+.comp{display:flex;flex-direction:column;gap:12px}
+.ccard2{border:1px solid var(--line);background:var(--card-solid);border-radius:18px;
+  overflow:hidden}
+.ccard2 .chead{display:grid;grid-template-columns:1fr auto;gap:16px;align-items:start;
+  padding:16px 20px;background:color-mix(in srgb, var(--ink) 3%, transparent);
+  border-bottom:1px solid var(--line)}
+.ccard2 .cid{font-size:10.5px;font-weight:700;letter-spacing:.06em;color:var(--ink-3);
+  hyphens:none}
+.ccard2 .cnm{font-size:16px;font-weight:700;letter-spacing:-.02em;margin:3px 0 4px}
+.ccard2 .cmeta{display:flex;gap:8px;flex-wrap:wrap;align-items:center;font-size:11.5px;
+  color:var(--ink-3)}
+.ccard2 .scale{display:inline-block;font-size:10px;font-weight:700;letter-spacing:.05em;
+  text-transform:uppercase;padding:2px 8px;border-radius:999px;background:var(--line-2);
+  color:var(--ink-2);hyphens:none}
+.ccard2 .price{text-align:right}
+.ccard2 .price b{display:block;font-size:16px;font-weight:700;letter-spacing:-.02em}
+.ccard2 .price span{display:block;font-size:10.5px;color:var(--ink-3);margin-top:2px}
+.cgrid{display:grid;grid-template-columns:1fr 1fr;gap:0}
+.cbox{padding:15px 20px;border-top:1px solid var(--line-2)}
+.cbox:nth-child(odd){border-right:1px solid var(--line-2)}
+.cbox h5{margin:0 0 8px;font-size:10px;font-weight:700;letter-spacing:.07em;
+  text-transform:uppercase;color:var(--ink-3)}
+.cbox p{margin:0;font-size:12.5px;line-height:1.5;color:var(--ink-2)}
+.cbox p+p{margin-top:7px}
+.cbox ul{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:6px}
+.cbox li{font-size:12.5px;line-height:1.45;color:var(--ink-2);padding-left:14px;
+  position:relative}
+.cbox li::before{content:"";position:absolute;left:0;top:7px;width:5px;height:5px;
+  background:var(--ink-3)}
+.cbox.pro li::before{background:var(--mid)}
+.cbox.con li::before{background:var(--sw-violet)}
+.cbox.full{grid-column:1/-1;border-right:0}
+.cbox.gap2{grid-column:1/-1;border-right:0;
+  background:color-mix(in srgb, var(--mid) 5%, transparent)}
+.cbox.gap2 p{color:var(--ink)}
+
+/* ── Гэп-анализ, сгруппированный по статусу ───────────────────────────────
+   Главное здесь — не «что у нас лучше», а НА ЧЁМ это утверждение стоит.
+   Поэтому «Основание статуса» вынесено на видное место, а не спрятано
+   одиннадцатой колонкой, куда никто не долистает. */
+/* Секция статуса/эмоции — отдельная карточка: шапка, под ней шапка колонок,
+   под ней ряды. Заголовок, стоящий просто строкой над рядами, сливается с
+   таблицей — владелица поймала это на M2. */
+.gap{display:flex;flex-direction:column;gap:14px}
+.gsec{border:1px solid var(--line);border-radius:16px;overflow:hidden;
+  background:var(--card-solid)}
+.gsec h4{margin:0;padding:14px 18px;font-size:12px;font-weight:700;letter-spacing:.08em;
+  text-transform:uppercase;color:var(--ink);display:flex;align-items:center;gap:14px;
+  border-bottom:1px solid var(--line)}
+/* Заголовок с эмоцией: крупный значок слева, рядом название и подсказка в две
+   строки — блок начинается с образа, а не с полоски текста. */
+.gsec h4.wemo .etxt{display:flex;flex-direction:column;gap:3px;min-width:0}
+.gsec h4.wemo .etxt b{font-size:15px;font-weight:700;letter-spacing:-.01em;
+  text-transform:none;color:var(--ink)}
+.gsec h4.wemo .etxt span{font-size:11.5px;font-weight:600;letter-spacing:0;
+  text-transform:none;color:var(--ink-3)}
+.gsec h4 .cnt{margin-left:auto;font-size:11px;font-weight:700;color:var(--ink-2);
+  letter-spacing:0;text-transform:none;hyphens:none;white-space:nowrap}
+.grow2{display:grid;grid-template-columns:186px 1fr 1fr 1fr;gap:16px;
+  padding:12px 18px;border-top:1px solid var(--line-2);align-items:start;font-size:12.5px;
+  line-height:1.45}
+.grow2:first-of-type{border-top:0}
+.grow2 .kk{font-weight:700;color:var(--ink);font-size:13px}
+.grow2 .vv{color:var(--ink-2)}
+.grow2 .vv b{color:var(--ink);font-weight:600}
+.ghead{display:grid;grid-template-columns:186px 1fr 1fr 1fr;gap:16px;
+  padding:10px 18px;font-size:10px;font-weight:700;letter-spacing:.07em;
+  text-transform:uppercase;color:var(--ink-3);
+  background:color-mix(in srgb, var(--ink) 3%, transparent);
+  border-bottom:1px solid var(--line)}
+.warn{background:color-mix(in srgb, var(--sw-violet) 7%, var(--raise));
+  border:1px solid color-mix(in srgb, var(--sw-violet) 28%, var(--line));
+  border-radius:16px;padding:16px 20px;margin:12px 0 0}
+.warn p{margin:0 0 9px;font-size:13px;line-height:1.55;color:var(--ink-2)}
+.warn p:last-child{margin-bottom:0}
+.warn b{color:var(--ink)}
+@media (max-width:900px){
+  .cgrid,.grow2,.ghead{grid-template-columns:1fr}
+  .cbox:nth-child(odd){border-right:0}
+  .ghead{display:none}
+}
+
+
+/* ── Метка проверки цитаты ────────────────────────────────────────────────
+   Самое ценное в M3 — не оформление, а то, что цитаты УЖЕ проверяются
+   машиной: страница скачивается и в ней ищется точное совпадение подстроки.
+   Непрошедшие удаляются из отчёта. Читатель об этом не знает вообще.
+   Метка возвращает ему это знание: цитата со «сверено с источником» стоит
+   дороже той же цитаты без метки, а стоит нам это ноль — работа уже сделана. */
+.vmark{display:inline-flex;align-items:center;gap:6px;font-size:10.5px;font-weight:700;
+  letter-spacing:.04em;text-transform:uppercase;hyphens:none}
+.vmark i{width:9px;height:9px;border-radius:50%;display:block;flex:0 0 auto}
+.vmark.ok{color:var(--ink-2)} .vmark.ok i{background:var(--mid)}
+.vmark.nopage{color:var(--ink-3)} .vmark.nopage i{border:1.5px solid var(--sw-violet)}
+.vmark.gone{color:var(--ink-3)} .vmark.gone i{background:var(--sw-grey)}
+/* ── Карточка цитаты ──────────────────────────────────────────────────────
+   ПРАВКА: владелица — «тема, сегмент, источник, всё одним цветом, всё
+   сливается; и палочка силы боли непонятная и некрасивая».
+   Оба замечания об одном: в карточке не было ИЕРАРХИИ. Шесть полей стояли
+   одинаковым кеглем и одинаковым цветом, хотя важность у них разная.
+   Разложено по весу: тема — заголовок под цитатой, сегмент — плашкой,
+   источник уходит вниз и тише всех, числа отделены линией.
+   Сила боли показана той же конструкцией, что все меры на платформе:
+   дорожка плюс заливка. Три отдельных штриха были чужой формой — такой
+   больше нигде нет, оттого и «непонятно и некрасиво». */
+.vq2{border:1px solid var(--line);background:var(--card-solid);border-radius:16px;
+  padding:0;display:flex;flex-direction:column;overflow:hidden}
+.vq2 .vtop{padding:15px 18px 0}
+.vq2 blockquote{margin:12px 0 0;font-family:var(--serif);font-style:italic;
+  font-size:15px;line-height:1.5;color:var(--ink)}
+.vq2 .vtheme{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;
+  margin:14px 0 0;padding:0 18px}
+.vq2 .vtheme b{font-size:13.5px;font-weight:700;color:var(--ink);letter-spacing:-.01em}
+.vq2 .seg2{display:inline-block;font-size:10px;font-weight:700;letter-spacing:.05em;
+  text-transform:uppercase;color:var(--ink-2);background:var(--line-2);
+  padding:3px 9px;border-radius:999px;hyphens:none}
+.vq2 .vsrc2{padding:5px 18px 0;font-size:11.5px;color:var(--ink-3)}
+.vq2 .vnums{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:14px;
+  padding:12px 18px;border-top:1px solid var(--line-2);
+  background:color-mix(in srgb, var(--ink) 2%, transparent)}
+.vq2 .vnums .lab{display:block;font-size:10px;font-weight:700;letter-spacing:.07em;
+  text-transform:uppercase;color:var(--ink-3);margin-bottom:5px}
+.vq2 .vnums .big2{font-size:15px;font-weight:700;color:var(--ink);letter-spacing:-.02em}
+.vq2 .vnums .big2 em{font-style:normal;font-size:11.5px;font-weight:600;
+  color:var(--ink-3);margin-left:4px}
+/* Мера силы — дорожка и заливка, как у всех полос на платформе. */
+.pain{display:flex;align-items:center;gap:9px;margin-top:2px}
+.pain .rail2{flex:1;max-width:78px;height:9px;background:var(--line-2)}
+.pain .rail2 i{display:block;height:100%;background:var(--mid)}
+.pain b{font-size:12.5px;font-weight:700;color:var(--ink)}
+.vq2 .vans{padding:13px 18px;border-top:1px solid var(--line-2);font-size:12.5px;
+  line-height:1.45;color:var(--ink)}
+.vq2 .vans span{display:block;font-size:10px;font-weight:700;letter-spacing:.07em;
+  text-transform:uppercase;color:var(--ink-3);margin-bottom:3px}
+.vgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:12px}
+/* ── Значок эмоции ────────────────────────────────────────────────────────
+   ВОССТАНОВЛЕНО. Правила значка я снесла, когда переписывала блок банка языка
+   целиком: пропали fill:none и stroke:currentColor. Без них браузер рисует
+   svg по умолчанию — заливает чёрным и не рисует контур вовсе. Владелица это
+   и увидела: «опять всё чёрное». Это была поломка, а не оформление.
+   Контур, без заливки, цвет наследуется от родителя — то есть от эмоции. */
+.emo{flex:0 0 auto;display:flex;align-items:center}
+.emo svg{fill:none;stroke:currentColor;stroke-width:1.6;
+  stroke-linecap:round;stroke-linejoin:round;display:block}
+
+/* ── Банк языка: одна карточка, внутри полосы с разрывами ─────────────────
+   Владелица: «а если не скруглённые плашки, а как у наших графиков — собрать
+   линией; общее скруглённое, а внутри разделено по эмоциям с небольшим
+   разрывом, как в диаграмме».
+   Так и сделано, и это оказалось точнее, чем плашки. Цветная подложка была
+   чужим приёмом: у нас цвет живёт ЗАЛИВКОЙ ПОЛОСЫ, а не подкрашенным полем.
+   Здесь полоса делает три работы сразу — отделяет эмоцию, называет её цветом
+   и ПОКАЗЫВАЕТ ОБЪЁМ: высота равна доле реплик этой эмоции. Разрывы между
+   полосами те же 3px, что между секторами кольца. */
+.lang{border:1px solid var(--line);border-radius:18px;background:var(--card-solid);
+  max-width:900px;padding:6px 0}
+.lrow2{display:grid;grid-template-columns:7px 236px 1fr;gap:0;align-items:stretch}
+.lbar{margin:3px 0 3px 10px}
+/* Значок эмоции — крупный, в цвет своей полосы, слева от всего текстового
+   столбика: названия, подсказки и чисел. Владелица просила именно так:
+   «во всю высоту заголовка». Размер здесь и есть смысл — эмоция должна
+   узнаваться раньше, чем прочитано слово, а на 36px рисунок этого не давал. */
+/* ПРАВКА, владелица: «надо сделать линию — восемь из двенадцати — и вот это
+   цветное; тогда никаких иконок не нужно».
+   Так и вышло лучше. Значок был украшением и трижды не давался; линия —
+   измерение, она работает. Дорожка равна всему банку, заливка — доле этой
+   эмоции. Число рядом даёт точность, длина — сравнение без чтения.
+   Значков в блоке больше нет. */
+.ltag{display:flex;flex-direction:column;gap:8px;padding:16px 18px 16px 16px}
+.lmeter{display:flex;align-items:center;gap:10px;margin-top:2px}
+.lmeter .rail3{flex:1;height:9px;background:var(--line-2)}
+.lmeter .rail3 i{display:block;height:100%}
+.lmeter b{font-size:11.5px;font-weight:700;color:var(--ink);white-space:nowrap;
+  hyphens:none}
+.ltag .ename{font-size:14.5px;font-weight:700;color:var(--ink);line-height:1.25}
+.ltag .ename span{display:block;font-size:11px;font-weight:600;color:var(--ink-3);
+  margin-top:4px}
+.llist{display:flex;flex-direction:column;gap:8px;padding:16px 18px 16px 6px}
+.llist div{font-family:var(--serif);font-size:13.5px;line-height:1.45;color:var(--ink);
+  padding-left:16px;position:relative}
+.llist div::before{content:"";position:absolute;left:0;top:7.5px;width:5px;height:5px;
+  /* Было «--c2» — такой переменной в файле нет вовсе, и точки рисовались
+     прозрачными, то есть их не было видно. Ставим ту же бирюзу заливкой, что у
+     всех круглых маркеров списков на платформе.
+     11.09: переменная появилась — renderLangBank ставит её на строке группы.
+     Точка теперь того же цвета, что полоса и шкала этой эмоции (владелица:
+     «точечки к каждым надо в этот же цвет»), бирюза остаётся запасной. */
+  border-radius:50%;background:var(--c2,var(--mid))}
+.llist div span{font-family:var(--sans);font-size:11px;color:var(--ink-3);
+  margin-left:8px;white-space:nowrap}
+@media (max-width:760px){
+  .lrow2{grid-template-columns:7px 1fr}
+  .llist{grid-column:2;padding:0 18px 14px 6px}
+}
+
+/* ── Варианты значка эмоции ───────────────────────────────────────────────
+   Лица я нарисовала дважды и дважды мимо. Рисовать выразительное лицо вслепую
+   я проверить не могу: вижу координаты, а не результат. Поэтому вместо третьей
+   попытки того же — четыре РАЗНЫХ направления сразу, чтобы выбрать глазами. */
+.vars{display:flex;flex-direction:column;gap:0}
+.vrow{display:grid;grid-template-columns:236px 1fr;gap:20px;padding:18px 0;
+  border-top:1px solid var(--line-2);align-items:center}
+.vrow:first-child{border-top:0}
+.vrow .vinfo b{display:block;font-size:14px;font-weight:700;color:var(--ink);
+  letter-spacing:-.01em;margin-bottom:5px}
+.vrow .vinfo span{font-size:12px;color:var(--ink-2);line-height:1.45}
+.vset{display:flex;align-items:center;gap:26px;flex-wrap:wrap}
+.vset figure{margin:0;display:flex;flex-direction:column;align-items:center;gap:7px}
+.vset figcaption{font-size:10px;font-weight:700;letter-spacing:.07em;
+  text-transform:uppercase;color:var(--ink-3)}
+.vset svg{display:block;fill:none;stroke-linecap:round;stroke-linejoin:round}
+
+/* ── Проба маскота ────────────────────────────────────────────────────────
+   Владелица прислала птичек и женщин, сделанных ChatGPT, и спросила, подойдут
+   ли. Отвечаю пробой, а не словами: перерисовала птицу под наш вес линии —
+   без круга, без заливок, тёмными чернилами, а фирменный цвет остался только
+   в признаке эмоции. Рядом стоит текущий значок, чтобы сравнивать вживую. */
+.mtest{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:0 22px}
+.mcol{padding:16px 0;border-top:1px solid var(--line-2)}
+.mcol h5{margin:0 0 12px;font-size:10px;font-weight:700;letter-spacing:.07em;
+  text-transform:uppercase;color:var(--ink-3)}
+.mrow3{display:flex;align-items:center;gap:18px;flex-wrap:wrap}
+.mrow3 figure{margin:0;display:flex;flex-direction:column;align-items:center;gap:8px}
+.mrow3 svg{display:block;fill:none;stroke-linecap:round;stroke-linejoin:round}
+.mrow3 figcaption{font-size:11px;color:var(--ink-3)}
+.msize{display:flex;align-items:flex-end;gap:16px;margin-top:14px;padding-top:12px;
+  border-top:1px solid var(--line-2)}
+
+.bias{background:color-mix(in srgb, var(--sw-grey) 8%, var(--raise));
+  border:1px solid var(--line);border-radius:14px;padding:14px 18px;margin-top:14px;
+  font-size:12.5px;line-height:1.55;color:var(--ink-2)}
+.bias b{color:var(--ink)}
+
+/* ── Своё для этой страницы ─────────────────────────────────── */
+.sw-help{box-shadow:inset 3px 0 0 var(--mid)}
+.sw-help h3{color:var(--ink)}
+.sw-help li::before{background:var(--acc-strong)}
+
+/* ── Карта рынка — перенесена из разбора M2, где уцелела ── */
+.mkt{display:grid;grid-template-columns:112px repeat(4,1fr);gap:3px}
+.mkt .hd{font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;
+  color:var(--ink-3);display:flex;align-items:flex-end;justify-content:center;
+  padding-bottom:7px;text-align:center;line-height:1.3}
+.mkt .rw{font-size:11.5px;font-weight:700;color:var(--ink-2);display:flex;
+  align-items:center;justify-content:flex-end;padding-right:12px;text-align:right;
+  line-height:1.3}
+.mkt .cell{background:var(--line-2);min-height:74px;padding:9px;display:flex;
+  flex-direction:column;gap:7px}
+.mkt .cell.ours{background:color-mix(in srgb, var(--mid) 12%, var(--line-2));
+  box-shadow:inset 0 0 0 2px color-mix(in srgb, var(--mid) 55%, transparent)}
+.mkt .cell .dots{display:flex;flex-wrap:wrap;gap:4px;align-content:flex-start}
+.mktwrap{position:relative}
+.mkt .dot{width:15px;height:15px;display:grid;place-items:center;padding:0;border:0;
+  background:none;cursor:pointer;border-radius:50%}
+.mkt .dot i{width:9px;height:9px;border-radius:50%;background:var(--sw-grey);display:block;
+  transition:transform .12s ease,opacity .12s ease}
+.mkt .dot i.us{background:var(--mid);box-shadow:0 0 0 2px var(--card-solid),
+  0 0 0 4px color-mix(in srgb, var(--mid) 60%, transparent)}
+.mkt .dot:focus-visible{outline:2px solid var(--mid);outline-offset:2px}
+.mkt.seek .dot i{opacity:.22}
+.mkt.seek .dot.hit i{opacity:1;transform:scale(1.7)}
+.mkt.seek .cell{opacity:.55}
+.mkt.seek .cell.hit{opacity:1}
+.mkttip{position:absolute;z-index:5;pointer-events:none;opacity:0;transform:translate(-50%,-100%);
+  background:var(--card-solid);border:1px solid var(--line);padding:10px 12px;min-width:186px;
+  max-width:260px;box-shadow:0 6px 20px rgba(0,0,0,.12);transition:opacity .12s ease}
+.mkttip.on{opacity:1}
+.mkttip b{display:block;font-size:13px;font-weight:700;color:var(--ink);margin-bottom:7px;line-height:1.25}
+.mkttip dl{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;margin:0;font-size:11.5px}
+.mkttip dt{color:var(--ink-3)}
+.mkttip dd{margin:0;color:var(--ink-2);font-weight:600;font-variant-numeric:tabular-nums;text-align:right}
+.mktlist{margin-top:20px;padding-top:14px;border-top:1px solid var(--line)}
+.mktlist h4{margin:0 0 4px;font-size:10px;font-weight:700;letter-spacing:.07em;
+  text-transform:uppercase;color:var(--ink-3)}
+.mktlist .hint{margin:0 0 10px;font-size:12px;color:var(--ink-3)}
+.mktlist .hdr,.mktlist .r{display:grid;grid-template-columns:1fr 112px 108px 96px;
+  gap:14px;padding:7px 8px;align-items:baseline}
+.mktlist .hdr{font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;
+  color:var(--ink-3);padding-bottom:4px}
+.mktlist .r{border-top:1px solid var(--line-2);font-size:12.5px;cursor:default}
+.mktlist .r:hover,.mktlist .r.on{background:var(--line-2)}
+.mktlist .r:focus-visible{outline:2px solid var(--mid);outline-offset:-2px}
+.mktlist .r b{font-weight:600;color:var(--ink)}
+.mktlist .r.mine{background:color-mix(in srgb, var(--mid) 10%, transparent)}
+.mktlist .r.mine b{font-weight:700}
+.mktlist .r .g{color:var(--ink-2)}
+.mktlist .r .num{text-align:right;font-variant-numeric:tabular-nums;color:var(--ink-2);
+  font-weight:600}
+.mktlist .r .num.no{font-weight:400;color:var(--ink-3)}
+.mkt .cell .n{margin-top:auto;font-size:11px;font-weight:700;color:var(--ink-2);
+  font-variant-numeric:tabular-nums}
+.mkt .cell.empty .n{color:var(--ink-3);font-weight:600}
+.mktleg{display:flex;gap:18px;flex-wrap:wrap;margin-top:14px;padding-top:12px;
+  border-top:1px solid var(--line);font-size:11.5px;color:var(--ink-3)}
+.mktleg span{display:flex;align-items:center;gap:8px}
+.mktleg i{width:9px;height:9px;border-radius:50%;display:block}
+
+/* ── SWOT — утверждено владелицей 11.09 (вариант «рейл») ─────────────────────
+   Переопределяет старые правила оболочки выше: там четыре поля были четырёх
+   разных цветов. Плашки равной высоты, рейл слева у всех четырёх, цветом
+   различается сторона: бирюза «работает на нас», фиолетовый «против».
+   Квадранты различают ПОДПИСИ ОСЕЙ, а не заливки. */
+.swot{display:grid;grid-template-columns:74px 1fr 1fr;gap:10px;align-items:stretch}
+.swot .cor{font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;
+  color:var(--ink-3);display:flex;align-items:flex-end;justify-content:center;
+  padding-bottom:8px;line-height:1.3}
+.swot .cor.r{align-items:center;justify-content:flex-end;text-align:right;padding:0 10px 0 0}
+.swot .sw{border:1px solid var(--line);border-radius:16px;padding:16px 18px;
+  background:var(--card-solid);display:flex;flex-direction:column;
+  box-shadow:inset 3px 0 0 var(--acc-mid)}
+.swot .sw h3{font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;
+  color:var(--ink-3);margin:0 0 10px;display:block}
+.swot .sw ul{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:7px}
+.swot .sw li{font-size:13px;color:var(--ink-2);padding-left:14px;position:relative;line-height:1.5}
+.swot .sw li::before{content:"";position:absolute;left:0;top:8px;width:5px;height:5px;
+  border-radius:50%;background:var(--acc-mid)}
+.swot .sw-help{box-shadow:inset 3px 0 0 var(--mid)}
+.swot .sw-help h3{color:var(--ink)}
+.swot .sw-help li::before{background:var(--acc-strong)}
+.swot .sw-note{grid-column:1/-1;font-size:11.5px;color:var(--ink-3);margin-top:4px;line-height:1.5}
+@media (max-width:820px){ .swot{grid-template-columns:1fr} .swot .cor{display:none} }
+
+
+/* ── Легенда кольца ───────────────────────────────────────────────────────
+   Две правки владелицы, 10.09.
+   1. Кольцо взято ОДИН В ОДИН из утверждённой библиотеки: тот же радиус,
+      толщина, зазоры между секторами, те же ступени светлоты, тот же центр.
+      Я перерисовала его по-своему — другой радиус, другие оттенки, без
+      зазоров, — и оно перестало быть тем же кольцом. Своей версии больше нет.
+   2. «Ключевая потребность», «платёжеспособность», «уверенность» повторялись
+      в каждой из пяти строк. Подписи вынесены в шапку и написаны ОДИН раз —
+      то же правило, что и в таблицах. Значения встали в колонки и теперь
+      сравниваются взглядом сверху вниз, чего в повторяющихся строках не было. */
+.leghead,.sl.rich{display:grid;grid-template-columns:44px 1fr 62px 128px 72px;
+  gap:14px;align-items:start}
+.leghead{padding:0 0 9px;border-bottom:1px solid var(--line);
+  font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;
+  color:var(--ink-3)}
+.sl.rich{padding:13px 0;border-top:1px solid var(--line-2)}
+.sl.rich:first-of-type{border-top:0}
+.sl.rich .ic{width:40px;height:40px;border-radius:12px;display:flex;
+  align-items:center;justify-content:center;border:1px solid var(--line);
+  font-size:12.5px;font-weight:700;color:#12100D;letter-spacing:-.02em;hyphens:none}
+.sl.rich .nm{font-size:12.5px;line-height:1.45;color:var(--ink-2);min-width:0}
+.sl.rich .nm b{display:block;color:var(--ink);font-weight:700;font-size:14px;
+  margin-bottom:3px}
+.sl.rich .nm .need{display:block;margin-top:5px;color:var(--ink)}
+.sl.rich .v2{font-size:12.5px;color:var(--ink-2);font-variant-numeric:tabular-nums;
+  hyphens:none;padding-top:2px}
+.sl.rich .v2.big{font-size:17px;font-weight:700;color:var(--ink);letter-spacing:-.02em}
+@media (max-width:900px){
+  .leghead{display:none}
+  .sl.rich{grid-template-columns:44px 1fr;gap:10px}
+  .sl.rich .v2{grid-column:2}
+}
+
+/* ── Ниши: профиль «ёжиком» ───────────────────────────────────────────────
+   Владелица 10.09: «тут просто цифры, цифры, цифры — что они значат, непонятно».
+   Так и было: пять голых чисел в строке, и ни одно ничего не говорит само по себе.
+   Здесь радар подходит — по тому же правилу, по которому он НЕ подошёл сегментам:
+   он сравнивает ОДИН объект по МНОГИМ осям. У ниши ровно четыре оси, все четыре
+   в одной шкале 1–5, и форма фигуры сразу читается: ровный четырёхугольник —
+   ниша без слабых мест, вытянутый — что-то сильно проседает. Две ниши с одинаковой
+   суммой выглядят по-разному, а в столбце чисел это неразличимо. */
+.nprof{display:grid;grid-template-columns:repeat(auto-fit,minmax(316px,1fr));gap:12px}
+.ncard2{border:1px solid var(--line);background:var(--card-solid);border-radius:16px;
+  padding:16px 18px;display:grid;grid-template-columns:132px 1fr;gap:16px;
+  align-items:start}
+/* ПРАВКА: у приоритетной ниши была бирюзовая подложка, и рядом с бирюзовой
+   плашкой «Идём» всё сливалось в одно зелёное пятно. Подложка убрана: статус
+   уже назван плашкой и цветом фигуры, третий раз повторять его фоном незачем.
+   Тем более что ниш со статусом «идём» бывает несколько — выделять фоном
+   «самую главную» значит вводить четвёртый статус, которого в данных нет. */
+.ncard2 .nh b{display:block;font-size:14.5px;font-weight:700;line-height:1.25}
+.ncard2 .tot{display:flex;align-items:baseline;gap:9px;margin:9px 0 8px}
+.ncard2 .tot i{font-style:normal;font-size:26px;font-weight:700;letter-spacing:-.03em}
+.ncard2 .tot em{font-style:normal;font-size:10px;font-weight:700;letter-spacing:.07em;
+  text-transform:uppercase;color:var(--ink-3)}
+.rkey{display:flex;align-items:center;gap:20px;flex-wrap:wrap;
+  padding:14px 18px;border:1px solid var(--line);border-radius:16px;
+  background:var(--card-solid);margin-bottom:12px}
+.rkey .rtext{font-size:12.5px;color:var(--ink-2);line-height:1.5;max-width:52ch}
+.rkey .rtext b{color:var(--ink)}
+
+/* Плашки статусов — из макета платформы, один в один, включая русские
+   подписи. Английские Go / Maybe / No-Go в русском отчёте стоять не должны:
+   для английской версии будут английские, для русской — русские. */
+.kchip{display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:999px;
+  font-size:12px;font-weight:600;hyphens:none}
+.kchip .d{width:7px;height:7px;border-radius:50%;flex:0 0 auto}
+.kchip-go{background:color-mix(in srgb, var(--acc-strong) 12%, var(--card-solid));color:var(--ink)}
+.kchip-go .d{background:var(--acc-strong)}
+.kchip-mb{background:color-mix(in srgb, var(--acc-mid) 22%, var(--card-solid));color:var(--ink)}
+.kchip-mb .d{background:var(--acc-mid)}
+.kchip-no{background:color-mix(in srgb, var(--acc-quiet) 30%, var(--card-solid));color:var(--ink)}
+.kchip-no .d{background:var(--acc-quiet)}
+
+/* ── Сигналы построчно ────────────────────────────────────────────────────
+   Владелица: «всё налеплено, теряется понимание; чек вообще непонятен».
+   Было одним абзацем: спрос, конкуренция, чек и риск подряд через точку.
+   Теперь каждый признак — своя строка с подписью, а «чек 890 ₽ × 12 мес»
+   расписан словами: сколько платят в месяц и сколько месяцев остаются. */
+.sigrows{display:flex;flex-direction:column;gap:0;margin-top:11px}
+.sigrow{display:grid;grid-template-columns:104px 1fr;gap:12px;padding:7px 0;
+  border-top:1px solid var(--line-2);font-size:12px;line-height:1.45}
+.sigrow:first-child{border-top:0}
+.sigrow .k2{font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;
+  color:var(--ink-3);padding-top:2px}
+.sigrow .v3{color:var(--ink-2)}
+.sigrow .v3 b{color:var(--ink);font-weight:600}
+
+/* Карточка «не идём» — без фигуры, но с причиной. Профиль ей не нужен:
+   разбирать сильные стороны ниши, куда мы не идём, незачем. А вот ПОЧЕМУ не
+   идём — нужно, иначе ниша просто исчезает из разбора и через месяц никто не
+   вспомнит, отбросили её по данным или забыли. */
+.ncard2.slim{grid-template-columns:1fr;opacity:.9}
+.ncard2.slim .why2{font-size:12.5px;color:var(--ink-2);line-height:1.5;margin-top:10px}
+.ncard2.slim .why2 b{color:var(--ink);font-weight:600}
+
+/* Пометка «вывод» — для строк, у которых источника нет и быть не может:
+   они выведены из других строк отчёта. Ставится вместо номера, а не рядом с
+   ним, чтобы нельзя было принять вывод за находку. */
+.infer{display:inline-block;font-size:10px;font-weight:700;letter-spacing:.07em;
+  text-transform:uppercase;color:var(--ink-3);background:var(--line-2);
+  padding:1px 7px;border-radius:999px;margin-left:6px;hyphens:none;
+  vertical-align:1px}
+
+/* Выделение по клику: связывает полосу и карточку. */
+.ncard2{transition:box-shadow .2s, border-color .2s}
+.ncard2.on{border-color:var(--mid);
+  box-shadow:0 0 0 2px color-mix(in srgb, var(--mid) 45%, transparent)}
+.nbar{cursor:pointer}
+.nhint{font-size:12px;color:var(--ink-3);margin:10px 0 0;min-height:17px}
+
+/* ── Разбор модуля: «как сейчас» рядом с «как предлагаю» ─────────────────── */
+.sech{font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--ink-3);margin:34px 0 14px;display:flex;align-items:center;gap:14px}
+.sech::after{content:"";flex:1;height:1px;background:var(--line)}
+.two2{display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:start}
+.two2 .viz{margin-bottom:0}
+/* Настоящая таблица отчёта — намеренно без украшений: она должна выглядеть
+   ровно так, как выглядит сегодня, иначе сравнение нечестное. */
+.rawwrap{overflow-x:auto}
+table.raw{border-collapse:collapse;width:100%;font-size:11.5px;line-height:1.4}
+table.raw th,table.raw td{border:1px solid var(--line);padding:6px 8px;
+  text-align:left;vertical-align:top;hyphens:none}
+table.raw th{background:color-mix(in srgb, var(--ink) 4%, transparent);
+  font-weight:700;color:var(--ink-3);font-size:10.5px;white-space:nowrap}
+table.raw td{color:var(--ink-2)}
+table.raw td.num{font-variant-numeric:tabular-nums;text-align:center;white-space:nowrap}
+.verd{background:color-mix(in srgb, var(--sw-violet) 5%, var(--raise));
+  border:1px solid color-mix(in srgb, var(--sw-violet) 24%, var(--line));
+  border-radius:16px;padding:16px 20px;margin:12px 0 0}
+.verd p{margin:0 0 9px;font-size:13px;line-height:1.55;color:var(--ink-2)}
+.verd p:last-child{margin-bottom:0}
+.verd b{color:var(--ink)}
+@media (max-width:1000px){ .two2{grid-template-columns:1fr} }
+
+.glue{border:1px dashed var(--line);border-radius:14px;padding:16px 18px;
+  background:color-mix(in srgb, var(--mid) 5%, transparent)}
+.glue .gl{display:grid;grid-template-columns:1fr 92px 96px;gap:14px;padding:7px 0;
+  border-top:1px solid var(--line-2);font-size:12.5px;align-items:baseline}
+.glue .gl:first-of-type{border-top:0}
+.glue .gl .n{text-align:right;font-variant-numeric:tabular-nums;font-weight:700;color:var(--ink)}
+.glue .gl .t{text-align:right;font-size:11px;color:var(--ink-3)}
+.glue .gl.cfm b{color:var(--acc-ink)}
+.glue .cap{font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;
+  color:var(--ink-3);margin-bottom:10px}
+.sem{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,320px);gap:22px;align-items:start}
+.semrow{display:grid;grid-template-columns:1fr 52px;gap:12px;padding:8px 9px;
+  align-items:center;cursor:default;border-radius:10px}
+.semrow:hover,.semrow.on{background:var(--line-2)}
+.semrow:focus-visible{outline:2px solid var(--mid);outline-offset:-2px}
+.semrow .nm{font-size:12.5px;color:var(--ink-2);margin-bottom:5px;line-height:1.3}
+.semrow.on .nm{color:var(--ink);font-weight:600}
+.semrow .rail{height:14px;background:var(--line-2)}
+.semrow .rail i{display:block;height:14px;background:var(--ink-3)}
+.semrow.on .rail i{background:var(--mid)}
+.semrow .n{text-align:right;font-size:12.5px;font-weight:700;color:var(--ink);
+  font-variant-numeric:tabular-nums}
+.sempanel{border:1px solid var(--line);border-radius:16px;padding:15px 16px;
+  background:var(--card-solid);position:sticky;top:16px}
+.sempanel .cap{font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;
+  color:var(--ink-3);margin-bottom:3px}
+.sempanel .who{font-size:13px;font-weight:700;color:var(--ink);margin-bottom:12px;line-height:1.3}
+.sempanel .note{margin-top:11px;padding-top:10px;border-top:1px solid var(--line-2);
+  font-size:11.5px;color:var(--ink-2);line-height:1.5}
+.sempanel .note b{color:var(--ink)}
+.serp{display:flex;flex-direction:column;gap:0}
+.serp .s{padding:13px 2px;border-top:1px solid var(--line-2)}
+.serp .s:first-child{border-top:0}
+.serp .s .t{font-size:13.5px;font-weight:600;line-height:1.35;margin-bottom:4px}
+.serp .s .u{font-size:11.5px;color:var(--ink-3);margin-bottom:8px;word-break:break-all}
+.serp .s .meta{display:flex;gap:8px;flex-wrap:wrap;font-size:11px;color:var(--ink-3);
+  margin-bottom:7px}
+.serp .s .meta b{color:var(--ink-2);font-weight:600}
+.serp .s .str{font-size:12.5px;color:var(--ink-2);line-height:1.5;
+  padding-left:14px;position:relative}
+.serp .s .str::before{content:'';position:absolute;left:0;top:7px;width:5px;height:5px;
+  border-radius:50%;background:var(--mid)}
+.aud{display:flex;flex-direction:column;gap:0}
+.aud .a{display:grid;grid-template-columns:150px 1fr;gap:16px;padding:14px 2px;
+  border-top:1px solid var(--line-2)}
+.aud .a:first-child{border-top:0}
+.aud .a .who{font-size:13px;font-weight:700;color:var(--ink);line-height:1.3}
+.aud .a .who span{display:block;font-size:11px;font-weight:600;color:var(--ink-3);
+  margin-top:4px}
+.aud .a .freq{margin-top:8px}
+.aud .a .freq .rail{height:14px;background:var(--line-2)}
+.aud .a .freq .rail i{display:block;height:14px;background:var(--mid)}
+.aud .a .freq .lab{font-size:10.5px;color:var(--ink-3);margin-top:4px}
+.aud .a .cols{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.aud .a .cols h5{margin:0 0 5px;font-size:10px;font-weight:700;letter-spacing:.05em;
+  text-transform:uppercase;color:var(--ink-3)}
+.aud .a .cols p{margin:0;font-size:12.5px;color:var(--ink-2);line-height:1.5}
+.aud .a .themes{margin-top:10px;font-size:11.5px;color:var(--ink-3)}
+.swot{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.sw{border:1px solid var(--line);border-radius:16px;padding:16px 18px;
+  background:color-mix(in srgb, var(--ink) 2%, transparent)}
+.sw h3{font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;
+  color:var(--ink-3);margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.sw h3 i{width:16px;height:3px;border-radius:2px;display:block}
+.sw ul{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:7px}
+.sw li{font-size:13px;color:var(--ink-2);padding-left:14px;position:relative;line-height:1.5}
+.sw li::before{content:"";position:absolute;left:0;top:8px;width:5px;height:5px;
+  border-radius:50%;background:var(--ink-3)}
+.sw{position:relative}
+.sw-note{grid-column:1/-1;font-size:11.5px;color:var(--ink-3);margin-top:2px;line-height:1.5}
+.sw-help{box-shadow:inset 3px 0 0 var(--mid)}
+.sw-help h3{color:var(--ink)}
+.sw-help li::before{background:var(--acc-strong)}
+.mkt{display:grid;grid-template-columns:112px repeat(4,1fr);gap:3px}
+.mkt .hd{font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;
+  color:var(--ink-3);display:flex;align-items:flex-end;justify-content:center;
+  padding-bottom:7px;text-align:center;line-height:1.3}
+.mkt .rw{font-size:11.5px;font-weight:700;color:var(--ink-2);display:flex;
+  align-items:center;justify-content:flex-end;padding-right:12px;text-align:right;
+  line-height:1.3}
+.mkt .cell{background:var(--line-2);min-height:74px;padding:9px;display:flex;
+  flex-direction:column;gap:7px}
+.mkt .cell.ours{background:color-mix(in srgb, var(--mid) 12%, var(--line-2));
+  box-shadow:inset 0 0 0 2px color-mix(in srgb, var(--mid) 55%, transparent)}
+.mkt .cell .dots{display:flex;flex-wrap:wrap;gap:4px;align-content:flex-start}
+.mktwrap{position:relative}
+.mkt .dot{width:15px;height:15px;display:grid;place-items:center;padding:0;border:0;
+  background:none;cursor:pointer;border-radius:50%}
+.mkt .dot i{width:9px;height:9px;border-radius:50%;background:var(--sw-grey);display:block;
+  transition:transform .12s ease,opacity .12s ease}
+.mkt .dot i.us{background:var(--mid);box-shadow:0 0 0 2px var(--card-solid),
+  0 0 0 4px color-mix(in srgb, var(--mid) 60%, transparent)}
+.mkt .dot:focus-visible{outline:2px solid var(--mid);outline-offset:2px}
+.mkt.seek .dot i{opacity:.22}
+.mkt.seek .dot.hit i{opacity:1;transform:scale(1.7)}
+.mkt.seek .cell{opacity:.55}
+.mkt.seek .cell.hit{opacity:1}
+.mkttip{position:absolute;z-index:5;pointer-events:none;opacity:0;transform:translate(-50%,-100%);
+  background:var(--card-solid);border:1px solid var(--line);padding:10px 12px;min-width:186px;
+  max-width:260px;box-shadow:0 6px 20px rgba(0,0,0,.12);transition:opacity .12s ease}
+.mkttip.on{opacity:1}
+.mkttip b{display:block;font-size:13px;font-weight:700;color:var(--ink);margin-bottom:7px;line-height:1.25}
+.mkttip dl{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;margin:0;font-size:11.5px}
+.mkttip dt{color:var(--ink-3)}
+.mkttip dd{margin:0;color:var(--ink-2);font-weight:600;font-variant-numeric:tabular-nums;text-align:right}
+.mktlist{margin-top:20px;padding-top:14px;border-top:1px solid var(--line)}
+.mktlist h4{margin:0 0 4px;font-size:10px;font-weight:700;letter-spacing:.07em;
+  text-transform:uppercase;color:var(--ink-3)}
+.mktlist .hint{margin:0 0 10px;font-size:12px;color:var(--ink-3)}
+.mktlist .hdr,.mktlist .r{display:grid;grid-template-columns:1fr 112px 108px 96px;
+  gap:14px;padding:7px 8px;align-items:baseline}
+.mktlist .hdr{font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;
+  color:var(--ink-3);padding-bottom:4px}
+.mktlist .r{border-top:1px solid var(--line-2);font-size:12.5px;cursor:default}
+.mktlist .r:hover,.mktlist .r.on{background:var(--line-2)}
+.mktlist .r:focus-visible{outline:2px solid var(--mid);outline-offset:-2px}
+.mktlist .r b{font-weight:600;color:var(--ink)}
+.mktlist .r.mine{background:color-mix(in srgb, var(--mid) 10%, transparent)}
+.mktlist .r.mine b{font-weight:700}
+.mktlist .r .g{color:var(--ink-2)}
+.mktlist .r .num{text-align:right;font-variant-numeric:tabular-nums;color:var(--ink-2);
+  font-weight:600}
+.mktlist .r .num.no{font-weight:400;color:var(--ink-3)}
+.mkt .cell .n{margin-top:auto;font-size:11px;font-weight:700;color:var(--ink-2);
+  font-variant-numeric:tabular-nums}
+.mkt .cell.empty .n{color:var(--ink-3);font-weight:600}
+.mktleg{display:flex;gap:18px;flex-wrap:wrap;margin-top:14px;padding-top:12px;
+  border-top:1px solid var(--line);font-size:11.5px;color:var(--ink-3)}
+.mktleg span{display:flex;align-items:center;gap:8px}
+.mktleg i{width:9px;height:9px;border-radius:50%;display:block}
+.swot{display:grid;grid-template-columns:74px 1fr 1fr;gap:10px;align-items:stretch}
+.swot .cor{font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;
+  color:var(--ink-3);display:flex;align-items:flex-end;justify-content:center;
+  padding-bottom:8px;line-height:1.3}
+.swot .cor.r{align-items:center;justify-content:flex-end;text-align:right;padding:0 10px 0 0}
+.swot .sw{border:1px solid var(--line);border-radius:16px;padding:16px 18px;
+  background:var(--card-solid);display:flex;flex-direction:column;
+  box-shadow:inset 3px 0 0 var(--acc-mid)}
+.swot .sw h3{font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;
+  color:var(--ink-3);margin:0 0 10px;display:block}
+.swot .sw ul{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:7px}
+.swot .sw li{font-size:13px;color:var(--ink-2);padding-left:14px;position:relative;line-height:1.5}
+.swot .sw li::before{content:"";position:absolute;left:0;top:8px;width:5px;height:5px;
+  border-radius:50%;background:var(--acc-mid)}
+.swot .sw-help{box-shadow:inset 3px 0 0 var(--mid)}
+.swot .sw-help h3{color:var(--ink)}
+.swot .sw-help li::before{background:var(--acc-strong)}
+.swot .sw-note{grid-column:1/-1;font-size:11.5px;color:var(--ink-3);margin-top:4px;line-height:1.5}
+.infer{font-size:10.5px;font-weight:600;letter-spacing:.03em;color:var(--ink-3);
+  margin-left:6px;white-space:nowrap}
+.awrow{display:grid;grid-template-columns:210px 1fr;gap:16px;align-items:center;
+  padding:11px 0;border-top:1px solid var(--line-2)}
+.awrow:first-child{border-top:0}
+.awrow .awnm{font-size:13px;font-weight:700;color:var(--ink);line-height:1.3}
+.awrow .awnm span{display:block;font-size:11px;font-weight:600;color:var(--ink-3);
+  margin-top:3px}
+.aw{display:flex;height:26px;gap:3px}
+.aw span{display:flex;align-items:center;justify-content:center;font-size:10.5px;
+  font-weight:700;color:#12100D;hyphens:none;min-width:0}
+.awleg{display:flex;gap:16px;flex-wrap:wrap;margin-top:14px;padding-top:12px;
+  border-top:1px solid var(--line);font-size:11px;color:var(--ink-3)}
+.awleg i{width:11px;height:9px;display:inline-block;margin-right:6px}
+.srcs{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:0 28px}
+.srow{display:grid;grid-template-columns:32px 1fr;gap:12px;padding:13px 0;
+  border-top:1px solid var(--line-2);align-items:baseline}
+.srow .sn{font-size:11.5px;font-weight:700;color:var(--acc-mid-ink);
+  font-variant-numeric:tabular-nums;hyphens:none}
+.srow .sd{font-size:12.5px;line-height:1.45;min-width:0}
+.srow .sd .dom{display:flex;align-items:baseline;justify-content:space-between;gap:12px}
+.srow .sd .dom a{font-size:13.5px;font-weight:700;color:var(--acc-mid-ink);
+  text-decoration:none;border-bottom:1px solid color-mix(in srgb, var(--acc-mid-ink) 45%, transparent);
+  overflow-wrap:break-word;hyphens:none}
+.srow .sd .dom a:hover{border-bottom-color:var(--acc-mid-ink)}
+.srow .sd .dom a svg{width:10px;height:10px;display:inline-block;vertical-align:1px;
+  margin-left:5px;fill:none;stroke:currentColor;stroke-width:2}
+.srow .sd .dt{font-size:11px;color:var(--ink-3);white-space:nowrap;flex:0 0 auto;
+  hyphens:none}
+.srow .sd .took{margin-top:8px}
+.srow .sd .took span{display:block;font-size:10px;font-weight:700;letter-spacing:.07em;
+  text-transform:uppercase;color:var(--ink-3);margin-bottom:3px}
+.srow .sd .took em{font-style:normal;color:var(--ink-2);font-size:12.5px;line-height:1.45}
+.heat{width:100%;border-collapse:separate;border-spacing:3px;font-size:12px}
+.heat th{font-weight:600;color:var(--ink-3);font-size:10.5px;letter-spacing:.05em;
+  text-transform:uppercase;padding:0 6px 6px;text-align:center;vertical-align:bottom}
+.heat th:first-child{text-align:left}
+.heat td{text-align:center;padding:9px 6px;border-radius:8px;font-weight:700;color:var(--ink)}
+.heat td:first-child{text-align:left;font-weight:600;color:var(--ink-2);
+  background:none;padding-left:0;white-space:nowrap}
+.voc{display:flex;gap:12px;overflow-x:auto;scroll-snap-type:x mandatory;
+  scrollbar-width:none;padding-bottom:2px}
+.voc::-webkit-scrollbar{display:none}
+.vq{flex:0 0 auto;width:268px;scroll-snap-align:start;
+  border:1px solid var(--line);background:var(--card-solid);padding:17px 19px;
+  border-radius:16px;display:flex;flex-direction:column;gap:12px;
+  justify-content:space-between}
+.vq blockquote{margin:0;font-family:var(--serif);font-style:italic;
+  font-size:14px;line-height:1.5;color:var(--ink)}
+.vq .vst{display:flex;align-items:center;gap:7px;font-size:10px;font-weight:700;
+  letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3)}
+.vq .vst i{width:9px;height:9px;border-radius:50%;display:block;flex:0 0 auto}
+.vq .vst.wait i{border:1.5px solid var(--ink-3)}
+.vq .vst.work i{background:var(--mid)}
+.vq .vst.done i{background:var(--ink-3)}
+.vq .vst.work{color:var(--ink)}
+.vq .vf{display:flex;justify-content:space-between;align-items:center;gap:12px;
+  padding-top:12px;border-top:1px solid var(--line-2)}
+.vq .vsrc{font-size:11px;color:var(--ink-3);line-height:1.4}
+.vq .vsrc b{display:block;color:var(--ink-2);font-weight:600;font-size:11.5px}
+.vq .vcnt{font-size:11px;font-weight:700;color:var(--ink);white-space:nowrap;
+  display:flex;align-items:center;gap:7px}
+.vq .vcnt i{width:8px;height:8px;background:var(--mid);display:block}
+.alt{border:1px solid var(--line);border-radius:16px;overflow:hidden}
+.chn{display:grid;grid-template-columns:repeat(auto-fit,minmax(296px,1fr));gap:12px}
+.obj{border:1px solid var(--line);border-radius:16px;overflow:hidden;max-width:940px}
+.hooks{display:flex;flex-direction:column;gap:0}
+.ccard{border:1px solid var(--line);background:var(--card-solid);border-radius:16px;
+  padding:16px 18px;display:flex;flex-direction:column;gap:11px}
+.ccard .ch{display:flex;align-items:center;gap:11px}
+.ccard .ci{width:34px;height:34px;border-radius:11px;background:var(--line-2);
+  display:flex;align-items:center;justify-content:center;flex:0 0 auto}
+.ccard .ci svg{width:19px;height:19px;fill:none;stroke:var(--ink-2);stroke-width:1.6;
+  stroke-linecap:round;stroke-linejoin:round;display:block}
+.ccard .cn{font-size:14px;font-weight:700;line-height:1.25}
+.ccard .cn span{display:block;font-size:11px;font-weight:600;color:var(--ink-3);
+  margin-top:3px}
+.ccard .cd{font-size:12.5px;color:var(--ink-2);line-height:1.5}
+.ccard .cf{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;
+  padding-top:11px;border-top:1px solid var(--line-2);margin-top:auto}
+.ccard .cf div span{display:block;font-size:10px;font-weight:700;letter-spacing:.07em;
+  text-transform:uppercase;color:var(--ink-3);margin-bottom:3px}
+.ccard .cf div b{font-size:12px;font-weight:700;color:var(--ink)}
+.ccard .cf .r{text-align:right}
+.comp{display:flex;flex-direction:column;gap:12px}
+.ccard2 .cmeta{display:flex;gap:8px;flex-wrap:wrap;align-items:center;font-size:11.5px;
+  color:var(--ink-3)}
+.comp{display:flex;flex-direction:column;gap:12px}
+.ccard2 .cmeta{display:flex;gap:8px;flex-wrap:wrap;align-items:center;font-size:11.5px;
+  color:var(--ink-3)}
+.pers{display:grid;grid-template-columns:230px 1fr;gap:0;
+  border:1px solid var(--line);border-radius:20px;overflow:hidden;margin-bottom:14px}
+.prow{display:grid;grid-template-columns:150px 1fr 1fr;gap:16px;
+  padding:12px 22px;border-top:1px solid var(--line-2);font-size:13px;line-height:1.5}
+.prow:first-child{border-top:0}
+.prow .p{color:var(--ink-3);font-size:11.5px;font-weight:600;padding-top:1px}
+.prow .v{color:var(--ink)}
+.prow .a{color:var(--acc-ink);font-weight:600}
+.lad{display:flex;flex-direction:column;gap:8px}
+.lrow{display:grid;grid-template-columns:var(--lw,300px) 1fr;gap:0;align-items:stretch}
+.lleft{position:relative;display:flex;align-items:center;gap:13px;
+  padding:14px 26px 14px 18px;color:var(--ink);border-radius:12px 0 0 12px;
+  /* один косой срез вместо стрелки: верх длиннее низа */
+  clip-path:polygon(0 0, 100% 0, calc(100% - 20px) 100%, 0 100%)}
+.lleft .num{font-size:19px;font-weight:700;letter-spacing:-.02em;opacity:.5;
+  min-width:28px;text-align:right}
+.lleft .nm{font-size:13px;font-weight:700;line-height:1.3;letter-spacing:-.01em}
+.lright{padding:14px 20px 14px 22px;margin-left:-14px;border-radius:0 12px 12px 0;
+  background:color-mix(in srgb, var(--ink) 2%, transparent);
+  display:flex;flex-direction:column;justify-content:center;gap:3px}
+.lright b{font-size:13px;font-weight:700;color:var(--ink);line-height:1.4}
+.lright span{font-size:12.5px;color:var(--ink-2);line-height:1.5}
+.lright .meta{margin-top:6px;font-size:11.5px;font-weight:600;
+  color:var(--ink-3);display:flex;gap:16px;flex-wrap:wrap}
+.lright .meta i{font-style:normal}
+.lright .meta i.rk-high{color:var(--acc-mid-ink)}
+.lright .meta i.rk-medium{color:var(--ink-3)}
+.lright .meta i.rk-low{color:var(--acc-ink)}
+.lright .meta i.rk::before{content:"";display:inline-block;width:6px;height:6px;
+  border-radius:50%;background:currentColor;margin-right:6px;vertical-align:1px}
+.ltag{display:flex;flex-direction:column;gap:8px;padding:16px 18px 16px 16px}
+.lmeter{display:flex;align-items:center;gap:10px;margin-top:2px}
+.lmeter .rail3{flex:1;height:9px;background:var(--line-2)}
+.lmeter .rail3 i{display:block;height:100%}
+.lmeter b{font-size:11.5px;font-weight:700;color:var(--ink);white-space:nowrap;
+  hyphens:none}
+.ltag .ename{font-size:14.5px;font-weight:700;color:var(--ink);line-height:1.25}
+.ltag .ename span{display:block;font-size:11px;font-weight:600;color:var(--ink-3);
+  margin-top:4px}
+.llist{display:flex;flex-direction:column;gap:8px;padding:16px 18px 16px 6px}
+.llist div{font-family:var(--serif);font-size:13.5px;line-height:1.45;color:var(--ink);
+  padding-left:16px;position:relative}
+.llist div::before{content:"";position:absolute;left:0;top:7.5px;width:5px;height:5px;
+  /* Было «--c2» — такой переменной в файле нет вовсе, и точки рисовались
+     прозрачными, то есть их не было видно. Ставим ту же бирюзу заливкой, что у
+     всех круглых маркеров списков на платформе.
+     11.09: переменная появилась — renderLangBank ставит её на строке группы.
+     Точка теперь того же цвета, что полоса и шкала этой эмоции (владелица:
+     «точечки к каждым надо в этот же цвет»), бирюза остаётся запасной. */
+  border-radius:50%;background:var(--c2,var(--mid))}
+.llist div span{font-family:var(--sans);font-size:11px;color:var(--ink-3);
+  margin-left:8px;white-space:nowrap}
+.pyr{display:flex;flex-direction:column;gap:13px}
+.pyrow{display:grid;grid-template-columns:1fr 78px 1fr;align-items:center;gap:8px}
+.pyrow .s{display:flex;align-items:center}
+.pyrow .s.l{justify-content:flex-end}
+.pyrow .rail{flex:1;height:14px;background:var(--line-2);display:flex}
+.pyrow .s.l .rail{justify-content:flex-end}
+.pyrow .bar{height:14px;flex:0 0 auto;min-width:3px}
+.pyrow .l .bar{background:var(--mid)}
+.pyrow .r .bar{background:var(--sw-violet)}
+.pyrow .s .v{font-size:11.5px;font-weight:700;color:var(--ink);
+  font-variant-numeric:tabular-nums;min-width:38px}
+.pyrow .s.l .v{text-align:right;margin-right:9px}
+.pyrow .s.r .v{text-align:left;margin-left:9px}
+.pyrow .age{text-align:center;font-size:11.5px;color:var(--ink-2);font-weight:600;
+  font-variant-numeric:tabular-nums}
+.val,.axis,.lbl,.gx,.dbar .n,.kpi .n,.pyrow .s .v,.gvol .v{hyphens:none;-webkit-hyphens:none}
+.pers-conf{margin-top:14px;padding-top:14px;border-top:1px solid rgba(23,21,18,.1)}
+.pers-conf .clab{display:block;font-size:10px;font-weight:700;letter-spacing:.07em;
+  text-transform:uppercase;color:var(--ink-3);margin-bottom:6px}
+.pers-conf .crail{display:block;height:9px;background:var(--line-2);margin-bottom:7px}
+.pers-conf .crail i{display:block;height:100%}
+.pers-conf b{font-size:13px;font-weight:700;color:var(--ink)}
+.pers-conf span.sub2{display:block;font-size:11px;color:var(--ink-3);margin-top:3px}
+.inp{display:grid;gap:0}
+.inp .ir{display:grid;grid-template-columns:190px 1fr 128px;gap:16px;padding:10px 8px;
+  border-top:1px solid var(--line-2);font-size:12.5px;align-items:baseline}
+.inp .ir:first-child{border-top:0}
+.inp .ir .k{color:var(--ink-3);font-weight:600}
+.inp .ir .v{color:var(--ink);line-height:1.5}
+.inp .ir .v.miss{color:var(--ink-3);font-style:italic}
+.inp .ir .o{font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;
+  text-align:right}
+.inp .ir .o.brief{color:var(--acc-ink)}
+.inp .ir .o.site{color:var(--ink-2)}
+.inp .ir .o.none{color:var(--acc-quiet)}
+.kan{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.kcol h3{font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;
+  color:var(--ink-3);margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid var(--line)}
+.kcard{border:1px solid var(--line);border-radius:14px;padding:13px 15px;margin-bottom:9px;
+  background:var(--card-solid)}
+.kcard b{display:block;font-size:12.5px;margin-bottom:4px}
+.kcard span{display:block;font-size:11.5px;color:var(--ink-3);line-height:1.5}
+.kcard .met{margin-top:8px;padding-top:8px;border-top:1px solid var(--line-2);
+  font-size:11px;color:var(--ink-2);font-weight:600}
+.kcard .met u{text-decoration:none;color:var(--acc-ink);font-weight:700}
+.pyr{display:flex;flex-direction:column;gap:13px}
+.pyr-head{display:grid;grid-template-columns:1fr 78px 1fr;align-items:center;
+  margin-bottom:14px;padding-bottom:11px;border-bottom:1px solid var(--line);gap:8px}
+.pyr-head .t{font-size:16px;font-weight:700;letter-spacing:-.02em;color:var(--ink);
+  display:flex;align-items:center;gap:9px}
+.pyr-head .t.r{justify-content:flex-end}
+.pyr-head .t .sx{width:26px;height:26px;border-radius:8px;display:flex;
+  align-items:center;justify-content:center;flex:0 0 auto}
+.pyr-head .t .sx{background:var(--line-2)}
+.pyr-head .t .sx svg{width:17px;height:17px;fill:none;stroke:var(--ink-2);
+  stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;display:block}
+.pyr-head .c{text-align:center;font-size:10px;font-weight:700;letter-spacing:.07em;
+  text-transform:uppercase;color:var(--ink-3)}
+.pyrow{display:grid;grid-template-columns:1fr 78px 1fr;align-items:center;gap:8px}
+.pyrow .s{display:flex;align-items:center}
+.pyrow .s.l{justify-content:flex-end}
+.pyrow .rail{flex:1;height:14px;background:var(--line-2);display:flex}
+.pyrow .s.l .rail{justify-content:flex-end}
+.pyrow .bar{height:14px;flex:0 0 auto;min-width:3px}
+.pyrow .l .bar{background:var(--mid)}
+.pyrow .r .bar{background:var(--sw-violet)}
+.pyrow .s .v{font-size:11.5px;font-weight:700;color:var(--ink);
+  font-variant-numeric:tabular-nums;min-width:38px}
+.pyrow .s.l .v{text-align:right;margin-right:9px}
+.pyrow .s.r .v{text-align:left;margin-left:9px}
+.pyrow .age{text-align:center;font-size:11.5px;color:var(--ink-2);font-weight:600;
+  font-variant-numeric:tabular-nums}
+.val,.axis,.lbl,.gx,.dbar .n,.kpi .n,.pyrow .s .v,.gvol .v{hyphens:none;-webkit-hyphens:none}
+.bpain .dbar{grid-template-columns:1fr 190px 58px}
+.chnside .dbar{grid-template-columns:1fr 84px 34px}
+.bpain .dbar .t{color:var(--ink-2)}
+.bpain .dbar .n{font-variant-numeric:tabular-nums}
+.val,.axis,.lbl,.gx,.dbar .n,.kpi .n,.pyrow .s .v,.gvol .v{hyphens:none;-webkit-hyphens:none}
+.att .dbar{grid-template-columns:172px 1fr 104px}
+.att .dbar .n{white-space:nowrap}
+.demo{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;padding:18px 22px;
+  border-top:1px solid var(--line-2)}
+.demo h4{font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;
+  color:var(--ink-3);margin:0 0 10px}
+.dsplit{display:flex;height:26px;border-radius:0;overflow:hidden;margin-bottom:7px}
+.dsplit span{display:flex;align-items:center;justify-content:center;font-size:11px;
+  font-weight:700;color:#12100D}
+.dbars{display:flex;flex-direction:column;gap:13px}
+.dbar{display:grid;grid-template-columns:46px 1fr 30px;gap:8px;align-items:center;font-size:11.5px}
+.dbar .t{color:var(--ink-3)}
+.dbar .g{height:14px;background:var(--line-2)}
+.dbar .g i{display:block;height:100%;background:var(--mid)}
+.dbar .n{text-align:right;font-weight:700;color:var(--ink)}
+.chips{display:flex;flex-direction:column;gap:11px}
+.chips figure{margin:0;display:flex;flex-direction:row;align-items:center;gap:11px;
+  text-align:left}
+.chips figure .disc{width:34px;height:34px;border-radius:11px;display:flex;
+  align-items:center;justify-content:center;background:var(--line-2)}
+.chips figure svg{width:19px;height:19px;fill:none;stroke:var(--ink-2);
+  stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;display:block}
+.chips figcaption{font-size:12.5px;font-weight:600;color:var(--ink-2);line-height:1.35}
+.demo.split{grid-template-columns:1fr 1fr;gap:0}
+.demo.split > div + div{border-left:1px solid var(--line);padding-left:24px}
+.demo.split > div:first-child{padding-right:24px}
+.vq .vst{display:flex;align-items:center;gap:7px;font-size:10px;font-weight:700;
+  letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3)}
+.vq .vst i{width:9px;height:9px;border-radius:50%;display:block;flex:0 0 auto}
+.vq .vst.wait i{border:1.5px solid var(--ink-3)}
+.vq .vst.work i{background:var(--mid)}
+.vq .vst.done i{background:var(--ink-3)}
+.vq .vst.work{color:var(--ink)}
+.vq2{border:1px solid var(--line);background:var(--card-solid);border-radius:16px;
+  padding:0;display:flex;flex-direction:column;overflow:hidden}
+.vq2 .vtop{padding:15px 18px 0}
+.vq2 blockquote{margin:12px 0 0;font-family:var(--serif);font-style:italic;
+  font-size:15px;line-height:1.5;color:var(--ink)}
+.vq2 .vtheme{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;
+  margin:14px 0 0;padding:0 18px}
+.vq2 .vtheme b{font-size:13.5px;font-weight:700;color:var(--ink);letter-spacing:-.01em}
+.vq2 .seg2{display:inline-block;font-size:10px;font-weight:700;letter-spacing:.05em;
+  text-transform:uppercase;color:var(--ink-2);background:var(--line-2);
+  padding:3px 9px;border-radius:999px;hyphens:none}
+.vq2 .vsrc2{padding:5px 18px 0;font-size:11.5px;color:var(--ink-3)}
+.vq2 .vnums{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:14px;
+  padding:12px 18px;border-top:1px solid var(--line-2);
+  background:color-mix(in srgb, var(--ink) 2%, transparent)}
+.vq2 .vnums .lab{display:block;font-size:10px;font-weight:700;letter-spacing:.07em;
+  text-transform:uppercase;color:var(--ink-3);margin-bottom:5px}
+.vq2 .vnums .big2{font-size:15px;font-weight:700;color:var(--ink);letter-spacing:-.02em}
+.vq2 .vnums .big2 em{font-style:normal;font-size:11.5px;font-weight:600;
+  color:var(--ink-3);margin-left:4px}
+.pain{display:flex;align-items:center;gap:9px;margin-top:2px}
+.pain .rail2{flex:1;max-width:78px;height:9px;background:var(--line-2)}
+.pain .rail2 i{display:block;height:100%;background:var(--mid)}
+.pain b{font-size:12.5px;font-weight:700;color:var(--ink)}
+.vq2 .vans{padding:13px 18px;border-top:1px solid var(--line-2);font-size:12.5px;
+  line-height:1.45;color:var(--ink)}
+.vq2 .vans span{display:block;font-size:10px;font-weight:700;letter-spacing:.07em;
+  text-transform:uppercase;color:var(--ink-3);margin-bottom:3px}
+.emo{flex:0 0 auto;display:flex;align-items:center}
+.emo svg{fill:none;stroke:currentColor;stroke-width:1.6;
+  stroke-linecap:round;stroke-linejoin:round;display:block}
+.lang{border:1px solid var(--line);border-radius:18px;background:var(--card-solid);
+  max-width:900px;padding:6px 0}
+.bias{background:color-mix(in srgb, var(--sw-grey) 8%, var(--raise));
+  border:1px solid var(--line);border-radius:14px;padding:14px 18px;margin-top:14px;
+  font-size:12.5px;line-height:1.55;color:var(--ink-2)}
+.bias b{color:var(--ink)}
+.rules{background:none;backdrop-filter:none;border:0;border-radius:0;overflow:visible;
+  display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
+.rule-card{position:relative;overflow:hidden;
+  background:var(--card);backdrop-filter:blur(14px);border:1px solid var(--line);
+  border-radius:20px;padding:22px 24px 22px 26px;
+  font-size:13.6px;line-height:1.6;color:var(--ink-2);
+  box-shadow:inset 0 1px 0 var(--hi), 0 10px 26px -20px rgba(45,36,22,.3);
+  transition:box-shadow .4s ease, transform .4s cubic-bezier(.2,.8,.2,1)}
+.rule-card:hover{transform:translateY(-2px);
+  box-shadow:inset 0 1px 0 var(--hi), 0 18px 34px -20px rgba(45,36,22,.4)}
+.rule-card b{position:absolute;right:16px;bottom:-14px;
+  font-size:74px;font-weight:700;line-height:1;
+  color:color-mix(in srgb, var(--ink) 12%, transparent);
+  pointer-events:none;user-select:none}
+.rule-card::before{content:"";position:absolute;left:0;top:0;height:2px;width:0;
+  background:linear-gradient(90deg, var(--mid), transparent);
+  transition:width .55s cubic-bezier(.2,.8,.2,1)}
+.rule-card:hover::before{width:100%}
+.rule-card span{position:relative;z-index:1;display:block;max-width:34ch}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 :root{--back:#4D66F7;--back-fg:#FFFFFF;--mid:#06BDBD;--mid-fg:#12100D;--front:#5CD0D0;--front-fg:#12100D;--maybe-bg:rgba(23,21,18,.05);--acc-strong:#06BDBD;--acc-mid:#4D66F7;--acc-quiet:#6E6C66;--acc-ink:#06BDBD;--acc-strong-ink:#06BDBD;--acc-mid-ink:#4A62EE;--acc-quiet-ink:#5E5C57;--sw-green:#06BDBD;--sw-blue:#4DD1F7;--sw-violet:#4D66F7;--sw-grey:#6E6C66}
 :root{--mid-deep:#078282}
 :root{--raise:var(--card-solid)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--maybe-bg:rgba(255,255,255,.05)}}
+.side .navtile[disabled],.side .navrow[disabled]{opacity:.45}
+.coverdl{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px 26px;margin:22px 0 0;padding-top:18px;border-top:1px solid var(--line)}
+.coverdl>div{display:flex;gap:10px;align-items:baseline;font-size:13px}
+.coverdl dt{color:var(--ink-3);white-space:nowrap}
+.coverdl dd{margin:0;color:var(--ink);font-weight:600}
+.mods{display:flex;gap:7px;flex-wrap:wrap;margin-top:24px;padding-top:18px;border-top:1px solid var(--line)}
+.mods span{font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3);padding:4px 9px;border-radius:7px;border:1px solid var(--line)}
+.mods span.on{color:var(--ink);border-color:transparent;background:color-mix(in srgb, var(--mid) 14%, transparent)}
+.rli{font-size:13.5px;color:var(--ink-2);margin:5px 0;padding-left:15px;position:relative;max-width:74ch}
+.rli::before{content:"";position:absolute;left:0;top:8px;width:5px;height:5px;border-radius:50%;background:var(--mid)}
 :root{--glow:#06BDBD}
+:root{--nacre-img:url(data:image/jpeg;base64,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)}
+.nacre,.side .upsell{background:rgba(255,254,251,.86);backdrop-filter:blur(16px) saturate(150%);-webkit-backdrop-filter:blur(16px) saturate(150%);position:relative;isolation:isolate;border:1px solid rgba(255,255,255,.9);box-shadow:0 24px 42px -18px rgba(45,36,22,.34), 0 0 0 1px rgba(23,21,18,.06),inset 0 1px 0 rgba(255,255,255,.95)}
+.nacre::before,.side .upsell::before{content:"";position:absolute;inset:0;z-index:0;border-radius:inherit;pointer-events:none;opacity:.62;background:radial-gradient(48% 120px at 26% 0%, rgba(255,255,255,.86), rgba(255,255,255,0) 74%),linear-gradient(112deg,color-mix(in srgb, var(--glow) 11%, transparent) 0%,rgba(254,252,248,.28) 22%,rgba(235,230,244,.34) 44%,color-mix(in srgb, var(--mid) 10%, rgba(226,233,240,.24)) 63%,rgba(249,240,220,.32) 82%,color-mix(in srgb, var(--glow) 10%, transparent) 100%),var(--nacre-img) center/cover}
+.rules .eb{font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--ink-3);margin-bottom:7px;max-width:34ch}
+.rules .nm{font-size:15px;font-weight:700;color:var(--ink);line-height:1.3;margin-bottom:7px;max-width:34ch}
+.rules .q{font-family:var(--serif);font-size:15px;line-height:1.5;color:var(--ink);max-width:38ch}
+.rules .ft{margin-top:12px;padding-top:10px;border-top:1px solid var(--line);font-size:11.5px;color:var(--ink-3);line-height:1.5;max-width:36ch}
+.topc{display:flex;flex-direction:column;gap:0}
+.tcrow{display:grid;grid-template-columns:minmax(0,300px) 1fr 116px;gap:14px;align-items:center;padding:10px 0;border-top:1px solid var(--line-2)}
+.topc .tcrow:first-child{border-top:0}
+.tcn{font-size:13.5px;line-height:1.35;color:var(--ink);min-width:0}
+.tcn a{color:var(--ink);text-decoration:none}
+.tcn a:hover{text-decoration:underline}
+.tcn span{display:block;font-size:11.5px;color:var(--ink-3);margin-top:3px}
+.tcv{text-align:right;font-size:13.5px;font-weight:700;color:var(--ink);font-variant-numeric:tabular-nums}
+.tcv span{display:block;font-size:11.5px;font-weight:600;color:var(--ink-3);margin-top:2px}
+.tch{grid-column:1/-1;font-family:var(--serif);font-size:13.5px;color:var(--ink-2);line-height:1.5;padding:2px 0 2px 2px}
+.rules .q i{font-style:normal;font-family:var(--sans);font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3)}
+.rules .warnline{margin-top:10px;padding:7px 0 7px 11px;font-size:11.5px;color:var(--ink-2);line-height:1.5;box-shadow:inset 2px 0 0 var(--acc-mid);max-width:34ch}
+.msum{margin:2px 0 26px;padding:18px 22px 20px;border-radius:16px;background:color-mix(in srgb, var(--mid) 5%, transparent);box-shadow:inset 3px 0 0 var(--mid)}
+.msum-h{font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--acc-ink);margin-bottom:14px}
+.msum-body{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:22px 34px;align-items:start}
+.msum .sm-col{display:flex;flex-direction:column;gap:18px}
+.msum .smh{display:block;font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--ink-3);margin-bottom:8px}
+.msum ul{margin:0;padding-left:17px;list-style:none}
+.msum li{position:relative;margin:8px 0}
+.msum li::before{content:"";position:absolute;left:-17px;top:8px;width:5px;height:5px;border-radius:50%;background:var(--mid)}
+.msum .sm-main li{font-family:var(--serif);font-size:13.5px;line-height:1.55;color:var(--ink)}
+.msum .sm-side li{font-size:12.5px;line-height:1.5;color:var(--ink-2);margin:6px 0}
+.msum .sm-side li::before{top:7px;width:4px;height:4px;background:var(--ink-3)}
+.msum li b{color:var(--ink);font-weight:600}
+@media (max-width:860px){.msum-body{grid-template-columns:1fr}}
+.pers-side h3 .pflag{display:inline-block;margin-left:8px;padding:2px 8px;border-radius:999px;font-family:var(--sans);font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;vertical-align:middle;color:var(--ink);background:color-mix(in srgb, var(--sw-violet) 18%, transparent)}
+.rules .hooklist{margin:2px 0 10px;padding-left:16px;list-style:none;max-width:36ch}
+.rules .hooklist li{position:relative;font-family:var(--serif);font-size:13.5px;line-height:1.5;color:var(--ink);margin:5px 0}
+.rules .hooklist li::before{content:"";position:absolute;left:-16px;top:8px;width:5px;height:5px;border-radius:50%;background:var(--mid)}
+.bmk{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:0 26px}
+.bcell{padding:14px 0;border-top:1px solid var(--line-2)}
+.bcell .bk{display:block;font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--ink-3);margin-bottom:6px}
+.bcell .bv{display:block;font-size:19px;font-weight:700;color:var(--ink);font-variant-numeric:tabular-nums;line-height:1.2}
+.bcell .br{display:block;font-size:11.5px;color:var(--ink-2);margin-top:4px}
+.bcell .bn{display:block;font-size:11.5px;color:var(--ink-3);margin-top:2px}
+.bcell .bnote{display:block;font-size:11.5px;color:var(--ink-3);margin-top:6px;line-height:1.45}
+.rules .rule-card.lead{box-shadow:inset 3px 0 0 var(--mid),inset 0 1px 0 var(--hi), 0 10px 26px -20px rgba(45,36,22,.3)}
+.bet .rule-card.wide{grid-column:1/-1}
+.bet .rule-card.wide>span:last-child{font-family:var(--serif);font-size:19px;line-height:1.45;color:var(--ink);max-width:48ch}
+@media (max-width:900px){.bet .rule-card.wide{grid-column:auto}}
+body{overflow-x:clip}
+.side{position:sticky;top:14px;max-height:calc(100vh - 28px);overflow-y:auto;scrollbar-width:thin}
+.side::-webkit-scrollbar{width:6px}
+.side::-webkit-scrollbar-thumb{background:var(--line);border-radius:3px}
+@media (max-width:900px){.side{position:relative;top:auto;max-height:none}}
+.nacre > *,.side .upsell > *{position:relative;z-index:1}
+.cover .rpt-mark{margin-bottom:10px}
+.tbl,.dtbl,.obj{background:none;border:0;border-radius:0;backdrop-filter:none;-webkit-backdrop-filter:none}
+.tbl th,.dtbl .th,table.raw th{background:none;border-bottom:1px solid var(--line);padding:13px 18px 9px}
+.dtbl .th + .tr{border-top:0}
+.tbl thead + tbody tr:first-child td{border-top:0}
+.swot,.comp,.kan,.chn,.rules{background:none;border:0;padding:0}
+.serp{display:grid;grid-template-columns:repeat(auto-fit,minmax(330px,1fr));gap:0 30px;align-items:start}
+.serp .s{padding:12px 0;border-top:0;border-bottom:1px solid var(--line-2)}
+.serp .s .u{margin-bottom:6px}
+.serp .s .meta{margin-bottom:6px}
+.semrow{display:grid;grid-template-columns:minmax(0,210px) 1fr 64px;gap:14px;align-items:center;padding:4px 9px;cursor:pointer;background:none}
+.semrow .nm{margin-bottom:0;font-size:12.5px;line-height:1.3}
+@media (max-width:860px){.semrow{grid-template-columns:minmax(0,120px) 1fr 56px;gap:10px}}
+.semrow:hover,.semrow.on{background:none}
+.semrow .rail i{background:color-mix(in srgb, var(--mid) 42%, var(--line-2));transition:background .18s ease}
+.semrow:hover .rail i{background:color-mix(in srgb, var(--mid) 70%, var(--line-2))}
+.semrow.on .rail i{background:var(--mid)}
+.semrow .nm{transition:color .18s ease}
+@media (prefers-reduced-motion:reduce){.semrow .rail i,.semrow .nm{transition:none}}
+.tbl th,.dtbl .th,table.raw th{background:color-mix(in srgb, var(--ink) 4%, transparent);color:var(--ink-3);font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;white-space:nowrap;text-align:left}
+.tbl th,table.raw th{padding:11px 18px}
+.swot .sw li em{display:block;font-style:normal;font-size:11px;color:var(--ink-3);line-height:1.45;margin-top:3px}
+.main > .card{margin-bottom:30px;padding:26px 28px 28px}
+.main > .card > h2,.main > .card > h3{margin-top:30px}
+.main > .card > h2:first-of-type,.main > .card > h3:first-of-type{margin-top:14px}
+.main .tbl,.main .geo,.main .seg,.main .swot,.main .comp,.main .pers,.main .kan{margin:14px 0 22px}
+.main .chead{margin-bottom:14px}
+.main .seg{grid-template-columns:238px minmax(0,1fr)!important;gap:30px;align-items:start}
+.main .leghead,.main .sl.rich{grid-template-columns:40px minmax(0,1fr) 54px 104px 96px;gap:12px}
+.main .sl.rich{border-radius:10px;padding:6px 8px;margin:0 -8px;transition:background .15s ease}
+.main .sl.rich.on{background:color-mix(in srgb, var(--mid) 12%, transparent)}
+.main .leghead>span,.main .sl.rich .v2{white-space:normal;line-height:1.3;hyphens:none}
+.main .sl.rich .v2.big{white-space:nowrap}
+.nwrap{display:grid;grid-template-columns:minmax(0,1fr) 290px;gap:26px;align-items:start;margin-bottom:18px}
+.rkey-side{display:flex;flex-direction:column;align-items:flex-start;gap:12px;margin:0}
+.rkey-side .rtext{max-width:none;font-size:12.5px}
+@media (max-width:1000px){.main .seg{grid-template-columns:1fr!important}.nwrap{grid-template-columns:1fr}}
+@media (max-width:820px){.main .leghead{display:none}.main .sl.rich{grid-template-columns:40px 1fr;gap:6px 12px}}
+.tamwrap{display:grid;grid-template-columns:minmax(0,1fr) 220px;gap:24px;align-items:center}
+.tamvals{display:flex;flex-direction:column;gap:2px}
+.tamrow{display:grid;grid-template-columns:52px 1fr;gap:10px;align-items:baseline;padding:9px 0;border-top:1px solid var(--line-2)}
+.tamrow:first-child{border-top:0}
+.tamrow .c{font-size:11px;font-weight:700;letter-spacing:.06em;color:var(--ink-3)}
+.tamrow b{font-size:16px;font-weight:700;color:var(--ink);font-variant-numeric:tabular-nums}
+.tamrow .rel{grid-column:2;font-size:11.5px;color:var(--ink-3)}
+.tamrow{border-radius:9px;padding-left:8px;margin-left:-8px;transition:background .15s ease}
+.tamrow.on{background:color-mix(in srgb, var(--mid) 12%, transparent)}
+.tamwrap ellipse{cursor:default}
+@media (max-width:820px){.tamwrap{grid-template-columns:1fr}}
+.ibar{display:inline-flex;gap:2px;margin-left:12px;vertical-align:-4px}
+.ibtn{background:none;border:0;padding:5px;cursor:pointer;border-radius:8px;display:inline-flex;line-height:0;transition:background .15s ease}
+.ibtn svg{width:17px;height:17px;stroke:var(--ink-3);fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.ibtn:hover{background:color-mix(in srgb, var(--ink) 6%, transparent)}
+.ibtn:hover svg{stroke:var(--ink)}
+.ibtn.ok svg{stroke:var(--acc-strong)}
+.main > .card > .chead h2{font-size:21px;letter-spacing:-.015em}
+.main > .card h2{font-size:16px;font-weight:600;margin:26px 0 8px}
+.main > .card h3{font-size:14px;font-weight:600;margin:20px 0 6px;color:var(--ink-2)}
+.main > .card h4{font-size:13px;font-weight:600;margin:16px 0 6px;color:var(--ink-2)}
+.main > .card > h2:first-of-type{margin-top:12px}
+.nicheband{margin:42px 0 16px;padding:0 0 12px;border-bottom:2px solid var(--mid)}
+.nicheband .lab{display:block;font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);margin-bottom:6px}
+.nicheband .nm{font-family:var(--serif);font-size:30px;font-weight:600;color:var(--ink);line-height:1.15;letter-spacing:-.02em}
+.nicheband:first-of-type{margin-top:10px}
+.cover .chead{align-items:flex-start;gap:22px}
+.cover .eyebrow{display:block;font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);margin-bottom:8px}
+.cover .covername{font-family:var(--serif);font-size:34px;font-weight:600;margin:0;line-height:1.1;letter-spacing:-.02em}
+.cover .coversub{margin:8px 0 0;font-size:14px;color:var(--ink-2)}
+.cover .coveract{display:flex;align-items:center;gap:14px;flex-wrap:wrap;white-space:nowrap}
+.perslist{display:flex;flex-direction:column;gap:14px}
+.main .pers{grid-template-columns:minmax(0,230px) minmax(0,1fr);overflow:visible;border-radius:20px;margin-bottom:18px}
+.main .pers-side{border-radius:20px 0 0 20px;min-width:0}
+.main .pers-main{min-width:0;border-radius:0 20px 20px 0;overflow:hidden}
+.main .prow{grid-template-columns:minmax(0,130px) minmax(0,1fr) minmax(0,1fr);padding:12px 18px;align-items:start}
+.main .prow>*{min-width:0;overflow-wrap:anywhere}
+.main .pers-side h3{overflow-wrap:anywhere}
+@media (max-width:860px){.main .pers{grid-template-columns:1fr}.main .pers-side{border-radius:20px 20px 0 0}.main .pers-main{border-radius:0 0 20px 20px}.main .prow{grid-template-columns:1fr;gap:4px}}
+.main > .card{scroll-margin-top:18px}
+.cover .mods a{text-decoration:none}
+.cover .mods a:hover{background:color-mix(in srgb, var(--mid) 26%, transparent)}
+.side .logo{display:block;width:100%;max-width:170px;height:auto}
+.side .navgrid{grid-template-columns:1fr 1fr;gap:7px}
+.side .navtile{transition:padding .22s ease, background .22s ease, color .22s ease, box-shadow .22s ease}
+.side .navtile[aria-current="page"]{grid-column:1/-1;flex-direction:row;align-items:center;gap:14px;padding:20px 18px;font-size:14px;font-weight:600}
+.side .navtile[aria-current="page"] .ic{width:40px;height:40px;border-radius:13px;flex:0 0 auto}
+.side .navtile[aria-current="page"] .ic svg{width:20px;height:20px}
+.side .navtile:not([aria-current="page"]){grid-column:1/-1;padding:10px 12px;font-size:12px;flex-direction:row;align-items:center;gap:10px}
+.side .navtile:not([aria-current="page"]):not(:disabled):hover{padding:12px;box-shadow:0 8px 18px -12px rgba(23,21,18,.35)}
+.side .navtile:not([aria-current="page"]) .ic{width:24px;height:24px;border-radius:8px;flex:0 0 auto}
+.side .navtile:not([aria-current="page"]) .ic svg{width:13px;height:13px}
+.side .navtile:disabled{opacity:.5}
+@media (prefers-reduced-motion:reduce){.side .navtile{transition:none}}
+.side .navlist a.navrow{display:flex;align-items:center;gap:10px;width:100%;text-decoration:none;color:var(--ink-2);opacity:1}
+.side .navlist a.navrow:hover{color:var(--ink)}
+.klist{margin:10px 0 0;padding-left:18px}
+.klist li{font-size:13.5px;color:var(--ink-2);line-height:1.55;margin:6px 0}
+.aud .a .freq .lab,.aw span,.ccard2 .cid,.ccard2 .price span,.cmark,.heat th,.vmark,.tbl th,table.raw th{font-size:10px}
+.aud .a .who span,.awleg,.awrow .awnm span,.ccard .cn span,.client i,.kcard .met,.llist div span,.ltag .ename span,.mklbl,.pers-conf span.sub2,.serp .s .meta,.srow .sd .dt,.tamrow .c{font-size:11.5px}
+.ccard .cf div b,.chead .note,.gvol .v,.gx,.heat,.mktlist .hint,.nhint,.sigrow{font-size:12.5px}
+.rule-card{font-size:13.5px}
+.dtbl .q,.rules .q,.llist div{font-size:13.5px}
+.rules .nm,.ccard2 .cnm{font-size:15px}
+.lbl{font-size:12.5px}
+.val{font-size:11.5px;font-weight:700}
+.infer{font-size:10px;font-weight:700}
+.prow .p{font-weight:600}
+.qarrow{color:var(--ink-3)}
+.fcard .name{font-size:14.5px}
+.fcard .foot b{font-size:12.5px}
+th{font-size:10px}
+.tamrow .c,.upsell b i,.kchip{font-size:11.5px}
 :root{--fs-read:14.5px}
+.ltag .ename{font-size:var(--fs-item)}
+.aud .a .who,.awrow .awnm,.coverdl>div,.lleft .nm,.lright b,.pers-conf b,.prow,.sempanel .who,table{font-size:13.5px}
+.sl.rich .v2.big,.pers-side h3,.upsell b{font-size:19px}
+.pers-share b{font-size:30px}
+.main > .card > p{font-size:13.5px;line-height:1.6;color:var(--ink-2);max-width:74ch}
+.aud .a .cols h5,.bmet h4,.bpain h4,.cbox h5,.ccard .cf div span,.ccard2 .scale,.cover .eyebrow,.dtbl .eb,.dtbl .tag,.dtbl .th,.geohead,.kcol h3,.leghead,.mkt .hd,.mktlist .hdr,.mktlist h4,.rules .eb,.sw h3,.swot .sw h3,.tbl th,table.raw th,th,.demo h4,.vis h4,.chnside h4{letter-spacing:.07em;font-weight:700}
+.grp,.heat th,.mods span,.nicheband .lab,.upsell b i,.vmark,.vq2 .seg2{letter-spacing:.07em;font-weight:700}
 :root{--fs-label:10px;--fs-caption:11.5px;--fs-ui:12px;--fs-small:12.5px;--fs-base:13px;--fs-body:13.5px;--fs-sub:14px;--fs-item:15px;--fs-block:16px;--fs-num:19px;--fs-module:21px;--fs-display:30px;--fs-hero:34px}
+.btn-pri,.cm-btn,.cm-btn-pri,.cm-btn-back,.cm-btn-quiet{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line);border-radius:12px;padding:9px 17px;font-family:var(--sans);font-size:var(--fs-body);font-weight:600;color:var(--ink);cursor:pointer;background:linear-gradient(180deg, var(--card-solid), color-mix(in srgb, var(--card-solid) 93%, var(--ink)));transition:background .16s ease, border-color .16s ease, color .16s ease}
+.cm-btn:hover:not(:disabled),.cm-btn.hov{border-color:var(--ink-3);background:linear-gradient(180deg, color-mix(in srgb, var(--card-solid) 96%, var(--ink)),color-mix(in srgb, var(--card-solid) 88%, var(--ink)))}
+.cm-btn:active:not(:disabled),.cm-btn.act{box-shadow:inset 0 2px 4px rgba(23,21,18,.16)}
+.cm-btn:disabled{opacity:.45;cursor:default}
+.btn-pri,.cm-btn-pri{color:#FFFFFF;border:2px solid #0D0C0A;padding:8px 16px;background:linear-gradient(180deg, #262320, #171512)}
+.btn-pri:hover,.cm-btn-pri:hover:not(:disabled),.cm-btn-pri.hov{border-color:var(--mid);background:linear-gradient(180deg, #2E2A25, #1B1916);box-shadow:0 0 0 3px color-mix(in srgb, var(--mid) 22%, transparent)}
+.btn-pri:active,.cm-btn-pri:active:not(:disabled),.cm-btn-pri.act{box-shadow:inset 0 2px 5px rgba(0,0,0,.5);background:linear-gradient(180deg, #1B1916, #121110)}
+.cm-btn-back{border-color:var(--acc-mid);color:var(--ink)}
+.cm-btn-back:hover:not(:disabled),.cm-btn-back.hov{border-color:var(--acc-mid-ink);background:color-mix(in srgb, var(--acc-mid) 8%, var(--card-solid))}
+.cm-btn-quiet{border-color:transparent;background:none;color:var(--ink-2);font-weight:500}
+.cm-btn-quiet:hover:not(:disabled),.cm-btn-quiet.hov{background:color-mix(in srgb, var(--ink) 6%, transparent);color:var(--ink);border-color:transparent}
+.tabs,.cm-tabs{display:flex;gap:24px;flex-wrap:wrap;margin:18px 0 0;border-bottom:1px solid var(--line)}
+.tabs a,.cm-tabs a{display:inline-flex;align-items:baseline;gap:7px;padding:9px 1px 10px;margin-bottom:-1px;font-family:var(--sans);font-size:var(--fs-body);font-weight:600;color:var(--ink-3);cursor:pointer;user-select:none;border-bottom:2px solid transparent;transition:color .16s ease, border-color .16s ease}
+.tabs a:hover,.cm-tabs a:hover{color:var(--ink);border-bottom-color:var(--line)}
+.tabs a.on,.cm-tabs a.on{color:var(--ink);border-bottom-color:var(--mid)}
+.tabs .n,.cm-tabs .n{font-size:var(--fs-caption);font-weight:700;color:var(--ink-3);font-variant-numeric:tabular-nums}
+.tabs a.on .n,.cm-tabs a.on .n{color:var(--acc-ink)}
+@media (prefers-reduced-motion:reduce){.cm-btn,.cm-btn-pri,.tabs a,.cm-tabs a{transition:none}}
+@media print{.side,.no-print{display:none!important}.app{grid-template-columns:1fr}.card{break-inside:avoid}}

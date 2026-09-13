@@ -5844,10 +5844,20 @@ function injectBlockStyles() {
     (m, br, sel) => br + '\n' + scope(sel) + '{');
   const el = document.createElement('style');
   el.id = 'research-block-styles';
-  el.textContent = prefix(REPORT_BLOCK_CSS) + '\n' + prefix(REPORT_M1_CSS) + '\n' + prefix(REPORT_M7_CSS) + '\n' + prefix(REPORT_M2_CSS) + '\n' + prefix(REPORT_M4_CSS) + '\n' + prefix(REPORT_LIB2_CSS) + '\n' + prefix(REPORT_LIB3_CSS) + '\n' + prefix(REPORT_COMP_CSS) + '\n' + prefix(REPORT_LIB4_CSS) + '\n' + prefix(REPORT_PERS_CSS) + '\n' + prefix(REPORT_M5_CSS) + '\n' + prefix(REPORT_DEMO_CSS) + '\n' + prefix(REPORT_M3_CSS) + '\n' + prefix(REPORT_RULES_CSS)
+  // Константы — сразу, чтобы блоки не мигали голыми. Затем ПОЛНЫЙ стиль
+  // отчёта из собранного файла: половина вида блоков (итог модуля, карточки,
+  // полосы, единая шапка таблиц) живёт добавками сборки, констант мало —
+  // из-за этого сайт показывал «половину не так». Страничные правила отчёта
+  // область .rview обезвреживает: «.rview body» не совпадает ни с чем.
+  el.textContent = prefix(REPORT_BLOCK_CSS) + '\n' + prefix(REPORT_RULES_CSS)
     + '\n.rview{color:var(--ink,#171512);font-family:Montserrat,-apple-system,sans-serif}'
     + '\n.rview table{min-width:0}';
   document.head.appendChild(el);
+  fetch('lib/report.css').then(r => r.ok ? r.text() : '').then(css => {
+    if (css) el.textContent = prefix(css)
+      + '\n.rview{color:var(--ink,#171512);font-family:Montserrat,-apple-system,sans-serif}'
+      + '\n.rview table{min-width:0}';
+  }).catch(() => {});
 }
 
 // Показ результата модуля НА САЙТЕ. Рисует ровно тем же кодом, что и выгрузка
@@ -5856,7 +5866,14 @@ function injectBlockStyles() {
 // «я думала, это будет на сайте, а не только в выгрузке».
 function ResearchView({ content, ourName }) {
   const ref = React.useRef(null);
-  const out = React.useMemo(() => renderResearchHTML(content || '', { ourName }), [content, ourName]);
+  // Итог модуля вырезается и встаёт карточкой наверх — ровно как в выгрузке.
+  // Без этого на сайте раздел «ИТОГ МОДУЛЯ» лежал сырым текстом в хвосте,
+  // и владелица справедливо сказала «нет выводов».
+  const out = React.useMemo(() => {
+    const cut = splitModuleSummary(content || '');
+    const r = renderResearchHTML(cut.body, { ourName });
+    return { ...r, html: renderModuleSummary(cut.summary) + r.html };
+  }, [content, ourName]);
   React.useEffect(() => { injectBlockStyles(); }, []);
   React.useEffect(() => {
     if (!ref.current || !out.scripts.length) return;
@@ -6366,7 +6383,11 @@ function App() {
   React.useEffect(() => {
     if (!embedded || автовходСделан.current || sc !== 'list') return;
     автовходСделан.current = true;
-    const свои = projs || [];
+    const свои = (projs || []).filter(p =>
+      // Прогоны до перенумерации узнаются по старому id разведки ниш: их
+      // результаты под новыми номерами читаются как каша («M3 ошибка»,
+      // модули не те). Владелица решила: старое не переносим, перепрогоняем.
+      !(p.results || []).some(r => r && r.id === 'M1_2'));
     if (свои.length) openP(свои[0]); else goNew();
   }, [projs, sc]);
 
@@ -7628,10 +7649,9 @@ function App() {
                       </div>
                     </div>
                   ) : (<>
-                    <ModuleCharts moduleId={r.id} chartData={r.chartData}/>
-                    {r.id === 'M1' && r.chartData && (
-                      <MarketPositionBlock chartData={r.chartData} brief={brief} lang={lang}/>
-                    )}
+                    {/* Старые Chart.js-пироги убраны 14.09: согласованные
+                        визуализации рисуют блочные скрипты отчёта, и два вида
+                        графиков об одном рядом — разнобой, не богатство. */}
                     <ResearchView content={r.content} ourName={(proj&&proj.brief&&proj.brief.name)||''}/>
                   </>)}
                 </div>
