@@ -6566,6 +6566,21 @@ function App() {
       const usage = lastGptUsage;
       const searchCalls = searchCallCount;
       const keywordCalls = keywordCallCount;
+      // Расход прогона — в общий счётчик проекта. До 13.09 исследование не
+      // писало его вовсе: владелица видела в платформе только траты
+      // контент-машины и считала, что это весь расход. Клиент приходит из
+      // оболочки параметром адреса; открыт инструмент сам по себе — писать
+      // некуда, и это не ошибка, просто счёт ведётся по проекту.
+      if (embeddedClientId) {
+        authFetch('/api/usage', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            client_id: embeddedClientId, llm_calls: 1,
+            tokens_in: usage ? usage.prompt : 0, tokens_out: usage ? usage.completion : 0,
+            search_calls: searchCalls,
+          }),
+        }).catch(() => {});   // счёт не должен ронять прогон
+      }
       const chartData = extractChartData(full);
       const nicheData = mod.id === 'M2' ? extractNicheData(full) : null;
       const cleanedContent = cleanContent(full);
@@ -6781,6 +6796,11 @@ function App() {
   const embedded = (() => { try {
     return new URLSearchParams(location.search).get('embed') === '1';
   } catch { return false; } })();
+  // Клиент, от имени которого идёт работа: его передаёт оболочка. По нему
+  // ведётся счёт расхода — общий с контент-машиной, один на проект.
+  const embeddedClientId = (() => { try {
+    return new URLSearchParams(location.search).get('client') || '';
+  } catch { return ''; } })();
   const Header = () => embedded ? null : (
     <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'1.5rem'}}>
       <div>
