@@ -1,7 +1,11 @@
 // СОБРАНО АВТОМАТИЧЕСКИ из shell.jsx — не править руками.
 // Правки вносить в shell.jsx, затем: osascript -l JavaScript tools/build.js
-// отпечаток-исходника: d0f330b70842b271
+// отпечаток-исходника: fef0a803a83fa7fb
 function _extends() { return _extends = Object.assign ? Object.assign.bind() : function (n) { for (var e = 1; e < arguments.length; e++) { var t = arguments[e]; for (var r in t) ({}).hasOwnProperty.call(t, r) && (n[r] = t[r]); } return n; }, _extends.apply(null, arguments); }
+// Экраны «Клиенты» и «Рынки» удалены 13.09.2026: они были моей выдумкой.
+// В согласованной оболочке проект переключают выпадающим списком В МЕНЮ,
+// а отдельная страница со списком означала вход в платформу мимо самой
+// платформы — без меню, без разделов, без единого её признака.
 const {
   useState,
   useEffect,
@@ -263,104 +267,6 @@ function Login({
     }
   }, note)));
 }
-
-// ── Экран 1: клиенты ────────────────────────────────────────────────────────
-function Clients({
-  data,
-  onOpen,
-  onAdd,
-  importing
-}) {
-  const [adding, setAdding] = useState(false);
-  const [f, setF] = useState({
-    name: '',
-    domain: '',
-    what: ''
-  });
-  const save = e => {
-    e.preventDefault();
-    onAdd({
-      id: uid(),
-      ...f,
-      markets: []
-    });
-    setF({
-      name: '',
-      domain: '',
-      what: ''
-    });
-    setAdding(false);
-  };
-  if (adding) return /*#__PURE__*/React.createElement("div", {
-    className: "wrap",
-    style: {
-      maxWidth: 620
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "hdr"
-  }, /*#__PURE__*/React.createElement("h1", null, "\u041D\u043E\u0432\u044B\u0439 \u043A\u043B\u0438\u0435\u043D\u0442"), /*#__PURE__*/React.createElement("p", null, "\u0411\u0440\u0435\u043D\u0434 \u0446\u0435\u043B\u0438\u043A\u043E\u043C: \u043E\u043D \u043E\u0431\u0449\u0438\u0439 \u0434\u043B\u044F \u0432\u0441\u0435\u0445 \u0441\u0442\u0440\u0430\u043D, \u0432 \u043A\u043E\u0442\u043E\u0440\u044B\u0445 \u0432\u044B \u0440\u0430\u0431\u043E\u0442\u0430\u0435\u0442\u0435.")), /*#__PURE__*/React.createElement("form", {
-    className: "card",
-    onSubmit: save
-  }, /*#__PURE__*/React.createElement("label", null, /*#__PURE__*/React.createElement("span", {
-    className: "lab"
-  }, "\u041D\u0430\u0437\u0432\u0430\u043D\u0438\u0435 \u0431\u0440\u0435\u043D\u0434\u0430"), /*#__PURE__*/React.createElement("input", {
-    value: f.name,
-    onChange: e => setF({
-      ...f,
-      name: e.target.value
-    }),
-    required: true,
-    autoFocus: true
-  })), /*#__PURE__*/React.createElement("label", null, /*#__PURE__*/React.createElement("span", {
-    className: "lab"
-  }, "\u0421\u0430\u0439\u0442"), /*#__PURE__*/React.createElement("input", {
-    value: f.domain,
-    onChange: e => setF({
-      ...f,
-      domain: e.target.value
-    }),
-    placeholder: "example.com"
-  })), /*#__PURE__*/React.createElement("label", null, /*#__PURE__*/React.createElement("span", {
-    className: "lab"
-  }, "\u0421\u0443\u0442\u044C \u043F\u0440\u043E\u0434\u0443\u043A\u0442\u0430"), /*#__PURE__*/React.createElement("input", {
-    value: f.what,
-    onChange: e => setF({
-      ...f,
-      what: e.target.value
-    }),
-    placeholder: "\u0427\u0442\u043E \u0432\u044B \u043F\u0440\u043E\u0434\u0430\u0451\u0442\u0435 \u0438 \u043A\u043E\u043C\u0443"
-  }), /*#__PURE__*/React.createElement("span", {
-    className: "hint"
-  }, "\u041E\u0434\u043D\u043E\u0439 \u0441\u0442\u0440\u043E\u043A\u043E\u0439. \u041F\u043E\u0434\u0440\u043E\u0431\u043D\u043E\u0441\u0442\u0438 \u0441\u043F\u0440\u043E\u0441\u0438\u0442 \u0438\u0441\u0441\u043B\u0435\u0434\u043E\u0432\u0430\u043D\u0438\u0435.")), /*#__PURE__*/React.createElement("div", {
-    className: "row"
-  }, /*#__PURE__*/React.createElement("button", {
-    className: "btn btn-primary",
-    disabled: !f.name.trim()
-  }, "\u0421\u043E\u0437\u0434\u0430\u0442\u044C"), /*#__PURE__*/React.createElement("button", {
-    type: "button",
-    className: "btn",
-    onClick: () => setAdding(false)
-  }, "\u041E\u0442\u043C\u0435\u043D\u0430"))));
-  return /*#__PURE__*/React.createElement("div", {
-    className: "wrap"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "hdr"
-  }, /*#__PURE__*/React.createElement("h1", null, "\u041A\u043B\u0438\u0435\u043D\u0442\u044B"), /*#__PURE__*/React.createElement("p", null, "\u0411\u0440\u0435\u043D\u0434 \u2014 \u0432\u0435\u0440\u0445\u043D\u0438\u0439 \u0443\u0440\u043E\u0432\u0435\u043D\u044C. \u0412\u043D\u0443\u0442\u0440\u0438 \u043D\u0435\u0433\u043E \u0441\u0442\u0440\u0430\u043D\u044B, \u0432 \u043A\u043E\u0442\u043E\u0440\u044B\u0445 \u0432\u044B \u0440\u0430\u0431\u043E\u0442\u0430\u0435\u0442\u0435.")), data.clients.length === 0 ? /*#__PURE__*/React.createElement("div", {
-    className: "card empty"
-  }, importing ? /*#__PURE__*/React.createElement("p", null, "\u0418\u0449\u0443 \u0432\u0430\u0448\u0438 \u043F\u0440\u043E\u0435\u043A\u0442\u044B \u0432 \u0438\u043D\u0441\u0442\u0440\u0443\u043C\u0435\u043D\u0442\u0435 \u0438 \u0432 \u0431\u0430\u0437\u0435\u2026") : /*#__PURE__*/React.createElement("p", null, "\u0417\u0434\u0435\u0441\u044C \u043F\u043E\u043A\u0430 \u043F\u0443\u0441\u0442\u043E. \u041D\u0430\u0447\u043D\u0438\u0442\u0435 \u0441 \u0431\u0440\u0435\u043D\u0434\u0430 \u2014 \u043D\u0430\u0437\u0432\u0430\u043D\u0438\u044F, \u0441\u0430\u0439\u0442\u0430 \u0438 \u043E\u0434\u043D\u043E\u0439 \u0441\u0442\u0440\u043E\u043A\u0438 \u043E \u0442\u043E\u043C, \u0447\u0442\u043E \u043E\u043D \u043F\u0440\u043E\u0434\u0430\u0451\u0442."), /*#__PURE__*/React.createElement("button", {
-    className: "btn btn-primary",
-    onClick: () => setAdding(true)
-  }, "\u0421\u043E\u0437\u0434\u0430\u0442\u044C \u043A\u043B\u0438\u0435\u043D\u0442\u0430")) : /*#__PURE__*/React.createElement("div", {
-    className: "tiles"
-  }, data.clients.map(c => /*#__PURE__*/React.createElement("button", {
-    key: c.id,
-    className: "tile",
-    onClick: () => onOpen(c.id)
-  }, /*#__PURE__*/React.createElement("b", null, c.name), /*#__PURE__*/React.createElement("span", null, c.fromOld ? 'из инструмента · ' : '', c.domain || 'без сайта', " \xB7 ", c.markets.length ? c.markets.length + ' ' + plural(c.markets.length, 'рынок', 'рынка', 'рынков') : 'рынков нет'))), /*#__PURE__*/React.createElement("button", {
-    className: "tile add",
-    onClick: () => setAdding(true)
-  }, "+ \u0415\u0449\u0451 \u043A\u043B\u0438\u0435\u043D\u0442")));
-}
 const plural = (n, a, b, c) => {
   const d = n % 100,
     e = n % 10;
@@ -369,108 +275,6 @@ const plural = (n, a, b, c) => {
   if (e >= 2 && e <= 4) return b;
   return c;
 };
-
-// ── Экран 2: рынки клиента ──────────────────────────────────────────────────
-function Markets({
-  client,
-  onOpen,
-  onAdd,
-  onBack
-}) {
-  const [adding, setAdding] = useState(false);
-  const [country, setCountry] = useState('RU');
-  const [lang, setLang] = useState('Русский');
-  const c = COUNTRIES.find(x => x.code === country);
-  const pickCountry = code => {
-    setCountry(code);
-    setLang(COUNTRIES.find(x => x.code === code).langs[0]);
-  };
-  const save = e => {
-    e.preventDefault();
-    onAdd({
-      id: uid(),
-      country,
-      countryName: c.name,
-      lang,
-      research: null
-    });
-    setAdding(false);
-  };
-  if (adding) return /*#__PURE__*/React.createElement("div", {
-    className: "wrap",
-    style: {
-      maxWidth: 620
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "hdr"
-  }, /*#__PURE__*/React.createElement("h1", null, "\u041D\u043E\u0432\u044B\u0439 \u0440\u044B\u043D\u043E\u043A"), /*#__PURE__*/React.createElement("p", null, "\u0420\u044B\u043D\u043E\u043A \u2014 \u044D\u0442\u043E \u0441\u0442\u0440\u0430\u043D\u0430 \u0438 \u044F\u0437\u044B\u043A \u0432\u043C\u0435\u0441\u0442\u0435. \u0418\u0441\u0441\u043B\u0435\u0434\u043E\u0432\u0430\u043D\u0438\u0435 \u0434\u0435\u043B\u0430\u0435\u0442\u0441\u044F \u0434\u043B\u044F \u043D\u0435\u0433\u043E.")), /*#__PURE__*/React.createElement("form", {
-    className: "card",
-    onSubmit: save
-  }, /*#__PURE__*/React.createElement("label", null, /*#__PURE__*/React.createElement("span", {
-    className: "lab"
-  }, "\u0421\u0442\u0440\u0430\u043D\u0430"), /*#__PURE__*/React.createElement("select", {
-    value: country,
-    onChange: e => pickCountry(e.target.value)
-  }, COUNTRIES.map(x => /*#__PURE__*/React.createElement("option", {
-    key: x.code,
-    value: x.code
-  }, x.name)))), /*#__PURE__*/React.createElement("label", null, /*#__PURE__*/React.createElement("span", {
-    className: "lab"
-  }, "\u042F\u0437\u044B\u043A \u0430\u0443\u0434\u0438\u0442\u043E\u0440\u0438\u0438"), /*#__PURE__*/React.createElement("select", {
-    value: lang,
-    onChange: e => setLang(e.target.value)
-  }, c.langs.map(l => /*#__PURE__*/React.createElement("option", {
-    key: l,
-    value: l
-  }, l))), /*#__PURE__*/React.createElement("span", {
-    className: "hint"
-  }, "\u0421\u0442\u0440\u0430\u043D\u0430 \u043D\u0435 \u043E\u0442\u0432\u0435\u0447\u0430\u0435\u0442 \u043D\u0430 \u044D\u0442\u043E\u0442 \u0432\u043E\u043F\u0440\u043E\u0441 \u0437\u0430 \u0432\u0430\u0441: \u0432 \u041E\u0410\u042D \u043F\u043E\u043A\u0443\u043F\u0430\u044E\u0442 \u0438 \u043F\u043E-\u0430\u043D\u0433\u043B\u0438\u0439\u0441\u043A\u0438, \u0438 \u043F\u043E-\u0430\u0440\u0430\u0431\u0441\u043A\u0438, \u0430 \u0432 \u0422\u0443\u0440\u0446\u0438\u0438 \u0435\u0441\u0442\u044C \u0440\u0443\u0441\u0441\u043A\u043E\u044F\u0437\u044B\u0447\u043D\u0430\u044F \u0430\u0443\u0434\u0438\u0442\u043E\u0440\u0438\u044F.")), /*#__PURE__*/React.createElement("div", {
-    className: "warn"
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "rule"
-  }), /*#__PURE__*/React.createElement("span", null, /*#__PURE__*/React.createElement("b", null, "\u042F\u0437\u044B\u043A \u043C\u0435\u043D\u044F\u0442\u044C \u043D\u0435\u043B\u044C\u0437\u044F"), "\u041E\u0442\u0437\u044B\u0432\u044B, \u0446\u0438\u0442\u0430\u0442\u044B \u0438 \u0444\u043E\u0440\u043C\u0443\u043B\u0438\u0440\u043E\u0432\u043A\u0438 \u0441\u043E\u0431\u0438\u0440\u0430\u044E\u0442\u0441\u044F \u043D\u0430 \u044F\u0437\u044B\u043A\u0435 \u0430\u0443\u0434\u0438\u0442\u043E\u0440\u0438\u0438. \u0414\u0440\u0443\u0433\u043E\u0439 \u044F\u0437\u044B\u043A \u2014 \u044D\u0442\u043E \u0434\u0440\u0443\u0433\u043E\u0439 \u0440\u044B\u043D\u043E\u043A \u0438 \u0434\u0440\u0443\u0433\u043E\u0435 \u0438\u0441\u0441\u043B\u0435\u0434\u043E\u0432\u0430\u043D\u0438\u0435, \u0437\u0430 \u043E\u0442\u0434\u0435\u043B\u044C\u043D\u044B\u0435 \u0434\u0435\u043D\u044C\u0433\u0438. \u0421\u0442\u0440\u0430\u043D\u0443 \u0438 \u044F\u0437\u044B\u043A \u043F\u043E\u0441\u043B\u0435 \u0441\u043E\u0437\u0434\u0430\u043D\u0438\u044F \u0440\u044B\u043D\u043A\u0430 \u043D\u0435 \u043F\u043E\u043C\u0435\u043D\u044F\u0442\u044C.")), /*#__PURE__*/React.createElement("div", {
-    className: "row"
-  }, /*#__PURE__*/React.createElement("button", {
-    className: "btn btn-primary"
-  }, "\u0421\u043E\u0437\u0434\u0430\u0442\u044C \u0440\u044B\u043D\u043E\u043A"), /*#__PURE__*/React.createElement("button", {
-    type: "button",
-    className: "btn",
-    onClick: () => setAdding(false)
-  }, "\u041E\u0442\u043C\u0435\u043D\u0430"))));
-  return /*#__PURE__*/React.createElement("div", {
-    className: "wrap"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "hdr"
-  }, /*#__PURE__*/React.createElement("h1", null, client.name), /*#__PURE__*/React.createElement("p", null, client.what || 'Суть продукта не заполнена')), /*#__PURE__*/React.createElement("button", {
-    className: "btn",
-    style: {
-      marginBottom: 20
-    },
-    onClick: onBack
-  }, "\u2190 \u0412\u0441\u0435 \u043A\u043B\u0438\u0435\u043D\u0442\u044B"), client.markets.length === 0 ? /*#__PURE__*/React.createElement("div", {
-    className: "card empty"
-  }, /*#__PURE__*/React.createElement("p", null, "\u0423 \u0431\u0440\u0435\u043D\u0434\u0430 \u043F\u043E\u043A\u0430 \u043D\u0435\u0442 \u043D\u0438 \u043E\u0434\u043D\u043E\u0433\u043E \u0440\u044B\u043D\u043A\u0430. \u0420\u044B\u043D\u043E\u043A \u2014 \u044D\u0442\u043E \u0441\u0442\u0440\u0430\u043D\u0430 \u0438 \u044F\u0437\u044B\u043A: \u0441 \u043D\u0435\u0433\u043E \u043D\u0430\u0447\u0438\u043D\u0430\u0435\u0442\u0441\u044F \u0438\u0441\u0441\u043B\u0435\u0434\u043E\u0432\u0430\u043D\u0438\u0435."), /*#__PURE__*/React.createElement("button", {
-    className: "btn btn-primary",
-    onClick: () => setAdding(true)
-  }, "\u0414\u043E\u0431\u0430\u0432\u0438\u0442\u044C \u0440\u044B\u043D\u043E\u043A")) : /*#__PURE__*/React.createElement("div", {
-    className: "tiles"
-  }, client.markets.map(m => /*#__PURE__*/React.createElement("button", {
-    key: m.id,
-    className: "tile",
-    onClick: () => onOpen(m.id)
-  }, /*#__PURE__*/React.createElement("b", null, m.countryName), /*#__PURE__*/React.createElement("span", {
-    style: {
-      marginBottom: 8
-    }
-  }, m.lang, m.projectIds && m.projectIds.length > 1 ? ' · ' + m.projectIds.length + ' прогона в инструменте' : ''), /*#__PURE__*/React.createElement("span", {
-    className: 'chip ' + (m.research ? 'chip-go' : 'chip-wait')
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "dot"
-  }), m.research ? 'исследование готово' : 'исследования ещё нет'))), /*#__PURE__*/React.createElement("button", {
-    className: "tile add",
-    onClick: () => setAdding(true)
-  }, "+ \u0415\u0449\u0451 \u0440\u044B\u043D\u043E\u043A")));
-}
 
 // ── Экран 3: рынок с боковым меню модулей ───────────────────────────────────
 // Разделы платформы и их части. Порядок и названия — из оболочки,
@@ -574,12 +378,14 @@ const FLAG = c => ({
   GB: '🇬🇧'
 })[c] || '';
 const MARK = n => (n || '').split(/\s+/).filter(Boolean).slice(0, 2).map(w => w[0]).join('').toUpperCase();
-function Market({
+function Platform({
   client,
   market,
   clients,
+  bar,
   onPick,
-  onBack,
+  onAddClient,
+  onAddMarket,
   theme,
   setTheme,
   onOut
@@ -598,12 +404,13 @@ function Market({
     return () => document.removeEventListener('click', off);
   }, [drop]);
   const cur = SECTIONS.find(x => x.id === section) || SECTIONS[0];
-  return /*#__PURE__*/React.createElement("div", {
+  const пусто = !client;
+  return /*#__PURE__*/React.createElement(React.Fragment, null, bar, /*#__PURE__*/React.createElement("div", {
     className: "app"
   }, /*#__PURE__*/React.createElement("aside", {
     className: "side"
   }, /*#__PURE__*/React.createElement("div", {
-    className: "cm-drop cm-side-proj"
+    className: "cm-drop cm-side-proj nacre"
   }, /*#__PURE__*/React.createElement("div", {
     className: "cm-drop"
   }, /*#__PURE__*/React.createElement("button", {
@@ -614,9 +421,9 @@ function Market({
     }
   }, /*#__PURE__*/React.createElement("span", {
     className: "cm-mark"
-  }, MARK(client.name)), /*#__PURE__*/React.createElement("u", {
+  }, пусто ? '+' : MARK(client.name)), !пусто && market && /*#__PURE__*/React.createElement("u", {
     className: "cm-cc"
-  }, FLAG(market.country), " ", (market.country || '').toUpperCase()), /*#__PURE__*/React.createElement("b", null, client.domain || client.name), /*#__PURE__*/React.createElement("em", null, ниши(client)), /*#__PURE__*/React.createElement("svg", {
+  }, FLAG(market.country), " ", (market.country || '').toUpperCase()), /*#__PURE__*/React.createElement("b", null, пусто ? 'Нет проектов' : client.domain || client.name), /*#__PURE__*/React.createElement("em", null, пусто ? 'заведите первый' : ниши(client)), /*#__PURE__*/React.createElement("svg", {
     className: "cm-chev",
     viewBox: "0 0 24 24"
   }, /*#__PURE__*/React.createElement("path", {
@@ -625,7 +432,7 @@ function Market({
     className: "cm-menu wide"
   }, (clients || []).flatMap(c => (c.markets || []).map(m => /*#__PURE__*/React.createElement("a", {
     key: c.id + m.id,
-    className: c.id === client.id && m.id === market.id ? 'on' : undefined,
+    className: client && market && c.id === client.id && m.id === market.id ? 'on' : undefined,
     onClick: () => {
       setDrop(false);
       onPick(c.id, m.id);
@@ -640,7 +447,7 @@ function Market({
     className: "cm-add",
     onClick: () => {
       setDrop(false);
-      onBack();
+      setPart('new');
     }
   }, "+ \u0421\u043E\u0437\u0434\u0430\u0442\u044C \u043F\u0440\u043E\u0435\u043A\u0442")))), /*#__PURE__*/React.createElement("div", {
     className: "navgrid"
@@ -691,8 +498,10 @@ function Market({
     section: section,
     part: part,
     client: client,
-    market: market
-  }))));
+    market: market,
+    onAddClient: onAddClient,
+    onAddMarket: onAddMarket
+  })))));
 }
 
 // Место, куда встанут модули. Оболочка сама ничего не считает и не генерирует —
@@ -869,14 +678,132 @@ function Keys({
   }, "\u0423\u0431\u0440\u0430\u0442\u044C")))));
 }
 
+// Заведение проекта — на месте работы, а не отдельной страницей: пока проекта
+// нет, платформа всё равно ничего показать не может, и уводить человека на
+// другой экран незачем.
+function NewProject({
+  client,
+  onAddClient,
+  onAddMarket
+}) {
+  const [f, setF] = useState({
+    name: '',
+    domain: '',
+    what: ''
+  });
+  const СТРАНЫ = [['RU', 'Россия', 'ru'], ['TR', 'Турция', 'tr'], ['KZ', 'Казахстан', 'kk'], ['AE', 'ОАЭ', 'ar'], ['US', 'США', 'en'], ['', 'Не указана', 'ru']];
+  const [m, setM] = useState({
+    country: 'RU',
+    countryName: 'Россия',
+    lang: 'ru'
+  });
+  if (!client) return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
+    className: "hdr"
+  }, /*#__PURE__*/React.createElement("h1", null, "\u041D\u043E\u0432\u044B\u0439 \u043F\u0440\u043E\u0435\u043A\u0442"), /*#__PURE__*/React.createElement("p", null, "\u041F\u0440\u043E\u0435\u043A\u0442 \u2014 \u044D\u0442\u043E \u0431\u0440\u0435\u043D\u0434, \u0434\u043B\u044F \u043A\u043E\u0442\u043E\u0440\u043E\u0433\u043E \u0440\u0430\u0431\u043E\u0442\u0430\u0435\u0442 \u043F\u043B\u0430\u0442\u0444\u043E\u0440\u043C\u0430. \u0420\u044B\u043D\u043E\u043A \u0434\u043E\u0431\u0430\u0432\u0438\u043C \u0441\u043B\u0435\u0434\u043E\u043C: \u0432 \u0434\u0440\u0443\u0433\u043E\u0439 \u0441\u0442\u0440\u0430\u043D\u0435 \u0438 \u043D\u0438\u0448\u0438, \u0438 \u043A\u043E\u043D\u043A\u0443\u0440\u0435\u043D\u0442\u044B, \u0438 \u0441\u043B\u043E\u0432\u0430 \u0434\u0440\u0443\u0433\u0438\u0435.")), /*#__PURE__*/React.createElement("div", {
+    className: "card nacre"
+  }, /*#__PURE__*/React.createElement("form", {
+    onSubmit: e => {
+      e.preventDefault();
+      if (!f.name.trim()) return;
+      onAddClient({
+        id: uid(),
+        name: f.name.trim(),
+        domain: f.domain.trim(),
+        what: f.what.trim(),
+        markets: []
+      });
+    }
+  }, /*#__PURE__*/React.createElement("label", null, /*#__PURE__*/React.createElement("span", {
+    className: "lab"
+  }, "\u041D\u0430\u0437\u0432\u0430\u043D\u0438\u0435"), /*#__PURE__*/React.createElement("input", {
+    value: f.name,
+    onChange: e => setF({
+      ...f,
+      name: e.target.value
+    }),
+    placeholder: "\u043D\u0430\u043F\u0440\u0438\u043C\u0435\u0440, \u041B\u043E\u0432\u0435\u0446 \u041B\u0438\u0434\u043E\u0432",
+    required: true
+  })), /*#__PURE__*/React.createElement("label", null, /*#__PURE__*/React.createElement("span", {
+    className: "lab"
+  }, "\u0421\u0430\u0439\u0442"), /*#__PURE__*/React.createElement("input", {
+    value: f.domain,
+    onChange: e => setF({
+      ...f,
+      domain: e.target.value
+    }),
+    placeholder: "\u043B\u043E\u0432\u0435\u0446-\u043B\u0438\u0434\u043E\u0432.\u0440\u0444"
+  })), /*#__PURE__*/React.createElement("label", null, /*#__PURE__*/React.createElement("span", {
+    className: "lab"
+  }, "\u0427\u0435\u043C \u0437\u0430\u043D\u0438\u043C\u0430\u0435\u0442\u0441\u044F"), /*#__PURE__*/React.createElement("input", {
+    value: f.what,
+    onChange: e => setF({
+      ...f,
+      what: e.target.value
+    }),
+    placeholder: "\u043E\u0434\u043D\u043E\u0439 \u0441\u0442\u0440\u043E\u043A\u043E\u0439"
+  })), /*#__PURE__*/React.createElement("button", {
+    className: "btn btn-primary"
+  }, "\u0417\u0430\u0432\u0435\u0441\u0442\u0438 \u043F\u0440\u043E\u0435\u043A\u0442"))));
+  return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
+    className: "hdr"
+  }, /*#__PURE__*/React.createElement("h1", null, "\u0420\u044B\u043D\u043E\u043A \u0434\u043B\u044F \xAB", client.name, "\xBB"), /*#__PURE__*/React.createElement("p", null, "\u0420\u044B\u043D\u043E\u043A \u2014 \u044D\u0442\u043E \u0441\u0442\u0440\u0430\u043D\u0430 \u0438 \u044F\u0437\u044B\u043A \u0432\u043C\u0435\u0441\u0442\u0435. \u0418\u0441\u0441\u043B\u0435\u0434\u043E\u0432\u0430\u043D\u0438\u0435 \u0434\u0435\u043B\u0430\u0435\u0442\u0441\u044F \u0434\u043B\u044F \u043D\u0435\u0433\u043E.")), /*#__PURE__*/React.createElement("div", {
+    className: "card nacre"
+  }, /*#__PURE__*/React.createElement("form", {
+    onSubmit: e => {
+      e.preventDefault();
+      onAddMarket(client.id, {
+        id: uid(),
+        country: m.country,
+        countryName: m.countryName,
+        lang: m.lang,
+        projects: []
+      });
+    }
+  }, /*#__PURE__*/React.createElement("label", null, /*#__PURE__*/React.createElement("span", {
+    className: "lab"
+  }, "\u0421\u0442\u0440\u0430\u043D\u0430"), /*#__PURE__*/React.createElement("select", {
+    value: m.country,
+    onChange: e => {
+      const c = СТРАНЫ.find(x => x[0] === e.target.value) || СТРАНЫ[0];
+      setM({
+        country: c[0],
+        countryName: c[1],
+        lang: c[2]
+      });
+    }
+  }, СТРАНЫ.map(([c, n2]) => /*#__PURE__*/React.createElement("option", {
+    key: c || 'none',
+    value: c
+  }, n2)))), /*#__PURE__*/React.createElement("label", null, /*#__PURE__*/React.createElement("span", {
+    className: "lab"
+  }, "\u042F\u0437\u044B\u043A \u0438\u0441\u0441\u043B\u0435\u0434\u043E\u0432\u0430\u043D\u0438\u044F"), /*#__PURE__*/React.createElement("input", {
+    value: m.lang,
+    onChange: e => setM({
+      ...m,
+      lang: e.target.value
+    })
+  })), /*#__PURE__*/React.createElement("button", {
+    className: "btn btn-primary"
+  }, "\u0414\u043E\u0431\u0430\u0432\u0438\u0442\u044C \u0440\u044B\u043D\u043E\u043A"))));
+}
+
 // Площадка раздела. Оболочка сама ничего не считает и не генерирует — она
 // только даёт место и говорит, кто вошёл, какой клиент и рынок.
 function Slot({
   section,
   part,
   client,
-  market
+  market,
+  onAddClient,
+  onAddMarket
 }) {
+  // Работать не с чем — показываем следующий шаг, а не пустоту. Это первое,
+  // что видит человек после регистрации, и «ничего нет» здесь неприемлемо.
+  if (!client || !market || part === 'new') return /*#__PURE__*/React.createElement(NewProject, {
+    client: part === 'new' ? null : client,
+    onAddClient: onAddClient,
+    onAddMarket: onAddMarket
+  });
   if (section === 'research') {
     const q = 'index.html?embed=1&client=' + encodeURIComponent(client.id) + '&market=' + encodeURIComponent(market.id || '') + '&country=' + encodeURIComponent(market.countryName || '') + '&lang=' + encodeURIComponent(market.lang || '') + (part ? '&step=' + encodeURIComponent(part) : '');
     return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
@@ -1206,40 +1133,34 @@ function App() {
   }, "\u041F\u0435\u0440\u0435\u043D\u043E\u0448\u0443 \u043F\u0440\u043E\u0435\u043A\u0442\u044B \u0438\u0437 \u0438\u043D\u0441\u0442\u0440\u0443\u043C\u0435\u043D\u0442\u0430\u2026"), saveErr && /*#__PURE__*/React.createElement("div", {
     className: "cm-lane"
   }, saveErr));
-  if (market) return /*#__PURE__*/React.createElement(Market, {
-    client: client,
-    market: market,
+
+  // Отдельного экрана со списком клиентов больше нет: после входа сразу
+  // платформа — меню слева, работа справа. Проект переключают выпадающим
+  // списком в меню, как в согласованной оболочке. Нет проектов — на месте
+  // работы приглашение завести первый, а не пустая страница.
+  const первый = data.clients[0] || null;
+  const текКлиент = client || первый;
+  const текРынок = (client ? market : null) || (текКлиент && текКлиент === первый ? (текКлиент.markets || [])[0] || null : null);
+  return /*#__PURE__*/React.createElement(Platform, {
+    client: текКлиент,
+    market: текРынок,
     clients: data.clients,
+    bar: bar,
     theme: theme,
     setTheme: setTheme,
     onPick: (c, m) => {
       setClientId(c);
       setMarketId(m);
     },
-    onBack: () => {
-      setMarketId(null);
-      setClientId(null);
+    onAddClient: addClient,
+    onAddMarket: (cid, m) => {
+      setClientId(cid);
+      addMarket(m);
     },
     onOut: () => {
       clearTokens();
       setInside(false);
     }
   });
-  if (client) return /*#__PURE__*/React.createElement(React.Fragment, null, bar, /*#__PURE__*/React.createElement(Markets, {
-    client: client,
-    onBack: () => setClientId(null),
-    onOpen: setMarketId,
-    onAdd: m => {
-      addMarket(m);
-    }
-  }));
-  return /*#__PURE__*/React.createElement(React.Fragment, null, bar, /*#__PURE__*/React.createElement(Clients, {
-    data: data,
-    onOpen: setClientId,
-    importing: importing,
-    onAdd: c => {
-      addClient(c);
-    }
-  }));
 }
 ReactDOM.createRoot(document.getElementById('root')).render(/*#__PURE__*/React.createElement(App, null));

@@ -97,6 +97,37 @@ TARGETS.forEach(function (t) {
   console.log('  app.jsx → lib/platform.css  (' + Math.round(css.length / 1024) + ' КБ)');
 })();
 
+// Перламутр отдельным файлом для оболочки. Правила и снимок раковины живут в
+// эталоне (app.jsx), и вторая копия завелась бы в первый же день: там правили
+// бы одно, здесь другое. Достаём из сборки отчёта ровно правила .nacre и
+// переменную со снимком — оболочка их подключает, остальное отчётное ей не нужно.
+(function () {
+  var src = rd(BASE + 'app.jsx');
+  var i = src.indexOf("+'\\n:root{--nacre-img:url(data:image/jpeg;base64,");
+  var end = src.indexOf("+'\\n.nacre > *,.side .upsell > *{position:relative;z-index:1}'");
+  if (i < 0 || end < 0) { console.log('  перламутр не найден — пропускаю'); return; }
+  end = src.indexOf('\n', end) + 1;
+  var block = src.slice(i, end), css = '';
+  // Куски склеены как строки JS: вынимаем содержимое кавычек по порядку.
+  var re = /'((?:[^'\\]|\\.)*)'/g, m;
+  while ((m = re.exec(block))) css += m[1].replace(/\\n/g, '\n').replace(/\\'/g, "'").replace(/\\"/g, '"');
+  // Берём ТОЛЬКО правила перламутра и переменную со снимком. В этом же куске
+  // лежат отчётные правила и — опаснее — body{overflow-x:clip} и .side{sticky}:
+  // в оболочке у бокового меню свои правила, и чужие молча бы их перебили.
+  var только = '';
+  var rr = /([^{}]+)\{([^}]*)\}/g, q;
+  while ((q = rr.exec(css))) {
+    var sel = q[1].trim();
+    var есть = sel.indexOf('.nacre') >= 0
+      || (/^:root$/.test(sel) && q[2].indexOf('--nacre-img') >= 0);
+    if (есть) только += sel + '{' + q[2].trim() + '}\n';
+  }
+  var head = '/* Собрано из app.jsx при сборке. Не править руками.\n'
+    + '   Только перламутр: правила .nacre и снимок раковины. */\n';
+  wr(BASE + 'lib/nacre.css', head + только);
+  console.log('  app.jsx → lib/nacre.css  (' + Math.round(только.length / 1024) + ' КБ)');
+})();
+
 // Знак платформы — из утверждённого отчёта, а не копией в оболочке. Логотип
 // поменялся 12.09.2026, и в shell.jsx лежал прежний: владелица увидела чужой
 // знак в собственной платформе. Источник теперь один — REPORT_SIDEBAR в

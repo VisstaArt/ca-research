@@ -1,3 +1,7 @@
+// Экраны «Клиенты» и «Рынки» удалены 13.09.2026: они были моей выдумкой.
+// В согласованной оболочке проект переключают выпадающим списком В МЕНЮ,
+// а отдельная страница со списком означала вход в платформу мимо самой
+// платформы — без меню, без разделов, без единого её признака.
 const { useState, useEffect, useCallback } = React;
 const { signIn, signUp, refreshTokens, getRefreshToken, clearTokens, authFetch } = window.CAAuth;
 const { buildShellData } = window.CAMigrate;
@@ -164,76 +168,6 @@ function Login({ onIn }) {
   );
 }
 
-// ── Экран 1: клиенты ────────────────────────────────────────────────────────
-function Clients({ data, onOpen, onAdd, importing }) {
-  const [adding, setAdding] = useState(false);
-  const [f, setF] = useState({ name:'', domain:'', what:'' });
-  const save = e => {
-    e.preventDefault();
-    onAdd({ id: uid(), ...f, markets: [] });
-    setF({ name:'', domain:'', what:'' }); setAdding(false);
-  };
-  if (adding) return (
-    <div className="wrap" style={{maxWidth:620}}>
-      <div className="hdr">
-        <h1>Новый клиент</h1>
-        <p>Бренд целиком: он общий для всех стран, в которых вы работаете.</p>
-      </div>
-      <form className="card" onSubmit={save}>
-        <label>
-          <span className="lab">Название бренда</span>
-          <input value={f.name} onChange={e=>setF({...f,name:e.target.value})} required autoFocus />
-        </label>
-        <label>
-          <span className="lab">Сайт</span>
-          <input value={f.domain} onChange={e=>setF({...f,domain:e.target.value})}
-                 placeholder="example.com" />
-        </label>
-        <label>
-          <span className="lab">Суть продукта</span>
-          <input value={f.what} onChange={e=>setF({...f,what:e.target.value})}
-                 placeholder="Что вы продаёте и кому" />
-          <span className="hint">Одной строкой. Подробности спросит исследование.</span>
-        </label>
-        <div className="row">
-          <button className="btn btn-primary" disabled={!f.name.trim()}>Создать</button>
-          <button type="button" className="btn" onClick={()=>setAdding(false)}>Отмена</button>
-        </div>
-      </form>
-    </div>
-  );
-  return (
-    <div className="wrap">
-      <div className="hdr">
-        <h1>Клиенты</h1>
-        <p>Бренд — верхний уровень. Внутри него страны, в которых вы работаете.</p>
-      </div>
-      {data.clients.length === 0 ? (
-        <div className="card empty">
-          {importing ? (
-            <p>Ищу ваши проекты в инструменте и в базе…</p>
-          ) : (
-            <p>Здесь пока пусто. Начните с бренда — названия, сайта и одной строки
-               о том, что он продаёт.</p>
-          )}
-          <button className="btn btn-primary" onClick={()=>setAdding(true)}>Создать клиента</button>
-        </div>
-      ) : (
-        <div className="tiles">
-          {data.clients.map(c => (
-            <button key={c.id} className="tile" onClick={()=>onOpen(c.id)}>
-              <b>{c.name}</b>
-              <span>{c.fromOld ? 'из инструмента · ' : ''}{c.domain || 'без сайта'} · {c.markets.length
-                ? c.markets.length + ' ' + plural(c.markets.length,'рынок','рынка','рынков')
-                : 'рынков нет'}</span>
-            </button>
-          ))}
-          <button className="tile add" onClick={()=>setAdding(true)}>+ Ещё клиент</button>
-        </div>
-      )}
-    </div>
-  );
-}
 const plural = (n,a,b,c) => {
   const d = n % 100, e = n % 10;
   if (d > 10 && d < 20) return c;
@@ -241,95 +175,6 @@ const plural = (n,a,b,c) => {
   if (e >= 2 && e <= 4) return b;
   return c;
 };
-
-// ── Экран 2: рынки клиента ──────────────────────────────────────────────────
-function Markets({ client, onOpen, onAdd, onBack }) {
-  const [adding, setAdding] = useState(false);
-  const [country, setCountry] = useState('RU');
-  const [lang, setLang] = useState('Русский');
-  const c = COUNTRIES.find(x => x.code === country);
-  const pickCountry = code => {
-    setCountry(code);
-    setLang(COUNTRIES.find(x => x.code === code).langs[0]);
-  };
-  const save = e => {
-    e.preventDefault();
-    onAdd({ id: uid(), country, countryName: c.name, lang, research: null });
-    setAdding(false);
-  };
-  if (adding) return (
-    <div className="wrap" style={{maxWidth:620}}>
-      <div className="hdr">
-        <h1>Новый рынок</h1>
-        <p>Рынок — это страна и язык вместе. Исследование делается для него.</p>
-      </div>
-      <form className="card" onSubmit={save}>
-        <label>
-          <span className="lab">Страна</span>
-          <select value={country} onChange={e=>pickCountry(e.target.value)}>
-            {COUNTRIES.map(x => <option key={x.code} value={x.code}>{x.name}</option>)}
-          </select>
-        </label>
-        <label>
-          <span className="lab">Язык аудитории</span>
-          <select value={lang} onChange={e=>setLang(e.target.value)}>
-            {c.langs.map(l => <option key={l} value={l}>{l}</option>)}
-          </select>
-          <span className="hint">Страна не отвечает на этот вопрос за вас: в ОАЭ
-            покупают и по-английски, и по-арабски, а в Турции есть русскоязычная
-            аудитория.</span>
-        </label>
-        {/* Требование свода: необратимость языка человек обязан увидеть В МОМЕНТ
-            выбора, а не в документации. Иначе он узнает об этом, когда
-            исследование уже оплачено, и это будет наша вина, а не его
-            невнимательность. */}
-        <div className="warn">
-          <span className="rule"></span>
-          <span><b>Язык менять нельзя</b>
-            Отзывы, цитаты и формулировки собираются на языке аудитории.
-            Другой язык — это другой рынок и другое исследование, за отдельные
-            деньги. Страну и язык после создания рынка не поменять.</span>
-        </div>
-        <div className="row">
-          <button className="btn btn-primary">Создать рынок</button>
-          <button type="button" className="btn" onClick={()=>setAdding(false)}>Отмена</button>
-        </div>
-      </form>
-    </div>
-  );
-  return (
-    <div className="wrap">
-      <div className="hdr">
-        <h1>{client.name}</h1>
-        <p>{client.what || 'Суть продукта не заполнена'}</p>
-      </div>
-      <button className="btn" style={{marginBottom:20}} onClick={onBack}>← Все клиенты</button>
-      {client.markets.length === 0 ? (
-        <div className="card empty">
-          <p>У бренда пока нет ни одного рынка. Рынок — это страна и язык:
-             с него начинается исследование.</p>
-          <button className="btn btn-primary" onClick={()=>setAdding(true)}>Добавить рынок</button>
-        </div>
-      ) : (
-        <div className="tiles">
-          {client.markets.map(m => (
-            <button key={m.id} className="tile" onClick={()=>onOpen(m.id)}>
-              <b>{m.countryName}</b>
-              <span style={{marginBottom:8}}>{m.lang}
-                {m.projectIds && m.projectIds.length > 1
-                  ? ' · ' + m.projectIds.length + ' прогона в инструменте' : ''}</span>
-              <span className={'chip ' + (m.research ? 'chip-go' : 'chip-wait')}>
-                <span className="dot"></span>
-                {m.research ? 'исследование готово' : 'исследования ещё нет'}
-              </span>
-            </button>
-          ))}
-          <button className="tile add" onClick={()=>setAdding(true)}>+ Ещё рынок</button>
-        </div>
-      )}
-    </div>
-  );
-}
 
 // ── Экран 3: рынок с боковым меню модулей ───────────────────────────────────
 // Разделы платформы и их части. Порядок и названия — из оболочки,
@@ -388,7 +233,7 @@ const расход = c => {
 const FLAG = c => ({ RU:'🇷🇺', TR:'🇹🇷', KZ:'🇰🇿', AE:'🇦🇪', US:'🇺🇸', GB:'🇬🇧' })[c] || '';
 const MARK = n => (n || '').split(/\s+/).filter(Boolean).slice(0,2).map(w => w[0]).join('').toUpperCase();
 
-function Market({ client, market, clients, onPick, onBack, theme, setTheme, onOut }) {
+function Platform({ client, market, clients, bar, onPick, onAddClient, onAddMarket, theme, setTheme, onOut }) {
   // Раздел и часть внутри него. Список частей меняется вместе с плиткой —
   // это и было решением владелицы: у каждого раздела свои части.
   const [section, setSection] = useState('research');
@@ -401,24 +246,30 @@ function Market({ client, market, clients, onPick, onBack, theme, setTheme, onOu
     return () => document.removeEventListener('click', off);
   }, [drop]);
   const cur = SECTIONS.find(x => x.id === section) || SECTIONS[0];
+  const пусто = !client;
   return (
+    <>
+    {bar}
     <div className="app">
       <aside className="side">
         {/* Проект и рынок ОДНОЙ строкой: по отдельности их переключать незачем,
-            работа всегда идёт в паре «бренд + рынок». */}
-        <div className="cm-drop cm-side-proj">
+            работа всегда идёт в паре «бренд + рынок». Плашка перламутровая —
+            это представление, как шапка отчёта; под данными поверхность ровная. */}
+        <div className="cm-drop cm-side-proj nacre">
           <div className="cm-drop">
             <button className="cm-proj" onClick={e=>{e.stopPropagation(); setDrop(!drop);}}>
-              <span className="cm-mark">{MARK(client.name)}</span>
-              <u className="cm-cc">{FLAG(market.country)} {(market.country || '').toUpperCase()}</u>
-              <b>{client.domain || client.name}</b>
-              <em>{ниши(client)}</em>
+              <span className="cm-mark">{пусто ? '+' : MARK(client.name)}</span>
+              {!пусто && market &&
+                <u className="cm-cc">{FLAG(market.country)} {(market.country || '').toUpperCase()}</u>}
+              <b>{пусто ? 'Нет проектов' : (client.domain || client.name)}</b>
+              <em>{пусто ? 'заведите первый' : ниши(client)}</em>
               <svg className="cm-chev" viewBox="0 0 24 24"><path d="M7 10l5 5 5-5"/></svg>
             </button>
             {drop && (
               <div className="cm-menu wide">
                 {(clients || []).flatMap(c => (c.markets || []).map(m => (
-                  <a key={c.id + m.id} className={c.id === client.id && m.id === market.id ? 'on' : undefined}
+                  <a key={c.id + m.id}
+                     className={client && market && c.id === client.id && m.id === market.id ? 'on' : undefined}
                      onClick={()=>{ setDrop(false); onPick(c.id, m.id); }}>
                     <span className="cm-mark">{MARK(c.name)}</span>
                     <u className="cm-cc">{FLAG(m.country)} {(m.country || '').toUpperCase()}</u>
@@ -427,7 +278,8 @@ function Market({ client, market, clients, onPick, onBack, theme, setTheme, onOu
                   </a>
                 )))}
                 <div className="cm-sep"></div>
-                <a className="cm-add" onClick={()=>{ setDrop(false); onBack(); }}>+ Создать проект</a>
+                <a className="cm-add" onClick={()=>{ setDrop(false); setPart('new'); }}>
+                  + Создать проект</a>
               </div>
             )}
           </div>
@@ -466,10 +318,12 @@ function Market({ client, market, clients, onPick, onBack, theme, setTheme, onOu
       </aside>
       <div className="main">
         <div className="wrap">
-          <Slot section={section} part={part} client={client} market={market} />
+          <Slot section={section} part={part} client={client} market={market}
+            onAddClient={onAddClient} onAddMarket={onAddMarket} />
         </div>
       </div>
     </div>
+    </>
   );
 }
 
@@ -608,9 +462,72 @@ function Keys({ client }) {
   );
 }
 
+// Заведение проекта — на месте работы, а не отдельной страницей: пока проекта
+// нет, платформа всё равно ничего показать не может, и уводить человека на
+// другой экран незачем.
+function NewProject({ client, onAddClient, onAddMarket }) {
+  const [f, setF] = useState({ name:'', domain:'', what:'' });
+  const СТРАНЫ = [['RU','Россия','ru'], ['TR','Турция','tr'], ['KZ','Казахстан','kk'],
+    ['AE','ОАЭ','ar'], ['US','США','en'], ['','Не указана','ru']];
+  const [m, setM] = useState({ country:'RU', countryName:'Россия', lang:'ru' });
+  if (!client) return (
+    <>
+      <div className="hdr">
+        <h1>Новый проект</h1>
+        <p>Проект — это бренд, для которого работает платформа. Рынок добавим следом:
+          в другой стране и ниши, и конкуренты, и слова другие.</p>
+      </div>
+      <div className="card nacre">
+        <form onSubmit={e=>{ e.preventDefault(); if (!f.name.trim()) return;
+          onAddClient({ id: uid(), name: f.name.trim(), domain: f.domain.trim(),
+            what: f.what.trim(), markets: [] }); }}>
+          <label><span className="lab">Название</span>
+            <input value={f.name} onChange={e=>setF({...f, name:e.target.value})}
+              placeholder="например, Ловец Лидов" required /></label>
+          <label><span className="lab">Сайт</span>
+            <input value={f.domain} onChange={e=>setF({...f, domain:e.target.value})}
+              placeholder="ловец-лидов.рф" /></label>
+          <label><span className="lab">Чем занимается</span>
+            <input value={f.what} onChange={e=>setF({...f, what:e.target.value})}
+              placeholder="одной строкой" /></label>
+          <button className="btn btn-primary">Завести проект</button>
+        </form>
+      </div>
+    </>
+  );
+  return (
+    <>
+      <div className="hdr">
+        <h1>Рынок для «{client.name}»</h1>
+        <p>Рынок — это страна и язык вместе. Исследование делается для него.</p>
+      </div>
+      <div className="card nacre">
+        <form onSubmit={e=>{ e.preventDefault();
+          onAddMarket(client.id, { id: uid(), country:m.country,
+            countryName:m.countryName, lang:m.lang, projects: [] }); }}>
+          <label><span className="lab">Страна</span>
+            <select value={m.country} onChange={e=>{
+              const c = СТРАНЫ.find(x => x[0] === e.target.value) || СТРАНЫ[0];
+              setM({ country:c[0], countryName:c[1], lang:c[2] }); }}>
+              {СТРАНЫ.map(([c,n2]) => <option key={c || 'none'} value={c}>{n2}</option>)}
+            </select></label>
+          <label><span className="lab">Язык исследования</span>
+            <input value={m.lang} onChange={e=>setM({...m, lang:e.target.value})} /></label>
+          <button className="btn btn-primary">Добавить рынок</button>
+        </form>
+      </div>
+    </>
+  );
+}
+
 // Площадка раздела. Оболочка сама ничего не считает и не генерирует — она
 // только даёт место и говорит, кто вошёл, какой клиент и рынок.
-function Slot({ section, part, client, market }) {
+function Slot({ section, part, client, market, onAddClient, onAddMarket }) {
+  // Работать не с чем — показываем следующий шаг, а не пустоту. Это первое,
+  // что видит человек после регистрации, и «ничего нет» здесь неприемлемо.
+  if (!client || !market || part === 'new')
+    return <NewProject client={part === 'new' ? null : client}
+      onAddClient={onAddClient} onAddMarket={onAddMarket} />;
   if (section === 'research') {
     const q = 'index.html?embed=1&client=' + encodeURIComponent(client.id)
       + '&market=' + encodeURIComponent(market.id || '')
@@ -834,20 +751,21 @@ function App() {
   );
 
 
-  if (market) return (
-    <Market client={client} market={market} clients={data.clients}
+  // Отдельного экрана со списком клиентов больше нет: после входа сразу
+  // платформа — меню слева, работа справа. Проект переключают выпадающим
+  // списком в меню, как в согласованной оболочке. Нет проектов — на месте
+  // работы приглашение завести первый, а не пустая страница.
+  const первый = data.clients[0] || null;
+  const текКлиент = client || первый;
+  const текРынок = (client ? market : null)
+    || (текКлиент && текКлиент === первый ? (текКлиент.markets || [])[0] || null : null);
+  return (
+    <Platform client={текКлиент} market={текРынок} clients={data.clients} bar={bar}
       theme={theme} setTheme={setTheme}
       onPick={(c, m)=>{ setClientId(c); setMarketId(m); }}
-      onBack={()=>{ setMarketId(null); setClientId(null); }}
+      onAddClient={addClient}
+      onAddMarket={(cid, m)=>{ setClientId(cid); addMarket(m); }}
       onOut={()=>{ clearTokens(); setInside(false); }} />
-  );
-  if (client) return (
-    <>{bar}<Markets client={client} onBack={()=>setClientId(null)} onOpen={setMarketId}
-      onAdd={m => { addMarket(m); }} /></>
-  );
-  return (
-    <>{bar}<Clients data={data} onOpen={setClientId} importing={importing}
-      onAdd={c => { addClient(c); }} /></>
   );
 }
 ReactDOM.createRoot(document.getElementById('root')).render(<App />);
