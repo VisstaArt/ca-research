@@ -1,6 +1,6 @@
 // СОБРАНО АВТОМАТИЧЕСКИ из shell.jsx — не править руками.
 // Правки вносить в shell.jsx, затем: osascript -l JavaScript tools/build.js
-// отпечаток-исходника: 770fc8ec7fdc6b22
+// отпечаток-исходника: e1425366329cf964
 const {
   useState,
   useEffect,
@@ -8,6 +8,7 @@ const {
 } = React;
 const {
   signIn,
+  signUp,
   refreshTokens,
   getRefreshToken,
   clearTokens,
@@ -195,6 +196,9 @@ const MODULES = [{
 const GROUPS = ['Начало проекта', 'Настройки', 'Работа'];
 
 // ─────────────────────────────────────────────────────────────────────────────
+// Вход и регистрация на одном экране. Регистрация нужна не «для полноты»:
+// пройти путь с чистого листа — и есть проверка платформы. Без неё первый
+// экран невозможно увидеть глазами нового человека, а мы именно это и проверяем.
 function Login({
   onIn
 }) {
@@ -202,10 +206,28 @@ function Login({
   const [pw, setPw] = useState('');
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState('');
+  const [note, setNote] = useState('');
+  const [mode, setMode] = useState('in'); // 'in' — вход, 'up' — регистрация
   const go = async e => {
     e.preventDefault();
     setBusy(true);
     setErr('');
+    setNote('');
+    if (mode === 'up') {
+      const r = await signUp(email.trim(), pw).catch(() => ({
+        ok: false,
+        error: 'Сеть недоступна'
+      }));
+      setBusy(false);
+      if (!r.ok) {
+        setErr(r.error);
+        return;
+      }
+      // Подтверждение почты включено — входа ещё нет, и делать вид, что есть,
+      // нельзя: человек нажмёт «дальше» и упрётся в пустоту без объяснения.
+      if (r.signedIn) onIn();else setNote('Отправила письмо на ' + email.trim() + '. Подтвердите почту и войдите.');
+      return;
+    }
     const ok = await signIn(email.trim(), pw).catch(() => false);
     setBusy(false);
     if (ok) onIn();else setErr('Не подошли почта или пароль.');
@@ -218,9 +240,9 @@ function Login({
   }, /*#__PURE__*/React.createElement("img", {
     src: LOGO,
     alt: "bulbullab"
-  }), /*#__PURE__*/React.createElement("h2", null, "\u0412\u0445\u043E\u0434"), /*#__PURE__*/React.createElement("p", {
+  }), /*#__PURE__*/React.createElement("h2", null, mode === 'up' ? 'Регистрация' : 'Вход'), /*#__PURE__*/React.createElement("p", {
     className: "lede"
-  }, "\u0422\u043E\u0442 \u0436\u0435 \u0430\u043A\u043A\u0430\u0443\u043D\u0442, \u0447\u0442\u043E \u0438 \u0432 \u0438\u043D\u0441\u0442\u0440\u0443\u043C\u0435\u043D\u0442\u0435 \u0438\u0441\u0441\u043B\u0435\u0434\u043E\u0432\u0430\u043D\u0438\u044F."), /*#__PURE__*/React.createElement("label", null, /*#__PURE__*/React.createElement("span", {
+  }, mode === 'up' ? 'Новый аккаунт. Всё, что в нём появится, будет видно только вам.' : 'Тот же аккаунт, что и в инструменте исследования.'), /*#__PURE__*/React.createElement("label", null, /*#__PURE__*/React.createElement("span", {
     className: "lab"
   }, "\u041F\u043E\u0447\u0442\u0430"), /*#__PURE__*/React.createElement("input", {
     type: "email",
@@ -242,9 +264,26 @@ function Login({
       width: '100%'
     },
     disabled: busy
-  }, busy ? 'Проверяю…' : 'Войти'), err && /*#__PURE__*/React.createElement("p", {
+  }, busy ? mode === 'up' ? 'Завожу…' : 'Проверяю…' : mode === 'up' ? 'Завести аккаунт' : 'Войти'), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "btn",
+    style: {
+      width: '100%',
+      marginTop: 8
+    },
+    onClick: () => {
+      setMode(mode === 'up' ? 'in' : 'up');
+      setErr('');
+      setNote('');
+    }
+  }, mode === 'up' ? 'У меня уже есть аккаунт' : 'Завести новый аккаунт'), err && /*#__PURE__*/React.createElement("p", {
     className: "err"
-  }, err)));
+  }, err), note && /*#__PURE__*/React.createElement("p", {
+    className: "lede",
+    style: {
+      marginTop: 10
+    }
+  }, note)));
 }
 
 // ── Экран 1: клиенты ────────────────────────────────────────────────────────
@@ -621,6 +660,93 @@ function App() {
     setData(d);
     store.write(d);
   }, []);
+
+  // Заводим клиента и рынок В БАЗЕ, а не только в браузере. Показываем сразу,
+  // не дожидаясь ответа, — иначе после нажатия экран стоит и непонятно,
+  // случилось ли что-то. Пришёл настоящий id — подменяем временный: по нему
+  // потом свяжутся исследование и контент-машина, и временный там не годится.
+  // Не записалось — говорим об этом вслух: молча оставить строку только в
+  // браузере значит пообещать сохранность, которой нет.
+  const [saveErr, setSaveErr] = useState('');
+  const addClient = useCallback(async c => {
+    save({
+      ...data,
+      clients: [...data.clients, c]
+    });
+    try {
+      const r = await authFetch('/api/clients', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          name: c.name,
+          domain: c.domain || '',
+          one_liner: c.what || ''
+        })
+      });
+      const d = await r.json().catch(() => ({}));
+      if (!r.ok || !d.client) throw new Error('нет строки');
+      setData(prev => {
+        const next = {
+          ...prev,
+          clients: prev.clients.map(x => x.id === c.id ? {
+            ...x,
+            id: d.client.id,
+            fromDb: true
+          } : x)
+        };
+        store.write(next);
+        return next;
+      });
+      setClientId(id => id === c.id ? d.client.id : id);
+    } catch {
+      setSaveErr('Клиент пока только в этом браузере — база не ответила.');
+    }
+  }, [data, save]);
+  const addMarket = useCallback(async m => {
+    save({
+      ...data,
+      clients: data.clients.map(c => c.id === clientId ? {
+        ...c,
+        markets: [...c.markets, m]
+      } : c)
+    });
+    try {
+      const r = await authFetch('/api/clients', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          client_id: clientId,
+          market: {
+            country: m.country || '',
+            country_name: m.countryName || '',
+            lang: m.lang || ''
+          }
+        })
+      });
+      const d = await r.json().catch(() => ({}));
+      if (!r.ok || !d.market) throw new Error('нет строки');
+      setData(prev => {
+        const next = {
+          ...prev,
+          clients: prev.clients.map(c => c.id === clientId ? {
+            ...c,
+            markets: c.markets.map(x => x.id === m.id ? {
+              ...x,
+              id: d.market.id
+            } : x)
+          } : c)
+        };
+        store.write(next);
+        return next;
+      });
+    } catch {
+      setSaveErr('Рынок пока только в этом браузере — база не ответила.');
+    }
+  }, [data, clientId, save]);
   const client = data.clients.find(c => c.id === clientId) || null;
   const market = client && client.markets.find(m => m.id === marketId) || null;
   if (!ready) return null;
@@ -634,7 +760,14 @@ function App() {
       color: 'var(--ink-3)',
       fontSize: 12.5
     }
-  }, "\u041F\u0435\u0440\u0435\u043D\u043E\u0448\u0443 \u043F\u0440\u043E\u0435\u043A\u0442\u044B \u0438\u0437 \u0438\u043D\u0441\u0442\u0440\u0443\u043C\u0435\u043D\u0442\u0430\u2026"), /*#__PURE__*/React.createElement("div", {
+  }, "\u041F\u0435\u0440\u0435\u043D\u043E\u0448\u0443 \u043F\u0440\u043E\u0435\u043A\u0442\u044B \u0438\u0437 \u0438\u043D\u0441\u0442\u0440\u0443\u043C\u0435\u043D\u0442\u0430\u2026"), saveErr && /*#__PURE__*/React.createElement("div", {
+    className: "top",
+    style: {
+      justifyContent: 'center',
+      color: 'var(--ink-2)',
+      fontSize: 12.5
+    }
+  }, saveErr), /*#__PURE__*/React.createElement("div", {
     className: "top"
   }, /*#__PURE__*/React.createElement("div", {
     className: "sp"
@@ -665,22 +798,17 @@ function App() {
     client: client,
     onBack: () => setClientId(null),
     onOpen: setMarketId,
-    onAdd: m => save({
-      ...data,
-      clients: data.clients.map(c => c.id === clientId ? {
-        ...c,
-        markets: [...c.markets, m]
-      } : c)
-    })
+    onAdd: m => {
+      addMarket(m);
+    }
   }));
   return /*#__PURE__*/React.createElement(React.Fragment, null, bar, /*#__PURE__*/React.createElement(Clients, {
     data: data,
     onOpen: setClientId,
     importing: importing,
-    onAdd: c => save({
-      ...data,
-      clients: [...data.clients, c]
-    })
+    onAdd: c => {
+      addClient(c);
+    }
   }));
 }
 ReactDOM.createRoot(document.getElementById('root')).render(/*#__PURE__*/React.createElement(App, null));

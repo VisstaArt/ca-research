@@ -1,5 +1,5 @@
 const { useState, useEffect, useCallback } = React;
-const { signIn, refreshTokens, getRefreshToken, clearTokens, authFetch } = window.CAAuth;
+const { signIn, signUp, refreshTokens, getRefreshToken, clearTokens, authFetch } = window.CAAuth;
 const { buildShellData } = window.CAMigrate;
 
 // Логотип платформы. Встроен строкой, а не файлом: страница должна открываться
@@ -107,14 +107,28 @@ const MODULES = [
 const GROUPS = ['Начало проекта','Настройки','Работа'];
 
 // ─────────────────────────────────────────────────────────────────────────────
+// Вход и регистрация на одном экране. Регистрация нужна не «для полноты»:
+// пройти путь с чистого листа — и есть проверка платформы. Без неё первый
+// экран невозможно увидеть глазами нового человека, а мы именно это и проверяем.
 function Login({ onIn }) {
   const [email, setEmail] = useState('');
   const [pw, setPw] = useState('');
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState('');
+  const [note, setNote] = useState('');
+  const [mode, setMode] = useState('in');   // 'in' — вход, 'up' — регистрация
   const go = async e => {
     e.preventDefault();
-    setBusy(true); setErr('');
+    setBusy(true); setErr(''); setNote('');
+    if (mode === 'up') {
+      const r = await signUp(email.trim(), pw).catch(() => ({ ok:false, error:'Сеть недоступна' }));
+      setBusy(false);
+      if (!r.ok) { setErr(r.error); return; }
+      // Подтверждение почты включено — входа ещё нет, и делать вид, что есть,
+      // нельзя: человек нажмёт «дальше» и упрётся в пустоту без объяснения.
+      if (r.signedIn) onIn(); else setNote('Отправила письмо на ' + email.trim() + '. Подтвердите почту и войдите.');
+      return;
+    }
     const ok = await signIn(email.trim(), pw).catch(() => false);
     setBusy(false);
     if (ok) onIn(); else setErr('Не подошли почта или пароль.');
@@ -123,8 +137,10 @@ function Login({ onIn }) {
     <div className="login">
       <form className="card" onSubmit={go}>
         <img src={LOGO} alt="bulbullab" />
-        <h2>Вход</h2>
-        <p className="lede">Тот же аккаунт, что и в инструменте исследования.</p>
+        <h2>{mode === 'up' ? 'Регистрация' : 'Вход'}</h2>
+        <p className="lede">{mode === 'up'
+          ? 'Новый аккаунт. Всё, что в нём появится, будет видно только вам.'
+          : 'Тот же аккаунт, что и в инструменте исследования.'}</p>
         <label>
           <span className="lab">Почта</span>
           <input type="email" value={email} onChange={e=>setEmail(e.target.value)}
@@ -136,9 +152,14 @@ function Login({ onIn }) {
                  autoComplete="current-password" required />
         </label>
         <button className="btn btn-primary" style={{width:'100%'}} disabled={busy}>
-          {busy ? 'Проверяю…' : 'Войти'}
+          {busy ? (mode === 'up' ? 'Завожу…' : 'Проверяю…') : (mode === 'up' ? 'Завести аккаунт' : 'Войти')}
+        </button>
+        <button type="button" className="btn" style={{width:'100%',marginTop:8}}
+          onClick={()=>{ setMode(mode === 'up' ? 'in' : 'up'); setErr(''); setNote(''); }}>
+          {mode === 'up' ? 'У меня уже есть аккаунт' : 'Завести новый аккаунт'}
         </button>
         {err && <p className="err">{err}</p>}
+        {note && <p className="lede" style={{marginTop:10}}>{note}</p>}
       </form>
     </div>
   );
@@ -458,6 +479,47 @@ function App() {
   }, [inside]);
 
   const save = useCallback(d => { setData(d); store.write(d); }, []);
+
+  // Заводим клиента и рынок В БАЗЕ, а не только в браузере. Показываем сразу,
+  // не дожидаясь ответа, — иначе после нажатия экран стоит и непонятно,
+  // случилось ли что-то. Пришёл настоящий id — подменяем временный: по нему
+  // потом свяжутся исследование и контент-машина, и временный там не годится.
+  // Не записалось — говорим об этом вслух: молча оставить строку только в
+  // браузере значит пообещать сохранность, которой нет.
+  const [saveErr, setSaveErr] = useState('');
+  const addClient = useCallback(async c => {
+    save({ ...data, clients: [...data.clients, c] });
+    try {
+      const r = await authFetch('/api/clients', {
+        method: 'POST', headers: { 'Content-Type':'application/json' },
+        body: JSON.stringify({ name: c.name, domain: c.domain || '', one_liner: c.what || '' }),
+      });
+      const d = await r.json().catch(() => ({}));
+      if (!r.ok || !d.client) throw new Error('нет строки');
+      setData(prev => { const next = { ...prev, clients: prev.clients.map(x =>
+        x.id === c.id ? { ...x, id: d.client.id, fromDb: true } : x) };
+        store.write(next); return next; });
+      setClientId(id => id === c.id ? d.client.id : id);
+    } catch { setSaveErr('Клиент пока только в этом браузере — база не ответила.'); }
+  }, [data, save]);
+
+  const addMarket = useCallback(async m => {
+    save({ ...data, clients: data.clients.map(c =>
+      c.id === clientId ? { ...c, markets: [...c.markets, m] } : c) });
+    try {
+      const r = await authFetch('/api/clients', {
+        method: 'POST', headers: { 'Content-Type':'application/json' },
+        body: JSON.stringify({ client_id: clientId, market: {
+          country: m.country || '', country_name: m.countryName || '', lang: m.lang || '' } }),
+      });
+      const d = await r.json().catch(() => ({}));
+      if (!r.ok || !d.market) throw new Error('нет строки');
+      setData(prev => { const next = { ...prev, clients: prev.clients.map(c =>
+        c.id === clientId ? { ...c, markets: c.markets.map(x =>
+          x.id === m.id ? { ...x, id: d.market.id } : x) } : c) };
+        store.write(next); return next; });
+    } catch { setSaveErr('Рынок пока только в этом браузере — база не ответила.'); }
+  }, [data, clientId, save]);
   const client = data.clients.find(c => c.id === clientId) || null;
   const market = client && client.markets.find(m => m.id === marketId) || null;
 
@@ -468,6 +530,9 @@ function App() {
     <>
     {importing && <div className="top" style={{justifyContent:'center',color:'var(--ink-3)',fontSize:12.5}}>
       Переношу проекты из инструмента…
+    </div>}
+    {saveErr && <div className="top" style={{justifyContent:'center',color:'var(--ink-2)',fontSize:12.5}}>
+      {saveErr}
     </div>}
     <div className="top">
       <div className="sp"></div>
@@ -487,12 +552,11 @@ function App() {
   );
   if (client) return (
     <>{bar}<Markets client={client} onBack={()=>setClientId(null)} onOpen={setMarketId}
-      onAdd={m => save({ ...data, clients: data.clients.map(c =>
-        c.id === clientId ? { ...c, markets: [...c.markets, m] } : c) })} /></>
+      onAdd={m => { addMarket(m); }} /></>
   );
   return (
     <>{bar}<Clients data={data} onOpen={setClientId} importing={importing}
-      onAdd={c => save({ ...data, clients: [...data.clients, c] })} /></>
+      onAdd={c => { addClient(c); }} /></>
   );
 }
 ReactDOM.createRoot(document.getElementById('root')).render(<App />);
