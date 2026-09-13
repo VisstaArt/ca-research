@@ -157,6 +157,22 @@
     }
   }
 
+  function разработчик() {
+    return !!(текущий && текущий.billing_mode === 'own_keys');
+  }
+
+  // Что видно на каком тарифе. На подписке вопросов про ключи нет вовсе — не
+  // спрятаны мелким шрифтом, а отсутствуют: человек на подписке не должен
+  // догадываться, что где-то есть «настоящие» ключи, которых ему не дали.
+  function тариф() {
+    var стр = document.querySelector('[data-screen="keys"]');
+    if (стр) стр.hidden = !разработчик();
+    var экр = document.getElementById('s-keys');
+    if (экр && !разработчик()) экр.classList.remove('on');
+    var рамка = document.getElementById('research-frame');
+    if (рамка && рамка.src) исследование();   // инструменту тоже нужен тариф
+  }
+
   function уведомления() {
     var п = document.querySelector('[data-panel="bell"]');
     if (!п) return;
@@ -177,18 +193,37 @@
     var имя = (почта || '').split('@')[0];
     // Тариф не назначен, и писать «разработчик · 1000 в месяц» нельзя: это
     // число из макета, в базе его нет. Режим берём из проекта — он настоящий.
-    var режимПроекта = текущий && текущий.billing_mode === 'own_keys'
-      ? 'свои ключи' : 'подписка';
+    // ТАРИФ, а не «режим оплаты». У платформы два вида работы: «Разработчик» —
+    // ключи провайдеров видны и вносятся руками, вызовы идут за счёт клиента;
+    // «Подписка» — работаем на ключах платформы, и вопросов про ключи человек
+    // не видит вовсе. От тарифа зависит, что вообще показывать.
     п.innerHTML =
       '<div class="cm-user"><b>' + (имя || 'Вы') + '</b><span>' + (почта || '') + '</span></div>'
       + '<a>Все проекты<span>' + клиенты.length + '</span></a>'
       + '<a>Расход<span>' + деньги(всего) + ' за месяц</span></a>'
-      + '<a>Режим оплаты<span>' + режимПроекта + '</span></a>'
+      + '<a id="tariff-row">Тариф<span>' + (разработчик() ? 'Разработчик' : 'Подписка') + '</span></a>'
+      + '<a id="tariff-switch"><span>' + (разработчик()
+          ? 'Перейти на подписку' : 'Включить тариф «Разработчик»') + '</span></a>'
       + '<a>Доступы<span>1 человек</span></a>'
       + '<a>Язык интерфейса<span>Русский</span></a>'
       + '<a>Поддержка</a>'
       + '<div class="cm-sep"></div>'
       + '<a id="logout">Выйти</a>';
+    var пер = document.getElementById('tariff-switch');
+    if (пер) пер.addEventListener('click', function (соб) {
+      соб.stopPropagation();
+      if (!текущий) return;
+      var новый = разработчик() ? 'subscription' : 'own_keys';
+      A.authFetch('/api/clients', { method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: текущий.id, billing_mode: новый }) })
+        .then(function (r) { return r.ok ? r.json() : null; })
+        .then(function (d) {
+          if (!d || !d.client) return;
+          текущий.billing_mode = d.client.billing_mode;
+          кабинет(почта); тариф();
+        });
+    });
     var в = document.getElementById('logout');
     if (в) в.addEventListener('click', function () { A.clearTokens(); location.reload(); });
   }
@@ -206,7 +241,9 @@
     рамка.src = 'index.html?embed=1&client=' + encodeURIComponent(текущий.id)
       + '&market=' + encodeURIComponent(рынок.id)
       + '&country=' + encodeURIComponent(рынок.country_name || '')
-      + '&lang=' + encodeURIComponent(рынок.lang || '');
+      + '&lang=' + encodeURIComponent(рынок.lang || '')
+      // Тариф передаём инструменту: на подписке он не спрашивает ключ.
+      + '&tariff=' + (разработчик() ? 'dev' : 'sub');
   }
 
   function загрузить() {
@@ -233,7 +270,7 @@
     загрузить().then(function () {
       var почта = почтаИзТокена();
       шапкаДанные(почта); кабинет(почта); уведомления();
-      строкаПроекта(); списокПроектов(); исследование();
+      строкаПроекта(); списокПроектов(); тариф(); исследование();
     });
   }
 

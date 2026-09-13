@@ -6879,6 +6879,13 @@ function App() {
   const viewReport = (() => { try {
     return new URLSearchParams(location.search).get('view') === 'report';
   } catch { return false; } })();
+  // Тариф проекта приходит из оболочки. «Разработчик» — ключи видны и
+  // спрашиваются; «Подписка» — вопросов про ключи нет вовсе: человек на
+  // подписке не должен догадываться, что где-то есть ключи, которых ему не
+  // дали. По умолчанию подписка: показать лишнее хуже, чем не показать.
+  const тарифРазработчика = (() => { try {
+    return new URLSearchParams(location.search).get('tariff') === 'dev';
+  } catch { return false; } })();
   const embeddedClientId = (() => { try {
     return new URLSearchParams(location.search).get('client') || '';
   } catch { return ''; } })();
@@ -7082,7 +7089,7 @@ function App() {
           style={{width:'100%',marginBottom:8}}>
           {MODELS.map(([v,n2]) => <option key={v} value={v}>{n2}</option>)}
         </select>
-        {clientIdFromUrl ? (
+        {clientIdFromUrl && тарифРазработчика ? (
           <>
             <p style={{fontSize:12,color:'#666',marginBottom:6}}>
               {ownKey === null ? 'Смотрю, заведён ли свой ключ…'
@@ -7103,7 +7110,9 @@ function App() {
           </>
         ) : (
           <p style={{fontSize:12,color:'#666'}}>
-            Ключ клиента заводится из платформы — там известно, чей это проект.
+            {clientIdFromUrl
+              ? 'Работа идёт на ключах платформы — так устроена подписка.'
+              : 'Ключ клиента заводится из платформы — там известно, чей это проект.'}
           </p>
         )}
       </div>

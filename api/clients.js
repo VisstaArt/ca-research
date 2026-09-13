@@ -15,7 +15,7 @@ export const config = { api: { bodyParser: true } };
 import { requireUser, setCorsHeaders } from './_auth.js';
 
 export default async function handler(req, res) {
-  setCorsHeaders(res, 'GET, POST, OPTIONS');
+  setCorsHeaders(res, 'GET, POST, PATCH, OPTIONS');
   if (req.method === 'OPTIONS') return res.status(200).end();
 
   const auth = await requireUser(req, res);
@@ -97,6 +97,26 @@ export default async function handler(req, res) {
         body: JSON.stringify({
           name: b.name, domain: b.domain || '', one_liner: b.one_liner || '',
         }),
+      });
+      const data = await r.json();
+      if (!r.ok) return res.status(r.status).json({ error: data });
+      return res.status(200).json({ client: Array.isArray(data) ? data[0] : data });
+    }
+
+    if (req.method === 'PATCH') {
+      // Тариф проекта. Два вида работы у платформы: «Разработчик» — ключи
+      // клиента видны и вносятся руками, вызовы идут за его счёт; «Подписка» —
+      // работаем на ключах платформы, и вопросов про ключи человек не видит
+      // вовсе. Больше PATCH сюда ничего не пускаем: остальное правится там,
+      // где заводится.
+      const b = req.body || {};
+      if (!b.id) return res.status(400).json({ error: { message: 'id is required' } });
+      if (b.billing_mode !== 'own_keys' && b.billing_mode !== 'subscription') {
+        return res.status(400).json({ error: { message: 'billing_mode: own_keys | subscription' } });
+      }
+      const r = await fetch(auth.pgBase + 'clients?id=eq.' + encodeURIComponent(b.id), {
+        method: 'PATCH', headers: { ...headers, Prefer: 'return=representation' },
+        body: JSON.stringify({ billing_mode: b.billing_mode }),
       });
       const data = await r.json();
       if (!r.ok) return res.status(r.status).json({ error: data });
