@@ -96,4 +96,18 @@ TARGETS.forEach(function (t) {
   wr(BASE + 'lib/platform.css', head + css + '\n');
   console.log('  app.jsx → lib/platform.css  (' + Math.round(css.length / 1024) + ' КБ)');
 })();
+
+// Знак платформы — из утверждённого отчёта, а не копией в оболочке. Логотип
+// поменялся 12.09.2026, и в shell.jsx лежал прежний: владелица увидела чужой
+// знак в собственной платформе. Источник теперь один — REPORT_SIDEBAR в
+// app.jsx, ровно тот файл, который она утверждала глазами.
+(function () {
+  var src = rd(BASE + 'app.jsx');
+  var m = src.match(/<img class=\\"logo\\" alt=\\"bulbul lab\\" src=\\"(data:image\/png;base64,[^\\\\"]+)/);
+  if (!m) { console.log('  знак платформы не найден — пропускаю'); return; }
+  var js = '// Собрано из REPORT_SIDEBAR в app.jsx. Не править руками.\n'
+    + 'window.CALogo = ' + JSON.stringify(m[1]) + ';\n';
+  wr(BASE + 'lib/logo.js', js);
+  console.log('  app.jsx → lib/logo.js  (' + Math.round(js.length / 1024) + ' КБ)');
+})();
 console.log('собрано файлов: ' + built);
