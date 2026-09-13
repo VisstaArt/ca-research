@@ -6399,7 +6399,11 @@ function App() {
       // результаты под новыми номерами читаются как каша («M3 ошибка»,
       // модули не те). Владелица решила: старое не переносим, перепрогоняем.
       !(p.results || []).some(r => r && r.id === 'M1_2'));
-    if (свои.length) openP(свои[0]); else goNew();
+    if (свои.length) {
+      openP(свои[0]);
+      // Экран «Бриф» открывает форму даже при готовом проекте: это его страница.
+      if (шагИзАдреса === 'brief') setSc('form');
+    } else goNew();
   }, [projs, sc]);
 
   const openP = p => {
@@ -6928,6 +6932,11 @@ function App() {
   // спрашиваются; «Подписка» — вопросов про ключи нет вовсе: человек на
   // подписке не должен догадываться, что где-то есть ключи, которых ему не
   // дали. По умолчанию подписка: показать лишнее хуже, чем не показать.
+  // Шаг пути из адреса: платформа открывает каждый этап отдельным экраном
+  // бокового меню (решение владелицы 14.09) — brief, niches, run.
+  const шагИзАдреса = (() => { try {
+    return new URLSearchParams(location.search).get('step') || '';
+  } catch { return ''; } })();
   const тарифРазработчика = (() => { try {
     return new URLSearchParams(location.search).get('tariff') === 'dev';
   } catch { return false; } })();
@@ -6937,43 +6946,8 @@ function App() {
   // Этапы пути — как в старом варианте исследования, но в новом оформлении:
   // Бриф → Ниши → Прогон → Отчёт. Вердикт по шагу считается от состояния, а
   // не хранится отдельно: хранимое состояние шага разъезжается с настоящим.
-  const Steps = ({ current }) => {
-    if (!embedded) return null;
-    const готово = (proj && (proj.results || []).some(r => r && r.content && !r.failed));
-    const ШАГИ = [
-      ['бриф',  'Бриф'],
-      ['ниши',  'Ниши'],
-      ['прогон','Прогон'],
-      ['отчёт', 'Отчёт'],
-    ];
-    const идти = k => {
-      if (k === 'бриф') { if (proj) setSc('form'); else goNew(); }
-      if (k === 'отчёт' && готово) { setRepOpen(true); setSc('work'); }
-      if ((k === 'ниши' || k === 'прогон') && proj) setSc('work');
-    };
-    return (
-      <div style={{display:'flex',gap:8,alignItems:'center',flexWrap:'wrap',marginBottom:16}}>
-        {ШАГИ.map(([k, имя], i) => {
-          const активен = current === k;
-          return (
-            <React.Fragment key={k}>
-              {i > 0 && <span style={{color:'var(--ink-3)',fontSize:11}}>→</span>}
-              <button onClick={()=>идти(k)}
-                style={активен
-                  ? {padding:'7px 15px',borderRadius:999,border:'2px solid #0D0C0A',
-                     background:'linear-gradient(180deg,#262320,#171512)',color:'#FFFFFF',
-                     fontSize:12,fontWeight:700}
-                  : {padding:'7px 15px',borderRadius:999,border:'1px solid var(--line)',
-                     background:'var(--card-solid)',color:'var(--ink-2)',fontSize:12,fontWeight:600}}>
-                {имя}
-              </button>
-            </React.Fragment>
-          );
-        })}
-      </div>
-    );
-  };
-
+  // Этап-бар удалён 14.09: части этапов живут в боковом меню платформы,
+  // под плиткой «Исследование» — вторая лента шагов внутри экрана была дублем.
   const Header = () => embedded ? null : (
     <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'1.5rem'}}>
       <div>
@@ -7064,14 +7038,13 @@ function App() {
   // ── FORM
   if (sc === 'form') return (
     <div>
-      <Steps current="бриф"/>
-      <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:'1.5rem'}}>
+      {!embedded && <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:'1.5rem'}}>
         <button onClick={()=>proj ? setSc('work') : setSc('list')}>{proj ? t.backToProject : t.backBtn}</button>
         <h2 style={{fontSize:20,fontWeight:500}}>{proj ? t.editBriefTitle+': '+brief.name : t.newProjectTitle}</h2>
         <div style={{marginLeft:'auto'}}>
           <button onClick={switchUiLang} style={{padding:'5px 12px',fontSize:12,fontWeight:500}}>{uiLang==='en'?'RU':'EN'}</button>
         </div>
-      </div>
+      </div>}
 
       <div className="card">
         <p style={{fontSize:13,fontWeight:500,marginBottom:4}}>{t.autoFill}</p>
@@ -7468,12 +7441,27 @@ function App() {
 
   return (
     <div>
-      <Steps current={isRun ? 'прогон' : (showNiches ? 'ниши' : 'отчёт')}/>
-      {/* Шапка исследования — жемчужная плашка, как шапка отчёта: название,
-          проект и всё управление в одном месте (решение владелицы 14.09).
-          Трекер и тренды с плашки убраны — это отдельные разделы платформы,
-          в пути исследования им делать нечего. Свои цвета у кнопок сняты:
-          конструкция одна на всю платформу. */}
+      {/* В платформе заголовок экрана и имя проекта даёт сама платформа:
+          экран «Прогон» в боковом меню + строка проекта в меню. Дублировать
+          их здесь — навал (замечание владелицы 14.09). Внутри платформы
+          остаётся только строка действий; вне платформы — прежняя шапка. */}
+      {embedded ? (
+        <div style={{display:'flex',gap:8,flexWrap:'wrap',alignItems:'center',marginBottom:'1rem'}}>
+          {!isRun && pending.length > 0 && (
+            <button className="btn-primary" onClick={()=>run()}>▶ Прогнать: {pending.map(m=>m.id).join(', ')}</button>
+          )}
+          {!isRun && pending.length === 0 && doneCount > 0 && (
+            <button className="btn-primary" onClick={()=>setSc('form')}>＋ Добавить модули</button>
+          )}
+          {!isRun && modDone('M2') && (
+            <button onClick={openNichePicker} style={{fontSize:12,padding:'7px 12px'}}
+              title="Добавить ещё ниши — прогонятся только новые, готовые не тронутся">
+              ＋ Добавить ниши
+            </button>
+          )}
+          <span className="tag" style={{marginLeft:'auto'}}>{lang} · {MODEL}</span>
+        </div>
+      ) : (
       <div className="card nacre" style={{marginBottom:'1rem'}}>
         <div style={{display:'flex',alignItems:'flex-start',justifyContent:'space-between',gap:14,flexWrap:'wrap'}}>
           <div>
@@ -7487,7 +7475,7 @@ function App() {
             </p>
           </div>
           <div style={{display:'flex',gap:8,flexShrink:0,flexWrap:'wrap',alignItems:'center'}}>
-            {!embedded && <button onClick={()=>setSc('list')} style={{fontSize:12,padding:'7px 12px'}}>{t.backProjects}</button>}
+            <button onClick={()=>setSc('list')} style={{fontSize:12,padding:'7px 12px'}}>{t.backProjects}</button>
             {!isRun && pending.length > 0 && (
               <button className="btn-primary" onClick={()=>run()}>▶ Прогнать: {pending.map(m=>m.id).join(', ')}</button>
             )}
@@ -7495,21 +7483,19 @@ function App() {
               <button className="btn-primary" onClick={()=>setSc('form')}>＋ Добавить модули</button>
             )}
             {!isRun && modDone('M2') && (
-              <button onClick={openNichePicker} style={{fontSize:12,padding:'7px 12px'}}
-                title="Добавить ещё ниши — прогонятся только новые, готовые не тронутся">
-                ＋ Добавить ниши
-              </button>
+              <button onClick={openNichePicker} style={{fontSize:12,padding:'7px 12px'}}>＋ Добавить ниши</button>
             )}
-            {!embedded && !isRun && (
+            {!isRun && (
               <button onClick={()=>setSc('tracker')} style={{fontSize:12,padding:'7px 12px'}}>Трекер</button>
             )}
-            {!embedded && !isRun && modDone('M3') && (
+            {!isRun && modDone('M3') && (
               <button onClick={()=>{setTrendNiche(workNiches[0]||''); setSc('trends');}} style={{fontSize:12,padding:'7px 12px'}}>Тренды</button>
             )}
             <button onClick={()=>setSc('form')} style={{fontSize:12,padding:'7px 12px'}}>Править бриф</button>
           </div>
         </div>
       </div>
+      )}
 
       <div style={{marginBottom:'1.25rem'}}>
         <div style={{display:'flex',gap:3,marginBottom:5}}>

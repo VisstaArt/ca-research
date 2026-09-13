@@ -228,23 +228,35 @@
     if (в) в.addEventListener('click', function () { A.clearTokens(); location.reload(); });
   }
 
-  function исследование() {
-    var рамка = document.getElementById('research-frame');
-    var строка = document.getElementById('ctx-line');
-    if (!рамка) return;
-    if (!текущий || !рынок) {
-      рамка.removeAttribute('src');
-      if (строка) строка.textContent = 'Сначала заведите проект и рынок — работать пока не с чем.';
-      return;
-    }
-    if (строка) строка.textContent = текущий.name + ' · ' + (рынок.country_name || '');
-    рамка.src = 'index.html?embed=1&client=' + encodeURIComponent(текущий.id)
+  // Этапы исследования — экраны в боковом меню, у каждого своя рамка.
+  // Инструмент грузится ЛЕНИВО: src ставится при первом открытии экрана,
+  // четыре копии приложения разом никому не нужны. Смена проекта сбрасывает
+  // src у всех — рамки перегрузятся под нового клиента при открытии.
+  function адресШага(шаг) {
+    var база = 'index.html?embed=1&client=' + encodeURIComponent(текущий.id)
       + '&market=' + encodeURIComponent(рынок.id)
       + '&country=' + encodeURIComponent(рынок.country_name || '')
       + '&lang=' + encodeURIComponent(рынок.lang || '')
-      // Тариф передаём инструменту: на подписке он не спрашивает ключ.
       + '&tariff=' + (разработчик() ? 'dev' : 'sub');
+    return шаг === 'report' ? база + '&view=report' : база + '&step=' + шаг;
   }
+  function исследование() {
+    document.querySelectorAll('iframe[data-step]').forEach(function (р) {
+      р.removeAttribute('src');
+    });
+    показатьШаг();
+  }
+  function показатьШаг() {
+    var экран = document.querySelector('.screen.on iframe[data-step]');
+    if (!экран || экран.getAttribute('src')) return;
+    if (!текущий || !рынок) return;
+    экран.src = адресШага(экран.dataset.step);
+  }
+  // Клик по строке меню переключает экран (это делает переключение.js) —
+  // после него грузим рамку открытого шага, если ещё не грузили.
+  document.addEventListener('click', function (e) {
+    if (e.target.closest('[data-screen]')) setTimeout(показатьШаг, 0);
+  });
 
   function загрузить() {
     return A.authFetch('/api/clients', { headers: { 'Content-Type': 'application/json' } })
