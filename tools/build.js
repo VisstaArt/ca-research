@@ -143,6 +143,26 @@ TARGETS.forEach(function (t) {
   console.log('  app.jsx → lib/report.css  (' + Math.round(css.length / 1024) + ' КБ)');
 })();
 
+// Метки версий в shell.html: браузер владелицы держал старые platform.js и
+// css из кэша — она обновляла страницу и видела «всё без изменений». Метка
+// меняется вместе с содержимым файла, кэш обязан скачать новое.
+(function () {
+  ['shell.html', 'index.html'].forEach(function (страница) {
+  var page = rd(BASE + страница);
+  if (!page) return;
+  ['platform.js', 'app.js', 'lib/auth.js', 'lib/logo.js', 'lib/platform.css',
+   'lib/nacre.css', 'lib/tokens.css', 'lib/migrate.js'].forEach(function (f) {
+    var body = rd(BASE + f);
+    if (!body) return;
+    var fp = fingerprint(body).slice(0, 8);
+    var re = new RegExp('(["\'])' + f.replace(/[.\/]/g, '\\$&') + '(\\?v=[0-9a-f]+)?(["\'])');
+    page = page.replace(re, '$1' + f + '?v=' + fp + '$3');
+  });
+  wr(BASE + страница, page);
+  console.log('  ' + страница + ': метки версий обновлены');
+  });
+})();
+
 // Стили платформы отдельным файлом. Источник один — константа PLATFORM_CSS в
 // app.jsx: оболочка и контент-машина берут ОДНО И ТО ЖЕ, а не две копии,
 // которые разъедутся в первый же день. Отчёт этот файл не тянет — в выгрузку
