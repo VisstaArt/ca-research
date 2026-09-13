@@ -138,12 +138,19 @@ TARGETS.forEach(function (t) {
   // тему целиком.
   var токены = '';
   var rt2 = /:root[^{}]*\{[^{}]*\}/g, tq;
+  // Тёмные переопределения (:root:not([data-theme="light"])) в исходнике живут
+  // ВНУТРИ @media (prefers-color-scheme:dark). Регулярка выше вырывала их из
+  // обёртки, и тёмная тема применялась ВСЕГДА, когда атрибут не выставлен, —
+  // чёрный фон на светлой ОС. Голыми такие блоки не берём: тёмная тема
+  // приходит ниже, целым @media-блоком.
+  var тёмный = function (t) { return t.indexOf(':root:not(') === 0; };
   while ((tq = rt2.exec(css)))
-    if (tq[0].indexOf('--') >= 0) токены += tq[0] + '\n';
+    if (tq[0].indexOf('--') >= 0 && !тёмный(tq[0])) токены += tq[0] + '\n';
   var md = css.match(/@media \(prefers-color-scheme:dark\)\{[^@]*?\}\s*\}/);
   if (md) токены += md[0] + '\n';
   while ((tq = rt2.exec(сборка)))
-    if (tq[0].indexOf('--') >= 0 && tq[0].indexOf('--nacre-img') < 0) токены += tq[0] + '\n';
+    if (tq[0].indexOf('--') >= 0 && tq[0].indexOf('--nacre-img') < 0 && !тёмный(tq[0]))
+      токены += tq[0] + '\n';
   wr(BASE + 'lib/tokens.css',
     '/* Токены эталона, собрано из app.jsx. Не править руками. */\n' + токены);
   console.log('  app.jsx → lib/tokens.css  (' + Math.round(токены.length / 1024) + ' КБ)');

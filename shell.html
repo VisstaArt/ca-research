@@ -1,6 +1,13 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Платформа</title>
+<script>
+/* Платформа всегда светлая — решение владелицы («жемчужный светлый оставляем»,
+   «никаких чёрных фонов у нас нет»). Без атрибута тёмная macOS уводила всю
+   оболочку в тёмные токены: плашки этапов оставались светлыми (рамка ставит
+   тему сама), а вокруг них — чёрное. */
+document.documentElement.setAttribute('data-theme','light');
+</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap">

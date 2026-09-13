@@ -7263,9 +7263,32 @@ function App() {
       </div>
     );
     const html = generateHTMLReport(п.brief || {}, п.results || [], п.lang || 'Russian',
-      priceLayers, selectedLayers, null);
-    return <iframe title="Отчёт исследования" srcDoc={html}
-      style={{display:'block',width:'100%',height:'100vh',border:0}} />;
+      priceLayers, selectedLayers, null)
+      // В платформе отчёт следует теме платформы (светлой), а не системе:
+      // скачанный файл остаётся как был, правится только показ в рамке.
+      .replace('<html lang="ru">', '<html lang="ru" data-theme="light">');
+    const скачатьHtml = () => {
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(new Blob([html], { type: 'text/html;charset=utf-8' }));
+      a.download = 'CA_' + ((п.brief && п.brief.name) || 'research').replace(/\s+/g, '_') + '.html';
+      a.click();
+    };
+    return (
+      <div>
+        {/* Выгрузка живёт здесь, при готовом отчёте — решение владелицы:
+            на прогоне этим кнопкам не место. Markdown собирает buildFullMd,
+            он читает текущий проект — кнопка показывается, только когда
+            показанный отчёт и есть текущий проект. */}
+        <div style={{display:'flex',gap:8,justifyContent:'flex-end',padding:'10px 14px 0'}}>
+          {п === proj && (
+            <button onClick={()=>dlMd(buildFullMd())} style={{fontSize:12,padding:'7px 12px'}}>⤓ Полный отчёт (MD)</button>
+          )}
+          <button onClick={скачатьHtml} style={{fontSize:12,padding:'7px 12px'}}>⤓ Отчёт файлом (HTML)</button>
+        </div>
+        <iframe title="Отчёт исследования" srcDoc={html}
+          style={{display:'block',width:'100%',height:'100vh',border:0}} />
+      </div>
+    );
   }
 
   // Пустые этапы в платформе — у КАЖДОЙ вкладки своё содержимое, а не одна
@@ -8110,7 +8133,11 @@ function App() {
         );
       })}
 
-      {!isRun && (
+      {/* В платформе этого блока нет: проверка языка — техническая часть
+          (владелица: «сюда её выносить не нужно»), а выгрузка живёт на этапе
+          «Отчёт», когда отчёт уже сформирован. В самостоятельном инструменте
+          всё остаётся как было. */}
+      {!isRun && !embedded && (
         <div style={{marginTop:16}}>
           <div style={{border:'1px solid var(--line)',borderRadius:12,overflow:'hidden',marginBottom:10}}>
             <div style={{display:'flex',alignItems:'center',gap:10,padding:'12px 14px',background:'var(--line-2)',borderBottom:'1px solid var(--line)'}}>
