@@ -1,0 +1,54 @@
+/* Копия design/исследование/ниши.css (из артефакта ZIXO). Не править руками. */
+.wave-bg{position:absolute;inset:-24px -20px auto;height:270px;z-index:0; opacity:.5;pointer-events:none}
+.fan{position:absolute;inset:0;z-index:1}
+.fcard .tag{font-size:10px;font-weight:600;letter-spacing:.03em;color:var(--ink-3)}
+.fcard .name{font-size:14.5px;font-weight:700;letter-spacing:-.01em;line-height:1.25}
+.fcard .foot{display:flex;justify-content:space-between;align-items:flex-end; font-size:10.5px;color:var(--ink-3)}
+.fcard .foot b{display:block;font-size:13px;font-weight:700;color:var(--ink)}
+.f1{left:calc(50% - 148px - 2 * var(--step));top:74px;z-index:1;--glow:var(--back);--gx:18%;--gy:18%;--rise:-44px}
+.f2{left:calc(50% - 148px - 1 * var(--step));top:52px;z-index:2;--glow:var(--mid);--gx:22%;--gy:14%;--rise:-22px}
+.f3{left:calc(50% - 148px);top:30px;z-index:4;--glow:var(--front);--gx:26%;--gy:12%;--rise:0px}
+.f4{left:calc(50% - 148px + 1 * var(--step));top:52px;z-index:2;--glow:var(--mid);--gx:78%;--gy:14%;--rise:-22px}
+.f5{left:calc(50% - 148px + 2 * var(--step));top:74px;z-index:1;--glow:var(--front);--gx:82%;--gy:18%;--rise:-44px}
+.stat{background:var(--card);backdrop-filter:blur(14px);border:1px solid var(--line); border-radius:20px;padding:18px 20px;box-shadow:inset 0 1px 0 var(--hi)}
+.stat .k{font-size:12px;color:var(--ink-3);margin-bottom:8px}
+.stat .row{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.stat .v{font-size:25px;font-weight:700;letter-spacing:-.02em}
+.stat svg{display:block;flex:0 0 auto}
+.delta{display:inline-flex;align-items:baseline;gap:5px;font-size:11px;margin-top:7px}
+.delta b{font-weight:700;letter-spacing:.01em}
+.delta b.up{color:var(--acc-ink)}
+.lbl{fill:var(--ink-2);font-size:12.5px;font-family:var(--sans)}
+.val{fill:var(--ink);font-size:12px;font-weight:600;font-family:var(--sans)}
+.bar{transition:opacity .12s}
+.bar:hover{opacity:.75}
+.tip-pill{fill:var(--ink)}
+.tip-txt{fill:var(--mist-1);font-size:11px;font-weight:700;font-family:var(--sans)}
+.guide{stroke:var(--ink-3);stroke-width:1;stroke-dasharray:2 3}
+.stats{grid-template-columns:repeat(2,1fr)}
+.grid2,.flow,.rules{grid-template-columns:1fr}
+.f1,.f5{top:56px}
+.f2,.f4{top:40px}
+.f3{top:24px}
+.hero{height:200px}
+.dock{margin-top:-42px}
+.f1{left:calc(50% - 118px - 2 * var(--step))}
+.f2{left:calc(50% - 118px - 1 * var(--step))}
+.f3{left:calc(50% - 118px)}
+.f4{left:calc(50% - 118px + 1 * var(--step))}
+.f5{left:calc(50% - 118px + 2 * var(--step))}
+.fcard .name{font-size:13px}
+.fcard .foot b{font-size:12px}
+.f1,.f5{top:44px}
+.f2,.f4{top:32px}
+.f3{top:20px}
+.hero{height:164px}
+.dock{margin-top:-32px;padding:20px 16px 6px;border-radius:22px}
+.f1{left:calc(50% - 92px - 2 * var(--step))}
+.f2{left:calc(50% - 92px - 1 * var(--step))}
+.f3{left:calc(50% - 92px)}
+.f4{left:calc(50% - 92px + 1 * var(--step))}
+.f5{left:calc(50% - 92px + 2 * var(--step))}
+@media (max-width:1080px){.stats{grid-template-columns:repeat(2,1fr)} .grid2,.flow,.rules{grid-template-columns:1fr}}
+@media (max-width:720px){.fcard{width:236px;height:150px;padding:15px;--step:min(12%, 66px)} .f1,.f5{top:56px} .f2,.f4{top:40px} .f3{top:24px} .hero{height:200px} .dock{margin-top:-42px} .f1{left:calc(50% - 118px - 2 * var(--step))} .f2{left:calc(50% - 118px - 1 * var(--step))} .f3{left:calc(50% - 118px)} .f4{left:calc(50% - 118px + 1 * var(--step))} .f5{left:calc(50% - 118px + 2 * var(--step))}}
+@media (max-width:460px){.fcard{width:184px;height:126px;padding:13px;border-radius:18px;--step:min(10%, 50px)} .fcard .name{font-size:13px} .fcard .foot b{font-size:12px} .f1,.f5{top:44px} .f2,.f4{top:32px} .f3{top:20px} .hero{height:164px} .dock{margin-top:-32px;padding:20px 16px 6px;border-radius:22px} .f1{left:calc(50% - 92px - 2 * var(--step))} .f2{left:calc(50% - 92px - 1 * var(--step))} .f3{left:calc(50% - 92px)} .f4{left:calc(50% - 92px + 1 * var(--step))} .f5{left:calc(50% - 92px + 2 * var(--step))}}

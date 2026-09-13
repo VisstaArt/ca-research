@@ -5857,6 +5857,128 @@ function InfoTip({ text }) {
   );
 }
 
+
+// ── ЭКРАН НИШ — веер карт из «стиль ZIXO» ────────────────────────────────────
+// Вёрстка и классы (.hero/.fan/.fcard/.dock/.stats) — со страницы владелицы,
+// стили копией лежат в lib/niches.css. Здесь только жизнь: какая ниша в
+// центре, что показать в плитках, что делает кнопка. Стрелки и клик по
+// боковой карте крутят веер; в центре — выбранная.
+function NicheHero({ list, canPick, selected, onToggle, onContinue, statusOf }) {
+  const [c, setC] = React.useState(0);
+  React.useEffect(() => { if (c >= list.length) setC(0); }, [list.length]);
+  const n = list.length;
+  const at = k => list[((c + k) % n + n) % n];
+  const слоты = n >= 2 ? [-2, -1, 0, 1, 2].slice(n >= 5 ? 0 : (n === 2 ? 2 : (n === 3 ? 1 : 1)),
+    n >= 5 ? 5 : (n === 2 ? 4 : (n === 3 ? 4 : 5))) : [0];
+  const тек = at(0);
+  const выбрана = имя => (selected || []).includes(имя);
+  const барRef = React.useRef(null);
+  React.useEffect(() => {
+    const box = барRef.current; if (!box || !n) return;
+    box.innerHTML = '';
+    const rows = [...list].sort((a, b) => (b.score || 0) - (a.score || 0)).slice(0, 8);
+    const NS = 'http://www.w3.org/2000/svg';
+    const el = (t, a) => { const e = document.createElementNS(NS, t);
+      for (const k in a) e.setAttribute(k, a[k]); return e; };
+    const W = 560, padL = 150, padR = 50, rowH = 28, top = 6, H = top + rows.length * rowH + 34, max = 20;
+    const x = v => padL + (W - padL - padR) * (v / max);
+    const svg = el('svg', { viewBox: '0 0 ' + W + ' ' + H, width: '100%', height: H });
+    rows.forEach((r, i) => {
+      const y = top + i * rowH;
+      const nm = el('text', { x: padL - 10, y: y + 14, class: 'lbl', 'text-anchor': 'end' });
+      nm.textContent = (r.name || '').length > 20 ? r.name.slice(0, 19) + '…' : (r.name || '');
+      svg.appendChild(nm);
+      svg.appendChild(el('rect', { x: padL, y: y + 3, width: W - padL - padR, height: 14, fill: 'var(--line-2)' }));
+      const bw = Math.max(x(r.score || 0) - padL, 3);
+      svg.appendChild(el('rect', { x: padL, y: y + 3, width: bw, height: 14,
+        fill: i === 0 ? 'var(--mid)' : 'var(--ink-3)' }));
+      const v = el('text', { x: padL + bw + 8, y: y + 14, class: 'val' });
+      v.textContent = r.score != null ? r.score : '—'; svg.appendChild(v);
+      if (i === 0) {
+        const gx = padL + bw;
+        svg.appendChild(el('line', { x1: gx, x2: gx, y1: y + 3, y2: H - 22, class: 'guide' }));
+        const label = 'лидер · ' + (r.score != null ? r.score : '—');
+        const pw = Math.round(label.length * 6.6) + 26, ph = 24;
+        const px = Math.min(Math.max(gx - pw / 2, 4), W - pw - 4), py = H - 24;
+        svg.appendChild(el('rect', { x: px, y: py, width: pw, height: ph, rx: 3, class: 'tip-pill' }));
+        const t2 = el('text', { x: px + pw / 2, y: py + 16, class: 'tip-txt', 'text-anchor': 'middle' });
+        t2.textContent = label; svg.appendChild(t2);
+      }
+    });
+    box.appendChild(svg);
+  }, [list, n]);
+  if (!n) return null;
+  const кл = { '-2':'f1', '-1':'f2', '0':'f3', '1':'f4', '2':'f5' };
+  return (
+    <div className="card" style={{padding:0,overflow:'hidden',marginBottom:14}}>
+      <div className="hero">
+        <div className="fan">
+          {слоты.map(k => {
+            const д = at(k);
+            const st = statusOf ? statusOf(д.name) : '';
+            return (
+              <div key={k} className={'fcard '+кл[String(k)]}
+                onClick={()=>k!==0 && setC(((c + k) % n + n) % n)}
+                style={k !== 0 ? {cursor:'pointer'} : undefined}>
+                <div className="tag">Ниша{д.verdict ? ' · '+д.verdict : ''}{выбрана(д.name) ? ' · выбрана' : ''}</div>
+                <div className="name">{д.name}</div>
+                <div className="foot"><span>{st || 'Оценка'}</span><b>{д.score != null ? д.score : '—'}</b></div>
+              </div>
+            );
+          })}
+        </div>
+        {n > 1 && <>
+          <button onClick={()=>setC(((c - 1) % n + n) % n)}
+            style={{position:'absolute',left:10,top:'50%',transform:'translateY(-50%)',zIndex:6,width:34,height:34,borderRadius:'50%',padding:0}}>←</button>
+          <button onClick={()=>setC(((c + 1) % n + n) % n)}
+            style={{position:'absolute',right:10,top:'50%',transform:'translateY(-50%)',zIndex:6,width:34,height:34,borderRadius:'50%',padding:0}}>→</button>
+        </>}
+      </div>
+      <div className="dock">
+        <div className="stats">
+          {[['Спрос', тек.demand], ['Конкуренция', тек.competition],
+            ['Экономика', тек.economics], ['Итого', тек.score]].map(([k, v]) => (
+            <div key={k} className="stat"><div className="k">{k}</div>
+              <div className="row"><span className="v">{v != null && v !== '' ? v : '—'}</span></div></div>
+          ))}
+        </div>
+        {тек.why && <p style={{fontSize:12.5,color:'var(--ink-2)',lineHeight:1.55,margin:'0 0 14px',maxWidth:'70ch'}}>{тек.why}</p>}
+        <div style={{display:'flex',gap:8,flexWrap:'wrap',alignItems:'center',marginBottom:16}}>
+          {canPick ? (
+            <>
+              <button className="btn-primary" onClick={()=>onToggle(тек.name)}>
+                {выбрана(тек.name) ? '✓ Выбрана — убрать' : 'Выбрать нишу'}
+              </button>
+              <button className="btn-primary" disabled={!(selected||[]).length}
+                onClick={onContinue}
+                style={(selected||[]).length ? {} : undefined}>
+                Продолжить с выбранными ({(selected||[]).length})
+              </button>
+            </>
+          ) : (
+            <span className="tag">{statusOf ? statusOf(тек.name) : ''}</span>
+          )}
+        </div>
+        <div className="grid2" style={{marginBottom:8}}>
+          <div className="card">
+            <div className="chead" style={{display:'flex',justifyContent:'space-between',alignItems:'baseline',marginBottom:10}}>
+              <h2 style={{fontSize:16,fontWeight:600}}>Сравнение ниш</h2>
+              <span className="tag">Оценка 0–20</span></div>
+            <div ref={барRef}></div>
+          </div>
+          <div className="card">
+            <div className="chead" style={{display:'flex',justifyContent:'space-between',alignItems:'baseline',marginBottom:10}}>
+              <h2 style={{fontSize:16,fontWeight:600}}>Почему эта ниша</h2>
+              <span className="tag">{тек.verdict || ''}</span></div>
+            <p style={{fontSize:12.5,color:'var(--ink-2)',lineHeight:1.6}}>
+              {тек.why || 'Обоснование появится из разведки ниш.'}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ── FIELD COMPONENT
 function Field({ label, optional, info, children }) {
   return (
@@ -7525,6 +7647,34 @@ function App() {
             <span className="tag" style={{marginLeft:'auto'}}>{lang} · {MODEL}</span>
           </div>
         </div>
+        {embedded && шагИзАдреса === 'niches' && (() => {
+          // Список ниш: на стоп-точке — кандидаты выбора; после — все ниши
+          // разведки, чтобы можно было листать и смотреть данные каждой.
+          const m2r = (proj?.results || []).find(r2 => r2.id === 'M2');
+          const nd = m2r && (m2r.nicheData || extractNicheData(m2r.content || ''));
+          const все = (showNiches && nicheOpts.length) ? nicheOpts
+            : (nd && Array.isArray(nd.niches) ? nd.niches : []);
+          if (!все.length) return (
+            <div className="card"><p className="lede" style={{fontSize:13,color:'var(--ink-2)'}}>
+              Ниши появятся после разведки — она идёт первым модулем прогона.</p></div>
+          );
+          const выбр = showNiches
+            ? selNiches.map(ix => (nicheOpts[ix] || {}).name).filter(Boolean)
+            : String(brief.selectedNiche || '').split(',').map(x2 => x2.trim()).filter(Boolean);
+          const статус = имя => {
+            const свои = (proj?.results || []).filter(r2 => (r2.niche || '') === имя && r2.content && !r2.failed);
+            if (!выбр.includes(имя)) return 'не в работе';
+            const ждут = MODULES.filter(m2 => !m2.disabled && !m2.offChain && m2.id !== 'CONTENT'
+              && CAContract.isPerNiche(m2.id)).length;
+            return свои.length >= ждут ? 'готова' : (свои.length ? свои.length + ' из ' + ждут : 'выбрана');
+          };
+          return <NicheHero list={все} canPick={showNiches}
+            selected={выбр}
+            statusOf={статус}
+            onToggle={имя => { const ix = nicheOpts.findIndex(x2 => x2.name === имя);
+              if (ix >= 0) setSelNiches(p2 => p2.includes(ix) ? p2.filter(z => z !== ix) : [...p2, ix]); }}
+            onContinue={continueAfterNiche} />;
+        })()}
         </>
       ) : (
       <div className="card nacre" style={{marginBottom:'1rem'}}>
@@ -7714,7 +7864,7 @@ function App() {
                 </div>
               )}
             </div>
-            {r.id === 'M2' && !isRun && showNiches && nicheOpts.length > 0 && (
+            {r.id === 'M2' && !embedded && !isRun && showNiches && nicheOpts.length > 0 && (
               <div style={{marginBottom:16}}>
                 <div className="card">
                   <h3 style={{fontSize:16,fontWeight:500,marginBottom:6}}>{t.nichePickTitle}</h3>

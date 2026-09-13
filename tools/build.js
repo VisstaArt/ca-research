@@ -143,6 +143,17 @@ TARGETS.forEach(function (t) {
   console.log('  app.jsx → lib/report.css  (' + Math.round(css.length / 1024) + ' КБ)');
 })();
 
+// Экран ниш: вёрстка взята со страницы «Платформа — стиль ZIXO» (артефакт
+// 3d2c6dbd), правила лежат в design/исследование/ниши.css и копируются в lib
+// как есть — не пересказ, копия. Владелица: «вот это красиво, почему не так».
+(function () {
+  var css = rd(BASE + 'design/исследование/ниши.css');
+  if (!css) { console.log('  ниши.css не найден — пропускаю'); return; }
+  wr(BASE + 'lib/niches.css',
+    '/* Копия design/исследование/ниши.css (из артефакта ZIXO). Не править руками. */\n' + css);
+  console.log('  ниши.css → lib/niches.css  (' + Math.round(css.length / 1024) + ' КБ)');
+})();
+
 // Метки версий в shell.html: браузер владелицы держал старые platform.js и
 // css из кэша — она обновляла страницу и видела «всё без изменений». Метка
 // меняется вместе с содержимым файла, кэш обязан скачать новое.
@@ -151,7 +162,7 @@ TARGETS.forEach(function (t) {
   var page = rd(BASE + страница);
   if (!page) return;
   ['platform.js', 'app.js', 'lib/auth.js', 'lib/logo.js', 'lib/platform.css',
-   'lib/nacre.css', 'lib/tokens.css', 'lib/migrate.js'].forEach(function (f) {
+   'lib/nacre.css', 'lib/tokens.css', 'lib/niches.css', 'lib/migrate.js'].forEach(function (f) {
     var body = rd(BASE + f);
     if (!body) return;
     var fp = fingerprint(body).slice(0, 8);
