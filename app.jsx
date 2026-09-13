@@ -39,6 +39,7 @@ const T = {
     appTitle: 'CA Research',
     appSub: 'Professional target audience research',
     newProject: '+ New project',
+    backToProject: '← Back to project', editBriefTitle: 'Edit brief', newProjectTitle: 'New project',
     noProjects: 'No projects yet',
     noProjectsSub: 'Enter a client website URL and the agent will fill the brief automatically',
     autoFill: 'Auto-fill from website',
@@ -136,6 +137,7 @@ const T = {
     appTitle: 'CA Research',
     appSub: 'Профессиональное исследование целевой аудитории',
     newProject: '+ Новый проект',
+    backToProject: '← К проекту', editBriefTitle: 'Правка брифа', newProjectTitle: 'Новый проект',
     noProjects: 'Проектов пока нет',
     noProjectsSub: 'Введите URL сайта клиента — агент прочитает страницы и заполнит бриф автоматически',
     autoFill: 'Автозаполнение с сайта',
@@ -401,8 +403,17 @@ const langSelf = l => LANG_SELF[l] || l;
 const loadAll = () => { try { return JSON.parse(localStorage.getItem(SK)||'[]'); } catch { return []; } };
 const saveAll = l => { try { localStorage.setItem(SK, JSON.stringify(l)); } catch {} };
 const upsert = p => { const a=loadAll(); const i=a.findIndex(x=>x.id===p.id); if(i>=0)a[i]=p; else a.unshift(p); saveAll(a); syncToDb(p); };
-const loadUiLang = () => { try { return localStorage.getItem('ca_uilang')||'en'; } catch { return 'en'; } };
-const saveUiLang = l => { try { localStorage.setItem('ca_uilang', l); } catch {} };
+const loadUiLang = () => {
+  // Внутри платформы язык интерфейса — русский: платформа сейчас русская, и
+  // английские кнопки в русском пути читались как «иностранные слова в
+  // кнопках» (замечание владелицы 14.09). Отдельно открытый инструмент
+  // помнит выбор человека, по умолчанию английский, как было.
+  try {
+    const сохранён = localStorage.getItem('ca_uilang');
+    if (сохранён) return сохранён;
+    return new URLSearchParams(location.search).get('embed') === '1' ? 'ru' : 'en';
+  } catch { return 'en'; }
+};const saveUiLang = l => { try { localStorage.setItem('ca_uilang', l); } catch {} };
 
 // ── API / AUTH (Supabase Auth — Б1+Б2+Б3, 24.08.2026)
 // Вход и авторизованные запросы живут в lib/auth.js — тот же код использует
@@ -7055,8 +7066,8 @@ function App() {
     <div>
       <Steps current="бриф"/>
       <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:'1.5rem'}}>
-        <button onClick={()=>proj ? setSc('work') : setSc('list')}>{proj ? '← Back to project' : t.backBtn}</button>
-        <h2 style={{fontSize:20,fontWeight:500}}>{proj ? 'Edit brief: '+brief.name : 'New project'}</h2>
+        <button onClick={()=>proj ? setSc('work') : setSc('list')}>{proj ? t.backToProject : t.backBtn}</button>
+        <h2 style={{fontSize:20,fontWeight:500}}>{proj ? t.editBriefTitle+': '+brief.name : t.newProjectTitle}</h2>
         <div style={{marginLeft:'auto'}}>
           <button onClick={switchUiLang} style={{padding:'5px 12px',fontSize:12,fontWeight:500}}>{uiLang==='en'?'RU':'EN'}</button>
         </div>
@@ -7231,7 +7242,7 @@ function App() {
   if (sc === 'tracker') return (
     <div>
       <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:'1.5rem'}}>
-        <button onClick={()=>setSc('work')}>← Back to project</button>
+        <button onClick={()=>setSc('work')}>{t.backToProject}</button>
         <h2 style={{fontSize:20,fontWeight:500}}>Трекер публикаций: {brief.name}</h2>
       </div>
 
@@ -7366,7 +7377,7 @@ function App() {
   if (sc === 'trends') return (
     <div>
       <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:'1.5rem'}}>
-        <button onClick={()=>setSc('work')}>← Back to project</button>
+        <button onClick={()=>setSc('work')}>{t.backToProject}</button>
         <h2 style={{fontSize:20,fontWeight:500}}>Тренды: {brief.name}</h2>
       </div>
 
@@ -7458,51 +7469,45 @@ function App() {
   return (
     <div>
       <Steps current={isRun ? 'прогон' : (showNiches ? 'ниши' : 'отчёт')}/>
-      <div style={{display:'flex',alignItems:'flex-start',justifyContent:'space-between',marginBottom:'1rem'}}>
-        <div>
-          <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:4}}>
-            <button onClick={()=>setSc('list')}>{t.backProjects}</button>
-            <h2 style={{fontSize:18,fontWeight:500}}>{brief.name}</h2>
+      {/* Шапка исследования — жемчужная плашка, как шапка отчёта: название,
+          проект и всё управление в одном месте (решение владелицы 14.09).
+          Трекер и тренды с плашки убраны — это отдельные разделы платформы,
+          в пути исследования им делать нечего. Свои цвета у кнопок сняты:
+          конструкция одна на всю платформу. */}
+      <div className="card nacre" style={{marginBottom:'1rem'}}>
+        <div style={{display:'flex',alignItems:'flex-start',justifyContent:'space-between',gap:14,flexWrap:'wrap'}}>
+          <div>
+            <span className="tag" style={{display:'block',marginBottom:6,color:'var(--acc-ink)'}}>Исследование целевой аудитории</span>
+            <h2 style={{fontSize:21,fontWeight:600,letterSpacing:'-.02em'}}>{brief.name}</h2>
+            <p style={{fontSize:12,color:'var(--ink-2)',marginTop:4}}>
+              {[brief.geoMarket||brief.geo,brief.niche].filter(Boolean).join(' · ')}
+              <span className="tag" style={{marginLeft:8,color:'var(--acc-ink)'}}>{lang}</span>
+              <span className="tag" style={{marginLeft:8}}>{MODEL}</span>
+              {brief.priceLayer && <span className="tag" style={{marginLeft:8,color:'var(--acc-quiet-ink)'}}>{brief.priceLayer}</span>}
+            </p>
           </div>
-          <p style={{fontSize:12,color:'var(--ink-2)'}}>
-            {[brief.geoMarket||brief.geo,brief.niche].filter(Boolean).join(' · ')}
-            <span className="tag" style={{marginLeft:8,background:'color-mix(in srgb, var(--mid) 12%, transparent)',color:'var(--acc-ink)',borderColor:'var(--mid)'}}>{lang}</span>
-            <span className="tag" style={{marginLeft:4,background:'var(--line-2)',color:'var(--ink-2)',borderColor:'var(--line)'}}>{MODEL}</span>
-            {brief.priceLayer && <span className="tag" style={{marginLeft:4,background:'color-mix(in srgb, var(--acc-quiet) 12%, var(--card-solid))',color:'var(--acc-quiet-ink)',borderColor:'var(--acc-quiet)'}}>{brief.priceLayer}</span>}
-          </p>
-        </div>
-        <div style={{display:'flex',gap:8,flexShrink:0,flexWrap:'wrap'}}>
-          {!isRun && pending.length > 0 && (
-            <button className="btn-primary" onClick={()=>run()}>
-              ▶ Run: {pending.map(m=>m.id).join(', ')} ↗
-            </button>
-          )}
-          {!isRun && pending.length === 0 && doneCount > 0 && (
-            <button className="btn-primary" onClick={()=>setSc('form')} style={{background:'var(--mid)',borderColor:'var(--mid)'}}>
-              + Add modules ↗
-            </button>
-          )}
-          {!isRun && modDone('M2') && (
-            <button onClick={openNichePicker} style={{fontSize:12,padding:'7px 12px',color:'var(--acc-strong-ink)',borderColor:'var(--mid)',background:'color-mix(in srgb, var(--mid) 8%, var(--card-solid))',fontWeight:500}}
-              title="Добавить ещё ниши к исследованию — прогонятся только новые, готовые не тронутся">
-              ＋ Добавить ниши
-            </button>
-          )}
-          {!isRun && (
-            <button onClick={()=>setSc('tracker')} style={{fontSize:12,padding:'7px 12px',color:'var(--acc-ink)',borderColor:'var(--mid)',background:'color-mix(in srgb, var(--mid) 12%, transparent)',fontWeight:500}}
-              title="M10: публикации и метрики по этому проекту">
-              📊 Трекер
-            </button>
-          )}
-          {!isRun && modDone('M3') && (
-            <button onClick={()=>{setTrendNiche(workNiches[0]||''); setSc('trends');}} style={{fontSize:12,padding:'7px 12px',color:'var(--acc-ink)',borderColor:'var(--mid)',background:'color-mix(in srgb, var(--mid) 12%, transparent)',fontWeight:500}}
-              title="M8: что изменилось в нише за период">
-              🔭 Тренды
-            </button>
-          )}
-          <button onClick={()=>setSc('form')} style={{fontSize:12,padding:'7px 12px',color:'var(--ink-2)',borderColor:'var(--line)'}}>
-            Edit brief ✎
-          </button>
+          <div style={{display:'flex',gap:8,flexShrink:0,flexWrap:'wrap',alignItems:'center'}}>
+            {!embedded && <button onClick={()=>setSc('list')} style={{fontSize:12,padding:'7px 12px'}}>{t.backProjects}</button>}
+            {!isRun && pending.length > 0 && (
+              <button className="btn-primary" onClick={()=>run()}>▶ Прогнать: {pending.map(m=>m.id).join(', ')}</button>
+            )}
+            {!isRun && pending.length === 0 && doneCount > 0 && (
+              <button className="btn-primary" onClick={()=>setSc('form')}>＋ Добавить модули</button>
+            )}
+            {!isRun && modDone('M2') && (
+              <button onClick={openNichePicker} style={{fontSize:12,padding:'7px 12px'}}
+                title="Добавить ещё ниши — прогонятся только новые, готовые не тронутся">
+                ＋ Добавить ниши
+              </button>
+            )}
+            {!embedded && !isRun && (
+              <button onClick={()=>setSc('tracker')} style={{fontSize:12,padding:'7px 12px'}}>Трекер</button>
+            )}
+            {!embedded && !isRun && modDone('M3') && (
+              <button onClick={()=>{setTrendNiche(workNiches[0]||''); setSc('trends');}} style={{fontSize:12,padding:'7px 12px'}}>Тренды</button>
+            )}
+            <button onClick={()=>setSc('form')} style={{fontSize:12,padding:'7px 12px'}}>Править бриф</button>
+          </div>
         </div>
       </div>
 
