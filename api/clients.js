@@ -31,7 +31,39 @@ export default async function handler(req, res) {
         + '&order=created_at.asc', { headers });
       const data = await r.json();
       if (!r.ok) return res.status(r.status).json({ error: data });
-      return res.status(200).json({ clients: data });
+
+      // Расход и число ниш — настоящие, из общих таблиц. Показываем только
+      // ПОТРАЧЕННОЕ, без знаменателя: сколько кредитов в тарифе — нерешённое
+      // место алгоритма, и «412 из 1000» было бы выдуманным числом в рабочей
+      // платформе. Владелица приняла бы его за настоящее и считала бы по нему.
+      //
+      // Один запрос на всё, не по клиенту: счётчиков и ниш единицы, а лишний
+      // круг на каждого клиента заметно медленнее при десятке проектов.
+      const месяц = new Date().toISOString().slice(0, 7) + '-01';
+      const [uRes, nRes] = await Promise.all([
+        fetch(auth.pgBase + 'usage_counters?select=client_id,cost_cents,llm_calls,period'
+          + '&period=gte.' + месяц, { headers }).catch(() => null),
+        fetch(auth.pgBase + 'audience_research?select=client_id,niche&is_current=eq.true',
+          { headers }).catch(() => null),
+      ]);
+      const usage = uRes && uRes.ok ? await uRes.json().catch(() => []) : [];
+      const niches = nRes && nRes.ok ? await nRes.json().catch(() => []) : [];
+      const свод = {};
+      for (const u of (Array.isArray(usage) ? usage : [])) {
+        const c = (свод[u.client_id] = свод[u.client_id] || { cost_cents: 0, llm_calls: 0, niches: 0 });
+        c.cost_cents += Number(u.cost_cents) || 0;
+        c.llm_calls += Number(u.llm_calls) || 0;
+      }
+      const поНишам = {};
+      for (const n of (Array.isArray(niches) ? niches : [])) {
+        (поНишам[n.client_id] = поНишам[n.client_id] || new Set()).add(n.niche);
+      }
+      for (const id of Object.keys(поНишам)) {
+        свод[id] = свод[id] || { cost_cents: 0, llm_calls: 0, niches: 0 };
+        свод[id].niches = поНишам[id].size;
+      }
+      const out = (Array.isArray(data) ? data : []).map(c => ({ ...c, usage: свод[c.id] || null }));
+      return res.status(200).json({ clients: out });
     }
 
     if (req.method === 'POST') {

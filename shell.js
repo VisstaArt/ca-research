@@ -1,6 +1,6 @@
 // СОБРАНО АВТОМАТИЧЕСКИ из shell.jsx — не править руками.
 // Правки вносить в shell.jsx, затем: osascript -l JavaScript tools/build.js
-// отпечаток-исходника: 4e0b6db101384317
+// отпечаток-исходника: e853d380697c64d6
 function _extends() { return _extends = Object.assign ? Object.assign.bind() : function (n) { for (var e = 1; e < arguments.length; e++) { var t = arguments[e]; for (var r in t) ({}).hasOwnProperty.call(t, r) && (n[r] = t[r]); } return n; }, _extends.apply(null, arguments); }
 const {
   useState,
@@ -107,6 +107,10 @@ const readDbClients = async () => {
       domain: (c.domain || '').replace(/^https?:\/\//, '').replace(/\/$/, ''),
       what: c.one_liner || '',
       fromDb: true,
+      // Расход настоящий, из общей таблицы. Знаменателя нет нарочно: сколько
+      // кредитов в тарифе — нерешённое место алгоритма, и «412 из 1000» было
+      // бы выдуманным числом, которое в рабочей платформе примут за настоящее.
+      usage: c.usage || null,
       markets: (c.markets || []).map(m => ({
         id: m.id,
         // Имя страны показываем человеку, код оставляем машине: в старых
@@ -476,10 +480,14 @@ function Markets({
 //
 // У «Исследования» части НАШИ: на той стороне это раздел «что пришло к нам»,
 // потому что исследование им приходит готовым. У нас оно тут и делается.
-const SECTIONS = [{
+const SECTIONS = [
+// Последняя часть — не наш шаг, а СТЫК: какие поля исследования доехали до
+// контент-машины, какие пусты, чего не хватает для генерации. Именно здесь
+// человек поймёт, почему контент-машина отказалась писать (их просьба).
+{
   id: 'research',
   name: 'Исследование',
-  parts: [['brief', 'Бриф'], ['niches', 'Ниши'], ['run', 'Прогон'], ['report', 'Отчёт']]
+  parts: [['brief', 'Бриф'], ['niches', 'Ниши'], ['run', 'Прогон'], ['report', 'Отчёт'], ['handoff', 'Что ушло в контент']]
 }, {
   id: 'funnel',
   name: 'Воронка',
@@ -540,6 +548,23 @@ const ICONS = {
     d: "M12 8v4l3 2"
   }))
 };
+
+// Подписи в строке проекта. Пусто — значит пусто: «нет исследования» честнее
+// прочерка, а выдуманного «412 из 1000» здесь нет вовсе.
+const ниши = c => {
+  const n = c && c.usage && c.usage.niches;
+  if (!n) return 'нет исследования';
+  const h = Math.abs(n) % 100,
+    t = h % 10;
+  const сл = h > 10 && h < 20 || t === 0 || t >= 5 ? 'ниш' : t === 1 ? 'ниша' : 'ниши';
+  return n + ' ' + сл;
+};
+const расход = c => {
+  const u = c && c.usage;
+  if (!u || !u.cost_cents && !u.llm_calls) return 'без расхода';
+  if (u.cost_cents) return (u.cost_cents / 100).toFixed(2).replace('.', ',') + ' $ за месяц';
+  return u.llm_calls + ' вызовов';
+};
 const FLAG = c => ({
   RU: '🇷🇺',
   TR: '🇹🇷',
@@ -591,7 +616,7 @@ function Market({
     className: "cm-mark"
   }, MARK(client.name)), /*#__PURE__*/React.createElement("u", {
     className: "cm-cc"
-  }, FLAG(market.country), " ", (market.country || '').toUpperCase()), /*#__PURE__*/React.createElement("b", null, client.domain || client.name), /*#__PURE__*/React.createElement("em", null, market.countryName), /*#__PURE__*/React.createElement("svg", {
+  }, FLAG(market.country), " ", (market.country || '').toUpperCase()), /*#__PURE__*/React.createElement("b", null, client.domain || client.name), /*#__PURE__*/React.createElement("em", null, ниши(client)), /*#__PURE__*/React.createElement("svg", {
     className: "cm-chev",
     viewBox: "0 0 24 24"
   }, /*#__PURE__*/React.createElement("path", {
@@ -609,7 +634,7 @@ function Market({
     className: "cm-mark"
   }, MARK(c.name)), /*#__PURE__*/React.createElement("u", {
     className: "cm-cc"
-  }, FLAG(m.country), " ", (m.country || '').toUpperCase()), /*#__PURE__*/React.createElement("b", null, c.domain || c.name), /*#__PURE__*/React.createElement("em", null, m.countryName)))), /*#__PURE__*/React.createElement("div", {
+  }, FLAG(m.country), " ", (m.country || '').toUpperCase()), /*#__PURE__*/React.createElement("b", null, c.domain || c.name), /*#__PURE__*/React.createElement("em", null, ниши(c)), /*#__PURE__*/React.createElement("span", null, расход(c))))), /*#__PURE__*/React.createElement("div", {
     className: "cm-sep"
   }), /*#__PURE__*/React.createElement("a", {
     className: "cm-add",

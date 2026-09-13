@@ -60,6 +60,10 @@ const readDbClients = async () => {
       domain: (c.domain || '').replace(/^https?:\/\//, '').replace(/\/$/, ''),
       what: c.one_liner || '',
       fromDb: true,
+      // Расход настоящий, из общей таблицы. Знаменателя нет нарочно: сколько
+      // кредитов в тарифе — нерешённое место алгоритма, и «412 из 1000» было
+      // бы выдуманным числом, которое в рабочей платформе примут за настоящее.
+      usage: c.usage || null,
       markets: (c.markets || []).map(m => ({
         id: m.id,
         // Имя страны показываем человеку, код оставляем машине: в старых
@@ -336,8 +340,12 @@ function Markets({ client, onOpen, onAdd, onBack }) {
 // У «Исследования» части НАШИ: на той стороне это раздел «что пришло к нам»,
 // потому что исследование им приходит готовым. У нас оно тут и делается.
 const SECTIONS = [
+  // Последняя часть — не наш шаг, а СТЫК: какие поля исследования доехали до
+  // контент-машины, какие пусты, чего не хватает для генерации. Именно здесь
+  // человек поймёт, почему контент-машина отказалась писать (их просьба).
   { id:'research',  name:'Исследование', parts:[
-      ['brief','Бриф'], ['niches','Ниши'], ['run','Прогон'], ['report','Отчёт']] },
+      ['brief','Бриф'], ['niches','Ниши'], ['run','Прогон'], ['report','Отчёт'],
+      ['handoff','Что ушло в контент']] },
   { id:'funnel',    name:'Воронка', parts:[
       ['goal','Цель'], ['parts','Из чего состоит'], ['page','Целевая страница'],
       ['auto','Автомат касаний']] },
@@ -362,6 +370,21 @@ const ICONS = {
   analytics:<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 8v4l3 2"/></svg>,
 };
 
+// Подписи в строке проекта. Пусто — значит пусто: «нет исследования» честнее
+// прочерка, а выдуманного «412 из 1000» здесь нет вовсе.
+const ниши = c => {
+  const n = c && c.usage && c.usage.niches;
+  if (!n) return 'нет исследования';
+  const h = Math.abs(n) % 100, t = h % 10;
+  const сл = (h > 10 && h < 20) || t === 0 || t >= 5 ? 'ниш' : t === 1 ? 'ниша' : 'ниши';
+  return n + ' ' + сл;
+};
+const расход = c => {
+  const u = c && c.usage;
+  if (!u || (!u.cost_cents && !u.llm_calls)) return 'без расхода';
+  if (u.cost_cents) return (u.cost_cents / 100).toFixed(2).replace('.', ',') + ' $ за месяц';
+  return u.llm_calls + ' вызовов';
+};
 const FLAG = c => ({ RU:'🇷🇺', TR:'🇹🇷', KZ:'🇰🇿', AE:'🇦🇪', US:'🇺🇸', GB:'🇬🇧' })[c] || '';
 const MARK = n => (n || '').split(/\s+/).filter(Boolean).slice(0,2).map(w => w[0]).join('').toUpperCase();
 
@@ -389,7 +412,7 @@ function Market({ client, market, clients, onPick, onBack, theme, setTheme, onOu
               <span className="cm-mark">{MARK(client.name)}</span>
               <u className="cm-cc">{FLAG(market.country)} {(market.country || '').toUpperCase()}</u>
               <b>{client.domain || client.name}</b>
-              <em>{market.countryName}</em>
+              <em>{ниши(client)}</em>
               <svg className="cm-chev" viewBox="0 0 24 24"><path d="M7 10l5 5 5-5"/></svg>
             </button>
             {drop && (
@@ -399,7 +422,8 @@ function Market({ client, market, clients, onPick, onBack, theme, setTheme, onOu
                      onClick={()=>{ setDrop(false); onPick(c.id, m.id); }}>
                     <span className="cm-mark">{MARK(c.name)}</span>
                     <u className="cm-cc">{FLAG(m.country)} {(m.country || '').toUpperCase()}</u>
-                    <b>{c.domain || c.name}</b><em>{m.countryName}</em>
+                    <b>{c.domain || c.name}</b><em>{ниши(c)}</em>
+                    <span>{расход(c)}</span>
                   </a>
                 )))}
                 <div className="cm-sep"></div>
