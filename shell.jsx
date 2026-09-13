@@ -43,6 +43,33 @@ const readDbProjects = async () => {
       lang: row.lang || 'Russian', results: row.results || [] }));
   } catch { return []; }
 };
+// Клиенты и рынки ИЗ БАЗЫ — общие таблицы с контент-машиной. Это главный
+// источник: то, что видит здесь владелица, и то, с чем работает контент-машина,
+// обязано быть одним и тем же. Сборка клиентов из прогонов инструмента ниже
+// остаётся запасным путём — для аккаунта, где таблицы ещё пусты.
+const readDbClients = async () => {
+  try {
+    const r = await authFetch('/api/clients', { headers: { 'Content-Type':'application/json' } });
+    if (!r.ok) return [];
+    const d = await r.json();
+    if (!Array.isArray(d.clients)) return [];
+    return d.clients.map(c => ({
+      id: c.id, name: c.name || 'Без названия',
+      domain: (c.domain || '').replace(/^https?:\/\//, '').replace(/\/$/, ''),
+      what: c.one_liner || '',
+      fromDb: true,
+      markets: (c.markets || []).map(m => ({
+        id: m.id,
+        // Имя страны показываем человеку, код оставляем машине: в старых
+        // брифах страна приходит текстом вроде «Не указана», и кода у неё нет.
+        countryName: m.country_name || m.country || 'Не указана',
+        country: m.country || '',
+        lang: m.lang || '',
+        projects: [],
+      })),
+    }));
+  } catch { return []; }
+};
 const mergeById = (a, b) => {
   const out = [], seen = {};
   for (const r of [...a, ...b]) {
@@ -417,10 +444,16 @@ function App() {
     // Локальные показываем сразу, не дожидаясь сети: если сеть медленная или
     // база недоступна, человек всё равно видит свои проекты, а не пустоту.
     if (local.length) save(buildShellData(local));
-    readDbProjects().then(db => {
-      const all = mergeById(local, db);
-      if (all.length) save(buildShellData(all));
-      setImporting(false);
+    // Сначала спрашиваем таблицу клиентов — это общий с контент-машиной
+    // источник. Есть строки — работаем от них и прогоны инструмента больше не
+    // разбираем: клиент, заведённый в базе, главнее собранного из брифов.
+    readDbClients().then(cl => {
+      if (cl.length) { save({ clients: cl }); setImporting(false); return null; }
+      return readDbProjects().then(db => {
+        const all = mergeById(local, db);
+        if (all.length) save(buildShellData(all));
+        setImporting(false);
+      });
     }).catch(() => setImporting(false));
   }, [inside]);
 
