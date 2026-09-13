@@ -409,9 +409,11 @@ const loadUiLang = () => {
   // кнопках» (замечание владелицы 14.09). Отдельно открытый инструмент
   // помнит выбор человека, по умолчанию английский, как было.
   try {
-    const сохранён = localStorage.getItem('ca_uilang');
-    if (сохранён) return сохранён;
-    return new URLSearchParams(location.search).get('embed') === '1' ? 'ru' : 'en';
+    // В платформе — всегда русский, независимо от сохранённого выбора:
+    // язык платформы задаётся в её кабинете, а старое сохранённое «en»
+    // от отдельного инструмента давало английские подписи в русском пути.
+    if (new URLSearchParams(location.search).get('embed') === '1') return 'ru';
+    return localStorage.getItem('ca_uilang') || 'en';
   } catch { return 'en'; }
 };const saveUiLang = l => { try { localStorage.setItem('ca_uilang', l); } catch {} };
 
@@ -5979,6 +5981,92 @@ function NicheHero({ list, canPick, selected, onToggle, onContinue, statusOf }) 
   );
 }
 
+
+// ── КВИЗ-БРИФ ────────────────────────────────────────────────────────────────
+// Бриф в платформе — не анкета на семнадцать полей, а путь (решение владелицы,
+// давнее и повторённое 14.09): сайт → разбор → система сама говорит, чего не
+// хватило, → по одному вопросу на экран → настройка и запуск. Полная форма
+// остаётся для правки готового брифа и для инструмента вне платформы.
+const КВИЗ_ПОЛЯ = [
+  ['name',        'Как называется компания?', false],
+  ['niche',       'Что продаёт? Ниша, продукт', false],
+  ['geoMarket',   'Какой рынок исследуем? Страна', false],
+  ['geoCompany',  'Где компания работает вообще?', true],
+  ['audience',    'Кто покупатель?', false],
+  ['result',      'Какой результат обещаете клиенту?', false],
+  ['format',      'В каком формате продукт?', true],
+  ['price',       'Цены и тарифы', true],
+  ['competitors', 'Каких конкурентов знаете?', true],
+  ['extra',       'Что ещё важно знать?', true],
+];
+function QuizBrief(Q) {
+  const [stage, setStage] = React.useState('site');
+  const [поля, setПоля] = React.useState([]);
+  const [i, setI] = React.useState(0);
+  const кПолям = () => {
+    // Спрашиваем ТОЛЬКО то, чего разбор не достал, — в этом весь смысл квиза.
+    const пустые = КВИЗ_ПОЛЯ.filter(([k]) => !String(Q.brief[k] || '').trim());
+    setПоля(пустые.length ? пустые : []);
+    setI(0);
+    setStage(пустые.length ? 'fields' : 'final');
+  };
+  if (stage === 'site') return (
+    <div className="card">
+      <p style={{fontSize:16,fontWeight:600,marginBottom:4}}>Сайт компании</p>
+      <p style={{fontSize:12.5,color:'var(--ink-2)',marginBottom:12,lineHeight:1.55,maxWidth:'70ch'}}>
+        Дайте адрес — я прочитаю страницы и заполню бриф сама. Спрошу только то,
+        чего на сайте не нашлось.</p>
+      <div style={{display:'flex',gap:8,marginBottom:10}}>
+        <input value={Q.siteUrl} onChange={e=>Q.setSiteUrl(e.target.value)}
+          placeholder="ловец-лидов.рф" style={{flex:1}}
+          onKeyDown={e=>{ if (e.key==='Enter' && Q.siteUrl.trim() && !Q.parsing)
+            Q.parseSite().then(кПолям); }}/>
+        <button className="btn-primary" disabled={!Q.siteUrl.trim()||Q.parsing}
+          onClick={()=>Q.parseSite().then(кПолям)}>
+          {Q.parsing ? 'Читаю сайт…' : 'Разобрать сайт'}</button>
+      </div>
+      {Q.pMsg && <p style={{fontSize:12,color:'var(--ink-2)',marginBottom:8}}>{Q.pMsg}</p>}
+      <button onClick={кПолям} style={{fontSize:12,padding:'7px 12px'}}>
+        Сайта нет — заполню ответами</button>
+    </div>
+  );
+  if (stage === 'fields' && поля.length) {
+    const [ключ, вопрос, необяз] = поля[i];
+    const длинное = ['audience','result','extra','competitors','price'].includes(ключ);
+    return (
+      <div className="card">
+        <p className="tag" style={{marginBottom:8}}>Вопрос {i+1} из {поля.length}</p>
+        <p style={{fontSize:18,fontWeight:600,marginBottom:4,letterSpacing:'-.01em'}}>{вопрос}</p>
+        {необяз && <p style={{fontSize:11.5,color:'var(--ink-3)',marginBottom:8}}>Можно пропустить — модель обойдётся без этого.</p>}
+        {длинное
+          ? <textarea autoFocus value={Q.brief[ключ]||''} rows={3}
+              onChange={e=>Q.setBrief(b=>({...b,[ключ]:e.target.value}))}/>
+          : <input autoFocus value={Q.brief[ключ]||''}
+              onChange={e=>Q.setBrief(b=>({...b,[ключ]:e.target.value}))}
+              onKeyDown={e=>{ if (e.key==='Enter') i+1<поля.length?setI(i+1):setStage('final'); }}/>}
+        <div style={{display:'flex',gap:8,marginTop:12}}>
+          {i>0 && <button onClick={()=>setI(i-1)} style={{fontSize:12,padding:'7px 12px'}}>← Назад</button>}
+          <button className="btn-primary" style={{marginLeft:'auto'}}
+            onClick={()=>i+1<поля.length?setI(i+1):setStage('final')}>
+            {i+1<поля.length ? 'Дальше →' : 'К запуску →'}</button>
+        </div>
+      </div>
+    );
+  }
+  return (
+    <>
+      {Q.настройка}
+      <div style={{display:'flex',gap:8,marginTop:4}}>
+        <button onClick={()=>{ setStage('site'); }} style={{fontSize:12,padding:'7px 12px'}}>← К сайту</button>
+        <button className="btn-primary" style={{flex:1,padding:'13px',fontSize:14}}
+          disabled={!Q.brief.name || !Q.mods.length} onClick={Q.запуск}>
+          ▶ Запустить исследование · {Q.mods.length} модулей
+        </button>
+      </div>
+    </>
+  );
+}
+
 // ── FIELD COMPONENT
 function Field({ label, optional, info, children }) {
   return (
@@ -7223,6 +7311,86 @@ function App() {
   );
 
   // ── FORM
+    // Карточки настройки — общие для полной формы и финала квиза.
+  const картаЯзыка = (
+    <div className="card">
+        <p style={{fontSize:16,fontWeight:600,marginBottom:4,letterSpacing:'-.01em'}}>{t.researchLang}</p>
+        <p style={{fontSize:12,color:'var(--ink-2)',marginBottom:10}}>{t.researchLangSub}</p>
+        <div style={{display:'flex',gap:6,flexWrap:'wrap',marginBottom:8}}>
+          {LANGS.map(l => (
+            <button key={l} onClick={()=>setLang(l)} style={{padding:'5px 12px',fontSize:12,borderColor:l===lang?'var(--mid)':'var(--line)',background:l===lang?'color-mix(in srgb, var(--mid) 12%, transparent)':'var(--card-solid)',color:l===lang?'var(--acc-ink)':'var(--ink)',fontWeight:l===lang?500:400}}>
+              {l}
+            </button>
+          ))}
+        </div>
+      </div>
+  );
+  const картаМодельКлюч = (
+    <div className="card">
+        <p style={{fontSize:16,fontWeight:600,marginBottom:4,letterSpacing:'-.01em'}}>Модель и ключ</p>
+        <p style={{fontSize:12,color:'var(--ink-2)',marginBottom:10}}>
+          На чём считаем и за чей счёт. Меняется в любой момент — модели улучшаются,
+          и выбор не должен быть вшит навсегда.
+        </p>
+        <select value={model} onChange={e=>{ setModel(e.target.value);
+            try { localStorage.setItem('ca_model', e.target.value); } catch {} }}
+          style={{width:'100%',marginBottom:8}}>
+          {MODELS.map(([v,n2]) => <option key={v} value={v}>{n2}</option>)}
+        </select>
+        {clientIdFromUrl && тарифРазработчика ? (
+          <>
+            <p style={{fontSize:12,color:'var(--ink-2)',marginBottom:6}}>
+              {ownKey === null ? 'Смотрю, заведён ли свой ключ…'
+                : ownKey ? 'Работаем на ключе клиента: …' + ownKey + '. Кредиты платформы не тратятся.'
+                : 'Свой ключ не заведён — работа идёт на ключе платформы и тратит кредиты.'}
+            </p>
+            {!ownKey && (
+              <div style={{display:'flex',gap:6}}>
+                <input type="password" value={keyDraft} autoComplete="new-password"
+                  onChange={e=>setKeyDraft(e.target.value)}
+                  placeholder="ключ OpenAI клиента — вставьте, если работаем на нём"
+                  style={{flex:1}} />
+                <button onClick={saveOwnKey} disabled={!keyDraft.trim()||keyBusy}>
+                  {keyBusy ? 'Сохраняю…' : 'Сохранить'}</button>
+              </div>
+            )}
+            {keyMsg && <p style={{fontSize:12,color:'var(--ink-2)',marginTop:6}}>{keyMsg}</p>}
+          </>
+        ) : (
+          <p style={{fontSize:12,color:'var(--ink-2)'}}>
+            {clientIdFromUrl
+              ? 'Работа идёт на ключах платформы — так устроена подписка.'
+              : 'Ключ клиента заводится из платформы — там известно, чей это проект.'}
+          </p>
+        )}
+      </div>
+  );
+  const картаМодулей = (
+    <div className="card">
+        <p style={{fontSize:16,fontWeight:600,marginBottom:4,letterSpacing:'-.01em'}}>{t.selectModules}</p>
+        <p style={{fontSize:12,color:'var(--ink-2)',marginBottom:10}}>{t.selectModulesSub}</p>
+        {MODULES.map(m => (
+          <ModuleCard key={m.id} m={m} on={mods.includes(m.id)} onToggle={()=>setMods(p=>p.includes(m.id)?p.filter(x=>x!==m.id):[...p,m.id])} uiLang={uiLang}/>
+        ))}
+      </div>
+  );
+
+  // Квиз вместо анкеты — только в платформе и только для нового брифа.
+  if (embedded && !proj && sc === 'form') return (
+    <div>
+      <div className="card nacre cover rview" style={{marginBottom:14}}
+        dangerouslySetInnerHTML={{__html:
+          buildCoverHTML(brief.name ? brief : { ...brief, name: 'Новый проект' },
+            proj?.results, lang, 'Бриф')}}/>
+      <QuizBrief brief={brief} setBrief={setBrief}
+        siteUrl={siteUrl} setSiteUrl={setSiteUrl}
+        parseSite={parseSite} parsing={parsing} pMsg={pMsg}
+        mods={mods}
+        настройка={<>{картаМодельКлюч}{картаЯзыка}{картаМодулей}</>}
+        запуск={()=>run()}/>
+    </div>
+  );
+
   if (sc === 'form') return (
     <div>
       {embedded && (
@@ -7314,68 +7482,15 @@ function App() {
         </Field>
       </div>
 
-      <div className="card">
-        <p style={{fontSize:16,fontWeight:600,marginBottom:4,letterSpacing:'-.01em'}}>{t.researchLang}</p>
-        <p style={{fontSize:12,color:'var(--ink-2)',marginBottom:10}}>{t.researchLangSub}</p>
-        <div style={{display:'flex',gap:6,flexWrap:'wrap',marginBottom:8}}>
-          {LANGS.map(l => (
-            <button key={l} onClick={()=>setLang(l)} style={{padding:'5px 12px',fontSize:12,borderColor:l===lang?'var(--mid)':'var(--line)',background:l===lang?'color-mix(in srgb, var(--mid) 12%, transparent)':'var(--card-solid)',color:l===lang?'var(--acc-ink)':'var(--ink)',fontWeight:l===lang?500:400}}>
-              {l}
-            </button>
-          ))}
-        </div>
-      </div>
+      {картаЯзыка}
 
       {/* Настройка прогона — здесь, ПЕРЕД первой тратой, а не в дальних
           настройках: и модель, и ключ спрашиваются в тот момент, когда человек
           настраивает работу (замечание владелицы 13.09.2026). В личном кабинете
           они потом видны и меняются, но первый раз их спрашивают тут. */}
-      <div className="card">
-        <p style={{fontSize:16,fontWeight:600,marginBottom:4,letterSpacing:'-.01em'}}>Модель и ключ</p>
-        <p style={{fontSize:12,color:'var(--ink-2)',marginBottom:10}}>
-          На чём считаем и за чей счёт. Меняется в любой момент — модели улучшаются,
-          и выбор не должен быть вшит навсегда.
-        </p>
-        <select value={model} onChange={e=>{ setModel(e.target.value);
-            try { localStorage.setItem('ca_model', e.target.value); } catch {} }}
-          style={{width:'100%',marginBottom:8}}>
-          {MODELS.map(([v,n2]) => <option key={v} value={v}>{n2}</option>)}
-        </select>
-        {clientIdFromUrl && тарифРазработчика ? (
-          <>
-            <p style={{fontSize:12,color:'var(--ink-2)',marginBottom:6}}>
-              {ownKey === null ? 'Смотрю, заведён ли свой ключ…'
-                : ownKey ? 'Работаем на ключе клиента: …' + ownKey + '. Кредиты платформы не тратятся.'
-                : 'Свой ключ не заведён — работа идёт на ключе платформы и тратит кредиты.'}
-            </p>
-            {!ownKey && (
-              <div style={{display:'flex',gap:6}}>
-                <input type="password" value={keyDraft} autoComplete="new-password"
-                  onChange={e=>setKeyDraft(e.target.value)}
-                  placeholder="ключ OpenAI клиента — вставьте, если работаем на нём"
-                  style={{flex:1}} />
-                <button onClick={saveOwnKey} disabled={!keyDraft.trim()||keyBusy}>
-                  {keyBusy ? 'Сохраняю…' : 'Сохранить'}</button>
-              </div>
-            )}
-            {keyMsg && <p style={{fontSize:12,color:'var(--ink-2)',marginTop:6}}>{keyMsg}</p>}
-          </>
-        ) : (
-          <p style={{fontSize:12,color:'var(--ink-2)'}}>
-            {clientIdFromUrl
-              ? 'Работа идёт на ключах платформы — так устроена подписка.'
-              : 'Ключ клиента заводится из платформы — там известно, чей это проект.'}
-          </p>
-        )}
-      </div>
+      {картаМодельКлюч}
 
-      <div className="card">
-        <p style={{fontSize:16,fontWeight:600,marginBottom:4,letterSpacing:'-.01em'}}>{t.selectModules}</p>
-        <p style={{fontSize:12,color:'var(--ink-2)',marginBottom:10}}>{t.selectModulesSub}</p>
-        {MODULES.map(m => (
-          <ModuleCard key={m.id} m={m} on={mods.includes(m.id)} onToggle={()=>setMods(p=>p.includes(m.id)?p.filter(x=>x!==m.id):[...p,m.id])} uiLang={uiLang}/>
-        ))}
-      </div>
+      {картаМодулей}
 
       <div className="card" style={{background:'color-mix(in srgb, var(--acc-quiet) 6%, var(--card-solid))',borderColor:'var(--acc-quiet)'}}>
         <p style={{fontSize:12,color:'var(--acc-quiet-ink)'}}>

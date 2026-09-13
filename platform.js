@@ -246,6 +246,21 @@
     });
     показатьШаг();
   }
+  // Высота рамки = высоте содержимого: прокрутка одна, у страницы. Следим
+  // недорого — раз в полсекунды по открытой рамке; смена шага и данных внутри
+  // подхватывается сама.
+  function подогнать() {
+    var р = document.querySelector('.screen.on iframe[data-step][src]');
+    if (!р) return;
+    try {
+      var d = р.contentDocument;
+      if (!d || !d.body) return;
+      var h = Math.max(d.documentElement.scrollHeight, d.body.scrollHeight);
+      if (h > 60 && Math.abs(р.offsetHeight - h) > 6) р.style.height = (h + 4) + 'px';
+    } catch (e) {}
+  }
+  setInterval(подогнать, 500);
+
   function показатьШаг() {
     var экран = document.querySelector('.screen.on iframe[data-step]');
     if (!экран || экран.getAttribute('src')) return;

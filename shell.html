@@ -3004,8 +3004,12 @@ pre.mermaid{background:var(--card-solid);border:1px solid var(--line);
 @media (prefers-reduced-motion:reduce){.kit-tile{transition:none}}
 
 /* Своё — только рамка инструмента: экран исследования у нас живой, а не макет. */
-.modframe{display:block;width:100%;height:calc(100vh - 190px);min-height:540px;
-  border:0;border-radius:18px;background:var(--card-solid)}
+.modframe{display:block;width:100%;height:600px;min-height:320px;border:0;
+  border-radius:18px;background:transparent}
+/* Рамка растёт под содержимое (высоту ставит platform.js): страница листается
+   ЦЕЛИКОМ, а боковое меню закреплено и едет с прокруткой — решение владелицы
+   14.09: «в каком бы месте в глубине ни был — плашка там». Внутренняя прокрутка
+   в ужатом окне убрана. */
 /* Правило display у класса СИЛЬНЕЕ браузерного [hidden] — из-за этого экран
    входа оставался поверх платформы после успешного входа: нажали «Войти», а
    «никакой реакции». Возвращаем hidden его силу явно, один раз на всю
@@ -3270,4 +3274,4 @@ pre.mermaid{background:var(--card-solid);border:1px solid var(--line);
 })();
 
 </script>
-<script src="platform.js?v=3a1336a5"></script>
+<script src="platform.js?v=0b95c180"></script>

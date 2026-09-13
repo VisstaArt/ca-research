@@ -13,6 +13,13 @@
      (.card, .main, .side) в инструменте перебивали его собственную
      раскладку — «плашка на плашке» у владелицы 14.09. Блочные стили
      отчёта инструмент подключает сам, с ограничением области .rview. -->
+<script>
+/* Внутри платформы инструмент следует теме ПЛАТФОРМЫ, а не системе: платформа
+   сейчас светлая, а тёмная система переключала рамку в тёмные токены — и
+   данные брифа ложились на чёрный фон под светлой жемчужной плашкой. */
+try{if(new URLSearchParams(location.search).get('embed')==='1')
+  document.documentElement.setAttribute('data-theme','light');}catch(e){}
+</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap">
@@ -100,6 +107,6 @@ tr:nth-child(even) td { background: none; }
      без сборки — как и весь остальной проект. -->
 <script src="lib/contract.js?v=c5d82d20"></script>
 <script src="lib/auth.js?v=c0e4610f"></script>
-<script src="app.js?v=ccd1acc8"></script>
+<script src="app.js?v=959e1240"></script>
 </body>
 </html>
