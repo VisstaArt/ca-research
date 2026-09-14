@@ -9,6 +9,12 @@ var SRC=readFile(ROOT+'/app.jsx');
   var i=SRC.indexOf('\nfunction '+имя+'('), j=SRC.indexOf('\n}\n', i);
   globalThis.eval(SRC.slice(i+1, j+3));
 });
+// Базовый словарь терминов лежит константой рядом с функциями — без него
+// собратьСловарь не соберётся.
+(function(){ var i=SRC.indexOf('const СЛОВАРЬ_БАЗА'), d=0;
+  for(var k=SRC.indexOf('{',i);k<SRC.length;k++){ if(SRC[k]==='{')d++;
+    else if(SRC[k]==='}'){ d--; if(!d){ globalThis.eval(SRC.slice(i,k+1).replace(/^const /,'var ')+';'); return; } } }
+})();
 console.log('tests/tail-clean.test.js');
 var fails=0;
 function check(n,ok){ if(ok) console.log('  ok   '+n); else {fails++; console.log('  FAIL '+n);} }

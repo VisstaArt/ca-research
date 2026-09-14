@@ -1251,27 +1251,33 @@ async function processM5Voc(full, niche) {
     coverageNote = 'Верификация недоступна в этом прогоне (сбой эндпоинта) — цитаты НЕ проверены программно, ниже приведены как есть.';
   }
   const passes = (url, quote) => !verifiedSet || verifiedSet.has(String(url) + '|||' + normalizeQuote(quote).toLowerCase());
+  // ВАЖНО: непроверенную цитату НЕ выбрасываем, а помечаем. Страницы часто не
+  // открываются для робота (защита, JS-отрисовка), текст на них бывает
+  // перефразирован — и строгая сверка вычищала блок подчистую: у владелицы
+  // 15.09 голос клиента, банк живого языка и банк хуков оказались пустыми
+  // разом. Пустой блок хуже помеченного: по нему не видно даже, что искали.
+  const пометить = (r, url, quote) => {
+    if (passes(url, quote)) return r;
+    const ключ = Object.keys(r).find(k => /провер|статус/i.test(k)) || 'Проверка';
+    return { ...r, [ключ]: 'страница не открылась' };
+  };
 
-  let rows07 = t07 ? t07.rows.filter(r => passes(r[uKey07], r[qKey07])) : [];
+  let rows07 = t07 ? t07.rows.map(r => пометить(r, r[uKey07], r[qKey07])) : [];
   if (t07 && qKey07) rows07 = hashDedupe(rows07, qKey07);
-  const rows07a = t07a ? t07a.rows.filter(r => passes(r[uKey07a], r[qKey07a])) : [];
+  const rows07a = t07a ? t07a.rows.map(r => пометить(r, r[uKey07a], r[qKey07a])) : [];
 
-  // Ключи выживших цитат (07+07A) — хук в 07B держится, только если его цитата
-  // пережила верификацию+дедуп там, откуда её якобы отобрала модель.
-  const survivedKeys = new Set([...rows07, ...rows07a].map(r =>
-    String(r[uKey07] || r[uKey07a]) + '|||' + normalizeQuote(r[qKey07] || r[qKey07a]).toLowerCase()
-  ));
-  const rows07b = t07b && qKey07b && uKey07b
-    ? t07b.rows.filter(r => survivedKeys.has(String(r[uKey07b]) + '|||' + normalizeQuote(r[qKey07b]).toLowerCase()))
-    : (t07b ? t07b.rows : []);
+
+  // Хуки держатся за свою цитату. Раз цитаты больше не удаляются, и хуки
+  // остаются все: иначе банк хуков пустел вслед за непройденной сверкой.
+  const rows07b = t07b ? t07b.rows : [];
 
   // hookBank (CHART DATA) — та же логика, что 07B. Пересобираем ВЕСЬ CHART_DATA
   // блок целиком (проще и надёжнее, чем редактировать JSON-подстроку на месте).
+  // Банк хуков тоже не режем сверкой: он пустел вслед за ней, и контент-машина
+  // получала пустое поле HOOK_BANK — то есть «писать не из чего», хотя хуки были.
   const chartData = extractChartData(full) || {};
   if (Array.isArray(chartData.hookBank)) {
-    chartData.hookBank = chartData.hookBank.filter(h =>
-      h && h.url && h.quote && survivedKeys.has(String(h.url) + '|||' + normalizeQuote(h.quote).toLowerCase())
-    );
+    chartData.hookBank = chartData.hookBank.filter(h => h && h.quote);
   }
 
   // ВАЖНО: сплайсим таблицы строго СНИЗУ ДОКУМЕНТА ВВЕРХ (CHART_DATA → 07B → 07A → 07).
@@ -3784,6 +3790,64 @@ const ФРАЗЫ_РУ = {
   'next steps':'Следующие шаги', 'key findings':'Главные находки',
   'what to test':'Что проверяем', 'quick wins':'Быстрые победы',
   'main bet':'Главная ставка', 'why it works':'Почему это работает',
+  // Названия наших же блоков, которые модель зовёт по-английски. В отчёте
+  // блок подписан «Банк хуков», а в выводах модель ссылалась на «Hook Bank» —
+  // владелица 14.09: «у нас нет такой строчки».
+  'hook bank':'Банк хуков', 'hook-bank':'Банк хуков', 'хук банк':'Банк хуков',
+  'хук-банк':'Банк хуков', 'language bank':'Банк живого языка',
+  'offer input':'Вход для офферов', 'final offers':'Финальные офферы',
+  'customer journey':'Путь клиента', 'brand archetype':'Архетип бренда',
+  'niche benchmarks':'Бенчмарки ниши', 'intent cluster':'Кластер намерений',
+};
+// Умные сокращения владелица просила пояснять ПО МЕСТУ, а не списком в конце:
+// «не все маркетологи это понимают». Модель печатает свою «Легенду терминов»
+// не всегда и не для всех сокращений — этот словарь закрывает разрыв. Толк
+// модели, если он есть, главнее: он знает контекст ниши (см. собратьСловарь).
+const СЛОВАРЬ_БАЗА = {
+  'JTBD':'работа, ради которой клиент «нанимает» продукт',
+  'VoC':'голос клиента — его собственные слова из отзывов, форумов и переписок',
+  'CJM':'путь клиента от первой мысли о покупке до повторной',
+  'ЛПР':'лицо, принимающее решение о покупке',
+  'LPR':'лицо, принимающее решение о покупке',
+  'УТП':'чем предложение отличается от всех остальных на рынке',
+  'ЦА':'целевая аудитория — те, кому продаём',
+  'СМБ':'малый и средний бизнес',
+  'SMB':'малый и средний бизнес',
+  'МСП':'малый и средний бизнес',
+  'B2B':'продажа бизнесу, а не частному человеку',
+  'B2C':'продажа частному человеку',
+  'TAM':'весь рынок целиком, если бы купили все',
+  'SAM':'та часть рынка, до которой реально дотянуться',
+  'SOM':'та доля, которую можно занять в обозримый срок',
+  'ICP':'портрет идеального клиента',
+  'LTV':'сколько денег приносит один клиент за всё время',
+  'CAC':'сколько стоит привлечь одного клиента',
+  'ROMI':'окупаемость вложений в маркетинг',
+  'CR':'конверсия — доля посетителей, которые сделали нужное действие',
+  'CTR':'доля тех, кто нажал на объявление, увидев его',
+  'CPC':'цена одного нажатия на объявление',
+  'CPL':'цена одной заявки',
+  'CPA':'цена одного целевого действия',
+  'CPM':'цена тысячи показов',
+  'ARPU':'средний доход с одного пользователя',
+  'MDE':'наименьшая разница, которую проверка вообще способна заметить',
+  'NPS':'готовность клиентов рекомендовать',
+  'SKU':'отдельная товарная позиция',
+  'SEO':'работа над тем, чтобы сайт находили в поиске без рекламы',
+  'SERP':'страница результатов поиска',
+  'UGC':'материалы, снятые самими покупателями',
+  'MVP':'первая рабочая версия с минимумом возможностей',
+  'SLA':'обещанные сроки и качество обслуживания',
+  'KPI':'показатель, по которому меряют результат',
+  'хук':'первая фраза, которая цепляет внимание за секунду',
+  'оффер':'предложение: что человек получит и на каких условиях',
+  'лид':'человек, оставивший контакт',
+  'лид-магнит':'бесплатная польза в обмен на контакт',
+  'бенчмарк':'опорное число для сравнения: как у других в нише',
+  'когорта':'группа клиентов, пришедших в один период',
+  'ретеншн':'доля клиентов, оставшихся с нами',
+  'churn':'доля клиентов, ушедших за период',
+  'фрейминг':'подача одного и того же факта в разной рамке',
 };
 const МЕТКИ_РУ = {
   'conclusions':'Выводы', 'conclusion':'Вывод', 'information':'Информация',
@@ -3849,26 +3913,41 @@ function поРусски(html) {
 // список на месте: «всё равно внизу есть». Конец блока — заголовок, черта
 // или конец текста.
 function найтиБлокАббревиатур(строки) {
-  const начало = строки.findIndex(х => /^\s*#{0,4}\s*\*{0,2}Аббревиатуры\*{0,2}\s*:?\s*$/i.test(х));
+  // Модель озаглавливает этот список как придётся: «Аббревиатуры»,
+  // «Легенда терминов», «Сокращения», «Глоссарий». Ловили только первое
+  // написание — остальные доезжали до отчёта списком (скрин М5, 14.09).
+  const заголовок = /^\s*#{0,4}\s*\*{0,2}(аббревиатур[а-яё]*|сокращени[а-яё]*|глоссарий|расшифровк[а-яё]*|(легенда|словарь|список)\s+(терминов|сокращений|аббревиатур)|термины\s+и\s+сокращения|термины)\*{0,2}\s*:?\s*\*{0,2}\s*$/i;
+  const начало = строки.findIndex(х => заголовок.test(х));
   if (начало < 0) return null;
+  // Конец — первая строка, которая уже не пункт списка и не пустая. Раньше
+  // блок тянулся до следующего заголовка и утаскивал с собой соседний текст,
+  // если тот был выделен жирным, а не решёткой.
   let конец = начало + 1;
   while (конец < строки.length) {
     const х = строки[конец];
-    if (/^\s*#{1,4}\s+\S/.test(х)) break;
-    if (/^\s*(-{3,}|\*{3,}|_{3,})\s*$/.test(х)) break;
-    конец++;
+    if (/^\s*$/.test(х)) { конец++; continue; }
+    if (/^\s*(?:[-*•]|\d{1,2}[).])\s+\S/.test(х)) { конец++; continue; }
+    // Пункты бывают и без маркера — просто «TAM — общий рынок» строкой.
+    // Признак тот же, что у разбора: короткий термин, потом тире или
+    // двоеточие, потом толкование.
+    if (/^\s*\*{0,2}[A-Za-zА-Яа-я][A-Za-zА-Яа-я0-9/]{1,15}\*{0,2}\s*(?:[—–-]|:)\s+\S/.test(х)) { конец++; continue; }
+    break;
   }
+  while (конец > начало + 1 && /^\s*$/.test(строки[конец - 1])) конец--;
   return { начало, конец };
 }
 
 function собратьСловарь(тело) {
-  const словарь = {};
+  const словарь = Object.assign({}, СЛОВАРЬ_БАЗА);
   const строки = String(тело || '').split('\n');
   const блок = найтиБлокАббревиатур(строки);
   if (!блок) return словарь;
   строки.slice(блок.начало + 1, блок.конец).forEach(строка => {
     const п = строка.replace(/^\s*[-*•]\s*/, '')
-      .match(/^\s*\*{0,2}([A-Za-zА-Яа-я][A-Za-zА-Яа-я0-9]{1,7})\*{0,2}\s*[—–-]\s*(.+?)\s*$/);
+      // Разделитель — тире ИЛИ двоеточие: модель пишет и «JTBD — работа…»,
+      // и «**JTBD**: работа…». Вторую форму разбор не видел, и словарь
+      // оставался пустым — подсказки не появлялись вообще.
+      .match(/^\s*\*{0,2}([A-Za-zА-Яа-я][A-Za-zА-Яа-я0-9/]{1,15})\*{0,2}\s*(?:[—–-]|:)\s*(.+?)\s*$/);
     if (!п) return;
     const термин = п[1].trim();
     // Расшифровка без английского дубля в скобках: он нужен был списку,
@@ -4477,7 +4556,7 @@ function renderResearchHTML(content, opts) {
     "function renderHeat(cols,rows){\n  \n  const tint=v=>v===0?'color-mix(in srgb, var(--ink) 3%, transparent)'\n    :`color-mix(in srgb, var(--mid) ${v*22}%, var(--card-solid))`;\n  document.getElementById('rpt-heat').innerHTML =\n    '<thead><tr><th></th>'+cols.map(c=>`<th>${c}</th>`).join('')+'</tr></thead><tbody>'+\n    rows.map(([n,vs])=>`<tr><td>${esc(n)}</td>`+\n      vs.map(v=>`<td style=\"background:${tint(v)}\">${v?'':'—'}</td>`).join('')+'</tr>').join('')+\n    '</tbody>';\n}",
     "function renderVoc(D){\n  const box=document.getElementById('rpt-voc'); if(!box) return;\n  const V={ok:['сверено с источником','ok'],nopage:['страница не открылась','nopage']};\n  \n  box.innerHTML=D.map(c=>{\n    const [txt,cls]=V[c.v];\n    const INT={3:['высокая',100],2:['средняя',62],1:['низкая',30]};\n    const [word,pct]=INT[c.int];\n    return `<div class=\"vq2\">\n      <div class=\"vtop\">\n        <span class=\"vmark ${cls}\"><i></i>${txt}</span>\n        <blockquote>${c.q}</blockquote>\n      </div>\n      <div class=\"vtheme\"><b>${c.theme}</b><span class=\"seg2\">${c.seg}</span></div>\n      <div class=\"vsrc2\">${L(c.src,c.url)} · ${c.date}</div>\n      <div class=\"vnums\">\n        <div><span class=\"lab\">как часто встречается</span>\n          <span class=\"big2\">${c.freq.split(' ')[0]}<em>${c.freq.split(' ').slice(1).join(' ')}</em></span></div>\n        <div><span class=\"lab\">сила боли</span>\n          <span class=\"pain\"><span class=\"rail2\"><i style=\"width:${pct}%\"></i></span><b>${word}</b></span></div>\n      </div>\n      <div class=\"vans\"><span>формула ответа</span>${c.ans}</div>\n    </div>`;\n  }).join('');\n  const ok=D.filter(x=>x.v==='ok').length;\n  const bad=D.length-ok;\n  /* Фраза про непрочитанные страницы раньше стояла в тексте всегда — отчёт\n     сообщал о сбое, которого не было. Считаем по факту. */\n  const tail = bad\n    ? `; у ${bad} ${bad===1?'страница не открылась':'страниц не открылось'} — ${bad===1?'она оставлена':'они оставлены'} с пометкой, а не удалена.`\n    : '; все страницы открылись.';\n  var biasBox=document.getElementById('rpt-bias'); if(biasBox) biasBox.innerHTML=\n    `<b>Смещение выборки.</b> Поиск шёл по жалобам и отзывам, а там пишут в основном\n     недовольные и опытные пользователи — молчаливое большинство сюда не попало.\n     Без этой оговорки список болей читается как «мнение рынка», а это мнение\n     самой громкой его части.\n     <br><b>Проверено ${ok} из ${D.length}</b> цитат${tail}`;\n}",
     "function renderAlt(d){\n  var box=document.getElementById('rpt-alt'); if(!box) return;\n  /* Альтернатива — предмет разговора, а не строка: её называют, объясняют,\n     чем она берёт, и отвечают на неё. Тот же формат, что у ограничений. */\n  box.innerHTML=d.map(function(r,i){\n    var n=r[0],ty=r[1],why=r[2],say=r[3],main=r[4];\n    return '<div class=\"rule-card'+(main?' lead':'')+'\"><b>'+(i+1)+'</b>'\n      +'<span class=\"eb\">'+escText(main?'главный конкурент':(ty||'альтернатива'))+'</span>'\n      +'<span class=\"nm\">'+escText(n)+'</span>'\n      +(why?'<span>'+escText(why)+'</span>':'')\n      +(say?'<span class=\"ft\">Отвечаем: '+escText(say)+'</span>':'')\n      +'</div>';\n  }).join('');\n}",
-    "function renderChannels(d){\n  const box=document.getElementById('rpt-chn');\n  if(!box) return;\n  const G={\n    forum:'<path d=\"M3 6.5A2.5 2.5 0 015.5 4h13A2.5 2.5 0 0121 6.5v7a2.5 2.5 0 01-2.5 2.5H9l-5 4v-4H5.5A2.5 2.5 0 013 13.5z\"/>',\n    star:'<path d=\"M12 3l2.7 5.9 6.3.7-4.7 4.3 1.3 6.2L12 17l-5.6 3.1 1.3-6.2L3 9.6l6.3-.7z\"/>',\n    tg:'<rect x=\"6\" y=\"2.5\" width=\"12\" height=\"19\" rx=\"2.6\"/><path d=\"M9 9h6M9 12.5h4\"/>',\n    video:'<path d=\"M3 7.5A2.5 2.5 0 015.5 5h8A2.5 2.5 0 0116 7.5v9a2.5 2.5 0 01-2.5 2.5h-8A2.5 2.5 0 013 16.5z\"/><path d=\"M16 10.6l5-2.6v8l-5-2.6z\"/>',\n    news:'<rect x=\"3\" y=\"4.5\" width=\"18\" height=\"15\" rx=\"2.2\"/><path d=\"M7 9h6M7 12.5h10M7 16h10\"/>',\n  };\n  \n  box.innerHTML=d.map(([n,ty,ic,what,live,use,ref])=>\n    `<div class=\"ccard\">\n       <div class=\"ch\">\n         <span class=\"ci\"><svg viewBox=\"0 0 24 24\">${G[ic]}</svg></span>\n         <div class=\"cn\">${n} <a class=\"rn2\" href=\"#src\">[${ref}]</a><span>${ty}</span></div>\n       </div>\n       <div class=\"cd\">${what}</div>\n       <div class=\"cf\">\n         <div><span>признак живости</span><b>${live}</b></div>\n         <div class=\"r\"><span>как использовать</span><b>${use}</b></div>\n       </div>\n     </div>`).join('');\n\n  /* Доли по площадкам — те же 41 цитата, разложенные по источникам. */\n  const sh=[['vc.ru',14],['oborot.ru',9],['Отзывы на картах',8],\n            ['Telegram-чаты',6],['YouTube-разборы',4]];\n  const tot=sh.reduce((a,b)=>a+b[1],0), mx=Math.max(...sh.map(x=>x[1]));\n  /* Округляем по наибольшему остатку, а не каждое число по отдельности:\n     при обычном округлении сумма даёт 101%, и это первое, что бросается\n     в глаза в отчёте. */\n  const ex=sh.map(([n,v])=>({n,v,f:Math.floor(v/tot*100),r:(v/tot*100)%1}));\n  let left=100-ex.reduce((a,b)=>a+b.f,0);\n  ex.slice().sort((a,b)=>b.r-a.r).forEach(o=>{ if(left>0){o.f++;left--;} });\n  document.getElementById('v-chn-share').innerHTML=ex.map(o=>\n    `<div class=\"dbar\"><span class=\"t\">${o.n}</span>\n       <span class=\"g\"><i style=\"width:${(o.v/mx*100).toFixed(0)}%\"></i></span>\n       <span class=\"n\">${o.f}%</span></div>`).join('');\n}",
+    "function renderChannels(d){\n  const box=document.getElementById('rpt-chn');\n  if(!box) return;\n  const G={\n    forum:'<path d=\"M3 6.5A2.5 2.5 0 015.5 4h13A2.5 2.5 0 0121 6.5v7a2.5 2.5 0 01-2.5 2.5H9l-5 4v-4H5.5A2.5 2.5 0 013 13.5z\"/>',\n    star:'<path d=\"M12 3l2.7 5.9 6.3.7-4.7 4.3 1.3 6.2L12 17l-5.6 3.1 1.3-6.2L3 9.6l6.3-.7z\"/>',\n    tg:'<rect x=\"6\" y=\"2.5\" width=\"12\" height=\"19\" rx=\"2.6\"/><path d=\"M9 9h6M9 12.5h4\"/>',\n    video:'<path d=\"M3 7.5A2.5 2.5 0 015.5 5h8A2.5 2.5 0 0116 7.5v9a2.5 2.5 0 01-2.5 2.5h-8A2.5 2.5 0 013 16.5z\"/><path d=\"M16 10.6l5-2.6v8l-5-2.6z\"/>',\n    news:'<rect x=\"3\" y=\"4.5\" width=\"18\" height=\"15\" rx=\"2.2\"/><path d=\"M7 9h6M7 12.5h10M7 16h10\"/>',\n  };\n  \n  box.innerHTML=d.map(([n,ty,ic,what,live,use,ref,url])=>\n    `<div class=\"ccard\">\n       <div class=\"ch\">\n         <span class=\"ci\"><svg viewBox=\"0 0 24 24\">${G[ic]}</svg></span>\n         <div class=\"cn\">${url?'<a href=\"'+url+'\" target=\"_blank\" rel=\"noopener\">'+n+'</a>':n}${ref?' <a class=\"rn2\" href=\"#src\">['+ref+']</a>':''}<span>${ty||''}</span></div>\n       </div>\n       ${what?'<div class=\"cd\">'+what+'</div>':''}\n       <div class=\"cf\">\n         ${live?'<div><span>признак живости</span><b>'+live+'</b></div>':''}\n         ${use?'<div class=\"r\"><span>как использовать</span><b>'+use+'</b></div>':''}\n       </div>\n     </div>`).join('');\n\n  /* Доли по площадкам — те же 41 цитата, разложенные по источникам. */\n  const sh=[['vc.ru',14],['oborot.ru',9],['Отзывы на картах',8],\n            ['Telegram-чаты',6],['YouTube-разборы',4]];\n  const tot=sh.reduce((a,b)=>a+b[1],0), mx=Math.max(...sh.map(x=>x[1]));\n  /* Округляем по наибольшему остатку, а не каждое число по отдельности:\n     при обычном округлении сумма даёт 101%, и это первое, что бросается\n     в глаза в отчёте. */\n  const ex=sh.map(([n,v])=>({n,v,f:Math.floor(v/tot*100),r:(v/tot*100)%1}));\n  let left=100-ex.reduce((a,b)=>a+b.f,0);\n  ex.slice().sort((a,b)=>b.r-a.r).forEach(o=>{ if(left>0){o.f++;left--;} });\n  document.getElementById('v-chn-share').innerHTML=ex.map(o=>\n    `<div class=\"dbar\"><span class=\"t\">${o.n}</span>\n       <span class=\"g\"><i style=\"width:${(o.v/mx*100).toFixed(0)}%\"></i></span>\n       <span class=\"n\">${o.f}%</span></div>`).join('');\n}",
     "function renderObj(d){\n  const box=document.getElementById('rpt-obj');\n  if(!box) return;\n  \n  box.innerHTML='<div class=\"ohead\"><span>Что говорит клиент</span>'+\n    '<span>Чем снимаем</span></div>'+\n    d.map(([f,a])=>\n    `<div class=\"orow\"><div class=\"of\">${f}</div><div class=\"oa\">${a}</div></div>`).join('');\n}",
     "function renderHooks(d){\n  var box=document.getElementById('rpt-hooks'); if(!box) return;\n  /* Хук — это чужая фраза, поэтому антиквой и в кавычках, как цитата.\n     Под ней — где её брать и о чём она. */\n  box.innerHTML=d.map(function(r,i){\n    var t=r[0],topic=r[1],place=r[2];\n    var tail=[topic,place].filter(Boolean).join(' · ');\n    return '<div class=\"rule-card\"><b>'+(i+1)+'</b>'\n      +'<span class=\"q\">«'+escText(t)+'»</span>'\n      +(tail?'<span class=\"ft\">'+escText(tail)+'</span>':'')\n      +'</div>';\n  }).join('');\n}",
     "function renderCompCards(D){\n  const box=document.getElementById('rpt-comp'); if(!box) return;\n  \n  box.innerHTML=D.map(c=>{\n    const t=v=>typeof v==='string'?v:v.h;\n    return `<div class=\"ccard2\">\n      <div class=\"chead\">\n        <div>\n          <div class=\"cid\">${c.id} · ${c.niche}</div>\n          <div class=\"cnm\">${c.n}</div>\n          <div class=\"cmeta\"><span class=\"scale\">${c.scale}</span>${L(c.dom,c.url)}</div>\n        </div>\n        <div class=\"price\"><b>${c.price}</b><span>${c.per}</span></div>\n      </div>\n      <div class=\"cgrid\">\n        <div class=\"cbox\"><h5>Оффер</h5><p>${c.offer}</p></div>\n        <div class=\"cbox\"><h5>Позиционирование</h5><p>${c.pos}</p>\n          <p style=\"color:var(--ink-3)\">${c.cta}</p></div>\n        <div class=\"cbox pro\"><h5>Сильные стороны</h5><ul>${c.pro.map(x=>`<li>${x}</li>`).join('')}</ul></div>\n        <div class=\"cbox con\"><h5>Слабые стороны</h5><ul>${c.con.map(x=>`<li>${x}</li>`).join('')}</ul></div>\n        <div class=\"cbox\"><h5>Что мешает клиенту</h5><p>${c.bar}</p></div>\n        <div class=\"cbox\"><h5>Как он это снимает</h5><p>${c.ans}</p></div>\n        <div class=\"cbox\"><h5>Доказательства</h5><p>${c.proof}</p></div>\n        <div class=\"cbox\"><h5>Триггеры дефицита</h5><p>${t(c.trig)}</p></div>\n        <div class=\"cbox gap2\"><h5>Наша возможность</h5><p>${c.gap}</p></div>\n      </div></div>`;\n  }).join('');\n}",
@@ -4485,7 +4564,7 @@ function renderResearchHTML(content, opts) {
     "function renderPersonas(D){\n  const box=document.getElementById('rpt-pers'); if(!box) return;\n  \n  const CONF={4:['подтверждена','var(--mid)',80],2:['гипотеза','var(--sw-violet)',40]};\n  const TINT=[16,32,52,74,100];\n  box.innerHTML=D.map(p=>{\n    const [w,col,pct]=CONF[p.conf];\n    const mx=Math.max(...p.pain.map(x=>x[1]),1);\n    const painRows=p.pain.map(([t,v])=>\n      `<div class=\"dbar\"><span class=\"t\">${t}</span>\n         <span class=\"g\"><i style=\"width:${v?(v/mx*100).toFixed(0):2}%\"></i></span>\n         <span class=\"n\">${v?v+' из 41':'—'}</span></div>`).join('');\n    /* Метка гипотезы стоит У ИМЕНИ, а не только в шкале уверенности ниже:\n       читатель пробегает портреты по именам, и персона на двух цитатах не\n       должна читаться наравне с персоной на двадцати. */\n    const flag = p.conf<=2\n      ? '<span class=\"pflag\">гипотеза</span>' : '';\n    return `<div class=\"pers\" style=\"margin-bottom:14px\">\n      <div class=\"pers-side\">\n        <div class=\"pers-av\">${p.ini}</div>\n        <div><div class=\"rl\">${p.role}</div><h3>${p.nm}${flag}</h3></div>\n        <div class=\"one\">${p.one}</div>\n        <div class=\"pers-share\"><b>${p.share}</b><span>доля в аудитории</span></div>\n        <div class=\"pers-conf\">\n          <span class=\"clab\">уверенность</span>\n          <span class=\"crail\"><i style=\"width:${pct}%;background:${col}\"></i></span>\n          <b>${p.conf} из 5 · ${w}</b>\n          <span class=\"sub2\">${p.quotes?p.quotes+' проверенные цитаты из «Голоса клиента»':'проверенных цитат нет'}</span>\n        </div>\n      </div>\n      <div class=\"pers-main\">\n        <div class=\"bmet\">\n          <div><h4>Кто решает</h4><div class=\"big\">${p.who}</div>\n            <div class=\"sm\">${p.conf>2?'Блок «как согласовать с руководством» не нужен':'Аргументы должны пересказываться'}</div></div>\n          <div><h4>Цикл сделки</h4><div class=\"big\">${p.cycle}</div>\n            <div class=\"trk\"><span class=\"rg\" style=\"left:${p.cyclePct[0]}%;width:${p.cyclePct[1]}%\"></span></div>\n            <div class=\"trk-ax\"><span>0</span><span>15</span><span>30 дней</span></div></div>\n          <div><h4>Бюджет без согласования</h4><div class=\"big\">${p.budget}</div>\n            <div class=\"trk\"><span class=\"rg\" style=\"left:0;width:${p.mark?50:0}%\"></span>\n              ${p.mark?`<span class=\"mk\" style=\"left:${p.mark}%\"></span>`:''}</div>\n            <div class=\"mklbl\">${p.markTxt}</div></div>\n          <div><h4>Осведомлённость</h4>\n            <div class=\"aw\" style=\"height:22px;margin-top:6px\">${p.aw.map((x,i)=>x?\n              `<span style=\"width:${x}%;background:${TINT[i]>=100?'var(--mid)':`color-mix(in srgb, var(--mid) ${TINT[i]}%, var(--line-2))`}\">${x>=15?x+'%':''}</span>`:'').join('')}</div>\n            <div class=\"sm\" style=\"margin-top:7px\">Доминирует ${['L1','L2','L3','L4','L5'][p.aw.indexOf(Math.max(...p.aw))]}</div></div>\n        </div>\n        <div class=\"bpain\"><h4>Боли по частоте упоминания <span style=\"font-weight:600;letter-spacing:0;text-transform:none\">· из «Голоса клиента»</span></h4>\n          <div class=\"dbars\">${painRows}</div></div>\n        <div class=\"prow-head\"><span>Параметр</span><span>Значение</span><span>Что из этого следует</span></div>\n        ${p.rows.map(r=>`<div class=\"prow\"><span class=\"p\">${r[0]}</span>\n          <span class=\"v\">${r[1]==='нет своих цитат'?'<span class=\"no\">нет своих цитат</span>':r[1]}</span>\n          <span class=\"a\">${r[2]}</span></div>`).join('')}\n      </div></div>`;\n  }).join('');\n}",
     "function renderLadder(STEP,st){\n  /* Одна шкала светлоты вместо пяти тонов: продвижение по пути — одна\n     величина. Тёмные чернила держат контраст на всех пяти ступенях,\n     слабейшая 7.83 при норме 4.5 — проверено. */\n  \n  const COL=STEP.map(k=>k>=100?'var(--mid)'\n    :`color-mix(in srgb, var(--mid) ${k}%, var(--line-2))`);\n  \n  const RISK={high:'высокий риск потери',medium:'средний риск',low:'низкий риск'};\n  const maxW=250, minW=175;\n  document.getElementById('rpt-lad').innerHTML=st.map(([nm,pct,risk,act,desc],i)=>{\n    const w=Math.round(maxW-(maxW-minW)*(i/(st.length-1)));\n    return `<div class=\"lrow\" style=\"--lw:${w}px\">\n      <div class=\"lleft\" style=\"background:${COL[i]}\">\n        <span class=\"num\">${String(i).padStart(2,'0')}</span>\n        <span class=\"nm\">${nm}</span>\n      </div>\n      <div class=\"lright\">\n        <b>${act}</b>\n        <span>${desc}</span>\n        <span class=\"meta\"><i>доходит ${pct}%</i><i class=\"rk rk-${risk}\">${RISK[risk]}</i></span>\n      </div>\n    </div>`;\n  }).join('');\n}",
     "function renderPyramid(rows){\n  \n  const mx=Math.max(...rows.flatMap(r=>[r[1],r[2]]));\n  document.getElementById('rpt-pyr').innerHTML=rows.map(([a,m,f])=>\n    `<div class=\"pyrow\">\n       <div class=\"s l\"><span class=\"v\">${String(m).replace('.',',')}%</span><span class=\"rail\"><span class=\"bar\" style=\"width:${(m/mx*100).toFixed(1)}%\"></span></span></div>\n       <div class=\"age\">${a}</div>\n       <div class=\"s r\"><span class=\"rail\"><span class=\"bar\" style=\"width:${(f/mx*100).toFixed(1)}%\"></span></span><span class=\"v\">${String(f).replace('.',',')}%</span></div>\n     </div>`).join('');\n}",
-    "function renderOfferInput(D){\n  const box=document.getElementById('rpt-inp'); if(!box) return;\n  const LBL={brief:'из брифа',site:'с сайта',none:'не задано'};\n  box.innerHTML='<div class=\"th\"><span>Что знаем</span><span>Значение</span>'+\n    '<span>Откуда</span></div>'+\n    D.map(([k,v,o])=>`<div class=\"tr\">\n    <div>${esc(k)}</div>\n    <div${o==='none'?' class=\"no\"':''}>${esc(v)}</div>\n    <div><span class=\"tag\">${LBL[o]}</span></div></div>`).join('');\n}",
+    "function renderOfferInput(D){\n  const box=document.getElementById('rpt-inp'); if(!box) return;\n  const LBL={brief:'из брифа',site:'с сайта',none:'не задано'};\n  box.innerHTML='<div class=\"th\"><span>Что знаем</span><span>Значение</span>'+\n    '<span>Откуда</span></div>'+\n    D.map(([k,v,o])=>`<div class=\"tr\">\n    <div class=\"nm\">${esc(k)}</div>\n    <div${o==='none'?' class=\"no\"':''}>${esc(v)}</div>\n    <div><span class=\"tag\">${LBL[o]}</span></div></div>`).join('');\n}",
     "function renderFinalOffer(O,ix){\n  const box=document.getElementById('rpt-off-'+(ix||0)); if(!box) return;\n  \n  box.innerHTML=`\n   <div style=\"border:1px solid var(--line);border-radius:18px;padding:22px 24px;background:var(--card-solid)\">\n    <div style=\"font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--ink-3);margin-bottom:12px\">${esc(O.seg)}</div>\n    <div style=\"font-family:'Source Serif 4',Georgia,serif;font-size:25px;font-weight:600;line-height:1.2;color:var(--ink);margin-bottom:8px\">${esc(O.h1)}</div>\n    <div style=\"font-size:14px;color:var(--ink-2);line-height:1.5;margin-bottom:18px;max-width:56ch\">${esc(O.h2)}</div>\n    <div style=\"display:grid;grid-template-columns:1fr 1fr;gap:14px;padding:14px 0;border-top:1px solid var(--line-2);border-bottom:1px solid var(--line-2);margin-bottom:16px\">\n      <div><div style=\"font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-3);margin-bottom:5px\">Проблема</div>\n        <div style=\"font-size:12.5px;color:var(--ink-2);line-height:1.45\">${esc(O.prob)}</div></div>\n      <div><div style=\"font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-3);margin-bottom:5px\">Результат</div>\n        <div style=\"font-size:12.5px;color:var(--ink-2);line-height:1.45\">${esc(O.res)}</div></div>\n    </div>\n    <div style=\"font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-3);margin-bottom:8px\">Что входит</div>\n    <ul style=\"margin:0 0 18px;padding-left:18px;font-size:12.5px;color:var(--ink-2);line-height:1.9\">\n      ${O.pack.map(p=>`<li>${esc(p)}</li>`).join('')}</ul>\n    <div style=\"display:flex;align-items:center;gap:18px;flex-wrap:wrap\">\n      <div style=\"font-size:19px;font-weight:700;color:var(--ink)\">${esc(O.price)}</div>\n      <div style=\"flex:1;min-width:180px;font-size:12px;line-height:1.4;${O.risk?'color:var(--ink-2)':'color:var(--ink-3);font-style:italic'}\">\n        ${O.risk?esc(O.risk):'снятие риска не заполнено — здесь клиент решает, рисковать ли'}</div>\n      <div style=\"background:var(--ink);color:var(--mist-1);font-size:13px;font-weight:600;padding:11px 22px;border-radius:999px\">${esc(O.cta)}</div>\n    </div>\n    <div style=\"margin-top:12px;font-size:11px;color:var(--ink-3)\">Ведёт на: ${esc(O.to)}</div>\n   </div>`;\n}",
     "function renderKanban(D){\n  var box=document.getElementById('rpt-kan'); if(!box) return;\n  var COLS=[['Ждут проверки',/не запущен|ждёт|план/i],['В работе',/в работ|идёт|запущен/i],\n            ['Проверены',/провер|заверш|готов/i]];\n  box.innerHTML=COLS.map(function(c){\n    var items=D.filter(function(h){return c[1].test(h.st||'') ||\n        (c[0]==='Ждут проверки' && !COLS.some(function(x){return x[1].test(h.st||'');}));});\n    return '<div class=\"kcol\"><h3>'+c[0]+'</h3>'+items.map(function(h){\n      return '<div class=\"kcard\"><b>'+escText(h.n)+'</b><span>'+escText(h.what)+'</span>'\n        +(h.met?'<div class=\"met\"><u>Успех</u> — '+escText(h.met)+'</div>':'')+'</div>';}).join('')\n      +'</div>';}).join('');\n}",
     "function renderPyramid(rows){\n  \n  const mx=Math.max(...rows.flatMap(r=>[r[1],r[2]]));\n  document.getElementById('rpt-pyr').innerHTML=rows.map(([a,m,f])=>\n    `<div class=\"pyrow\">\n       <div class=\"s l\"><span class=\"v\">${String(m).replace('.',',')}%</span><span class=\"rail\"><span class=\"bar\" style=\"width:${(m/mx*100).toFixed(1)}%\"></span></span></div>\n       <div class=\"age\">${a}</div>\n       <div class=\"s r\"><span class=\"rail\"><span class=\"bar\" style=\"width:${(f/mx*100).toFixed(1)}%\"></span></span><span class=\"v\">${String(f).replace('.',',')}%</span></div>\n     </div>`).join('');\n}",
@@ -4856,11 +4935,38 @@ function renderResearchHTML(content, opts) {
     if (!kP) return null;
     const kT = col(headers,'тип'), kW = col(headers,'что аудитория','что делают','о чём');
     const kL = col(headers,'признак','живост','актив'), kU = col(headers,'url');
+    const kWho = col(headers,'кого там читают','кого читают','авторы');
+    const kUse = col(headers,'как использовать','использов');
+    const kRef = col(headers,'источник');
+    const g = (r,k) => k ? String(r[k]||'').replace(/\*\*/g,'').trim() : '';
+    // Рисовалка ждёт восемь полей. Блок отдавал пять, и остальные печатались
+    // словом «undefined», а адрес площадки уезжал в строку «признак живости»
+    // (скрин М5, владелица 14.09). Та же поломка, что уже чинили в M4.
+    const значок = п => {
+      const t = String(п || '').toLowerCase();
+      if (/telegram|телеграм|tg|мессендж/.test(t)) return 'tg';
+      if (/youtube|ютуб|видео|rutube/.test(t)) return 'video';
+      if (/форум|reddit|отзыв|обсужд|сообществ/.test(t)) return 'forum';
+      if (/vc|хабр|дзен|блог|сми|новост|медиа|журнал/.test(t)) return 'news';
+      return 'star';
+    };
     const d = rows.map(r => {
       const n = String(r[kP]||'').replace(/\*\*|\[|\]/g,'').trim();
       if (!n) return null;
-      return [ n, kT?String(r[kT]||''):'', kW?String(r[kW]||''):'',
-               kL?String(r[kL]||''):'', kU?String(r[kU]||''):'' ];
+      const тип = g(r,kT);
+      // «не видно из источника» — честный ответ модели там, где данных нет.
+      // В карточке это пустое место, а не сведение: убираем ДО склейки,
+      // иначе получается «читают: не видно из источника».
+      const живое = k => { const v = g(r,k); return (!v || v === '—' || /^не видно/i.test(v)) ? '' : v; };
+      const что = [живое(kW), живое(kWho) && 'читают: ' + живое(kWho)]
+        .filter(Boolean).join(' · ');
+      const живость = живое(kL);
+      // Адрес вешаем на имя площадки, а не печатаем строкой: голый URL
+      // в карточке занимает три строки и ничего не сообщает.
+      const адрес = g(r,kU).replace(/[<>"']/g,'').replace(/\[|\]/g,'');
+      const реф = (g(r,kRef).match(/\d{1,2}/) || [''])[0];
+      return [ n, тип, значок(тип + ' ' + n), что, живость, живое(kUse), реф,
+               адрес.indexOf('http') === 0 ? адрес : '' ];
     }).filter(Boolean);
     if (!d.length) return null;
     blockScripts.push('renderChannels('+safeJson(d)+');');
@@ -5046,7 +5152,18 @@ function renderResearchHTML(content, opts) {
     });
     if (D.length < 3) return null;
     blockScripts.push('renderOfferInput('+safeJson(D)+');');
-    return '<div class="dtbl" style="--cols:190px 1fr 128px" id="rpt-inp"></div>';
+    // Таблица пересказывает бриф — сама по себе заказчику она ничего не даёт
+    // (владелица 14.09: «не знаю, нужна ли она вообще»). Польза в пустых
+    // строках: это вопросы к заказчику, без ответов на которые офферы ниже
+    // остаются предположением. Поэтому называем их прямо под таблицей.
+    const нет = D.filter(x => x[2] === 'none').map(x => x[0]);
+    const подпись = нет.length
+      ? '<p class="note">Заполнено ' + (D.length - нет.length) + ' полей из ' + D.length
+        + '. Не хватает: ' + нет.map(escHtml).join(', ')
+        + '. Офферы ниже опираются только на заполненные поля — остальное придётся'
+        + ' либо дособрать у заказчика, либо не обещать покупателю вовсе.</p>'
+      : '';
+    return '<div class="dtbl" style="--cols:190px 1fr 128px" id="rpt-inp"></div>' + подпись;
   }
 
   // ── BLOCK 17 FINAL: оффер так, как его увидит покупатель ────────────────────
@@ -5168,11 +5285,25 @@ function renderResearchHTML(content, opts) {
     const kSub = col(headers,'подписч','аудитор'), kF = col(headers,'как часто','частот');
     const kFmt = col(headers,'формат'), kU = col(headers,'url','источник','ссылк');
     const g = (r,k) => k ? String(r[k]||'').replace(/\*\*|\[|\]/g,'').trim() : '';
+    // Рисовалка ждёт семь полей: имя, площадка, значок, что это, признак
+    // живости, как использовать, номер источника. Блок отдавал пять — и на
+    // месте недостающих в отчёте печаталось «undefined» (скрин владелицы
+    // 15.09). Собираем ровно те поля, что она ждёт; чего нет — пустая строка.
+    const значок = п => {
+      const t = String(п || '').toLowerCase();
+      if (/telegram|телеграм|tg/.test(t)) return 'tg';
+      if (/youtube|ютуб|видео|rutube|vk видео/.test(t)) return 'video';
+      if (/форум|reddit|отзыв|обсужд/.test(t)) return 'forum';
+      if (/vc|хабр|дзен|блог|媒|сми|новост/.test(t)) return 'news';
+      return 'star';
+    };
     const d = rows.map(r => {
       const n = g(r,kN);
       if (!n) return null;
-      const size = [g(r,kSub), g(r,kF)].filter(x=>x && x!=='—').join(' · ');
-      return [ n, g(r,kP), [g(r,kWho), g(r,kFmt)].filter(Boolean).join(' · '), size, g(r,kU) ];
+      const площадка = g(r,kP);
+      const живость = [g(r,kSub), g(r,kF)].filter(x=>x && x!=='—').join(' · ');
+      const что = [g(r,kWho), g(r,kFmt)].filter(x=>x && x!=='—').join(' · ');
+      return [ n, площадка, значок(площадка), что, живость, '', g(r,kU) ];
     }).filter(Boolean);
     if (!d.length) return null;
     blockScripts.push('renderChannels('+safeJson(d)+');');
@@ -5384,7 +5515,16 @@ function renderResearchHTML(content, opts) {
     const d = rows.map(r => {
       const h = g(r,kH);
       if (!h) return null;
-      const hooks = h.split(/\s*(?:;|\n|\d\)\s|•)\s*/).map(x=>x.trim()).filter(Boolean);
+      // Модель отдаёт хуки по-разному: через точку с запятой, списком с
+      // цифрами, а часто — скобкой с кавычками: («первый», «второй»).
+      // Прежний разбор резал только по «;» и «•», и скобки с кавычками
+      // становились отдельными пунктами: в отчёте это выглядело как «(» и
+      // ««текст» (» (скрин владелицы 15.09).
+      const hooks = h
+        .replace(/^[\s(«"']+|[\s)»"']+$/g, '')      // обёртка всей ячейки
+        .split(/\s*(?:;|\n|\d[).]\s|•|»\s*,\s*«|"\s*,\s*")\s*/)
+        .map(x => x.replace(/^[\s(«"'\u2018\u201C]+|[\s)»"'\u2019\u201D]+$/g, '').trim())
+        .filter(x => x && /[А-Яа-яЁёA-Za-z0-9]/.test(x));
       return [ g(r,kId), hooks, g(r,kPain), g(r,kRes), g(r,kMech), g(r,kProof),
                [g(r,kPer), g(r,kAw)].filter(x=>x&&x!=='—').join(' · ') ];
     }).filter(Boolean);
@@ -5525,8 +5665,27 @@ function mdToHtml(text) {
       const естьДостаток = hdrs.some(h => /платёжеспособ|платежеспособ|достаток/i.test(h));
       const сУверенностью = естьКолонка;
       const сноска = () => сУверенностью ? легендаУверенности(естьДостаток) : '';
+
       // Сначала — согласованный формат по заголовку блока. Не опознан — таблица.
       const asObjs = rows.map(r => { const o={}; hdrs.forEach((h,i)=>o[h]=r[i]||''); return o; });
+      // Пустой блок показывать незачем. Владелица 15.09: «персона, цикл сделки,
+      // бюджет, осведомлённость, демография — пусто; если мы это пока не можем
+      // собирать, надо припрятать». Считаем таблицу пустой, когда во ВСЕХ
+      // клетках, кроме первой колонки, нет ничего, кроме пометок об отсутствии.
+      const пусто = v => !String(v == null ? '' : v).trim()
+        || /^(—|-|н\/д|нет данных|нет публичных данных|не замерено|не задано|не применимо|не определено|n\/a|none)\s*[.,;)]?\s*$/i
+             .test(String(v).trim());
+      const колонкиДанных = hdrs.length > 1 ? hdrs.slice(1) : hdrs;
+      const естьДанные = asObjs.some(o => колонкиДанных.some(h => !пусто(o[h])));
+      if (!естьДанные) {
+        // Если после заголовка ничего, кроме этой таблицы, не печаталось —
+        // снимаем и заголовок: пустой раздел читается как поломка.
+        if (ctx.headEnd === html.length && ctx.headStart != null) {
+          html = html.slice(0, ctx.headStart);
+          ctx.headStart = null; ctx.headEnd = -1;
+        }
+        tableRows = []; inTable = false; return;
+      }
       // 04_1 сам не рисуется — он кормит карточки ниш ниже.
       if (/BLOCK\s*04_1\b/i.test(lastHeading)) {
         const kn = hdrs.find(h => h.toLowerCase().includes('ниш'));
@@ -5595,7 +5754,9 @@ function mdToHtml(text) {
         // Метка на случай, если таблица блока окажется дублем и её снимут:
         // тогда откатим и заголовок с описанием, иначе останется пустой блок.
         if (/BLOCK\s*04_1\b/i.test(t)) ctx.mark041 = html.length;
+        ctx.headStart = html.length;
         html += '<h2'+якорь(t)+'>'+esc(human(t))+'</h2>';
+        ctx.headEnd = html.length;
         continue;
       }
       // Рабочие имена блоков («BLOCK 03 — Market Size», «SEO-02 — Semantic
@@ -5609,7 +5770,9 @@ function mdToHtml(text) {
       }
       else if (line.startsWith('## ')) {
         if (/BLOCK\s*04_1\b/i.test(line.slice(3))) ctx.mark041 = html.length;
+        ctx.headStart = html.length;
         html += '<h2'+якорь(line.slice(3))+'>'+esc(human(line.slice(3)))+'</h2>';
+        ctx.headEnd = html.length;
       }
       else if (line.startsWith('### ')) html += '<h3'+якорь(line.slice(4))+'>'+esc(human(line.slice(4)))+'</h3>';
       else if (line.startsWith('#### ')) html += '<h4'+якорь(line.slice(5))+'>'+esc(human(line.slice(5)))+'</h4>';
@@ -5626,8 +5789,12 @@ function mdToHtml(text) {
         const имя = t.replace(/^\*{1,2}\s*/, '').replace(/\s*\*{1,2}$/, '').trim();
         if (ctx.has062 && /^(сильные\s+стороны|слабые\s+стороны|возможности|угрозы)\s*:?$/i.test(имя)) continue;
         if (/^(таблица|табл\.)\s*\d*/i.test(имя)) {
-          html += '<h3>' + esc(имя.replace(/^(таблица|табл\.)\s*\d*\s*[—.:-]?\s*/i, '')
-            || имя) + '</h3>';
+          // «Таблица 1 — выбор» превращается в подзаголовок «выбор». А если
+          // после номера ничего нет («Таблица 2:»), заголовка нет вовсе:
+          // нумерация таблиц — рабочая пометка, а не название раздела
+          // (владелица 15.09: «здесь вот эта рабочая таблица один, таблица два»).
+          const хвост = имя.replace(/^(таблица|табл\.)\s*\d*\s*[—.:-]?\s*/i, '').replace(/[:.]\s*$/, '').trim();
+          if (хвост) html += '<h3>' + esc(хвост) + '</h3>';
         } else if (/^(легенда|определение|комментарий|примечание|пояснение|как читать)(\s|:|$)/i.test(имя)) {
           // Владелица 15.09: «опять легенда, это вообще везде надо убрать».
           // Служебные пояснения модели («Легенда:», «Определение:»,
