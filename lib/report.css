@@ -2485,6 +2485,8 @@ table.raw td.num{font-variant-numeric:tabular-nums;text-align:center;white-space
 .rules .ft{margin-top:12px;padding-top:10px;border-top:1px solid var(--line);font-size:11.5px;color:var(--ink-3);line-height:1.5;max-width:36ch}
 .topc{display:flex;flex-direction:column;gap:0}
 .tcrow{display:grid;grid-template-columns:minmax(0,300px) 1fr 116px;gap:14px;align-items:center;padding:10px 0;border-top:1px solid var(--line-2)}
+/* Нечего мерить — нет и дорожки: две колонки вместо трёх. */
+.nomeasure .tcrow{grid-template-columns:minmax(0,1fr) auto}
 .topc .tcrow:first-child{border-top:0}
 .tcn{font-size:13.5px;line-height:1.35;color:var(--ink);min-width:0}
 .tcn a{color:var(--ink);text-decoration:none}
