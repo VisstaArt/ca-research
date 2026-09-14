@@ -1983,7 +1983,7 @@ async function gatherCompetitorEvidence(brief) {
 // (ТЗ-M9-ОТКУДА-ДАННЫЕ, разд. 2): YouTube, Telegram через t.me/s/, VK, Дзен,
 // vc.ru и Хабр. Instagram и TikTok не запрашиваем вовсе — они отдают страницу
 // только авторизованным, и любое число оттуда было бы выдумкой.
-async // Соцсети самого заказчика — из брифа (владелица 14.09: «если есть соцсети,
+// Соцсети самого заказчика — из брифа (владелица 14.09: «если есть соцсети,
 // нам нужно видеть, что он уже ведёт, как ведёт, какие объёмы»). Ссылки, не
 // слова: только то, что похоже на адрес профиля.
 function clientSocials(brief) {
@@ -1991,7 +1991,7 @@ function clientSocials(brief) {
     .filter(x => /^https?:\/\//i.test(x)).slice(0, 5);
 }
 
-function gatherContentRadarEvidence(brief, competitors) {
+async function gatherContentRadarEvidence(brief, competitors) {
   const market = brief.geoMarket || brief.geoCompany || '';
   const product = brief.niche || brief.name || '';
   const topic = brief.selectedNiche || product;

@@ -1,6 +1,6 @@
 // СОБРАНО АВТОМАТИЧЕСКИ из app.jsx — не править руками.
 // Правки вносить в app.jsx, затем: osascript -l JavaScript tools/build.js
-// отпечаток-исходника: ca3dc54f4e8d3337
+// отпечаток-исходника: 6c844f8fca4eabff
 // Функции контракта живут в lib/contract.js. Разбираем их сюда, чтобы весь
 // остальной код обращался к ним по прежним именам и не менялся.
 const{GLOBAL_MODS,isPerNiche,dropOrphans,nichesOf,resKey,splitMdRow,isMdSeparator,parseMdTables,buildModuleEntry,pickTable,pickColumn,withStableIds}=CAContract;// Название модуля берётся из MODULES — это конфиг ИНТЕРФЕЙСА, и сборщик
@@ -537,10 +537,10 @@ queries.push(c+' '+Q.officialPrices+' -топ -рейтинг -обзор -ср�
 // (ТЗ-M9-ОТКУДА-ДАННЫЕ, разд. 2): YouTube, Telegram через t.me/s/, VK, Дзен,
 // vc.ru и Хабр. Instagram и TikTok не запрашиваем вовсе — они отдают страницу
 // только авторизованным, и любое число оттуда было бы выдумкой.
-async;// Соцсети самого заказчика — из брифа (владелица 14.09: «если есть соцсети,
+// Соцсети самого заказчика — из брифа (владелица 14.09: «если есть соцсети,
 // нам нужно видеть, что он уже ведёт, как ведёт, какие объёмы»). Ссылки, не
 // слова: только то, что похоже на адрес профиля.
-function clientSocials(brief){return String(brief.socials||'').split(/[\s,\n]+/).filter(x=>/^https?:\/\//i.test(x)).slice(0,5);}function gatherContentRadarEvidence(brief,competitors){const market=brief.geoMarket||brief.geoCompany||'';const product=brief.niche||brief.name||'';const topic=brief.selectedNiche||product;const comps=(competitors||[]).filter(Boolean).slice(0,5);const queries=[topic+' '+market+' youtube канал обзор',topic+' '+market+' telegram канал',topic+' '+market+' vc.ru habr статья разбор',topic+' '+market+' дзен статья'];for(const c of comps){// Канал самого конкурента, а не статьи о нём: у площадок в адресе
+function clientSocials(brief){return String(brief.socials||'').split(/[\s,\n]+/).filter(x=>/^https?:\/\//i.test(x)).slice(0,5);}async function gatherContentRadarEvidence(brief,competitors){const market=brief.geoMarket||brief.geoCompany||'';const product=brief.niche||brief.name||'';const topic=brief.selectedNiche||product;const comps=(competitors||[]).filter(Boolean).slice(0,5);const queries=[topic+' '+market+' youtube канал обзор',topic+' '+market+' telegram канал',topic+' '+market+' vc.ru habr статья разбор',topic+' '+market+' дзен статья'];for(const c of comps){// Канал самого конкурента, а не статьи о нём: у площадок в адресе
 // стоят их же домены, по ним и ищем.
 queries.push(c+' youtube.com канал');queries.push(c+' t.me канал');queries.push(c+' vk.com сообщество');queries.push(c+' блог статьи');}// Каналы самого заказчика — тем же замером, что и конкурентов: радар
 // должен видеть, что клиент УЖЕ выкладывает и как оно живёт.
