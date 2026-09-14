@@ -52,6 +52,9 @@
       + '<p class="lede" style="margin-bottom:0">' + esc(текст) + '</p></div>';
   }
 
+  // Пометка остаётся навсегда, а не на время переноса: молчаливый откат на
+  // снимок и есть тот случай, когда человек решает по устаревшему и не знает
+  // об этом (согласовано с контент-агентом 15.09).
   function приписка() {
     if (Д.живое) return '';
     return '<p class="note" style="margin-top:18px">Данные показаны из выгрузки '
@@ -309,6 +312,16 @@
     }).then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; });
   }
 
+  // Заголовка как поля у поста и статьи нет: разбор под него не заведён.
+  // У карусели он есть — parsed.cover_headline. Иначе берём первую строку
+  // текста, сняв разметку: это и есть то, что читатель увидит первым.
+  function заголовок(м) {
+    var п = м.parsed || {};
+    if (п.cover_headline) return String(п.cover_headline).trim();
+    var первая = String(м.body || '').split('\n')[0];
+    return первая.replace(/<[^>]+>/g, '').replace(/[*_#`]/g, '').trim().slice(0, 120);
+  }
+
   function изБазы(клиент) {
     var к = encodeURIComponent(клиент);
     var месяц = new Date().toISOString().slice(0, 7) + '-01';
@@ -334,11 +347,15 @@
             var блок = н.filter(function (ф) { return ф.severity === 'block'; }).length;
             return {
               topic_id: м.topic_id, lang: м.lang, format: м.format, status: м.status,
-              title: (м.parsed && м.parsed.title) || '', body: м.body,
+              title: заголовок(м), body: м.body,
               findings: н, blocking: блок,
-              // can_approve считает контент-машина; если поля нет в ответе —
-              // судим по блокировкам, но НЕ мягче: брак не должен проходить.
-              can_approve: м.can_approve != null ? м.can_approve : блок === 0,
+              // Правило целиком, слово в слово с контент-машиной: статус
+              // «ждёт решения» И ноль блокирующих находок. Без проверки
+              // статуса кнопка «Одобрить» оживала на том, что уже одобрено
+              // или уже вышло, — а это вторая публикация (её разбор 15.09).
+              can_approve: м.can_approve != null
+                ? м.can_approve
+                : (м.status === 'pending' && блок === 0),
             };
           }),
           topics: р[1] || [],
