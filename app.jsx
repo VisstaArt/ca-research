@@ -376,6 +376,13 @@ const MODULES = [
     // Пока живёт здесь и продолжает работать: блоки 18–22 кормят четыре поля
     // контракта, и выключать его можно только ПОСЛЕ того, как контент-завод
     // начнёт делать их сам, — иначе поля обнулятся, а делать будет некому.
+    // 14.09: владелица убрала его из исследования совсем — «это же то, что
+    // контент-машина делает, оно там раскидывается по этапам». Карточка
+    // больше не показывается и не запускается нигде (hidden). Описание и
+    // промпт остаются в коде: блоки 18–22 кормят четыре поля контракта, и
+    // удалять их до того, как контент-машина начнёт делать эти поля сама,
+    // значит молча обнулить контракт.
+    hidden: true,
     id: 'CONTENT', color: 'var(--ink)', bg: 'var(--card-solid)', border: 'var(--line)', dark: 'var(--ink)',
     // Контент-система и креативы строятся на архетипах персон из M4
     requires: ['M6'],
@@ -4197,6 +4204,17 @@ function поРусскиСтроку(t) {
   });
 }
 
+// Имя строки в таблице — с заглавной. Модель берёт их из промпта, где они
+// перечислены строчными («обещание одной фразой», «тон речи»), и печатает
+// как есть: в отчёте это читается как обрывок фразы (владелица 14.09 нашла
+// дважды — под позиционированием и в архетипе бренда). Трогаем только первую
+// букву и только если она строчная: кавычки, числа и адреса остаются как есть.
+function сБольшой(t) {
+  const с = String(t == null ? '' : t);
+  const м = с.match(/^(\s*(?:\*\*)?)([а-яёa-z])/);
+  return м ? с.slice(0, м[1].length) + м[2].toUpperCase() + с.slice(м[1].length + 1) : с;
+}
+
 // Термины в тексте — с подсказкой. Объяснение всплывает там, где человек
 // споткнулся, а не лежит списком в хвосте, куда он не дойдёт. Обычный
 // <abbr title> — без скрипта, поэтому одинаково работает и на сайте, и в
@@ -4565,7 +4583,7 @@ function renderResearchHTML(content, opts) {
     "function renderSemantics(D){\n  const M=['янв','фев','мар','апр','май','июн','июл','авг','сен','окт','ноя','дек'];\n  \n  const bars=document.getElementById('rpt-sembars'); if(!bars) return;\n  const max=Math.max(...D.map(d=>d.v));\n  const fmt=n=>String(n).replace(/\\B(?=(\\d{3})+(?!\\d))/g,' ');\n  /* Слово, полоса и число — в ОДНУ строку. Раньше слово стояло над полосой, и каждый кластер занимал две: на четырёх незаметно, на пятидесяти ядро растягивалось на два экрана. */\n  bars.innerHTML=D.map((d,i)=>`<div class=\"semrow\" data-i=\"${i}\" tabindex=\"0\"><div class=\"nm\">${esc(d.n)}</div><div class=\"rail\"><i style=\"width:${Math.max(d.v/max*100,1.5)}%\"></i></div><div class=\"n\">${fmt(d.v)}</div></div>`).join('');\n\n  const who=document.getElementById('rpt-semwho');\n  const chart=document.getElementById('rpt-semchart');\n  const note=document.getElementById('rpt-semnote');\n  const rows=[...bars.querySelectorAll('.semrow')];\n\n  const draw=i=>{\n    const d=D[i];\n    rows.forEach(r=>r.classList.toggle('on',+r.dataset.i===i));\n    who.textContent=d.n;\n    const W=300,H=104,padT=14,padB=22,padR=6,padL=6;\n    const ih=H-padT-padB, iw=W-padL-padR;\n    const x=k=>padL+iw*k/(M.length-1);\n    const y=v=>padT+ih-v*ih;\n    const svg=el('svg',{viewBox:`0 0 ${W} ${H}`,width:'100%',height:H});\n    /* Дорожка-основание: у линии должно быть от чего меряться, иначе подъём\n       читается только в сравнении с соседней точкой. */\n    svg.appendChild(el('line',{x1:padL,y1:y(0),x2:W-padR,y2:y(0),\n      stroke:'var(--line-2)','stroke-width':1}));\n    const pk=d.s.indexOf(Math.max(...d.s)), dp=d.s.indexOf(Math.min(...d.s));\n    /* Провал отмечаем вертикалью, а не второй линией: это про «когда не писать». */\n    svg.appendChild(el('line',{x1:x(dp),y1:padT,x2:x(dp),y2:y(0),\n      stroke:'var(--line)','stroke-width':1,'stroke-dasharray':'2 3'}));\n    const path=d.s.map((v,k)=>(k?'L':'M')+x(k).toFixed(1)+','+y(v).toFixed(1)).join(' ');\n    svg.appendChild(el('path',{d:path,fill:'none',stroke:'var(--mid)','stroke-width':2,\n      'stroke-linejoin':'round'}));\n    svg.appendChild(el('circle',{cx:x(pk),cy:y(d.s[pk]),r:3.5,fill:'var(--mid)'}));\n    svg.appendChild(el('circle',{cx:x(dp),cy:y(d.s[dp]),r:3,fill:'var(--card-solid)',\n      stroke:'var(--ink-3)','stroke-width':1.5}));\n    M.forEach((m,k)=>{\n      const t=el('text',{x:x(k),y:H-7,class:'axis','text-anchor':'middle',\n        'font-size':'8.5'});\n      t.textContent=m[0].toUpperCase();\n      /* Месяцы пика и провала подписываем целиком — именно их и ищут глазами. */\n      if(k===pk||k===dp){ t.textContent=m; t.setAttribute('font-size','8.5');\n        t.setAttribute('fill', k===pk?'var(--acc-ink)':'var(--ink-2)');\n        t.setAttribute('font-weight','700'); }\n      svg.appendChild(t);\n    });\n    chart.innerHTML=''; chart.appendChild(svg);\n    const ratio=(d.s[pk]/d.s[dp]).toFixed(1).replace('.',',');\n    note.innerHTML=`Пик — <b>${M[pk]}</b>, провал — <b>${M[dp]}</b>, разница\n      <b>в ${ratio} раза</b>. Статью под этот кластер ставить в работу за месяц-полтора\n      до подъёма.`;\n  };\n  draw(0);\n  bars.addEventListener('mouseover',e=>{const r=e.target.closest('.semrow'); if(r) draw(+r.dataset.i);});\n  bars.addEventListener('focusin',e=>{const r=e.target.closest('.semrow'); if(r) draw(+r.dataset.i);});\n}",
     "function renderMarketMap(P){\n  const box=document.getElementById('rpt-mkt'); if(!box) return;\n  const PRICE=['масс-маркет','средний','дорогой','VIP'];\n  const FAME=['лидер','заметный','нишевый'];\n  /* [название, цена 0-3, известность 0-2, брендовый спрос в месяц, мы?] */\n  \n  const ourPrice=P.find(x=>x[4])[1];\n  const top=Math.max(...P.map(x=>x[3]||0));\n  const fmt=n=>String(n).replace(/\\B(?=(\\d{3})+(?!\\d))/g,'\\u00A0');\n\n  let h='<div></div>'+PRICE.map(n=>`<div class=\"hd\">${n}</div>`).join('');\n  FAME.forEach((f,fi)=>{\n    h+=`<div class=\"rw\">${f}</div>`;\n    PRICE.forEach((pr,pi)=>{\n      const list=P.filter(x=>x[1]===pi&&x[2]===fi);\n      h+=`<div class=\"cell${pi===ourPrice?' ours':''}${list.length?'':' empty'}\" data-c=\"${fi}-${pi}\">\n        <span class=\"dots\">${list.map(x=>\n          `<button type=\"button\" class=\"dot\" data-i=\"${P.indexOf(x)}\"\n            aria-label=\"${x[0]}: ${PRICE[x[1]]}, ${FAME[x[2]]}\"><i class=\"${x[4]?'us':''}\"></i></button>`\n        ).join('')}</span>\n        <span class=\"n\">${list.length||'—'}</span></div>`;\n    });\n  });\n  box.innerHTML=h;\n\n  /* Список под картой — он и есть орган управления: наводишь на название и\n     видишь, где этот игрок стоит. Сама точка подписи не несёт, поэтому искать\n     конкретного конкурента по карте невозможно — только по списку. */\n  const listBox=document.getElementById('rpt-mkt-col');\n  const order=P.map((x,i)=>[x,i]).sort((a,b)=>(b[0][3]||-1)-(a[0][3]||-1));\n  listBox.innerHTML=\n    `<h4>Кто где стоит · ${P.length} игроков</h4>`+\n    `<p class=\"hint\">Наведите на название — на карте загорится его точка. И наоборот: наведите на точку — подсветится строка и всплывёт карточка.</p>`+\n    `<div class=\"hdr\"><span>Название</span><span>Цена</span><span>Известность</span>`+\n    `<span style=\"text-align:right\">Брендовый спрос</span></div>`+\n    order.map(([x,i])=>`<div class=\"r${x[4]?' mine':''}\" data-i=\"${i}\" tabindex=\"0\">\n      <b>${x[0]}${x[4]?' — мы':''}</b>\n      <span class=\"g\">${PRICE[x[1]]}</span>\n      <span class=\"g\">${FAME[x[2]]}</span>\n      <span class=\"num${x[3]?'':' no'}\">${x[3]?fmt(x[3])+'/мес':'не замерено'}</span>\n    </div>`).join('');\n\n  /* Подсказка у точки — владелица попросила оставить: на карте у кружка нет\n     подписи, и без неё непонятно, на кого навёл. Держим её внутри обёртки,\n     чтобы координаты считались от одного элемента и она не убегала при прокрутке. */\n  const wrap=box.parentNode, tip=document.createElement('div');\n  tip.className='mkttip'; tip.setAttribute('role','status'); wrap.appendChild(tip);\n  const showTip=(btn,x)=>{\n    const pct=x[3]?x[3]/top*100:null;\n    const share=pct===null?null:(pct<1?'&lt;1':Math.round(pct));\n    tip.innerHTML=`<b>${x[0]}${x[4]?' — мы':''}</b><dl>`+\n      `<dt>Цена</dt><dd>${PRICE[x[1]]}</dd>`+\n      `<dt>Известность</dt><dd>${FAME[x[2]]}</dd>`+\n      `<dt>Ищут название в месяц</dt><dd>${x[3]?fmt(x[3]):'не замерено'}</dd>`+\n      (share!==null?`<dt>Доля от лидера рынка</dt><dd>${share}%</dd>`:'')+\n      `</dl>`;\n    const b=btn.getBoundingClientRect(), w=wrap.getBoundingClientRect();\n    tip.style.left=(b.left-w.left+b.width/2)+'px';\n    tip.style.top=(b.top-w.top-8)+'px';\n    tip.classList.add('on');\n  };\n  const hideTip=()=>tip.classList.remove('on');\n\n  const dots=[...box.querySelectorAll('.dot')];\n  const rows=[...listBox.querySelectorAll('.r')];\n  const seek=i=>{\n    box.classList.add('seek');\n    dots.forEach(d=>{\n      const on=+d.dataset.i===i;\n      d.classList.toggle('hit',on);\n      if(on&&d.parentNode&&d.parentNode.parentNode) d.parentNode.parentNode.classList.add('hit');\n    });\n    box.querySelectorAll('.cell').forEach(c=>{\n      if(!c.querySelector('.dot.hit')) c.classList.remove('hit');\n    });\n    rows.forEach(r=>r.classList.toggle('on',+r.dataset.i===i));\n  };\n  const rest=()=>{\n    box.classList.remove('seek');\n    dots.forEach(d=>d.classList.remove('hit'));\n    box.querySelectorAll('.cell').forEach(c=>c.classList.remove('hit'));\n    rows.forEach(r=>r.classList.remove('on'));\n  };\n  /* Связь в обе стороны: со списка на карту (главное, ради чего это делалось)\n     и с карты на список — чтобы у точки, на которую случайно навёл, нашлось имя. */\n  listBox.addEventListener('mouseover',e=>{const r=e.target.closest('.r'); if(r) seek(+r.dataset.i);});\n  listBox.addEventListener('mouseleave',rest);\n  listBox.addEventListener('focusin',e=>{const r=e.target.closest('.r'); if(r) seek(+r.dataset.i);});\n  listBox.addEventListener('focusout',rest);\n  const onDot=d=>{ const i=+d.dataset.i; seek(i); showTip(d,P[i]); };\n  box.addEventListener('mouseover',e=>{const d=e.target.closest('.dot'); if(d) onDot(d);});\n  box.addEventListener('mouseleave',()=>{rest(); hideTip();});\n  box.addEventListener('focusin',e=>{const d=e.target.closest('.dot'); if(d) onDot(d);});\n  box.addEventListener('focusout',()=>{rest(); hideTip();});\n}",
     "function renderAwareness(D){\n  const box=document.getElementById('rpt-aw'); if(!box) return;\n  const LV=['L1 не знает о проблеме','L2 осознаёт проблему','L3 ищет решение',\n            'L4 сравнивает продукты','L5 знает нас'];\n  const TINT=[16,32,52,74,100];\n  const fill=i=>TINT[i]>=100?'var(--mid)'\n    :`color-mix(in srgb, var(--mid) ${TINT[i]}%, var(--line-2))`;\n  \n  box.innerHTML=D.map(([n,sub,v])=>\n    `<div class=\"awrow\">\n      <div class=\"awnm\">${n}<span>${sub}</span></div>\n      <div class=\"aw\">${v.map((x,i)=>x?\n        `<span style=\"width:${x}%;background:${fill(i)}\">${x>=15?x+'%':''}</span>`:'').join('')}</div>\n    </div>`).join('')+\n    `<div class=\"awleg\">${LV.map((n,i)=>\n      `<span><i style=\"background:${fill(i)}\"></i>${n}</span>`).join('')}</div>`;\n}",
-    "function renderSources(d){\n  const box=document.getElementById('rpt-srcs');\n  if(!box) return;\n  /* Ссылкой становится только НАСТОЯЩИЙ адрес. Пометки вроде «нет\n     публичного сайта» раньше тоже красились синим и вели в никуда —\n     владелица 15.09 показала это на скрине. Длинный адрес сокращаем:\n     в две строки он ломал колонку. Пустое «что взяли» не печатаем: строка\n     без содержимого только занимает место. */\n  const ext='<svg viewBox=\"0 0 12 12\"><path d=\"M4.5 2h5.5v5.5\"/><path d=\"M10 2L4.5 7.5\"/><path d=\"M8 8.5V10H2V4h1.5\"/></svg>';\n  const адрес=u=>/^https?:\\/\\//i.test(String(u||''));\n  const коротко=u=>{ const v=String(u||'').replace(/^https?:\\/\\/(www\\.)?/i,'').replace(/\\/$/,'');\n    return v.length>46?v.slice(0,44)+'…':v; };\n  /* Источник без адреса проверить нельзя, а в списке он стоит наравне с\n     настоящим: владелица 15.09 — «пять источников, публичный один, в чём\n     польза». Такие сводим в одну честную строку под списком. */\n  const сАдресом=d.filter(x=>адрес(x[4]));\n  const безАдреса=d.filter(x=>!адрес(x[4]));\n  box.innerHTML=сАдресом.map(([n,dom,t,use,url])=>{\n    /* Показываем ПОНЯТНОЕ имя, если оно есть (название площадки, канала),\n       и только при его отсутствии — сам адрес, сокращённый. */\n    const подпись=String(dom||'').trim();\n    const имя=(подпись && !адрес(подпись))?подпись:(адрес(url)?коротко(url):(подпись||'источник без адреса'));\n    const голова=адрес(url)\n      ? '<a href=\"'+url+'\" target=\"_blank\" rel=\"noopener\" title=\"'+url+'\">'+escText(имя)+ext+'</a>'\n      : '<span class=\"no\">'+escText(dom||'нет публичного адреса')+'</span>';\n    return '<div class=\"srow\"><span class=\"sn\">['+n+']</span>'\n      +'<span class=\"sd\"><span class=\"dom\">'+голова\n      +(use?'<span class=\"dt\">'+escText(use)+'</span>':'')+'</span>'\n      +(t?'<span class=\"took\"><span>что взяли</span><em>'+escText(t)+'</em></span>':'')\n      +'</span></div>';\n  }).join('')\n   +(безАдреса.length?'<p class=\"note\">Ещё '+безАдреса.length+' упоминаний без публичного адреса: '\n     +безАдреса.map(x=>escText(x[1])).join(', ')\n     +' — проверить их по ссылке нельзя, поэтому в списке источников они не стоят.</p>':'');\n}",
+    "function renderSources(d){\n  const box=document.getElementById('rpt-srcs');\n  if(!box) return;\n  /* Ссылкой становится только НАСТОЯЩИЙ адрес. Пометки вроде «нет\n     публичного сайта» раньше тоже красились синим и вели в никуда —\n     владелица 15.09 показала это на скрине. Длинный адрес сокращаем:\n     в две строки он ломал колонку. Пустое «что взяли» не печатаем: строка\n     без содержимого только занимает место. */\n  const ext='<svg viewBox=\"0 0 12 12\"><path d=\"M4.5 2h5.5v5.5\"/><path d=\"M10 2L4.5 7.5\"/><path d=\"M8 8.5V10H2V4h1.5\"/></svg>';\n  const адрес=u=>/^https?:\\/\\//i.test(String(u||''));\n  const коротко=u=>{ const v=String(u||'').replace(/^https?:\\/\\/(www\\.)?/i,'').replace(/\\/$/,'');\n    return v.length>46?v.slice(0,44)+'…':v; };\n  /* Источник без адреса проверить нельзя, а в списке он стоит наравне с\n     настоящим: владелица 15.09 — «пять источников, публичный один, в чём\n     польза». Такие сводим в одну честную строку под списком. */\n  const сАдресом=d.filter(x=>адрес(x[4]));\n  const безАдреса=d.filter(x=>!адрес(x[4]));\n  box.innerHTML=сАдресом.map(([n,dom,t,use,url])=>{\n    /* Показываем ПОНЯТНОЕ имя, если оно есть (название площадки, канала),\n       и только при его отсутствии — сам адрес, сокращённый. */\n    const подпись=String(dom||'').trim();\n    /* «нет публичного сайта», «не видно из источника» — это ПОМЕТКА, а не\n       имя площадки. Подставленная в ссылку, она превращалась в синюю\n       строку «нет публичного сайта», которая куда-то ведёт (скрин\n       владелицы 14.09). Тогда именем становится сам адрес. */\n    const пометка=/^(нет |не |—|н\\/д)/i.test(подпись);\n    const имя=(подпись && !пометка && !адрес(подпись))?подпись:(адрес(url)?коротко(url):(подпись||'источник без адреса'));\n    const голова=адрес(url)\n      ? '<a href=\"'+url+'\" target=\"_blank\" rel=\"noopener\" title=\"'+url+'\">'+escText(имя)+ext+'</a>'\n      : '<span class=\"no\">'+escText(dom||'нет публичного адреса')+'</span>';\n    return '<div class=\"srow\"><span class=\"sn\">['+n+']</span>'\n      +'<span class=\"sd\"><span class=\"dom\">'+голова\n      +(use?'<span class=\"dt\">'+escText(use)+'</span>':'')+'</span>'\n      +(t?'<span class=\"took\"><span>что взяли</span><em>'+escText(t)+'</em></span>':'')\n      +'</span></div>';\n  }).join('')\n   +(безАдреса.length?'<p class=\"note\">Ещё '+безАдреса.length+' упоминаний без публичного адреса: '\n     +безАдреса.map(x=>escText(x[1])).join(', ')\n     +' — проверить их по ссылке нельзя, поэтому в списке источников они не стоят.</p>':'');\n}",
     "function renderMarketSize(d){\n  var box=document.getElementById('rpt-tam'); if(!box) return;\n  /* ТРЕТИЙ ЗАХОД, 11.09. Капсулы со смещением не легли: у SOM при доле около\n     процента подпись выезжала за край. Владелица предложила круги — и это\n     лучше по существу: у круга ПЛОЩАДЬ пропорциональна числу (радиус берём\n     как корень из доли), то есть пропорция честная, а не нарисованная.\n     Круги вложенные и касаются снизу — видно, что SOM лежит ВНУТРИ SAM.\n     Подписи вынесены наружу, каждая на своей высоте: налезать им негде. */\n  var n=d.length, S=360, pad=10, topSpace=30;\n  /* Запас сверху: подпись самого большого круга стоит НАД его верхней точкой,\n     и без запаса она уезжала выше края поля. */\n  var R=(S-pad-topSpace)/2;\n  var sh=d.map(function(x){ return Math.max(x[3]||0, 0.0004); });\n  var base=sh[0]||1;\n  var rr=sh.map(function(v){ return Math.max(R*Math.sqrt(v/base), R*0.13); });\n  var W=S+250, cx=pad+R, baseY=S-pad;\n  var svg=el('svg',{viewBox:'0 0 '+W+' '+S,width:'100%',height:'auto'});\n  var circles=[], i;\n  for(i=0;i<n;i++){\n    var r=rr[i], cy=baseY-r;\n    var tint=[22,44,70,100][Math.min(i,3)];\n    var c=el('circle',{cx:cx,cy:cy,r:r,'data-i':i,\n      fill:i===n-1?'var(--mid)':'color-mix(in srgb, var(--mid) '+tint+'%, var(--card-solid))',\n      style:'transition:opacity .15s ease'});\n    svg.appendChild(c); circles.push(c);\n  }\n  for(i=0;i<n;i++){\n    var r=rr[i], topY=baseY-2*r, x2=cx+R+22;\n    svg.appendChild(el('line',{x1:cx,y1:topY,x2:x2,y2:topY,stroke:'var(--line)','stroke-width':1}));\n    svg.appendChild(el('circle',{cx:cx,cy:topY,r:2.5,fill:'var(--ink-3)'}));\n    var code=el('text',{x:x2+8,y:topY-3,class:'val',style:'font-size:17px'});\n    code.textContent=d[i][0]; svg.appendChild(code);\n    var words=String(d[i][1]||'').split(' '), lines=[], cur='';\n    words.forEach(function(wd){\n      if((cur+' '+wd).trim().length>20){ lines.push(cur.trim()); cur=wd; }\n      else cur=(cur+' '+wd).trim();\n    });\n    if(cur) lines.push(cur);\n    lines.slice(0,2).forEach(function(ln,li){\n      var note=el('text',{x:x2+8,y:topY+13+li*15,class:'axis',style:'font-size:12px'});\n      note.textContent=ln; svg.appendChild(note);\n    });\n  }\n  var wrap=document.createElement('div'); wrap.className='tamwrap';\n  var leftBox=document.createElement('div'); leftBox.appendChild(svg);\n  var right=document.createElement('div'); right.className='tamvals';\n  right.innerHTML=d.map(function(x,ix){\n    return '<div class=\"tamrow\" data-i=\"'+ix+'\"><span class=\"c\">'+escText(x[0])+'</span>'\n      +'<b>'+escText(x[2])+'</b>'\n      +(x[4]?'<span class=\"rel\">'+escText(x[4])+'</span>':'')+'</div>';\n  }).join('');\n  wrap.appendChild(leftBox); wrap.appendChild(right); box.appendChild(wrap);\n  var rows=[].slice.call(right.querySelectorAll('.tamrow'));\n  function hi(ix){\n    circles.forEach(function(c,j){ c.setAttribute('opacity', ix<0||ix===j?'1':'.3'); });\n    rows.forEach(function(r2,j){ r2.className='tamrow'+(ix===j?' on':''); });\n  }\n  circles.forEach(function(c,j){\n    c.addEventListener('mouseenter',function(){hi(j);});\n    c.addEventListener('mouseleave',function(){hi(-1);});\n  });\n  rows.forEach(function(r2,j){\n    r2.addEventListener('mouseenter',function(){hi(j);});\n    r2.addEventListener('mouseleave',function(){hi(-1);});\n  });\n}",
     "function renderHeat(cols,rows){\n  \n  const tint=v=>v===0?'color-mix(in srgb, var(--ink) 3%, transparent)'\n    :`color-mix(in srgb, var(--mid) ${v*22}%, var(--card-solid))`;\n  document.getElementById('rpt-heat').innerHTML =\n    '<thead><tr><th></th>'+cols.map(c=>`<th>${c}</th>`).join('')+'</tr></thead><tbody>'+\n    rows.map(([n,vs])=>`<tr><td>${esc(n)}</td>`+\n      vs.map(v=>`<td style=\"background:${tint(v)}\">${v?'':'—'}</td>`).join('')+'</tr>').join('')+\n    '</tbody>';\n}",
     "function renderVoc(D){\n  const box=document.getElementById('rpt-voc'); if(!box) return;\n  const V={ok:['сверено с источником','ok'],nopage:['страница не открылась','nopage']};\n  \n  box.innerHTML=D.map(c=>{\n    const [txt,cls]=V[c.v];\n    const INT={3:['высокая',100],2:['средняя',62],1:['низкая',30]};\n    const [word,pct]=INT[c.int];\n    return `<div class=\"vq2\">\n      <div class=\"vtop\">\n        <span class=\"vmark ${cls}\"><i></i>${txt}</span>\n        <blockquote>${c.q}</blockquote>\n      </div>\n      <div class=\"vtheme\"><b>${c.theme}</b><span class=\"seg2\">${c.seg}</span></div>\n      <div class=\"vsrc2\">${L(c.src,c.url)} · ${c.date}</div>\n      <div class=\"vnums\">\n        <div><span class=\"lab\">как часто встречается</span>\n          <span class=\"big2\">${c.freq.split(' ')[0]}<em>${c.freq.split(' ').slice(1).join(' ')}</em></span></div>\n        <div><span class=\"lab\">сила боли</span>\n          <span class=\"pain\"><span class=\"rail2\"><i style=\"width:${pct}%\"></i></span><b>${word}</b></span></div>\n      </div>\n      <div class=\"vans\"><span>формула ответа</span>${c.ans}</div>\n    </div>`;\n  }).join('');\n  const ok=D.filter(x=>x.v==='ok').length;\n  const bad=D.length-ok;\n  /* Фраза про непрочитанные страницы раньше стояла в тексте всегда — отчёт\n     сообщал о сбое, которого не было. Считаем по факту. */\n  const tail = bad\n    ? `; у ${bad} ${bad===1?'страница не открылась':'страниц не открылось'} — ${bad===1?'она оставлена':'они оставлены'} с пометкой, а не удалена.`\n    : '; все страницы открылись.';\n  var biasBox=document.getElementById('rpt-bias'); if(biasBox) biasBox.innerHTML=\n    `<b>Смещение выборки.</b> Поиск шёл по жалобам и отзывам, а там пишут в основном\n     недовольные и опытные пользователи — молчаливое большинство сюда не попало.\n     Без этой оговорки список болей читается как «мнение рынка», а это мнение\n     самой громкой его части.\n     <br><b>Проверено ${ok} из ${D.length}</b> цитат${tail}`;\n}",
@@ -4733,7 +4751,7 @@ function renderResearchHTML(content, opts) {
   // ── Источники (04_0, 02, 05, SEO-00) ────────────────────────────────────────
   // Владелица просила активные ссылки прямо на названия сайтов. Формат из
   // библиотеки: номер, площадка ссылкой, что взяли, куда пошло.
-  function renderSources(headers, rows) {
+  function renderSources(headers, rows, ctx) {
     const kU = col(headers,'url','ссылк');
     // «Канал» ищем ПЕРВЫМ: у радара колонки «Канал | Площадка», и поиск по
     // «площадк» подставлял в имя строки слово «YouTube» вместо названия
@@ -4758,7 +4776,17 @@ function renderResearchHTML(content, opts) {
     }).filter(Boolean);
     if (!d.length) return null;
     blockScripts.push('renderSources('+safeJson(d)+');');
-    return '<div class="srcs" id="rpt-srcs"></div>';
+    // Список источников — не находка, а доказательство: он нужен, когда к
+    // числу в отчёте появился вопрос, и только тогда. Владелица 14.09:
+    // «нам эти данные тут нужны? здесь оно вообще не нужно». Свёрнут, но на
+    // месте: сноски [n] по-прежнему ведут сюда, и по щелчку он раскрывается.
+    // Заголовок печатаем сами — свой, короткий, и убираем тот, что напечатал
+    // разбор, иначе над свёрнутой полосой висит второе имя того же самого.
+    if (ctx && ctx.headEnd === ctx.htmlLen && ctx.headStart != null) ctx.dropHead = true;
+    return '<details class="srcfold"><summary>Источники: '
+      + d.length + ' ' + plural(d.length, 'ссылка', 'ссылки', 'ссылок')
+      + ', по которым собран этот модуль</summary>'
+      + '<div class="srcs" id="rpt-srcs"></div></details>';
   }
 
   // ── BLOCK 03: размер рынка воронкой ─────────────────────────────────────────
@@ -5720,8 +5748,24 @@ function mdToHtml(text) {
         if (ctx.mark041 != null) { html = html.slice(0, ctx.mark041); ctx.mark041 = null; }
         tableRows=[]; inTable=false; return;
       }
-      const special = renderKnownBlock(lastHeading, hdrs, asObjs, ctx);
-      if (special != null) { html += special + сноска(); tableRows=[]; inTable=false; return; }
+      // Длина разметки на момент вызова нужна блоку, который хочет снять
+      // свой же заголовок (список источников сворачивается и печатает свой).
+      ctx.htmlLen = html.length; ctx.dropHead = false;
+      let special = renderKnownBlock(lastHeading, hdrs, asObjs, ctx);
+      if (special != null) {
+        if (ctx.dropHead && ctx.headStart != null) {
+          // Якорь снятого заголовка переезжает на блок: сноски [n] в тексте
+          // ведут именно на него, и потерять его значит сделать их мёртвыми.
+          const снятый = html.slice(ctx.headStart, ctx.headEnd);
+          const я = (снятый.match(/\sid="([^"]+)"/) || [])[1];
+          if (я && !/^<[a-z]+[^>]*\sid=/.test(special)) {
+            special = special.replace(/^<([a-z]+)/, '<$1 id="' + я + '"');
+          }
+          html = html.slice(0, ctx.headStart); ctx.headStart = null; ctx.headEnd = -1;
+        }
+        ctx.dropHead = false;
+        html += special + сноска(); tableRows=[]; inTable=false; return;
+      }
       // Числовая колонка узнаётся по содержимому, а не по названию: правило
       // «числа снаружи полосы, чернилами» начинается с того, что число вообще
       // должно быть выровнено по разряду, иначе колонку не сравнить глазами.
@@ -5737,7 +5781,7 @@ function mdToHtml(text) {
         row.forEach((c,ci) => {
           // Первая колонка — имя строки, чернилами и полужирным: тот же приём,
           // что .nm в разборах. Служебные пометки приглушены.
-          const inner = ci===0 ? '<b>'+mdInline(c)+'</b>' : mdInline(c);
+          const inner = ci===0 ? '<b>'+mdInline(сБольшой(c))+'</b>' : mdInline(c);
           const st = [numCols[ci]?'text-align:right;font-variant-numeric:tabular-nums':'',
                       quiet(c)?'color:var(--ink-3);font-style:italic':''].filter(Boolean).join(';');
           html += '<td'+(st?' style="'+st+'"':'')+'>'+inner+'</td>';
@@ -6343,6 +6387,16 @@ function generateHTMLReport(brief, results, lang, priceLayers, selectedLayers, s
     // Что залетает: название и разбор слева, полоса, число справа — одна
     // строка на единицу. Хук идёт отдельной строкой во всю ширину: это
     // чужие слова, их читают, а не сравнивают.
+    +'\n/* Источники свёрнуты: доказательство под рукой, но не поперёк отчёта. */'
+    +'\n.srcfold{margin:14px 0 22px}'
+    +'\n.srcfold>summary{cursor:pointer;list-style:none;font-size:12.5px;'
+      +'color:var(--ink-3);padding:9px 0;border-top:1px solid var(--line-2);'
+      +'border-bottom:1px solid var(--line-2)}'
+    +'\n.srcfold>summary::-webkit-details-marker{display:none}'
+    +'\n.srcfold>summary::before{content:\"▸\";display:inline-block;width:14px;color:var(--ink-3)}'
+    +'\n.srcfold[open]>summary::before{content:\"▾\"}'
+    +'\n.srcfold>summary:hover{color:var(--ink-2)}'
+    +'\n.srcfold[open]>summary{border-bottom-color:transparent}'
     +'\n.topc{display:flex;flex-direction:column;gap:0}'
     +'\n.tcrow{display:grid;grid-template-columns:minmax(0,300px) 1fr 116px;'
       +'gap:14px;align-items:center;padding:10px 0;border-top:1px solid var(--line-2)}'
@@ -7989,7 +8043,10 @@ function App() {
     const b={...(p.brief||{})};
     if(b.geo&&!b.geoMarket){b.geoMarket=b.geo;delete b.geo;}
     setProj(p); setBrief({...empty,...b}); setLang(p.lang||'Russian');
-    setMods((p.mods||['M2','M3']).filter(id => !MODULES.find(m=>m.id===id)?.disabled)); setRep(p.report||'');
+    setMods((p.mods||['M2','M3']).filter(id => {
+      const м = MODULES.find(m=>m.id===id);
+      return м && !м.disabled && !м.hidden;
+    })); setRep(p.report||'');
     setExp({}); setRepOpen(false); setXled('');
     setShowLayers(false); setPriceLayers(p.priceLayers||[]); setSelectedLayers(p.selectedLayers||[]);
     // Если разведка сделана, а ниша ещё не выбрана — восстановить стоп-точку выбора
@@ -8085,7 +8142,7 @@ function App() {
       return list.map(n => ({ mod: m, niche: n }));
     };
     const wkey = w => w.mod.id + '@@' + w.niche;
-    const selMods = MODULES.filter(m => !m.disabled && allSelected.includes(m.id));
+    const selMods = MODULES.filter(m => !m.disabled && !m.hidden && allSelected.includes(m.id));
 
     // forceRerun (перегенерация): выкидываем старые результаты именно запрошенных единиц,
     // иначе run() видит их и пропускает — «секунда без поиска».
@@ -8608,7 +8665,7 @@ function App() {
     <div>
       <StageHeader
         имя={шагИзАдреса === 'niches' ? 'Ниши' : 'Ход исследования'}
-        бровь={шагИзАдреса === 'niches' ? 'Стоп-точка выбора' : 'Модули идут по очереди'}
+        бровь={шагИзАдреса === 'niches' ? 'Стоп-точка выбора' : 'Ещё не запускалось'}
         подпись={шагИзАдреса === 'niches'
           ? 'Какие ниши нашла разведка и с какими работаем дальше.'
           : 'Модули идут один за другим; каждый оставляет свой блок отчёта.'}
@@ -8767,9 +8824,10 @@ function App() {
     <div className="card">
         <p style={{fontSize:16,fontWeight:600,marginBottom:4,letterSpacing:'-.01em'}}>{t.selectModules}</p>
         <p style={{fontSize:12,color:'var(--ink-2)',marginBottom:10}}>{t.selectModulesSub}</p>
-        {/* Модуль контента в платформе скрыт (владелица 14.09: «он тут не
-            нужен, дальше оно перейдёт») — контент-план это другой раздел. */}
-        {MODULES.filter(m => !embedded || m.id !== 'CONTENT').map(m => (
+        {/* Контент-система и лендинг убраны из исследования совсем
+            (владелица 14.09): это работа контент-машины, разложенная там по
+            этапам, а не отдельный модуль исследования. */}
+        {MODULES.filter(m => !m.hidden).map(m => (
           <ModuleCard key={m.id} m={m} on={mods.includes(m.id)} onToggle={()=>setMods(p=>p.includes(m.id)?p.filter(x=>x!==m.id):[...p,m.id])} uiLang={uiLang}/>
         ))}
       </div>
@@ -9264,7 +9322,7 @@ function App() {
   );
 
   // ── WORK
-  const allMods = MODULES.filter(m => mods.includes(m.id));
+  const allMods = MODULES.filter(m => mods.includes(m.id) && !m.hidden);
   const workNiches = nichesOf(brief);
   // Модуль «полностью готов»: глобальный — если есть его результат; по-нишевой — если сделан у ВСЕХ выбранных ниш.
   const modDone = id => {
@@ -9541,7 +9599,7 @@ function App() {
       {embedded ? (
         <StageHeader
           имя={шагИзАдреса === 'niches' ? 'Ниши' : 'Ход исследования'}
-          бровь={шагИзАдреса === 'niches' ? 'Стоп-точка выбора' : 'Модули идут по очереди'}
+          бровь={шагИзАдреса === 'niches' ? 'Стоп-точка выбора' : 'Что уже собрано'}
           подпись={шагИзАдреса === 'niches'
             ? 'Какие ниши нашла разведка и с какими работаем дальше.'
             : 'Модули идут один за другим; каждый оставляет свой блок отчёта.'}

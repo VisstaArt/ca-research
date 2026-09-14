@@ -2483,6 +2483,14 @@ table.raw td.num{font-variant-numeric:tabular-nums;text-align:center;white-space
 .rules .nm{font-size:15px;font-weight:700;color:var(--ink);line-height:1.3;margin-bottom:7px;max-width:34ch}
 .rules .q{font-family:var(--serif);font-size:15px;line-height:1.5;color:var(--ink);max-width:38ch}
 .rules .ft{margin-top:12px;padding-top:10px;border-top:1px solid var(--line);font-size:11.5px;color:var(--ink-3);line-height:1.5;max-width:36ch}
+/* Источники свёрнуты: доказательство под рукой, но не поперёк отчёта. */
+.srcfold{margin:14px 0 22px}
+.srcfold>summary{cursor:pointer;list-style:none;font-size:12.5px;color:var(--ink-3);padding:9px 0;border-top:1px solid var(--line-2);border-bottom:1px solid var(--line-2)}
+.srcfold>summary::-webkit-details-marker{display:none}
+.srcfold>summary::before{content:"▸";display:inline-block;width:14px;color:var(--ink-3)}
+.srcfold[open]>summary::before{content:"▾"}
+.srcfold>summary:hover{color:var(--ink-2)}
+.srcfold[open]>summary{border-bottom-color:transparent}
 .topc{display:flex;flex-direction:column;gap:0}
 .tcrow{display:grid;grid-template-columns:minmax(0,300px) 1fr 116px;gap:14px;align-items:center;padding:10px 0;border-top:1px solid var(--line-2)}
 /* Нечего мерить — нет и дорожки: две колонки вместо трёх. */

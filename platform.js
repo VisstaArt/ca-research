@@ -61,7 +61,12 @@
   };
   function ниш(c) {
     var n = c && c.usage && c.usage.niches;
-    if (!n) return 'нет исследования';
+    // Ноль ниш и «мы не умеем их считать» — разные вещи, а выглядели
+    // одинаково: под проектом с готовым исследованием стояло «нет
+    // исследования» (владелица 14.09). Число ниш берётся из представления
+    // audience_research, которого пока нет (работа переезда), поэтому здесь
+    // всегда ноль. Пока не знаем — не пишем ничего.
+    if (!n) return '';
     var h = Math.abs(n) % 100, t = h % 10;
     return n + ' ' + ((h > 10 && h < 20) || t === 0 || t >= 5 ? 'ниш' : t === 1 ? 'ниша' : 'ниши');
   }
@@ -77,13 +82,13 @@
       if (mark) mark.textContent = '+';
       if (cc) cc.textContent = '';
       if (b) b.textContent = 'Нет проектов';
-      if (em) em.textContent = 'заведите первый';
+      if (em) { em.textContent = 'заведите первый'; em.hidden = false; }
       return;
     }
     if (mark) mark.textContent = МЕТКА(текущий.name);
     if (cc) cc.textContent = (ФЛАГ(рынок && рынок.country) + ' ' + ((рынок && рынок.country) || '')).trim();
     if (b) b.textContent = текущий.domain || текущий.name;
-    if (em) em.textContent = ниш(текущий);
+    if (em) { var п = ниш(текущий); em.textContent = п; em.hidden = !п; }
   }
 
   function списокПроектов() {
