@@ -274,6 +274,7 @@ const MODULES = [
     outputsEn: ['Geo & open statistics','TAM → SAM → SOM model','Market share vs company position'],
     outputsRu: ['Гео и открытая статистика','Модель TAM → SAM → SOM','Доля рынка и позиция компании'],
     estimatedMin: 3,
+    model: 'gpt-5.6-terra',
     steps: ['Collecting geo & demographic statistics (Block 01)…','Mapping open data sources (Block 02)…','Building TAM→SAM→SOM model (Block 03)…'],
     stepsRu: ['Собираю статистику по географии и населению…','Ищу открытые источники данных…','Считаю ёмкость рынка: весь рынок → доступный → достижимый…'],
   },
@@ -288,6 +289,7 @@ const MODULES = [
     outputsEn: ['Audience segments map','Service effectiveness per niche','Niche prioritization matrix (scoring)','Niche selection stop-point'],
     outputsRu: ['Карта сегментов аудитории','Эффективность услуг по нишам','Матрица приоритизации ниш (скоринг)','Стоп-точка выбора ниши'],
     estimatedMin: 2,
+    model: 'gpt-5.6-terra',
     steps: ['Searching real market signals (web search)…','Describing target audience segments (Block 04)…','Evaluating service effectiveness per niche (Block 04_1)…','Prioritizing niches with scoring (Block 04_2)…','Preparing niche cards…'],
     stepsRu: ['Ищу живые сигналы рынка в поиске…','Описываю сегменты аудитории…','Оцениваю, какие услуги работают в каждой нише…','Расставляю ниши по приоритету и считаю баллы…','Собираю карточки ниш…'],
   },
@@ -302,6 +304,7 @@ const MODULES = [
     outputsEn: ['Competitor map (10–20)','Win / Parity / Lose table','Positioning gaps & opportunities','Competitor positioning chart'],
     outputsRu: ['Карта конкурентов (10–20)','Таблица Win / Parity / Lose','Гэпы и возможности','График позиционирования'],
     estimatedMin: 3,
+    model: 'gpt-5.6-sol',
     steps: ['Building open sources index (Block 05)…','Mapping competitors — offers, pricing, positioning (Block 06)…','Running Win/Parity/Lose gap analysis (Block 06_1)…','Generating competitor positioning chart…'],
     stepsRu: ['Собираю индекс открытых источников…','Составляю карту конкурентов: офферы, цены, позиционирование…','Сравниваю нас с ними: где выигрываем, где наравне, где отстаём…','Рисую график позиционирования…'],
   },
@@ -319,6 +322,7 @@ const MODULES = [
     outputsEn: ['Radar sources','Competitor channels','Top content breakdown','Working patterns','Niche benchmarks'],
     outputsRu: ['Источники радара','Каналы конкурентов','Разбор того, что залетает','Работающие паттерны','Бенчмарки ниши'],
     estimatedMin: 3,
+    model: 'gpt-5.6-terra',
     steps: ['Collecting competitor channels (Block 24_0)…','Measuring channel size and cadence (Block 24)…','Breaking down top content (Block 24A)…','Deriving what works (Block 24B)…','Computing niche benchmarks (Block 24C)…'],
     stepsRu: ['Собираю каналы конкурентов…','Замеряю размер каналов и частоту публикаций…','Разбираю, что у них залетает…','Вывожу работающие приёмы…','Считаю опорные числа ниши…'],
   },
@@ -336,6 +340,7 @@ const MODULES = [
     outputsEn: ['VoC table (25–40 real quotes)','Intent clusters by awareness stage','Customer language glossary'],
     outputsRu: ['Таблица VoC (25–40 реальных цитат)','Кластеры намерений по стадиям','Словарь языка клиента'],
     estimatedMin: 3,
+    model: 'gpt-5.6-terra',
     steps: ['Collecting VoC quotes from reviews, forums, social media (Block 07)…','Clustering search intents by awareness stage (Block 08)…','Mapping funnel roles and headline formulas…'],
     stepsRu: ['Собираю живые цитаты из отзывов, форумов и соцсетей…','Группирую запросы по стадиям осознания…','Раскладываю роли в воронке и формулы заголовков…'],
   },
@@ -352,6 +357,7 @@ const MODULES = [
     outputsEn: ['LPR personas (4–8)','JTBD map','Fears & decision criteria','Customer Journey Map','Cognitive tactics'],
     outputsRu: ['Персоны LPR (4–8)','Карта JTBD','Страхи и критерии выбора','Карта пути клиента CJM','Когнитивные тактики'],
     estimatedMin: 2,
+    model: 'gpt-5.6-sol',
     steps: ['Building LPR personas with real language (Block 09)…','Mapping Jobs-to-be-Done per segment (Block 10)…','Assessing awareness levels by Schwartz (Block 11)…','Cataloguing fears and doubts (Block 12)…','Mapping decision criteria and trust triggers (Block 13)…','Building customer journey map CJM (Block 14)…','Identifying cognitive tactics and influence patterns (Block 15)…'],
     stepsRu: ['Строю портреты тех, кто принимает решение…','Разбираю, ради каких задач нас нанимают…','Оцениваю уровни осведомлённости…','Собираю страхи и сомнения…','Выписываю критерии выбора и триггеры доверия…','Строю путь клиента…','Нахожу когнитивные приёмы и паттерны влияния…'],
   },
@@ -374,6 +380,7 @@ const MODULES = [
     outputsEn: ['Marketing hypotheses (10–15)','Offer workshop (draft variants)','Final offers per segment'],
     outputsRu: ['Маркетинговые гипотезы (10–15)','Воркшоп офферов (черновики)','Финальные офферы по сегментам'],
     estimatedMin: 2,
+    model: 'gpt-5.6-sol',
     steps: ['Generating marketing hypotheses (Block 16)…','Collecting offer input data (Block 17A)…','Running offer workbench — draft options (Block 17B)…','Finalising offers per segment (Block 17 Final)…'],
     stepsRu: ['Формулирую маркетинговые гипотезы…','Собираю вводные для офферов…','Черновики офферов в мастерской…','Довожу финальные офферы по сегментам…'],
   },
@@ -393,6 +400,7 @@ const MODULES = [
     outputsEn: ['Search competitor analysis','Semantic core by clusters with real volumes','Competitor content audit','Full keyword export as returned by the source'],
     outputsRu: ['Анализ поисковых конкурентов','Семантическое ядро по кластерам с реальной частотностью','Контент-аудит конкурентов','Полная выгрузка запросов как её вернул источник'],
     estimatedMin: 3,
+    model: 'gpt-5.6-terra',
     steps: ['Collecting sources (SEO-00)…','Analysing search competitors (SEO-01)…','Building semantic core by clusters (SEO-02)…','Auditing competitor content (SEO-03)…'],
     stepsRu: ['Собираю источники…','Разбираю конкурентов в поисковой выдаче…','Строю семантическое ядро по кластерам…','Проверяю контент конкурентов…'],
   },
@@ -422,6 +430,7 @@ const MODULES = [
     outputsEn: ['Persona archetypes & visual strategy','Content system by channel (20–30 formats)','Creative briefs (8–12)','Landing page TZ with screen structure'],
     outputsRu: ['Архетипы персон и визуальная стратегия','Контент-система по каналам (20–30 форматов)','Креативные брифы (8–12)','ТЗ на лендинг со структурой экранов'],
     estimatedMin: 2,
+    model: 'gpt-5.6-terra',
     steps: ['Building persona archetypes and archetype map (Blocks 18–19A)…','Designing content system by channel (Block 20)…','Writing creative briefs (Block 21)…','Creating landing page TZ with screen structure (Block 22)…'],
     stepsRu: ['Собираю архетипы персон и карту архетипов…','Проектирую контент-систему по каналам…','Пишу брифы на креативы…','Готовлю ТЗ на лендинг…'],
   },
@@ -611,7 +620,7 @@ const currentModel = () => {
 const ПОТОЛОК_ЗНАКОВ = 55000;
 const ПОТОЛОК_БОЛЬШОЙ = 600000;
 function потолокДляМодели() {
-  return /^gpt-4/.test(String(currentModel() || '')) ? ПОТОЛОК_ЗНАКОВ : ПОТОЛОК_БОЛЬШОЙ;
+  return /^gpt-4/.test(String(модельМодуля || currentModel() || '')) ? ПОТОЛОК_ЗНАКОВ : ПОТОЛОК_БОЛЬШОЙ;
 }
 function поместить(system, user) {
   const запас = потолокДляМодели() - String(system || '').length;
@@ -621,12 +630,18 @@ function поместить(system, user) {
     + '\n\n[материал урезан под минутный лимит модели: дальше выдержки не поместились]';
 }
 
+// Модель выбираем МЫ, а не человек: он не обязан знать, что разведке ниш
+// хватает быстрой модели, а гэп-анализу нужна сильная (владелица 14.09:
+// «откуда пользователь будет знать, что ему тыкать»). Модель прописана у
+// каждого модуля; ручной выбор остаётся только для тарифа «Разработчик»
+// и перекрывает карту.
+let модельМодуля = '';
 async function callGPT(system, user, temperature, maxTokens, попытка) {
   lastGptUsage = null;
   user = поместить(system, user);
   const res = await authFetch('/api/proxy', {
     method: 'POST', headers: {'Content-Type':'application/json'},
-    body: JSON.stringify({model: currentModel(), max_tokens: maxTokens || 8000, stream:false,
+    body: JSON.stringify({model: модельМодуля || currentModel(), max_tokens: maxTokens || 8000, stream:false,
       ...(clientIdFromUrl ? { client_id: clientIdFromUrl } : {}),
       ...(temperature != null ? { temperature } : {}),
       messages:[{role:'system',content:system},{role:'user',content:user}]}),
@@ -8166,9 +8181,10 @@ function App() {
       .then(d => { if (d && d.price) setПрайс(d); }).catch(() => {});
   // Цена зависит от ВЫБРАННОЙ модели: на gpt-6-astra выход в шесть раз дороже,
   // чем на gpt-4.1, и смета по старой цене врала бы в разы.
-  const ценаМодели = () => {
+  const ценаМодели = (id) => {
     if (!прайс) return null;
-    return (прайс.prices && прайс.prices[model]) || прайс.price;
+    const м = (!тарифРазработчика && id && (MODULES.find(x => x.id === id) || {}).model) || model;
+    return (прайс.prices && прайс.prices[м]) || прайс.price;
   };
   }, []);
   // Оценка модуля: СРЕДНЕЕ по фактическим прогонам этого же модуля (замер
@@ -8185,7 +8201,7 @@ function App() {
       tin = ср(r => r.usage.prompt); tout = ср(r => r.usage.completion);
       поиск = ср(r => r.searchCalls); частот = ср(r => r.keywordCalls);
     }
-    const ц = ценаМодели();
+    const ц = ценаМодели(id);
     return (tin * ц.in + tout * ц.out) / 1e6
       + (поиск + частот) * прайс.search_cents;
   };
@@ -8204,7 +8220,7 @@ function App() {
   const потраченоЦентов = () => {
     if (!прайс || !proj) return null;
     return (proj.results || []).reduce((s, r) => s
-      + (r.usage ? (r.usage.prompt * ценаМодели().in + r.usage.completion * ценаМодели().out) / 1e6 : 0)
+      + (r.usage ? (r.usage.prompt * ценаМодели(r.id).in + r.usage.completion * ценаМодели(r.id).out) / 1e6 : 0)
       + ((r.searchCalls || 0) + (r.keywordCalls || 0)) * прайс.search_cents, 0);
   };
   const [blockMsg, setBlockMsg] = React.useState(''); // «модуль не стартует без предыдущих стадий»
@@ -8523,6 +8539,9 @@ function App() {
       // prevContent/findDep, повторно замечание им не нужно.
       if (regenNote && mod.id === allSelected[0]) Bn.regenNote = regenNote;
       const sys = buildSystem(Bn, lang);
+      // Своя модель у модуля. На тарифе «Разработчик» ручной выбор главнее:
+      // там человек сознательно ставит модель и платит своим ключом.
+      модельМодуля = тарифРазработчика ? '' : (mod.model || '');
       const началоМодуля = Date.now();
       setCurMod(mod.id); setCurNiche(wn); setCurStep((mod.stepsRu || mod.steps)[0]); setCurStepIdx(0);
       let stepI = 0;
