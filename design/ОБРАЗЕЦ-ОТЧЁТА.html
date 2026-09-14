@@ -450,6 +450,9 @@ a{color:inherit}
 /* Сноска-номер: ведёт к списку источников этого модуля. Подчёркивания нет —
    в таблице их было бы слишком много; цвет и надстрочность и так читаются. */
 .ref{font-size:10.5px;font-weight:700;vertical-align:super;line-height:0;color:var(--acc-ink);text-decoration:none;padding:0 1px}
+/* Термин с расшифровкой: пунктир снизу и вопросительный курсор — привычная
+   пара признаков, по которой видно, что тут есть что посмотреть. */
+.term{border-bottom:1px dotted var(--ink-3);cursor:help;text-decoration:none}
 .ref:hover{text-decoration:underline}
 .chead .note{font-size:12px;color:var(--ink-3)}
 
