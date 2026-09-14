@@ -580,7 +580,7 @@ const currentModel = () => {
   try { return localStorage.getItem('ca_model') || MODEL; } catch { return MODEL; }
 };
 
-async function callGPT(system, user, temperature, maxTokens) {
+async function callGPT(system, user, temperature, maxTokens, попытка) {
   lastGptUsage = null;
   const res = await authFetch('/api/proxy', {
     method: 'POST', headers: {'Content-Type':'application/json'},
@@ -604,6 +604,20 @@ async function callGPT(system, user, temperature, maxTokens) {
     } catch {}
     if (res.status === 429 && /quota|billing|insufficient/i.test(detail)) {
       throw new Error('Закончились средства на счету OpenAI. Пополните баланс — повтор не поможет. (' + detail + ')');
+    }
+    // «Request too large»: материала собрали больше, чем модель принимает за
+    // минуту. Повтор с тем же запросом не поможет — поможет меньший запрос.
+    // Режем выдержки вдвое и пробуем снова: лучше модуль на половине
+    // материала, чем красная ошибка вместо модуля (владелица 14.09, M5).
+    if (res.status === 429 && /too large|tokens per min|TPM/i.test(detail) && !попытка) {
+      const короче = String(user).slice(0, Math.floor(String(user).length * 0.55))
+        + '\n\n[материал урезан вдвое: полный объём не проходит по минутному лимиту модели]';
+      return callGPT(system, короче, temperature, maxTokens, 1);
+    }
+    // Слишком частые запросы — здесь повтор как раз помогает, ждём и пробуем.
+    if (res.status === 429 && !попытка) {
+      await new Promise(р => setTimeout(р, 20000));
+      return callGPT(system, user, temperature, maxTokens, 1);
     }
     throw new Error('API ' + res.status + (detail ? ' — ' + detail : ''));
   }
@@ -1250,7 +1264,11 @@ async function gatherVoCEvidence(brief, discoveredCompetitors, m2Result) {
   // на площадки конкурентов) — просто пока не передаём его в include_domains
   // здесь. Возврат к сужению — отдельная, аккуратно проверенная задача позже.
   await ensureDomainRegistry(brief.selectedNiche || '', m2Result, brief);
-  return gatherEvidence(queries, 22, 6, { depth:'advanced', raw:true, contentChars:1500, perDomain:3, maxItems:45 });
+  // Размер материала подобран под минутный лимит модели: 45 выдержек по 1500
+  // знаков давали запрос на 33 тысячи токенов при разрешённых 30 — модуль
+  // падал с 429 «Request too large» (владелица 14.09). Цитат меньше не стало:
+  // режем длину выдержки, а не их число.
+  return gatherEvidence(queries, 22, 6, { depth:'advanced', raw:true, contentChars:900, perDomain:3, maxItems:34 });
 }
 
 // M3 VoC гигиена (ТЗ-M3-VOC.md, п.1-4) — вызывается ПОСЛЕ ответа модели, на готовом
@@ -2530,6 +2548,8 @@ Task: Показать, ИЗ ЧЕГО СОСТОИТ РЫНОК, а потом �
 Наш ценовой уровень берётся из брифа (поле «ценовой слой» или цена); не задан — определи по нашей цене и напиши, как определил.
 
 ПОЧЕМУ ГЛУБИНА ТОЛЬКО У СВОЕГО СЛОЯ: разобрать сорок игроков по шестнадцати колонкам невозможно честно — половина ячеек будет выдумана. Широкий список отвечает «из чего состоит рынок», глубокий — «с кем мы соревнуемся».
+
+КАТАЛОГИ, РЕЙТИНГИ И МЕДИА — НЕ КОНКУРЕНТЫ. Workspace, vc.ru, «Топ-10 инструментов», подборки, агрегаторы, блоги агентств и площадки отзывов в эту таблицу НЕ ПОПАДАЮТ: они не продают тот же продукт, а пишут о нём. Их место — в источниках. Признак простой: если строка не может ответить «сколько стоит их продукт и что он делает» — это не конкурент. Заказчик 14.09 дважды спрашивал, почему в конкурентах стоит каталог.
 
 ТАБЛИЦА 3 — КУДА РАСТИ. Две строки минимум: рост по цене и рост по известности — это разные пути, и путать их нельзя.
 | Направление роста | Что отличает следующий уровень | Чем подтверждено [n] | Что нужно, чтобы туда перейти |
@@ -4488,6 +4508,7 @@ function renderResearchHTML(content, opts) {
   // владелицы по карте модулей). Но если матрицы почему-то нет, таблицу
   // оставляем: потерять данные хуже, чем показать их дважды.
   const swotCtx = { signals: {}, ourName: (opts && opts.ourName) || '',
+    ourPrice: (opts && opts.ourPrice) || '',
     has042: /BLOCK\s*04_2\b/i.test(String(content || '')),
     // В модуле есть SWOT — значит четыре его таблицы уедут в карточки
     // квадрантов, а подписи «Сильные стороны:», «Возможности:» останутся
@@ -4848,6 +4869,16 @@ function renderResearchHTML(content, opts) {
       if (our && имя && (имя.includes(our) || our.includes(имя))) row.push(true);
       return row;
     }).filter(Boolean);
+    // Модель раз за разом не вписывает заказчика в таблицу, сколько ни требуй
+    // этого промптом (владелица 14.09, дважды). Карта без «нас» бесполезна:
+    // по ней смотрят, где ты САМ относительно остальных. Ставим себя сами —
+    // имя из брифа, ценовой уровень из брифа, известность «не замерено».
+    if (!P.some(x => x[4]) && ctx && ctx.ourName) {
+      const наш = String(ctx.ourPrice || '').toLowerCase();
+      const уровень = /vip|премиум/.test(наш) ? 3 : /дорог/.test(наш) ? 2
+        : /средн/.test(наш) ? 1 : 0;
+      P.push([ String(ctx.ourName), уровень, 2, null, true ]);
+    }
     if (P.length < 4) return null;                // на трёх точках карта бессмысленна
     // Раньше, не найдя себя, подсветка вешалась на ПОСЛЕДНЮЮ строку — и в
     // отчёте чужая компания была подписана «мы» (владелица 14.09: «Adpass —
@@ -6432,7 +6463,8 @@ function generateHTMLReport(brief, results, lang, priceLayers, selectedLayers, s
       || ((выводы.length || шаги.length)
           ? { learned: выводы, means: [], next: шаги } : null);
     const словарь = собратьСловарь(cut.body);
-    const rendered = renderResearchHTML(почиститьХвост(cut.body, !!свод), { ourName: brief.name, словарь });
+    const rendered = renderResearchHTML(почиститьХвост(cut.body, !!свод),
+      { ourName: brief.name, ourPrice: brief.priceLayer || '', словарь });
     const summary = оформитьТекст(renderModuleSummary(свод), rendered.источники, словарь);
     blockScripts.push(...rendered.scripts);
     blockJS = rendered.js;
@@ -7532,7 +7564,7 @@ function injectBlockStyles() {
 // (renderResearchHTML) — до 11.09.2026 сайт показывал голые markdown-таблицы,
 // потому что весь согласованный вид жил внутри функции отчёта. Владелица:
 // «я думала, это будет на сайте, а не только в выгрузке».
-function ResearchView({ content, ourName, выбранные, наВыбор }) {
+function ResearchView({ content, ourName, ourPrice, выбранные, наВыбор }) {
   const ref = React.useRef(null);
   // Итог модуля вырезается и встаёт карточкой наверх — ровно как в выгрузке.
   // Без этого на сайте раздел «ИТОГ МОДУЛЯ» лежал сырым текстом в хвосте,
@@ -7547,10 +7579,10 @@ function ResearchView({ content, ourName, выбранные, наВыбор }) 
           ? { learned: выводы, means: [], next: шаги } : null);
     // Словарь берём ДО чистки: список аббревиатур она выкидывает.
     const словарь = собратьСловарь(cut.body);
-    const r = renderResearchHTML(почиститьХвост(cut.body, !!свод), { ourName, словарь });
+    const r = renderResearchHTML(почиститьХвост(cut.body, !!свод), { ourName, ourPrice, словарь });
     const итог = оформитьТекст(renderModuleSummary(свод), r.источники, словарь);
     return { ...r, html: итог + r.html };
-  }, [content, ourName]);
+  }, [content, ourName, ourPrice]);
   React.useEffect(() => { injectBlockStyles(); }, []);
   React.useEffect(() => {
     if (!ref.current || !out.scripts.length) return;
@@ -9750,7 +9782,7 @@ function App() {
                   </div>
                   {отчётРазвёрнут && (
                     <div style={{marginTop:20}}>
-                      <ResearchView content={м2.content} ourName={brief.name}
+                      <ResearchView content={м2.content} ourName={brief.name} ourPrice={brief.priceLayer||''}
                         выбранные={вРаботе} наВыбор={переключить}/>
                     </div>
                   )}
@@ -10073,7 +10105,8 @@ function App() {
                     {/* Старые Chart.js-пироги убраны 14.09: согласованные
                         визуализации рисуют блочные скрипты отчёта, и два вида
                         графиков об одном рядом — разнобой, не богатство. */}
-                    <ResearchView content={r.content} ourName={(proj&&proj.brief&&proj.brief.name)||''}/>
+                    <ResearchView content={r.content} ourName={(proj&&proj.brief&&proj.brief.name)||''}
+                      ourPrice={(proj&&proj.brief&&proj.brief.priceLayer)||''}/>
                   </>)}
                 </div>
               )}
