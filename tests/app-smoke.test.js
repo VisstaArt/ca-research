@@ -22,11 +22,30 @@ g.CAAuth={SUPABASE_URL:'',SUPABASE_ANON_KEY:'',authFetch:g.fetch,getAccessToken:
 eval(readFile(ROOT+'/lib/contract.js'));
 g.CAContract=g.CAContract||globalThis.CAContract;
 console.log('tests/app-smoke.test.js');
+// Модульный уровень выполняем и СРАЗУ ЖЕ дёргаем разбор текста: 15.09
+// владелица поймала «BLOCK_TITLES is not defined» — объявление лежало внутри
+// чужой функции, а новый код звал его снаружи. Загрузка при этом проходила
+// чисто, ошибка вылезала только на живом отчёте. Теперь тест рисует модуль.
+var провалов = 0;
 try {
-  (new Function(readFile(ROOT+'/app.js'))).call(g);
+  (new Function(readFile(ROOT+'/app.js') + ';globalThis.renderResearchHTML=renderResearchHTML;')).call(g);
   console.log('  ok   app.js выполняется без ошибок');
-  console.log('\nвсё сошлось');
 } catch(e){
+  провалов++;
   console.log('  FAIL app.js падает на загрузке: '+e.message+' (строка '+(e.line||'?')+')');
-  console.log('\nПРОВАЛОВ: 1');
 }
+if (!провалов) {
+  try {
+    var проба = g.renderResearchHTML(
+      '## BLOCK 04_0 — Источники разведки\n| URL |\n|---|\n| https://vc.ru/x |\n\n'
+      + 'Вывод: магазины платят [9], см. BLOCK 04_2. Confidence scale — 4.\n', {});
+    if (проба.html.indexOf('class="ref"') < 0) { провалов++; console.log('  FAIL сноска [9] не стала ссылкой'); }
+    else console.log('  ok   разбор текста модуля отрабатывает');
+    if (проба.html.indexOf('BLOCK') >= 0) { провалов++; console.log('  FAIL служебное имя блока осталось'); }
+    else console.log('  ok   служебные имена блоков заменены');
+  } catch(e){
+    провалов++;
+    console.log('  FAIL разбор модуля падает: '+e.message);
+  }
+}
+console.log(провалов===0 ? '\nвсё сошлось' : '\nПРОВАЛОВ: '+провалов);
