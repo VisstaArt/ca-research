@@ -14,7 +14,7 @@ function grabConst(n){var i=SRC.indexOf('const '+n+' = {');if(i<0)throw new Erro
    return SRC.slice(i,k+1).replace(/^const /,'var ')+';';}}}
 console.log('tests/terms.test.js');
 eval(grabConst('СЛОВАРЬ_БАЗА'));
-eval(grab('escHtml')); eval(grab('строкаРасшифровки')); eval(grab('найтиБлокАббревиатур')); eval(grab('собратьСловарь'));
+eval(grab('escHtml')); eval(grab('строкаРасшифровки')); eval(grab('всеРасшифровки')); eval(grab('найтиБлокАббревиатур')); eval(grab('собратьСловарь'));
 eval(grab('внеСсылок')); eval(grab('поТексту')); eval(grab('подсказкиТерминов')); eval(grab('подсказкиВКуске'));
 var fails=0;
 function ok(n,g,w){var r=JSON.stringify(g)===JSON.stringify(w);

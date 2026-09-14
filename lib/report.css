@@ -872,8 +872,12 @@ td b{color:var(--ink);font-weight:600}
    Три остальные (боль, тормоз, свои слова) остаются словами: их числом не
    выразить, и попытка была бы враньём. Поэтому вариант 2 — не «то же самое
    с картинками», а разделение по природе данных. */
-.bmet{display:grid;grid-template-columns:repeat(4,1fr);gap:20px;padding:20px 22px;
+.bmet{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:20px;padding:20px 22px;
   border-bottom:1px solid var(--line)}
+/* Замеров бывает один: цикл сделки и бюджет из открытых источников не
+   берутся, и до подключения рекламного кабинета в ряду остаётся «кто
+   решает». Пустые четверти читались как поломка — колонки тянутся по
+   числу оставшихся замеров (владелица 14.09). */
 .bmet h4{font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;
   color:var(--ink-3);margin:0 0 11px}
 .bmet .big{font-size:19px;font-weight:700;letter-spacing:-.02em;line-height:1.15;
@@ -1338,6 +1342,10 @@ td b{color:var(--ink);font-weight:600}
 .prow .p{color:var(--ink-3);font-size:11.5px;font-weight:600;padding-top:1px}
 .prow .v{color:var(--ink)}
 .prow .a{color:var(--acc-ink);font-weight:600}
+/* «Что из этого следует» в блоке 09 нет — тогда колонок две, а не три,
+   иначе значение жмётся в треть ширины при пустой трети справа. */
+.pers-main.dvoe .prow-head{grid-template-columns:150px minmax(0,1fr)}
+.pers-main.dvoe .prow{grid-template-columns:minmax(0,150px) minmax(0,1fr)}
 .prow-head{display:grid;grid-template-columns:150px 1fr 1fr;gap:16px;padding:11px 22px;
   font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;
   color:var(--ink-3);background:color-mix(in srgb, var(--ink) 3%, transparent)}
