@@ -1,6 +1,6 @@
 // СОБРАНО АВТОМАТИЧЕСКИ из app.jsx — не править руками.
 // Правки вносить в app.jsx, затем: osascript -l JavaScript tools/build.js
-// отпечаток-исходника: 0a1cdb25ffa42c7b
+// отпечаток-исходника: e8d9b432abcdfae0
 // Функции контракта живут в lib/contract.js. Разбираем их сюда, чтобы весь
 // остальной код обращался к ним по прежним именам и не менялся.
 const{GLOBAL_MODS,isPerNiche,dropOrphans,nichesOf,resKey,splitMdRow,isMdSeparator,parseMdTables,buildModuleEntry,pickTable,pickColumn,withStableIds}=CAContract;// Название модуля берётся из MODULES — это конфиг ИНТЕРФЕЙСА, и сборщик
@@ -300,11 +300,11 @@ const audienceTopic=topics[0]||product;queries.push(audienceTopic+' '+market+' '
 // продолжаем наполнять (пригодится M9 — контент-радар, который смотрит именно
 // на площадки конкурентов) — просто пока не передаём его в include_domains
 // здесь. Возврат к сужению — отдельная, аккуратно проверенная задача позже.
-await ensureDomainRegistry(brief.selectedNiche||'',m2Result,brief);// Размер материала подобран под минутный лимит модели: 45 выдержек по 1500
-// знаков давали запрос на 33 тысячи токенов при разрешённых 30 — модуль
-// падал с 429 «Request too large» (владелица 14.09). Цитат меньше не стало:
-// режем длину выдержки, а не их число.
-return gatherEvidence(queries,22,6,{depth:'advanced',raw:true,contentChars:900,perDomain:3,maxItems:34});}// M3 VoC гигиена (ТЗ-M3-VOC.md, п.1-4) — вызывается ПОСЛЕ ответа модели, на готовом
+await ensureDomainRegistry(brief.selectedNiche||'',m2Result,brief);// Материал урезали 14.09 под минутный лимит gpt-4.1 (30 000 токенов) — и
+// цитат стало не хватать: банк живого языка и банк хуков выходили пустыми,
+// в голосе клиента оставалась одна строка. На terra лимит 500 000, резать
+// больше нечего: возвращаем полный объём и добавляем сверху.
+return gatherEvidence(queries,30,8,{depth:'advanced',raw:true,contentChars:1800,perDomain:4,maxItems:60});}// M3 VoC гигиена (ТЗ-M3-VOC.md, п.1-4) — вызывается ПОСЛЕ ответа модели, на готовом
 // markdown. Верифицирует цитаты BLOCK 07/07A программно (fetch страницы + проверка
 // точной подстроки), дедуплицирует, считает покрытие по сегментам. Модель ничего
 // из этого не видит и не пишет — тот же приём, что wordstatFullListBlock для M7.

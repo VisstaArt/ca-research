@@ -1348,11 +1348,11 @@ async function gatherVoCEvidence(brief, discoveredCompetitors, m2Result) {
   // на площадки конкурентов) — просто пока не передаём его в include_domains
   // здесь. Возврат к сужению — отдельная, аккуратно проверенная задача позже.
   await ensureDomainRegistry(brief.selectedNiche || '', m2Result, brief);
-  // Размер материала подобран под минутный лимит модели: 45 выдержек по 1500
-  // знаков давали запрос на 33 тысячи токенов при разрешённых 30 — модуль
-  // падал с 429 «Request too large» (владелица 14.09). Цитат меньше не стало:
-  // режем длину выдержки, а не их число.
-  return gatherEvidence(queries, 22, 6, { depth:'advanced', raw:true, contentChars:900, perDomain:3, maxItems:34 });
+  // Материал урезали 14.09 под минутный лимит gpt-4.1 (30 000 токенов) — и
+  // цитат стало не хватать: банк живого языка и банк хуков выходили пустыми,
+  // в голосе клиента оставалась одна строка. На terra лимит 500 000, резать
+  // больше нечего: возвращаем полный объём и добавляем сверху.
+  return gatherEvidence(queries, 30, 8, { depth:'advanced', raw:true, contentChars:1800, perDomain:4, maxItems:60 });
 }
 
 // M3 VoC гигиена (ТЗ-M3-VOC.md, п.1-4) — вызывается ПОСЛЕ ответа модели, на готовом
