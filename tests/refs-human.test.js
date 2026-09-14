@@ -1,0 +1,47 @@
+ObjC.import('Foundation');
+// Сноски и служебные имена блоков в ИТОГЕ МОДУЛЯ. Владелица 15.09 показала
+// живую строку из отчёта: «подтверждено ([1][2][3], см. BLOCK 04, BLOCK 04_1)» —
+// номера не кликались, имена блоков были рабочими. Итог рисуется отдельной
+// функцией и проходил мимо обработки; тест сторожит, что теперь не проходит.
+function readFile(p){return $.NSString.stringWithContentsOfFileEncodingError($(p),$.NSUTF8StringEncoding,null).js;}
+var ROOT=$.NSFileManager.defaultManager.currentDirectoryPath.js;
+var SRC=readFile(ROOT+'/app.jsx');
+console.log('tests/refs-human.test.js');
+eval(readFile(ROOT+'/tests/render-harness.js'));
+['внеСсылок','оформитьТекст'].forEach(function(имя){
+  var i=SRC.indexOf('\nfunction '+имя+'('), j=SRC.indexOf('\n}\n', i);
+  globalThis.eval(SRC.slice(i+1, j+3));
+});
+var fails=0;
+function check(n,ok){ if(ok) console.log('  ok   '+n); else { fails++; console.log('  FAIL '+n); } }
+
+var текст = '## BLOCK 04_0 — Источники разведки\n| URL |\n|---|\n| https://vc.ru/x |\n\n'
+  + '## BLOCK 04_2 — Приоритет ниш\n| Ниша |\n|---|\n| Магазины |\n';
+var r = renderResearchHTML(текст, {});
+check('блок источников найден', r.источники === '04_0');
+
+var итог = '<p>Интернет-магазины — крупнейший сегмент ([1][2][29], см. BLOCK 04, BLOCK 04_1, BLOCK 04_2).</p>';
+var вышло = оформитьТекст(итог, r.источники);
+check('сноска [1] стала ссылкой', вышло.indexOf('href="#блок-04_0"') >= 0);
+check('все три сноски кликаются', (вышло.match(/class="ref"/g)||[]).length === 3);
+check('BLOCK 04 назван по-человечески', вышло.indexOf('«Сегменты целевой аудитории»') >= 0);
+check('BLOCK 04_1 назван по-человечески', вышло.indexOf('«Эффективность услуг по нишам»') >= 0);
+check('BLOCK 04_2 назван по-человечески', вышло.indexOf('«Приоритет ниш»') >= 0);
+check('слово BLOCK не осталось', вышло.indexOf('BLOCK') < 0);
+
+// Повторная обработка не должна плодить ссылки в ссылках.
+var дважды = оформитьТекст(вышло, r.источники);
+check('повтор не ломает разметку', (дважды.match(/class="ref"/g)||[]).length === 3);
+
+
+// Устойчивые пары переводятся целиком, а не пословно: «Confidence scale»
+// давало «Уверенность scale» — владелица 15.09 спросила, почему так написано.
+var пара = оформитьТекст('<th>Confidence scale</th>', undefined);
+check('устойчивая пара переведена целиком', пара.indexOf('Уверенность') >= 0 && пара.indexOf('scale') < 0);
+
+// Перевод слов не должен трогать адреса: «/type/» внутри ссылки — часть пути.
+var адрес = оформитьТекст('<p>Смотри https://x.ru/type/name/source тут</p>', undefined);
+check('адрес не переведён', адрес.indexOf('href="https://x.ru/type/name/source"') >= 0);
+check('видимая часть адреса цела', адрес.indexOf('x.ru/type/name/source') >= 0);
+
+console.log(fails===0 ? '\nвсё сошлось' : '\nПРОВАЛОВ: '+fails);

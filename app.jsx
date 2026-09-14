@@ -3698,17 +3698,28 @@ function escHtml(s) {
 // Дальше человек уходит по конкретному адресу уже оттуда.
 function сноскиНаИсточники(html, блок) {
   if (!блок) return html;
-  return поТексту(html, function (t) {
+  return внеСсылок(html, function (кусок) { return поТексту(кусок, function (t) {
     return t.replace(/\[(\d{1,2})\]/g, function (m, n) {
       return '<a class="ref" href="#блок-' + блок + '" title="Показать источники разведки">[' + n + ']</a>';
     });
-  });
+  }); });
 }
 
 // Английские служебные слова, которые модель иногда оставляет в таблицах
 // («Conclusions», «Information», «Evidence»). Промпт требует язык отчёта, но
 // на служебные подписи правило срабатывает не всегда. Владелица 15.09: «все
 // метки — конклюженс, информейшн — убираем, заменяем на русский».
+// Устойчивые пары сначала: «Confidence scale» пословно даёт «Уверенность
+// scale» — владелица 15.09 справедливо спросила, почему так написано.
+const ФРАЗЫ_РУ = {
+  'confidence scale':'Уверенность', 'confidence level':'Уверенность',
+  'awareness level':'Уровень осознанности', 'awareness stage':'Уровень осознанности',
+  'voice of customer':'Голос клиента', 'jobs to be done':'Работы клиента',
+  'pain points':'Боли', 'pain point':'Боль', 'target audience':'Целевая аудитория',
+  'market size':'Ёмкость рынка', 'top performers':'Что залетает',
+  'decision criteria':'Критерии выбора', 'offer workbench':'Мастерская офферов',
+  'intent clusters':'Кластеры намерений', 'cognitive tactics':'Когнитивные тактики',
+};
 const МЕТКИ_РУ = {
   'conclusions':'Выводы', 'conclusion':'Вывод', 'information':'Информация',
   'evidence':'Доказательства', 'source':'Источник', 'sources':'Источники',
@@ -3722,16 +3733,35 @@ const МЕТКИ_РУ = {
   'comment':'Комментарий', 'summary':'Сводка', 'name':'Название',
   'reason':'Причина', 'reasons':'Причины', 'channel':'Канал', 'channels':'Каналы',
   'format':'Формат', 'formats':'Форматы', 'topic':'Тема', 'topics':'Темы',
+  'scale':'шкала', 'level':'уровень', 'rating':'оценка', 'share':'доля',
+  'stage':'этап', 'step':'шаг', 'high':'высокий', 'medium':'средний', 'low':'низкий',
+  'yes':'да', 'no':'нет', 'none':'нет', 'other':'другое', 'others':'другие',
 };
 function поРусски(html) {
-  return поТексту(html, function (t) {
+  return внеСсылок(html, function (кусок) { return поТексту(кусок, function (t) {
+    t = t.replace(/\b[A-Za-z][A-Za-z ]{4,24}[A-Za-z]\b/g, function (фраза) {
+      const русская = ФРАЗЫ_РУ[фраза.toLowerCase().replace(/\s+/g, ' ')];
+      return русская || фраза;
+    });
     return t.replace(/\b([A-Za-z]{3,14})\b/g, function (слово) {
       const русское = МЕТКИ_РУ[слово.toLowerCase()];
       if (!русское) return слово;
       // Сохраняем регистр первой буквы: в шапке таблицы «Выводы», в строке «выводы».
       return слово[0] === слово[0].toLowerCase() ? русское.toLowerCase() : русское;
     });
-  });
+  }); });
+}
+
+// Один проход над готовой разметкой: служебные имена блоков — человеческими,
+// английские метки — русскими, сноски [n] — ссылками на источники, голые
+// адреса — живыми ссылками. Собрано в одну функцию, потому что применять это
+// надо в ДВУХ местах: к телу модуля и к его «Итогу». Раньше итог шёл мимо, и
+// владелица видела в нём ровно то, что просила убрать: «см. BLOCK 04_1».
+function оформитьТекст(html, блокИсточников) {
+  // Порядок важен: сперва адреса становятся ссылками, и только потом идёт
+  // перевод слов. Иначе «/type/» внутри адреса превратилось бы в «/тип/» и
+  // ссылка сломалась бы молча.
+  return поРусски(поЧеловечески(сноскиНаИсточники(оживитьСсылки(html), блокИсточников)));
 }
 
 function поТексту(html, как) {
@@ -3748,22 +3778,27 @@ function поТексту(html, как) {
 // блока 07B». Владелица 15.09: «для пользователя это рабочие названия, они не
 // подходят». Меняем их на человеческие имена везде, где встретили.
 function поЧеловечески(html) {
-  return поТексту(html, function (t) {
+  return внеСсылок(html, function (кусок) { return поТексту(кусок, function (t) {
     return t.replace(/(?:BLOCK|БЛОК|блок)\s*[№#]?\s*(\d{1,2}(?:_\d)?[A-ZА-Я]?)/gi, function (весь, ключ) {
       const имя = BLOCK_TITLES[String(ключ).toUpperCase()];
       return имя ? '«' + имя + '»' : весь;
     });
-  });
+  }); });
 }
 
 // Голые адреса в тексте — живые ссылки. Владелица 15.09: «ссылки у нас все
 // должны быть активными». Показываем домен с путём, без схемы: длинный адрес
 // в ячейке таблицы ломает колонку.
 function оживитьСсылки(html) {
-  // Готовые ссылки не трогаем: текст внутри <a> может сам быть похож на адрес
-  // («www.rbc.ru»), и второй проход завернул бы ссылку в ссылку.
+  return внеСсылок(html, оживитьКусок);
+}
+
+// Обход всего, что НЕ внутри готовой ссылки. Нужен обеим правкам: и сноскам,
+// и адресам. Иначе повторный проход заворачивает ссылку в ссылку — а проход
+// повторяется, потому что тело модуля и его итог обрабатываются порознь.
+function внеСсылок(html, как) {
   return String(html).split(/(<a\b[^>]*>[\s\S]*?<\/a>)/i).map(function (кусок, i) {
-    return i % 2 ? кусок : оживитьКусок(кусок);
+    return i % 2 ? кусок : как(кусок);
   }).join('');
 }
 function оживитьКусок(html) {
@@ -5131,13 +5166,13 @@ function mdToHtml(text) {
   // модулей — свой список источников (02 или 05). Берём тот, что есть в этом
   // же тексте: ссылка на чужой блок увела бы в пустоту.
   const блокИсточников = ['04_0', '02', '05'].find(k => сырой.indexOf('id="блок-' + k + '"') >= 0);
-  const html = оживитьСсылки(поРусски(поЧеловечески(сноскиНаИсточники(сырой, блокИсточников))));
+  const html = оформитьТекст(сырой, блокИсточников);
   // SWOT собирается из четырёх таблиц: к моменту первой мы знаем не всё,
   // поэтому финальный набор подставляем после разбора всего текста.
   if (swotCtx.swot && swotCtx.swotRef != null) {
     blockScripts[swotCtx.swotRef] = 'renderSwotGrid(' + JSON.stringify(swotCtx.swot) + ');';
   }
-  return { html, scripts: blockScripts, js: BLOCK_JS };
+  return { html, scripts: blockScripts, js: BLOCK_JS, источники: блокИсточников };
 }
 
 // Обложка исследования — ровно та, что в отчёте: перламутровая шапка с
@@ -5471,7 +5506,7 @@ function generateHTMLReport(brief, results, lang, priceLayers, selectedLayers, s
     // не доходят. В теле он после этого не повторяется.
     const cut = splitModuleSummary(r.content);
     const rendered = renderResearchHTML(cut.body, { ourName: brief.name });
-    const summary = renderModuleSummary(cut.summary);
+    const summary = оформитьТекст(renderModuleSummary(cut.summary), rendered.источники);
     blockScripts.push(...rendered.scripts);
     blockJS = rendered.js;
     // Модуль различается ПОДПИСЬЮ, а не своим цветом. Семь фирменных цветов
@@ -5638,7 +5673,11 @@ function generateHTMLReport(brief, results, lang, priceLayers, selectedLayers, s
       +'box-shadow:inset 3px 0 0 var(--mid)}'
     +'\n.msum-h{font-size:10px;font-weight:700;letter-spacing:.07em;'
       +'text-transform:uppercase;color:var(--acc-ink);margin-bottom:14px}'
-    +'\n.msum-body{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);'
+    +'\n/* Пропорция перевёрнута 15.09: «что узнали» — факты, их читают бегло, а'
+      +'\n   «что это значит» и «что делаем дальше» — выводы и действия, ради'
+      +'\n   которых модуль и запускали. Раньше колонка фактов была шире обеих'
+      +'\n   колонок выводов вместе, и правая половина выглядела придавленной. */'
+      +'\n.msum-body{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.3fr);'
       +'gap:22px 34px;align-items:start}'
     +'\n.msum .sm-col{display:flex;flex-direction:column;gap:18px}'
     +'\n.msum .smh{display:block;font-size:10px;font-weight:700;letter-spacing:.07em;'
@@ -6460,7 +6499,8 @@ function ResearchView({ content, ourName }) {
   const out = React.useMemo(() => {
     const cut = splitModuleSummary(content || '');
     const r = renderResearchHTML(cut.body, { ourName });
-    return { ...r, html: renderModuleSummary(cut.summary) + r.html };
+    const итог = оформитьТекст(renderModuleSummary(cut.summary), r.источники);
+    return { ...r, html: итог + r.html };
   }, [content, ourName]);
   React.useEffect(() => { injectBlockStyles(); }, []);
   React.useEffect(() => {

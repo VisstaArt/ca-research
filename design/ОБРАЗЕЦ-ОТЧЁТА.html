@@ -2454,7 +2454,11 @@ table.raw td.num{font-variant-numeric:tabular-nums;text-align:center;white-space
 .rules .warnline{margin-top:10px;padding:7px 0 7px 11px;font-size:11.5px;color:var(--ink-2);line-height:1.5;box-shadow:inset 2px 0 0 var(--acc-mid);max-width:34ch}
 .msum{margin:2px 0 26px;padding:18px 22px 20px;border-radius:16px;background:color-mix(in srgb, var(--mid) 5%, transparent);box-shadow:inset 3px 0 0 var(--mid)}
 .msum-h{font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--acc-ink);margin-bottom:14px}
-.msum-body{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:22px 34px;align-items:start}
+/* Пропорция перевёрнута 15.09: «что узнали» — факты, их читают бегло, а
+   «что это значит» и «что делаем дальше» — выводы и действия, ради
+   которых модуль и запускали. Раньше колонка фактов была шире обеих
+   колонок выводов вместе, и правая половина выглядела придавленной. */
+.msum-body{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.3fr);gap:22px 34px;align-items:start}
 .msum .sm-col{display:flex;flex-direction:column;gap:18px}
 .msum .smh{display:block;font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--ink-3);margin-bottom:8px}
 .msum ul{margin:0;padding-left:17px;list-style:none}
