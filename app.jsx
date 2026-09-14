@@ -7610,6 +7610,12 @@ function App() {
                   <button onClick={saveOwnKey} disabled={!keyDraft.trim()||keyBusy}>
                     {keyBusy ? 'Сохраняю…' : 'Сохранить'}</button>
                 </div>
+                <p style={{fontSize:11,color:'var(--ink-3)',marginTop:4}}>
+                  Ключ выпускается в кабинете{' '}
+                  {keyProvider==='openrouter'
+                    ? <a href="https://openrouter.ai/keys" target="_blank" rel="noreferrer">openrouter.ai/keys</a>
+                    : <a href="https://platform.openai.com/api-keys" target="_blank" rel="noreferrer">platform.openai.com/api-keys</a>}.
+                </p>
               </div>
             )}
             {keyMsg && <p style={{fontSize:12,color:'var(--ink-2)',marginTop:6}}>{keyMsg}</p>}
@@ -7619,6 +7625,10 @@ function App() {
                 {ownSearchKey === null ? 'Смотрю, заведён ли поисковый ключ…'
                   : ownSearchKey ? 'Поиск на ключе клиента: …' + ownSearchKey + '. Живые отзывы и мониторинг — за его счёт.'
                   : 'Вторая нейронка — поиск: живые отзывы, площадки, мониторинг конкурентов. Свой ключ не заведён — поиск идёт на ключе платформы.'}
+                {!ownSearchKey && ownSearchKey !== null && (
+                  <> Ключ выпускается в кабинете{' '}
+                  <a href="https://app.tavily.com/home" target="_blank" rel="noreferrer">app.tavily.com</a>.</>
+                )}
               </p>
               {!ownSearchKey && (
                 <div style={{display:'flex',gap:6}}>
