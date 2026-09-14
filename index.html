@@ -124,16 +124,19 @@ tr:nth-child(even) td { background: none; }
    которой в рамке нет, поэтому заголовки шли вплотную и блоки слипались в
    сплошную ленту — владелица: «всё налеплено, нужны заметные отступы».
    Значения продолжают ряд эталона: там между карточками 30px, здесь между
-   блоками 46px — блок крупнее карточки и разделять его надо сильнее. */
-.модуль h2 { font-size: 19px; margin: 46px 0 14px; }
-.модуль > h2:first-child { margin-top: 4px; }
-.модуль h3 { font-size: 15px; margin: 28px 0 10px; }
-.модуль h4 { margin: 22px 0 8px; }
-.модуль p { margin: 0 0 12px; }
-.модуль table, .модуль .tbl, .модуль .dtbl, .модуль .nprof,
-.модуль .seg, .модуль .aud, .модуль .kit { margin-bottom: 26px; }
+   блоками 46px — блок крупнее карточки и разделять его надо сильнее.
+   Сила селектора важна: стиль отчёта подключается скриптом ПОЗЖЕ и несёт
+   «.rview h2{margin:0}» — при равной силе побеждал бы он, и отступы молча
+   пропадали. Поэтому у каждого правила здесь два класса: «.rview.модуль». */
+.rview.модуль h2 { font-size: 19px; margin: 46px 0 14px; }
+.rview.модуль > h2:first-child { margin-top: 4px; }
+.rview.модуль h3 { font-size: 15px; margin: 28px 0 10px; }
+.rview.модуль h4 { margin: 22px 0 8px; }
+.rview.модуль p { margin: 0 0 12px; }
+.rview.модуль table, .rview.модуль .tbl, .rview.модуль .dtbl, .rview.модуль .nprof,
+.rview.модуль .seg, .rview.модуль .aud, .rview.модуль .kit { margin-bottom: 26px; }
 /* Итог модуля стоит первым и отбивается от первого блока сильнее прочего. */
-.модуль .msum { margin-bottom: 40px; }
+.rview.модуль .msum { margin-bottom: 40px; }
 /* Таблица эталона просит минимум 600px ширины — на узкой рамке её должен
    прокручивать свой контейнер, а не страница. */
 .worksurface .tbl { overflow-x: auto; }
@@ -222,6 +225,6 @@ html[data-embed] #root { max-width: none; padding: 0; }
      без сборки — как и весь остальной проект. -->
 <script src="lib/contract.js?v=c5d82d20"></script>
 <script src="lib/auth.js?v=c0e4610f"></script>
-<script src="app.js?v=8e49697d"></script>
+<script src="app.js?v=7672ca25"></script>
 </body>
 </html>

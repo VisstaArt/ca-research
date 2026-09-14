@@ -438,6 +438,14 @@ a{color:inherit}
   margin-bottom:16px;gap:10px;flex-wrap:wrap}
 .chead h2{font-size:16px}
 .note{font-size:12px;color:var(--ink-3);line-height:1.55;margin:0}
+/* Шкала уверенности сноской под таблицей, где стоит эта колонка. Цифры
+   выделены, пояснения нет: глазами находишь свою цифру, а не читаешь
+   строку целиком. Пункты не переносятся по одному слову — каждый держится
+   цельным. */
+.confleg{display:flex;flex-wrap:wrap;gap:4px 18px;align-items:baseline;margin:-14px 0 26px}
+.confleg .cl-h{font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--ink-3)}
+.confleg .cl-i{white-space:nowrap}
+.confleg .cl-i b{color:var(--ink);font-weight:700}
 /* Сноска-номер: ведёт к списку источников этого модуля. Подчёркивания нет —
    в таблице их было бы слишком много; цвет и надстрочность и так читаются. */
 .ref{font-size:10.5px;font-weight:700;vertical-align:super;line-height:0;color:var(--acc-ink);text-decoration:none;padding:0 1px}
