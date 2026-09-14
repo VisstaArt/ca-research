@@ -102,9 +102,19 @@ tr:nth-child(even) td { background: none; }
    стоит отдельно НАД поверхностью, карточки данных лежат на ней. */
 .worksurface { background: color-mix(in srgb, var(--card-solid) 88%, transparent);
   border: 1px solid rgba(255,255,255,.7); border-radius: 24px;
-  padding: 20px 18px;
+  padding: 24px 26px 28px;
   box-shadow: 0 20px 44px -26px rgba(45,36,22,.3), inset 0 1px 0 rgba(255,255,255,.8); }
 .worksurface .card { box-shadow: inset 0 1px 0 var(--hi); }
+/* Роль колонки «.main» отчёта здесь играет рабочая поверхность. Часть правил
+   эталона привязана именно к .main (кегль и отступы заголовков внутри
+   карточек) — без этой связки <h2> в карточке остаётся браузерным, вдвое
+   крупнее образца, и страница читается как черновик. Значения взяты из
+   эталона дословно: .main > .card h2 и его первый-в-карточке случай. */
+.worksurface .card h2 { font-size: 16px; font-weight: 600; margin: 26px 0 8px; }
+.worksurface .card > h2:first-of-type { margin-top: 2px; }
+/* Таблица эталона просит минимум 600px ширины — на узкой рамке её должен
+   прокручивать свой контейнер, а не страница. */
+.worksurface .tbl { overflow-x: auto; }
 
 .field-opt { font-size: var(--fs-caption); color: var(--ink-3); text-transform: none; letter-spacing: 0; }
 </style>
@@ -116,6 +126,6 @@ tr:nth-child(even) td { background: none; }
      без сборки — как и весь остальной проект. -->
 <script src="lib/contract.js?v=c5d82d20"></script>
 <script src="lib/auth.js?v=c0e4610f"></script>
-<script src="app.js?v=82e63fb6"></script>
+<script src="app.js?v=b83cd7bb"></script>
 </body>
 </html>
