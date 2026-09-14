@@ -5962,7 +5962,7 @@ function InfoTip({ text }) {
 // стили копией лежат в lib/niches.css. Здесь только жизнь: какая ниша в
 // центре, что показать в плитках, что делает кнопка. Стрелки и клик по
 // боковой карте крутят веер; в центре — выбранная.
-function NicheHero({ list, canPick, selected, onToggle, onContinue, statusOf }) {
+function NicheHero({ list, canPick, selected, onToggle, onContinue, statusOf, шапка, наПерламутре, onPick }) {
   const [c, setC] = React.useState(0);
   React.useEffect(() => { if (c >= list.length) setC(0); }, [list.length]);
   const n = list.length;
@@ -6009,7 +6009,10 @@ function NicheHero({ list, canPick, selected, onToggle, onContinue, statusOf }) 
   if (!n) return null;
   const кл = { '-2':'f1', '-1':'f2', '0':'f3', '1':'f4', '2':'f5' };
   return (
-    <div className="card" style={{padding:0,overflow:'hidden',marginBottom:14}}>
+    <div className={'card' + (наПерламутре ? ' nacre cover' : '')}
+      style={{padding: наПерламутре ? '22px 24px 0' : 0, overflow:'hidden',
+              marginBottom: наПерламутре ? 22 : 14}}>
+      {шапка}
       <div className="hero">
         <div className="fan">
           {слоты.map(k => {
@@ -6017,7 +6020,7 @@ function NicheHero({ list, canPick, selected, onToggle, onContinue, statusOf }) 
             const st = statusOf ? statusOf(д.name) : '';
             return (
               <div key={k} className={'fcard '+кл[String(k)]}
-                onClick={()=>k!==0 && setC(((c + k) % n + n) % n)}
+                onClick={()=>{ if (k!==0) { const i=((c + k) % n + n) % n; setC(i); if (onPick) onPick(i); } }}
                 style={k !== 0 ? {cursor:'pointer'} : undefined}>
                 <div className="tag">Ниша{д.verdict ? ' · '+д.verdict : ''}{выбрана(д.name) ? ' · выбрана' : ''}</div>
                 <div className="name">{д.name}</div>
@@ -6027,9 +6030,9 @@ function NicheHero({ list, canPick, selected, onToggle, onContinue, statusOf }) 
           })}
         </div>
         {n > 1 && <>
-          <button onClick={()=>setC(((c - 1) % n + n) % n)}
+          <button onClick={()=>{ const i=((c - 1) % n + n) % n; setC(i); if (onPick) onPick(i); }}
             style={{position:'absolute',left:10,top:'50%',transform:'translateY(-50%)',zIndex:6,width:34,height:34,borderRadius:'50%',padding:0}}>←</button>
-          <button onClick={()=>setC(((c + 1) % n + n) % n)}
+          <button onClick={()=>{ const i=((c + 1) % n + n) % n; setC(i); if (onPick) onPick(i); }}
             style={{position:'absolute',right:10,top:'50%',transform:'translateY(-50%)',zIndex:6,width:34,height:34,borderRadius:'50%',padding:0}}>→</button>
         </>}
       </div>
@@ -8251,8 +8254,6 @@ function App() {
       const г = готовоПоНише(имя);
       return г >= нужноМодулей ? 'готова' : (г ? г + ' из ' + нужноМодулей : 'в работе');
     };
-    // На стоп-точке выбор ведёт пауза прогона; после неё — правим состав ниш
-    // прямо здесь: run() сам досчитает только недостающие пары (модуль, ниша).
     const наСтопТочке = showNiches && nicheOpts.length > 0;
     const переключить = имя => {
       const есть = вРаботе.includes(имя);
@@ -8261,58 +8262,91 @@ function App() {
       setBrief(новыйБриф);
       if (proj) { const u = { ...proj, brief: новыйБриф, updatedAt: new Date().toISOString() }; setProj(u); sv(u); }
     };
+    const дата = new Date().toLocaleDateString('ru-RU', { day:'numeric', month:'long', year:'numeric' });
+    // Веер сам и есть верхняя жемчужная плашка — решение владелицы 15.09:
+    // «переключение веером ниш вверху, тогда без верхней большой общей плашки».
+    // Заголовок экрана едет внутрь веера компактной строкой.
+    const шапкаВеера = (
+      <div className="chead" style={{marginBottom:10}}>
+        <div>
+          <span className="kchip kchip-go rpt-mark"><span className="d"></span>Исследование</span>
+          <span className="eyebrow">Что нашла разведка</span>
+          <h1 className="covername" style={{fontSize:26}}>Ниши</h1>
+        </div>
+        <div className="coveract">
+          <span className="note">Найдено: {список.length}</span>
+          <span className="note">В работе: {вРаботе.length}</span>
+          <span className="note">{дата}</span>
+        </div>
+      </div>
+    );
     return (
-      <div>
-        <StageHeader имя="Ниши"
-          бровь={наСтопТочке ? 'Стоп-точка выбора' : 'Что нашла разведка'}
-          подпись="Жмите на карту — увидите спрос, конкуренцию и экономику ниши."
-          факты={[['Проект', brief.name], ['Найдено', список.length ? String(список.length) : ''],
-                  ['В работе', вРаботе.length ? String(вРаботе.length) : '']]}
-          lang={lang}/>
-        <div className="worksurface rview">
-          {список.length > 0 ? (
-            <React.Fragment>
-              <NicheHero
-                list={список}
-                canPick={true}
-                selected={наСтопТочке ? selNiches.map(i => nicheOpts[i] ? nicheOpts[i].name : '').filter(Boolean) : вРаботе}
-                statusOf={статус}
-                onToggle={имя => {
-                  if (наСтопТочке) {
-                    const i = nicheOpts.findIndex(x => x.name === имя);
-                    if (i >= 0) setSelNiches(p => p.includes(i) ? p.filter(x => x !== i) : [...p, i]);
-                  } else переключить(имя);
-                }}
-                onContinue={() => {
-                  if (наСтопТочке) continueAfterNiche(); else run(mods, brief);
-                  // Работа пошла — показывать её надо на «Прогоне», а не на
-                  // карте ниш. Просим платформу переключить этап.
-                  try { window.parent.postMessage({ ca: 'шаг', шаг: 'run' }, '*'); } catch (e) {}
-                }}/>
+      <div className="rview">
+        {список.length > 0 ? (
+          <React.Fragment>
+            <NicheHero
+              list={список}
+              наПерламутре={true}
+              шапка={шапкаВеера}
+              canPick={true}
+              selected={наСтопТочке ? selNiches.map(i => nicheOpts[i] ? nicheOpts[i].name : '').filter(Boolean) : вРаботе}
+              statusOf={статус}
+              onToggle={имя => {
+                if (наСтопТочке) {
+                  const i = nicheOpts.findIndex(x => x.name === имя);
+                  if (i >= 0) setSelNiches(p => p.includes(i) ? p.filter(x => x !== i) : [...p, i]);
+                } else переключить(имя);
+              }}
+              onContinue={() => {
+                if (наСтопТочке) continueAfterNiche(); else run(mods, brief);
+                try { window.parent.postMessage({ ca: 'шаг', шаг: 'run' }, '*'); } catch (e) {}
+              }}/>
+            <div className="worksurface rview">
+              {/* Остальные блоки разведки: источники, сегменты, эффективность
+                  услуг, матрица приоритета. Владелица 15.09 спросила, куда они
+                  делись, — они всегда были в результате M2, но лежали на
+                  вкладке «Прогон» вперемешку с другими модулями. Место им
+                  здесь: это один модуль — разведка ниш. */}
+              {м2 ? (
+                <React.Fragment>
+                  <div className="sech" style={{marginTop:0}}>Что ещё собрала разведка</div>
+                  <ResearchView content={м2.content} ourName={brief.name}/>
+                  <p className="note" style={{marginTop:18}}>
+                    Ёмкость рынка здесь не считается: модуль ёмкости выключен —
+                    государственную статистику дорого собирать, а контенту она
+                    не нужна. Спрос по нишам оценён разведкой по открытым
+                    источникам, они перечислены выше.
+                  </p>
+                </React.Fragment>
+              ) : (
+                <div className="card">
+                  <h2>Блоки разведки не сохранились</h2>
+                  <p style={{fontSize:13.5,color:'var(--ink-2)',lineHeight:1.6,margin:0,maxWidth:'70ch'}}>
+                    Карты ниш есть, а текст модуля — нет. Так бывает у прогонов
+                    до перенумерации модулей. Прогоните разведку заново на
+                    вкладке «Прогон», чтобы получить источники и сегменты.
+                  </p>
+                </div>
+              )}
+            </div>
+          </React.Fragment>
+        ) : (
+          <React.Fragment>
+            <StageHeader имя="Ниши" бровь="Что нашла разведка"
+              подпись="Здесь появятся карты ниш со спросом, конкуренцией и экономикой."
+              факты={[['Проект', brief.name]]} lang={lang}/>
+            <div className="worksurface rview">
               <div className="card">
-                <h2>Как читать оценку</h2>
-                <p style={{fontSize:13.5,color:'var(--ink-2)',lineHeight:1.6,maxWidth:'74ch',margin:0}}>
-                  Спрос, конкуренция и экономика считаются по двадцатибалльной
-                  шкале и складываются в итог. Высокий спрос при высокой
-                  конкуренции — не отказ, а предупреждение: входить придётся
-                  через узкую тему, а не в лоб.
-                </p>
-                <p className="note">
-                  Оценки поставила разведка по открытым источникам. Спорную нишу
-                  можно взять в работу вопреки оценке — решение за вами.
+                <h2>Разведка ниш ещё не отработала</h2>
+                <p style={{fontSize:13.5,color:'var(--ink-2)',lineHeight:1.6,maxWidth:'70ch',margin:0}}>
+                  Ниши находит модуль разведки. Запустите его на вкладке «Прогон» —
+                  сюда лягут карты ниш и всё, что разведка собрала по пути:
+                  источники, сегменты аудитории и матрица приоритета.
                 </p>
               </div>
-            </React.Fragment>
-          ) : (
-            <div className="card">
-              <h2>Разведка ниш ещё не отработала</h2>
-              <p style={{fontSize:13.5,color:'var(--ink-2)',lineHeight:1.6,maxWidth:'70ch',margin:0}}>
-                Ниши находит модуль разведки. Запустите его на вкладке «Прогон» —
-                сюда лягут карты ниш со спросом, конкуренцией и экономикой.
-              </p>
             </div>
-          )}
-        </div>
+          </React.Fragment>
+        )}
       </div>
     );
   }
@@ -8455,7 +8489,25 @@ function App() {
         </div>
       )}
 
-      {orderedResults.map((r,i,arr) => {
+      {/* Разведка ниш живёт на своей вкладке целиком — и карты, и источники,
+          и сегменты. Здесь её не повторяем: два одинаковых блока на соседних
+          вкладках владелица читала как «данные не разделены». */}
+      {embedded && orderedResults.some(r => r.id === 'M2') && (
+        <div className="card" style={{marginBottom:14}}>
+          <h2>Разведка ниш — на вкладке «Ниши»</h2>
+          <p style={{fontSize:13.5,color:'var(--ink-2)',lineHeight:1.6,margin:0,maxWidth:'70ch'}}>
+            Там карты ниш с оценками, источники разведки, сегменты аудитории и
+            матрица приоритета — всё, что собрал этот модуль.
+          </p>
+          <div style={{marginTop:14}}>
+            <button className="cm-btn"
+              onClick={()=>{ try { window.parent.postMessage({ ca:'шаг', шаг:'niches' }, '*'); } catch(e){} }}>
+              Открыть ниши
+            </button>
+          </div>
+        </div>
+      )}
+      {orderedResults.filter(r => !(embedded && r.id === 'M2')).map((r,i,arr) => {
         const m = MODULES.find(x=>x.id===r.id); if (!m) return null;
         const open = exp[resKey(r)];
         const showNicheHeader = r.niche && (i===0 || (arr[i-1].niche||'') !== r.niche);
