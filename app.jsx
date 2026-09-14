@@ -2053,7 +2053,7 @@ async function gatherContentRadarEvidence(brief, competitors) {
   // должен видеть, что клиент УЖЕ выкладывает и как оно живёт.
   for (const u of clientSocials(brief)) queries.push(u);
   return gatherEvidence(queries, 34 + clientSocials(brief).length, 6,
-    { perDomain: 3, maxItems: 40 });
+    { depth: 'advanced', raw: true, contentChars: 1200, perDomain: 3, maxItems: 44 });
 }
 
 // M8 (тренд-монитор): в отличие от остальных gather-функций явно ограничена

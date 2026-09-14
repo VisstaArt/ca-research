@@ -1,6 +1,6 @@
 // СОБРАНО АВТОМАТИЧЕСКИ из app.jsx — не править руками.
 // Правки вносить в app.jsx, затем: osascript -l JavaScript tools/build.js
-// отпечаток-исходника: 18d03e81e2ccedad
+// отпечаток-исходника: e8ee073351457e65
 // Функции контракта живут в lib/contract.js. Разбираем их сюда, чтобы весь
 // остальной код обращался к ним по прежним именам и не менялся.
 const{GLOBAL_MODS,isPerNiche,dropOrphans,nichesOf,resKey,splitMdRow,isMdSeparator,parseMdTables,buildModuleEntry,pickTable,pickColumn,withStableIds}=CAContract;// Название модуля берётся из MODULES — это конфиг ИНТЕРФЕЙСА, и сборщик
@@ -572,7 +572,7 @@ const comps=(competitors||[]).filter(Boolean).slice(0,10);const queries=[topic+'
 // стоят их же домены, по ним и ищем.
 queries.push(c+' youtube.com канал');queries.push(c+' t.me канал');queries.push(c+' vk.com сообщество');queries.push(c+' блог статьи');}// Каналы самого заказчика — тем же замером, что и конкурентов: радар
 // должен видеть, что клиент УЖЕ выкладывает и как оно живёт.
-for(const u of clientSocials(brief))queries.push(u);return gatherEvidence(queries,34+clientSocials(brief).length,6,{perDomain:3,maxItems:40});}// M8 (тренд-монитор): в отличие от остальных gather-функций явно ограничена
+for(const u of clientSocials(brief))queries.push(u);return gatherEvidence(queries,34+clientSocials(brief).length,6,{depth:'advanced',raw:true,contentChars:1200,perDomain:3,maxItems:44});}// M8 (тренд-монитор): в отличие от остальных gather-функций явно ограничена
 // свежестью (days) — модуль отвечает на вопрос «что изменилось НЕДАВНО», а не
 // общий срез рынка.
 async function gatherTrendEvidence(brief){const market=brief.geoMarket||brief.geoCompany||'';const product=brief.niche||brief.name||'';const niche=brief.selectedNiche||'';const topic=niche||product;const queries=[topic+' '+market+' новости тренды',topic+' '+market+' новые игроки продукты запуск',topic+' '+market+' форум обсуждение свежие жалобы проблемы',topic+' '+market+' инфоповод событие'];return gatherEvidence(queries,8,5,{days:30});}// Единый блок «работай только с этим материалом» для промптов
