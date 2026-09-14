@@ -7690,6 +7690,8 @@ function App() {
   if (embedded && sc === 'form' && proj && !briefEdit) {
     // Что мы ЗНАЕМ — только заполненные поля; пустые не показываем вовсе:
     // страница говорит «вот что у нас есть», а не «вот чего вы не дали».
+    // Оформление — СЛОВАРЁМ ЭТАЛОНА (.rview даёт карточкам стекло отчёта,
+    // .sech/.coverdl/.kbtn/.note — его же классы), не самодельными стилями.
     const пары = [
       [t.fName, brief.name], ['Сайт', brief.siteUrl], [t.fNiche, brief.niche],
       [t.fGeoMarket, brief.geoMarket], [t.fGeoComp, brief.geoCompany],
@@ -7704,46 +7706,50 @@ function App() {
     return (
       <div>
         <StageHeader имя="Бриф" lang={lang}/>
-        <div className="worksurface">
-          <div className="card">
-            <div style={{display:'flex',alignItems:'center',gap:10,flexWrap:'wrap',marginBottom:12}}>
-              <p style={{fontSize:16,fontWeight:600,letterSpacing:'-.01em',flex:1}}>Что мы знаем о проекте</p>
-              <button onClick={()=>setBriefEdit(true)} style={{fontSize:12,padding:'7px 12px'}}>Править бриф</button>
-              <button onClick={()=>{ if (window.confirm('Начать заново? Текущий проект останется в списке, бриф заполните с нуля.')) goNew(); }}
-                style={{fontSize:12,padding:'7px 12px'}}>Начать заново</button>
-            </div>
-            <dl className="rview coverdl" style={{margin:0,paddingTop:0,borderTop:0}}>
+        <div className="worksurface rview">
+          <div className="sech" style={{marginTop:6}}>Что мы знаем о проекте</div>
+          <div className="card" style={{marginBottom:0}}>
+            <dl className="coverdl" style={{margin:0,paddingTop:0,borderTop:0}}>
               {пары.map(([м, з]) => (
                 <div key={м}><dt>{м}</dt><dd style={{whiteSpace:'pre-wrap'}}>{String(з)}</dd></div>
               ))}
             </dl>
+            <p className="note">Эти данные собраны с сайта и из ваших ответов —
+              на них строится всё исследование. Если что-то устарело или неверно,
+              поправьте до запуска модулей.</p>
           </div>
           {(цвета.length > 0 || brief.brandFonts || brief.brandLogo || соц.length > 0) && (
-            <div className="card">
-              <p style={{fontSize:16,fontWeight:600,letterSpacing:'-.01em',marginBottom:10}}>Дизайн и каналы</p>
-              {brief.brandLogo && (
-                <img src={brief.brandLogo} alt="Логотип" style={{maxHeight:44,maxWidth:220,display:'block',marginBottom:10}}
-                  onError={e=>{ e.target.style.display='none'; }}/>
-              )}
-              {цвета.length > 0 && (
-                <div style={{display:'flex',gap:8,alignItems:'center',flexWrap:'wrap',marginBottom:8}}>
-                  <span style={{fontSize:12,color:'var(--ink-3)'}}>Цвета:</span>
-                  {цвета.map(c => (
-                    <span key={c} title={c} style={{display:'inline-flex',alignItems:'center',gap:5,fontSize:12}}>
-                      <span style={{width:16,height:16,borderRadius:5,background:c,border:'1px solid var(--line)',display:'inline-block'}}/>{c}
-                    </span>
-                  ))}
-                </div>
-              )}
-              {brief.brandFonts && <p style={{fontSize:12.5,marginBottom:6}}><span style={{color:'var(--ink-3)'}}>Шрифты:</span> {brief.brandFonts}</p>}
-              {соц.length > 0 && (
-                <div style={{fontSize:12.5}}>
-                  <span style={{color:'var(--ink-3)'}}>Соцсети:</span>{' '}
-                  {соц.map(u => <a key={u} href={u} target="_blank" rel="noreferrer" style={{marginRight:10}}>{u.replace(/^https?:\/\/(www\.)?/,'').replace(/\/$/,'')}</a>)}
-                </div>
-              )}
-            </div>
+            <React.Fragment>
+              <div className="sech">Дизайн и каналы</div>
+              <div className="card" style={{marginBottom:0}}>
+                {brief.brandLogo && (
+                  <img src={brief.brandLogo} alt="Логотип" style={{maxHeight:44,maxWidth:220,display:'block',marginBottom:12}}
+                    onError={e=>{ e.target.style.display='none'; }}/>
+                )}
+                <dl className="coverdl" style={{margin:0,paddingTop:0,borderTop:0}}>
+                  {цвета.length > 0 && (
+                    <div><dt>Цвета</dt><dd style={{display:'flex',gap:8,alignItems:'center',flexWrap:'wrap'}}>
+                      {цвета.map(c => (
+                        <span key={c} title={c} style={{display:'inline-flex',alignItems:'center',gap:5}}>
+                          <span style={{width:15,height:15,borderRadius:5,background:c,border:'1px solid var(--line)',display:'inline-block'}}/>{c}
+                        </span>
+                      ))}
+                    </dd></div>
+                  )}
+                  {brief.brandFonts && <div><dt>Шрифты</dt><dd>{brief.brandFonts}</dd></div>}
+                  {соц.length > 0 && (
+                    <div><dt>Соцсети</dt><dd style={{display:'flex',gap:10,flexWrap:'wrap'}}>
+                      {соц.map(u => <a key={u} href={u} target="_blank" rel="noreferrer">{u.replace(/^https?:\/\/(www\.)?/,'').replace(/\/$/,'')}</a>)}
+                    </dd></div>
+                  )}
+                </dl>
+              </div>
+            </React.Fragment>
           )}
+          <div style={{display:'flex',gap:10,marginTop:18,flexWrap:'wrap'}}>
+            <button className="kbtn" onClick={()=>setBriefEdit(true)}>Править бриф</button>
+            <button className="kbtn" onClick={()=>{ if (window.confirm('Начать заново? Текущий проект останется в списке, бриф заполните с нуля.')) goNew(); }}>Начать заново</button>
+          </div>
         </div>
       </div>
     );
