@@ -3026,6 +3026,49 @@ pre.mermaid{background:var(--card-solid);border:1px solid var(--line);
 .login .card{width:100%;max-width:400px}
 .login img{display:block;width:150px;margin:0 auto 18px}
 .err{color:var(--acc-quiet);font-size:12.5px;margin-top:10px}
+
+/* ── Экраны контент-машины ─────────────────────────────────────────────────
+   Разметку рисует content.js по данным контент-машины; классы — наши, чтобы
+   обе стороны жили на одном эталоне (договорённость 13.09). */
+.mfilter{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+.mseg{display:inline-flex;align-items:baseline;gap:7px;padding:6px 13px;border-radius:999px;
+  border:1px solid var(--line);background:var(--card-solid);cursor:pointer;
+  font-size:12.5px;font-weight:500;color:var(--ink-2)}
+.mseg b{font-weight:700;color:var(--ink);font-variant-numeric:tabular-nums}
+.mseg:hover{border-color:var(--ink-3)}
+.mseg.on{border-color:var(--ink);color:var(--ink)}
+.mcard{margin-bottom:14px}
+.mhead{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;margin-bottom:12px}
+.mhead h3{margin:3px 0 0;font-size:16px;line-height:1.3}
+.mfmt{font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--ink-3)}
+.mbody{font-size:13.5px;line-height:1.65;color:var(--ink-2);max-width:70ch;
+  padding:12px 0;border-top:1px solid var(--line-2)}
+.mslides{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;margin-bottom:10px}
+.mslide{flex:0 0 132px;height:88px;border:1px solid var(--line);border-radius:12px;
+  background:var(--raise);display:flex;flex-direction:column;justify-content:flex-end;
+  padding:8px 10px;font-size:11px;color:var(--ink-3);line-height:1.3}
+.mslide span{font-size:10px;font-weight:700;color:var(--ink-3);margin-bottom:auto}
+.mfind{border-top:1px solid var(--line-2);padding-top:10px}
+.mfind>span,.kmod>span,.tfmts>span{display:block;font-size:10px;font-weight:700;
+  letter-spacing:.07em;text-transform:uppercase;color:var(--ink-3);margin-bottom:6px}
+.mfind ul,.kmod ul{margin:0;padding-left:18px}
+.mfind li,.kmod li{font-size:12.5px;line-height:1.5;color:var(--ink-2);margin-bottom:6px}
+.mfind li b{display:block;color:var(--ink);font-weight:600}
+.mfind li em{display:block;font-style:normal;color:var(--ink-3);margin-top:3px}
+.mact{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:14px;
+  border-top:1px solid var(--line-2);padding-top:12px}
+.mact .kbtn[disabled]{opacity:.45;cursor:not-allowed}
+.mprice{font-size:11.5px;color:var(--ink-3)}
+.tcard{margin-bottom:12px}
+.tcard h3{margin:4px 0 0;font-size:16px;line-height:1.3}
+.trub{font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--ink-3)}
+.twhy{font-size:13px;line-height:1.6;color:var(--ink-2);max-width:70ch;margin:8px 0 0}
+.tfmts{margin-top:12px}
+.tfmt{display:inline-block;margin-right:6px;padding:3px 9px;border-radius:999px;
+  background:var(--line-2);font-size:11px;color:var(--ink-2)}
+.kcard{margin-bottom:12px}
+.kcard h3{margin:4px 0 10px;font-size:15px}
+.kwhere{font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--ink-3)}
 </style>
 
 <div class="login" id="login" hidden>
@@ -3282,3 +3325,4 @@ pre.mermaid{background:var(--card-solid);border:1px solid var(--line);
 
 </script>
 <script src="platform.js?v=19b90a6f"></script>
+<script src="content.js"></script>

@@ -110,6 +110,10 @@
       a.addEventListener('click', function (соб) {
         соб.stopPropagation();
         текущий = клиенты.filter(function (c) { return c.id === a.dataset.client; })[0] || null;
+        // Экраны контент-машины читают базу по текущему клиенту — сообщаем им
+        // о переключении, иначе на новом проекте остались бы чужие материалы.
+        window.CAContentClient = текущий ? текущий.id : '';
+        if (window.CAContent && window.CAContent.обновить) window.CAContent.обновить();
         рынок = текущий && (текущий.markets || []).filter(function (m) { return m.id === a.dataset.market; })[0] || null;
         строкаПроекта(); списокПроектов(); исследование();
         // Список закрываем сами: он наш, и переключение.js о наших строках
@@ -331,6 +335,9 @@
     загрузить().then(function () {
       var почта = почтаИзТокена();
       шапкаДанные(почта); кабинет(почта); уведомления();
+      // Первый выбранный проект — тоже событие для экранов контент-машины.
+      window.CAContentClient = текущий ? текущий.id : '';
+      if (window.CAContent && window.CAContent.обновить) window.CAContent.обновить();
       строкаПроекта(); списокПроектов(); тариф(); исследование();
     });
   }

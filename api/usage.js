@@ -62,6 +62,27 @@ export default async function handler(req, res) {
     + '&period=eq.' + period;
 
   try {
+    // Прибавляем через функцию базы: она делает on conflict do update под
+    // блокировкой строки. Чтением-записью прибавлять НЕЛЬЗЯ — строка одна на
+    // (клиент, период), и кто записал вторым, тот и затёр чужое слагаемое.
+    // У контент-машины это уже случалось при двух воркерах: расход занижался,
+    // а на нём стоит себестоимость подписки (её разбор, 15.09.2026).
+    const rpc = await fetch(auth.pgBase + 'rpc/add_usage', {
+      method: 'POST', headers: { ...headers, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        p_client_id: clientId, p_period: period,
+        p_llm_calls: calls, p_llm_tokens: tin + tout,
+        p_llm_tokens_in: tin, p_llm_tokens_out: tout,
+        p_image_calls: 0, p_search_calls: search,
+        p_search_units: search, p_cost_cents: cents,
+      }),
+    }).catch(() => null);
+    if (rpc && rpc.ok) {
+      const d = await rpc.json().catch(() => null);
+      return res.status(200).json({ usage: Array.isArray(d) ? d[0] : d, added_cents: cents });
+    }
+    // Функции нет (миграция не применена) — работаем как раньше, чтением и
+    // записью. Это запасной путь, а не основной: он и есть источник гонки.
     const cur = await fetch(auth.pgBase + q + '&select=*', { headers });
     const rows = cur.ok ? await cur.json().catch(() => []) : [];
     const old = Array.isArray(rows) && rows[0] ? rows[0] : null;
