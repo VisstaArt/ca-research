@@ -21,12 +21,19 @@ const PRICE = { in: 200, out: 800 };      // gpt-4.1: $2 и $8 за миллио
 const SEARCH_CENTS = 1;                    // Tavily: ~$0.01 за поиск
 
 export default async function handler(req, res) {
-  setCorsHeaders(res, 'POST, OPTIONS');
+  setCorsHeaders(res, 'GET, POST, OPTIONS');
   if (req.method === 'OPTIONS') return res.status(200).end();
-  if (req.method !== 'POST') return res.status(405).json({ error: { message: 'Method not allowed' } });
+  if (req.method !== 'POST' && req.method !== 'GET') return res.status(405).json({ error: { message: 'Method not allowed' } });
 
   const auth = await requireUser(req, res);
   if (!auth) return;
+
+  // GET — прейскурант для сметы в интерфейсе. Цены живут ТОЛЬКО здесь
+  // (см. комментарий выше), браузер их спрашивает, а не хранит копию:
+  // смета и счёт обязаны сходиться, а две копии цен молча расходятся.
+  if (req.method === 'GET') {
+    return res.status(200).json({ price: PRICE, search_cents: SEARCH_CENTS });
+  }
 
   const b = req.body || {};
   const clientId = b.client_id;

@@ -61,6 +61,10 @@ const T = {
     fPrice: 'Price range', fPricePh: '₽15 000–50 000, on request, ₺5000+…',
     fCompetitors: 'Known competitors', fCompetitorsPh: 'Competitor A, site.com…',
     fExtra: 'Additional context', fExtraPh: 'Market specifics, USP, constraints, existing data…',
+    fSocials: 'Social profiles', fSocialsPh: 'Links to Instagram, Telegram, VK, YouTube… one per line',
+    fBrandColors: 'Brand colors', fBrandColorsPh: '#0ABAB5, #171512…',
+    fBrandFonts: 'Brand fonts', fBrandFontsPh: 'Montserrat, Source Serif 4…',
+    fBrandLogo: 'Logo (link)', fBrandLogoPh: 'https://…/logo.svg',
     companyDataTitle: 'Company data',
     companyDataSub: 'optional — for market position analysis',
     fRevenue: 'Current revenue', fRevenuePh: 'e.g. 5 000 000 TL',
@@ -159,6 +163,10 @@ const T = {
     fPrice: 'Ценовой диапазон', fPricePh: '₽15 000–50 000, по запросу, ₺5000+…',
     fCompetitors: 'Известные конкуренты', fCompetitorsPh: 'Конкурент А, site.com…',
     fExtra: 'Дополнительный контекст', fExtraPh: 'Специфика рынка, УТП, ограничения, имеющиеся данные…',
+    fSocials: 'Соцсети клиента', fSocialsPh: 'Ссылки на Instagram, Telegram, VK, YouTube… по одной на строку',
+    fBrandColors: 'Фирменные цвета', fBrandColorsPh: '#0ABAB5, #171512…',
+    fBrandFonts: 'Фирменные шрифты', fBrandFontsPh: 'Montserrat, Source Serif 4…',
+    fBrandLogo: 'Логотип (ссылка)', fBrandLogoPh: 'https://…/logo.svg',
     companyDataTitle: 'Данные компании',
     companyDataSub: 'опционально — для анализа позиции на рынке',
     fRevenue: 'Текущая выручка', fRevenuePh: 'напр. 5 000 000 TL',
@@ -574,7 +582,8 @@ async function callSearch(query, opts) {
   try {
     const res = await authFetch('/api/search', {
       method: 'POST', headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({query, ...(opts||{})}),
+      // client_id — чтобы сервер взял поисковый ключ клиента, если заведён
+      body: JSON.stringify({query, ...(clientIdFromUrl ? { client_id: clientIdFromUrl } : {}), ...(opts||{})}),
     });
     if (!res.ok) return [];
     const d = await res.json();
@@ -2023,6 +2032,51 @@ async function fetchSite(url) {
   let base = url.trim().replace(/\/$/, '');
   if (!/^https?:\/\//i.test(base)) base = 'https://' + base; // пользователь обычно вводит адрес без схемы
   const pages = [];
+  // Дизайн-система и соцсети достаются из СЫРОГО HTML, до очистки тегов:
+  // ссылки и стили живут в атрибутах, которые чистка стирает. Требование
+  // владелицы 14.09: бриф собирает дизайн (логотип, цвета, шрифты) и
+  // соцсети клиента — они нужны контенту и мониторингу.
+  const дизайн = { socials: [], logo: '', colors: [], fonts: [] };
+  const собратьДизайн = (html, у) => {
+    try {
+      const соц = html.match(/https?:\/\/(?:www\.)?(?:instagram\.com|facebook\.com|t\.me|telegram\.me|vk\.com|youtube\.com|youtu\.be|tiktok\.com|x\.com|twitter\.com|linkedin\.com|ok\.ru|dzen\.ru|zen\.yandex\.ru|wa\.me|pinterest\.com|rutube\.ru)\/[^\s"'<>\\)]+/gi) || [];
+      for (let ссылка of соц) {
+        ссылка = ссылка.replace(/[.,;]+$/, '');
+        // кнопки «поделиться» — не профиль клиента
+        if (/shar|intent|\/embed|\/plugins|\?/i.test(ссылка)) continue;
+        if (!дизайн.socials.some(x => x.toLowerCase() === ссылка.toLowerCase())) дизайн.socials.push(ссылка);
+      }
+      if (!дизайн.logo) {
+        const og = html.match(/property=["']og:image["'][^>]*content=["']([^"']+)["']/i)
+          || html.match(/content=["']([^"']+)["'][^>]*property=["']og:image["']/i);
+        const img = html.match(/<img[^>]+src=["']([^"']*logo[^"']*)["']/i);
+        const кандидат = (img && img[1]) || (og && og[1]) || '';
+        if (кандидат) дизайн.logo = new URL(кандидат, у).href;
+      }
+      // Цвета: тема сайта + самые частые цвета из его же стилей.
+      const тема = html.match(/name=["']theme-color["'][^>]*content=["']([^"']+)["']/i);
+      if (тема && !дизайн.colors.includes(тема[1])) дизайн.colors.push(тема[1]);
+      const счёт = {};
+      for (const m of html.match(/#[0-9a-fA-F]{6}\b/g) || []) {
+        const c = m.toLowerCase();
+        // белый/чёрный/серые не характеризуют бренд
+        if (/^#(?:fff...|......)$/.test(c) && /^#(.)\1(.)\2(.)\3$/.test('#'+c[1]+c[2]+c[3]+c[4]+c[5]+c[6])) continue;
+        счёт[c] = (счёт[c] || 0) + 1;
+      }
+      for (const [c] of Object.entries(счёт).sort((a,b)=>b[1]-a[1]).slice(0,5))
+        if (!дизайн.colors.includes(c) && дизайн.colors.length < 6) дизайн.colors.push(c);
+      // Шрифты: подключённые Google Fonts + font-family из стилей.
+      for (const m of html.match(/fonts\.googleapis\.com\/css2?\?[^"']*family=([^&"']+)/gi) || []) {
+        const имя = decodeURIComponent(m.split('family=')[1] || '').split(':')[0].replace(/\+/g, ' ').trim();
+        if (имя && !дизайн.fonts.includes(имя)) дизайн.fonts.push(имя);
+      }
+      for (const m of html.match(/font-family:\s*([^;}\n]+)/gi) || []) {
+        const имя = m.split(':')[1].split(',')[0].replace(/["']/g, '').trim();
+        if (имя && !/^(inherit|initial|sans-serif|serif|monospace|system-ui|-apple-system|var\()/i.test(имя)
+            && !дизайн.fonts.includes(имя) && дизайн.fonts.length < 5) дизайн.fonts.push(имя);
+      }
+    } catch {}
+  };
   const candidates = [base, base+'/hakkimizda', base+'/about', base+'/hizmetler',
     base+'/services', base+'/o-nas', base+'/uslugi', base+'/products', base+'/o-kompanii'];
   for (const u of candidates) {
@@ -2030,6 +2084,7 @@ async function fetchSite(url) {
       const r = await fetch(PROXY+'?url='+encodeURIComponent(u));
       if (!r.ok) continue;
       const t = await r.text();
+      собратьДизайн(t, u);
       const clean = t
         .replace(/<script[\s\S]*?<\/script>/gi,' ')   // выкидываем код и стили,
         .replace(/<style[\s\S]*?<\/style>/gi,' ')     // иначе в «текст» попадает CSS/JS-каша
@@ -2040,7 +2095,7 @@ async function fetchSite(url) {
       if (clean.length>300) { pages.push({url:u, text:clean.slice(0,2500)}); if(pages.length>=3) break; }
     } catch {}
   }
-  return pages;
+  return { pages, дизайн };
 }
 
 // ── SYSTEM PROMPT
@@ -5988,16 +6043,20 @@ function NicheHero({ list, canPick, selected, onToggle, onContinue, statusOf }) 
 // свалки данных (владелица, 14.09: «просто бриф, дата, язык — модули здесь
 // не нужны»). Имя этапа антиквой, как имя на обложке отчёта.
 function StageHeader({ имя, lang, справа }) {
+  // Точная копия шапки-обложки отчёта (card nacre cover: chead/covername/
+  // coveract из REPORT_CSS) — владелица: «как у нас в дизайне, отдельно».
+  // Никаких данных на плашке: имя этапа, дата, язык — и всё; данные лежат
+  // ниже, на рабочей поверхности.
   const дата = new Date().toLocaleDateString('ru-RU', { day:'numeric', month:'long', year:'numeric' });
   return (
-    <div className="card nacre" style={{marginBottom:16,display:'flex',alignItems:'flex-end',
-        justifyContent:'space-between',gap:14,flexWrap:'wrap',padding:'24px 26px'}}>
-      <h1 style={{fontFamily:'var(--serif)',fontSize:28,fontWeight:600,
-          letterSpacing:'-.02em',margin:0,lineHeight:1.1}}>{имя}</h1>
-      <div style={{display:'flex',alignItems:'baseline',gap:12,flexWrap:'wrap'}}>
-        {справа}
-        <span style={{fontSize:12,color:'var(--ink-2)'}}>{дата}</span>
-        <span className="tag" style={{color:'var(--acc-ink)'}}>{langSelf(lang)}</span>
+    <div className="card nacre cover rview" style={{marginBottom:22}}>
+      <div className="chead" style={{marginBottom:0}}>
+        <div><h1 className="covername">{имя}</h1></div>
+        <div className="coveract">
+          {справа}
+          <span className="note">{дата}</span>
+          <span className="tag" style={{color:'var(--acc-ink)'}}>{langSelf(lang)}</span>
+        </div>
       </div>
     </div>
   );
@@ -6018,6 +6077,7 @@ const КВИЗ_ПОЛЯ = [
   ['format',      'В каком формате продукт?', true],
   ['price',       'Цены и тарифы', true],
   ['competitors', 'Каких конкурентов знаете?', true],
+  ['socials',      'Соцсети: ссылки на профили, если ведёте', true],
   ['extra',       'Что ещё важно знать?', true],
 ];
 function QuizBrief(Q) {
@@ -6077,11 +6137,18 @@ function QuizBrief(Q) {
   return (
     <>
       {Q.настройка}
-      <div style={{display:'flex',gap:8,marginTop:4}}>
+      {Q.смета && (
+        <p style={{fontSize:12.5,color:'var(--ink-2)',margin:'10px 2px 0'}}>
+          Ориентировочная стоимость запуска: <b>≈ {Q.смета}</b>. Считается по
+          фактическому расходу прошлых прогонов и уточняется по ходу — на
+          каждом платном шаге цена видна до траты.
+        </p>
+      )}
+      <div style={{display:'flex',gap:8,marginTop:10}}>
         <button onClick={()=>{ setStage('site'); }} style={{fontSize:12,padding:'7px 12px'}}>← К сайту</button>
         <button className="btn-primary" style={{flex:1,padding:'13px',fontSize:14}}
           disabled={!Q.brief.name || !Q.mods.length} onClick={Q.запуск}>
-          ▶ Запустить исследование · {Q.mods.length} модулей
+          ▶ Запустить исследование · {Q.mods.length} {plural(Q.mods.length,'модуль','модуля','модулей')}{Q.смета ? ' · ≈ '+Q.смета : ''}
         </button>
       </div>
     </>
@@ -6519,7 +6586,7 @@ function App() {
   }, [unlocked]);
   const [proj, setProj] = React.useState(null);
 
-  const empty = { siteUrl:'', name:'', niche:'', geoCompany:'', geoMarket:'', format:'', audience:'', result:'', price:'', competitors:'', extra:'', currentRevenue:'', currentClients:'', currentAvgCheck:'', targetSegment:'', priceLayer:'', services:[], selectedServices:[], selectedNiche:'', nicheCandidates:'' };
+  const empty = { siteUrl:'', name:'', niche:'', geoCompany:'', geoMarket:'', format:'', audience:'', result:'', price:'', competitors:'', extra:'', currentRevenue:'', currentClients:'', currentAvgCheck:'', targetSegment:'', priceLayer:'', services:[], selectedServices:[], selectedNiche:'', nicheCandidates:'', socials:'', brandColors:'', brandFonts:'', brandLogo:'' };
   const [brief, setBrief] = React.useState(empty);
   const [lang, setLang] = React.useState('Russian');
   // Модель и ключ клиента — состояние настройки прогона. Ключ сюда НЕ
@@ -6530,45 +6597,117 @@ function App() {
   const [keyDraft, setKeyDraft] = React.useState('');
   const [keyBusy, setKeyBusy] = React.useState(false);
   const [keyMsg, setKeyMsg] = React.useState('');
+  // Вторая нейронка — поисковая (Tavily): она ходит за живыми отзывами,
+  // площадками и мониторингом конкурентов. Её ключ — отдельный, того же
+  // порядка: замечание владелицы 14.09 «эту API ты не спросил».
+  const [ownSearchKey, setOwnSearchKey] = React.useState(null);
+  const [searchDraft, setSearchDraft] = React.useState('');
+  const [searchBusy, setSearchBusy] = React.useState(false);
+  const [searchMsg, setSearchMsg] = React.useState('');
   React.useEffect(() => {
-    if (!clientIdFromUrl) { setOwnKey(''); return; }
+    if (!clientIdFromUrl) { setOwnKey(''); setOwnSearchKey(''); return; }
     const A = window.CAAuth;
     fetch(A.SUPABASE_URL + '/rest/v1/provider_keys?select=hint,provider&client_id=eq.'
-          + encodeURIComponent(clientIdFromUrl) + '&provider=eq.openai',
+          + encodeURIComponent(clientIdFromUrl) + '&provider=in.(openai,tavily)',
       { headers: { apikey: A.SUPABASE_ANON_KEY, Authorization: 'Bearer ' + A.getAccessToken() } })
       .then(r => r.ok ? r.json() : [])
-      .then(d => setOwnKey(Array.isArray(d) && d[0] ? (d[0].hint || 'заведён') : ''))
-      .catch(() => setOwnKey(''));
+      .then(d => {
+        const по = п => (Array.isArray(d) ? d : []).find(x => x.provider === п);
+        const о = по('openai'), т = по('tavily');
+        setOwnKey(о ? (о.hint || 'заведён') : '');
+        setOwnSearchKey(т ? (т.hint || 'заведён') : '');
+      })
+      .catch(() => { setOwnKey(''); setOwnSearchKey(''); });
   }, []);
+  // Общий сохранитель: браузер → Vault (set_provider_key), через наш сервер
+  // секрет не проходит и назад не возвращается — только последние знаки.
+  const saveProviderKey = async (провайдер, имя, назначение, секрет) => {
+    const A = window.CAAuth;
+    const r = await fetch(A.SUPABASE_URL + '/rest/v1/rpc/set_provider_key', {
+      method: 'POST',
+      headers: { apikey: A.SUPABASE_ANON_KEY, Authorization: 'Bearer ' + A.getAccessToken(),
+                 'Content-Type': 'application/json' },
+      body: JSON.stringify({ p_client: clientIdFromUrl, p_name: имя,
+        p_provider: провайдер, p_secret: секрет, p_purpose: назначение }),
+    });
+    const d = await r.json().catch(() => null);
+    if (!r.ok) {
+      const m = (d && (d.message || d.hint)) || '';
+      // Функции нет — миграция не применена. Это недостающий шаг, а не
+      // поломка, и сказать надо именно так, а не «не получилось».
+      throw new Error(/does not exist|schema cache/i.test(m)
+        ? 'Хранилище ключей в базе ещё не заведено — нужна миграция, её применяет владелица.'
+        : (m || 'Не получилось сохранить'));
+    }
+    return typeof d === 'string' ? d : секрет.slice(-4);
+  };
   const saveOwnKey = async () => {
     setKeyBusy(true); setKeyMsg('');
-    const A = window.CAAuth;
     try {
-      const r = await fetch(A.SUPABASE_URL + '/rest/v1/rpc/set_provider_key', {
-        method: 'POST',
-        headers: { apikey: A.SUPABASE_ANON_KEY, Authorization: 'Bearer ' + A.getAccessToken(),
-                   'Content-Type': 'application/json' },
-        body: JSON.stringify({ p_client: clientIdFromUrl, p_name: 'OpenAI клиента',
-          p_provider: 'openai', p_secret: keyDraft.trim(), p_purpose: 'writing' }),
-      });
-      const d = await r.json().catch(() => null);
-      if (!r.ok) {
-        const m = (d && (d.message || d.hint)) || '';
-        // Функции нет — миграция не применена. Это недостающий шаг, а не
-        // поломка, и сказать надо именно так, а не «не получилось».
-        throw new Error(/does not exist|schema cache/i.test(m)
-          ? 'Хранилище ключей в базе ещё не заведено — нужна миграция, её применяет владелица.'
-          : (m || 'Не получилось сохранить'));
-      }
-      setOwnKey(typeof d === 'string' ? d : (keyDraft.trim().slice(-4)));
-      setKeyDraft(''); setKeyMsg('Ключ сохранён. Дальше работа идёт на нём.');
+      const hint = await saveProviderKey('openai', 'OpenAI клиента', 'writing', keyDraft.trim());
+      setOwnKey(hint); setKeyDraft(''); setKeyMsg('Ключ сохранён. Дальше работа идёт на нём.');
     } catch (e) { setKeyMsg(e.message); }
     setKeyBusy(false);
+  };
+  const saveSearchKey = async () => {
+    setSearchBusy(true); setSearchMsg('');
+    try {
+      const hint = await saveProviderKey('tavily', 'Tavily клиента', 'search', searchDraft.trim());
+      setOwnSearchKey(hint); setSearchDraft(''); setSearchMsg('Ключ сохранён. Поиск идёт на нём.');
+    } catch (e) { setSearchMsg(e.message); }
+    setSearchBusy(false);
   };
   const [mods, setMods] = React.useState(['M2','M3']);
   const [siteUrl, setSiteUrl] = React.useState('');
   const [parsing, setParsing] = React.useState(false);
   const [pMsg, setPMsg] = React.useState('');
+  // Заполненный бриф в платформе показывается СВОДКОЙ, не формой: «мы должны
+  // увидеть полученную информацию, а не снова бриф, который надо заполнять»
+  // (владелица, 14.09). Форма открывается только по «Править бриф».
+  const [briefEdit, setBriefEdit] = React.useState(false);
+  // Цена — на каждом платном этапе (владелица, 14.09): «сколько стоит запуск,
+  // выбрал одну нишу — одна цена, все — другая; что тратится и на что».
+  // Цены приходят с сервера (api/usage GET) — смета и счёт по одним цифрам.
+  const [прайс, setПрайс] = React.useState(null);
+  React.useEffect(() => {
+    authFetch('/api/usage').then(r => r.ok ? r.json() : null)
+      .then(d => { if (d && d.price) setПрайс(d); }).catch(() => {});
+  }, []);
+  // Оценка модуля: СРЕДНЕЕ по фактическим прогонам этого же модуля (замер
+  // дороже догадки); фактов нет — ориентир, помеченный в подписи «≈».
+  const центыМодуля = (id) => {
+    if (!прайс) return null;
+    const факты = [];
+    (projs || []).forEach(п => (п.results || []).forEach(r => {
+      if (r.id === id && r.usage && !r.failed) факты.push(r);
+    }));
+    let tin = 25000, tout = 8000, поиск = 12, частот = id === 'M8' ? 10 : 0;
+    if (факты.length) {
+      const ср = f => факты.reduce((s, r) => s + (f(r) || 0), 0) / факты.length;
+      tin = ср(r => r.usage.prompt); tout = ср(r => r.usage.completion);
+      поиск = ср(r => r.searchCalls); частот = ср(r => r.keywordCalls);
+    }
+    return (tin * прайс.price.in + tout * прайс.price.out) / 1e6
+      + (поиск + частот) * прайс.search_cents;
+  };
+  const сметаЦентов = (ids, ниш) => {
+    if (!прайс) return null;
+    let всего = 0;
+    for (const id of ids) {
+      const c = центыМодуля(id);
+      if (c == null) return null;
+      всего += c * (CAContract.isPerNiche(id) ? Math.max(1, ниш) : 1);
+    }
+    return всего;
+  };
+  const деньгами = (c) => c == null ? '' : (c >= 100 ? '$' + (c / 100).toFixed(2) : Math.round(c) + ' ¢');
+  // Уже потрачено в этом проекте — по фактическим usage результатов.
+  const потраченоЦентов = () => {
+    if (!прайс || !proj) return null;
+    return (proj.results || []).reduce((s, r) => s
+      + (r.usage ? (r.usage.prompt * прайс.price.in + r.usage.completion * прайс.price.out) / 1e6 : 0)
+      + ((r.searchCalls || 0) + (r.keywordCalls || 0)) * прайс.search_cents, 0);
+  };
   const [blockMsg, setBlockMsg] = React.useState(''); // «модуль не стартует без предыдущих стадий»
 
   const [curMod, setCurMod] = React.useState(null);
@@ -6634,10 +6773,19 @@ function App() {
     if (!siteUrl.trim()) return;
     setParsing(true); setPMsg('⟳ Reading site pages…');
     try {
-      const pages = await fetchSite(siteUrl.trim());
+      const { pages, дизайн } = await fetchSite(siteUrl.trim());
       // Адрес сайта нужен потом в M7 (карта опубликованных страниц), а жил он
       // только в состоянии формы и терялся сразу после разбора брифа.
       setBrief(p => ({...p, siteUrl: siteUrl.trim()}));
+      // Дизайн-система и соцсети — с сайта, без вопросов клиенту (владелица
+      // 14.09: бриф собирает дизайн и соцсети; панель контент-машины потом
+      // покажет то же самое на проверку, не спрашивая заново).
+      if (дизайн) setBrief(p => ({...p,
+        ...(дизайн.socials.length && !p.socials ? { socials: дизайн.socials.join('\n') } : {}),
+        ...(дизайн.colors.length && !p.brandColors ? { brandColors: дизайн.colors.join(', ') } : {}),
+        ...(дизайн.fonts.length && !p.brandFonts ? { brandFonts: дизайн.fonts.join(', ') } : {}),
+        ...(дизайн.logo && !p.brandLogo ? { brandLogo: дизайн.logo } : {}),
+      }));
       if (!pages.length) throw new Error('No readable content found. Fill manually.');
       const combined = pages.map(p=>'['+p.url+']\n'+p.text).join('\n\n---\n\n');
       setPMsg('⟳ Read '+pages.length+' page(s) — extracting brief…');
@@ -7398,6 +7546,25 @@ function App() {
               </div>
             )}
             {keyMsg && <p style={{fontSize:12,color:'var(--ink-2)',marginTop:6}}>{keyMsg}</p>}
+            <div style={{borderTop:'1px solid var(--line)',marginTop:12,paddingTop:10}}>
+              <p style={{fontSize:13,fontWeight:600,marginBottom:2}}>Поисковая система</p>
+              <p style={{fontSize:12,color:'var(--ink-2)',marginBottom:6}}>
+                {ownSearchKey === null ? 'Смотрю, заведён ли поисковый ключ…'
+                  : ownSearchKey ? 'Поиск на ключе клиента: …' + ownSearchKey + '. Живые отзывы и мониторинг — за его счёт.'
+                  : 'Вторая нейронка — поиск: живые отзывы, площадки, мониторинг конкурентов. Свой ключ не заведён — поиск идёт на ключе платформы.'}
+              </p>
+              {!ownSearchKey && (
+                <div style={{display:'flex',gap:6}}>
+                  <input type="password" value={searchDraft} autoComplete="new-password"
+                    onChange={e=>setSearchDraft(e.target.value)}
+                    placeholder="ключ Tavily клиента — вставьте, если поиск на нём"
+                    style={{flex:1}} />
+                  <button onClick={saveSearchKey} disabled={!searchDraft.trim()||searchBusy}>
+                    {searchBusy ? 'Сохраняю…' : 'Сохранить'}</button>
+                </div>
+              )}
+              {searchMsg && <p style={{fontSize:12,color:'var(--ink-2)',marginTop:6}}>{searchMsg}</p>}
+            </div>
           </>
         ) : (
           <p style={{fontSize:12,color:'var(--ink-2)'}}>
@@ -7412,7 +7579,9 @@ function App() {
     <div className="card">
         <p style={{fontSize:16,fontWeight:600,marginBottom:4,letterSpacing:'-.01em'}}>{t.selectModules}</p>
         <p style={{fontSize:12,color:'var(--ink-2)',marginBottom:10}}>{t.selectModulesSub}</p>
-        {MODULES.map(m => (
+        {/* Модуль контента в платформе скрыт (владелица 14.09: «он тут не
+            нужен, дальше оно перейдёт») — контент-план это другой раздел. */}
+        {MODULES.filter(m => !embedded || m.id !== 'CONTENT').map(m => (
           <ModuleCard key={m.id} m={m} on={mods.includes(m.id)} onToggle={()=>setMods(p=>p.includes(m.id)?p.filter(x=>x!==m.id):[...p,m.id])} uiLang={uiLang}/>
         ))}
       </div>
@@ -7428,19 +7597,78 @@ function App() {
         parseSite={parseSite} parsing={parsing} pMsg={pMsg}
         mods={mods}
         настройка={<>{картаМодельКлюч}{картаЯзыка}{картаМодулей}</>}
+        смета={деньгами(сметаЦентов(mods, nichesOf(brief).length || 1))}
         запуск={()=>run()}/>
       </div>
     </div>
   );
 
+  if (embedded && sc === 'form' && proj && !briefEdit) {
+    // Что мы ЗНАЕМ — только заполненные поля; пустые не показываем вовсе:
+    // страница говорит «вот что у нас есть», а не «вот чего вы не дали».
+    const пары = [
+      [t.fName, brief.name], ['Сайт', brief.siteUrl], [t.fNiche, brief.niche],
+      [t.fGeoMarket, brief.geoMarket], [t.fGeoComp, brief.geoCompany],
+      [t.fAudience, brief.audience], [t.fResult, brief.result],
+      [t.fFormat, brief.format], [t.fPrice, brief.price],
+      [t.fCompetitors, brief.competitors],
+      ['Выбранные ниши', brief.selectedNiche], [t.fExtra, brief.extra],
+      ['Язык исследования', langSelf(lang)],
+    ].filter(([, v]) => String(v || '').trim());
+    const цвета = String(brief.brandColors || '').match(/#[0-9a-fA-F]{3,8}/g) || [];
+    const соц = String(brief.socials || '').split(/[\n,\s]+/).filter(x => /^https?:/.test(x));
+    return (
+      <div>
+        <StageHeader имя="Бриф" lang={lang}/>
+        <div className="worksurface">
+          <div className="card">
+            <div style={{display:'flex',alignItems:'center',gap:10,flexWrap:'wrap',marginBottom:12}}>
+              <p style={{fontSize:16,fontWeight:600,letterSpacing:'-.01em',flex:1}}>Что мы знаем о проекте</p>
+              <button onClick={()=>setBriefEdit(true)} style={{fontSize:12,padding:'7px 12px'}}>Править бриф</button>
+              <button onClick={()=>{ if (window.confirm('Начать заново? Текущий проект останется в списке, бриф заполните с нуля.')) goNew(); }}
+                style={{fontSize:12,padding:'7px 12px'}}>Начать заново</button>
+            </div>
+            <dl className="rview coverdl" style={{margin:0,paddingTop:0,borderTop:0}}>
+              {пары.map(([м, з]) => (
+                <div key={м}><dt>{м}</dt><dd style={{whiteSpace:'pre-wrap'}}>{String(з)}</dd></div>
+              ))}
+            </dl>
+          </div>
+          {(цвета.length > 0 || brief.brandFonts || brief.brandLogo || соц.length > 0) && (
+            <div className="card">
+              <p style={{fontSize:16,fontWeight:600,letterSpacing:'-.01em',marginBottom:10}}>Дизайн и каналы</p>
+              {brief.brandLogo && (
+                <img src={brief.brandLogo} alt="Логотип" style={{maxHeight:44,maxWidth:220,display:'block',marginBottom:10}}
+                  onError={e=>{ e.target.style.display='none'; }}/>
+              )}
+              {цвета.length > 0 && (
+                <div style={{display:'flex',gap:8,alignItems:'center',flexWrap:'wrap',marginBottom:8}}>
+                  <span style={{fontSize:12,color:'var(--ink-3)'}}>Цвета:</span>
+                  {цвета.map(c => (
+                    <span key={c} title={c} style={{display:'inline-flex',alignItems:'center',gap:5,fontSize:12}}>
+                      <span style={{width:16,height:16,borderRadius:5,background:c,border:'1px solid var(--line)',display:'inline-block'}}/>{c}
+                    </span>
+                  ))}
+                </div>
+              )}
+              {brief.brandFonts && <p style={{fontSize:12.5,marginBottom:6}}><span style={{color:'var(--ink-3)'}}>Шрифты:</span> {brief.brandFonts}</p>}
+              {соц.length > 0 && (
+                <div style={{fontSize:12.5}}>
+                  <span style={{color:'var(--ink-3)'}}>Соцсети:</span>{' '}
+                  {соц.map(u => <a key={u} href={u} target="_blank" rel="noreferrer" style={{marginRight:10}}>{u.replace(/^https?:\/\/(www\.)?/,'').replace(/\/$/,'')}</a>)}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
   if (sc === 'form') return (
     <div>
-      {embedded && (
-        <div className="card nacre cover rview" style={{marginBottom:14}}
-          dangerouslySetInnerHTML={{__html:
-            buildCoverHTML(brief.name ? brief : { ...brief, name: 'Новый проект' },
-              proj?.results, lang, 'Бриф')}}/>
-      )}
+      {embedded && <StageHeader имя="Бриф" lang={lang}/>}
+      <div className={embedded ? 'worksurface' : undefined}>
       {!embedded && <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:'1.5rem'}}>
         <button onClick={()=>proj ? setSc('work') : setSc('list')}>{proj ? t.backToProject : t.backBtn}</button>
         <h2 style={{fontSize:20,fontWeight:500}}>{proj ? t.editBriefTitle+': '+brief.name : t.newProjectTitle}</h2>
@@ -7477,6 +7705,10 @@ function App() {
           <Field label={t.fPrice}><input value={brief.price} onChange={e=>setBrief(p=>({...p,price:e.target.value}))} placeholder={t.fPricePh}/></Field>
           <Field label={t.fCompetitors}><input value={brief.competitors} onChange={e=>setBrief(p=>({...p,competitors:e.target.value}))} placeholder={t.fCompetitorsPh}/></Field>
           <Field label={t.fExtra}><textarea value={brief.extra} onChange={e=>setBrief(p=>({...p,extra:e.target.value}))} placeholder={t.fExtraPh} rows={2} style={{resize:'vertical'}}/></Field>
+          <Field label={t.fSocials}><textarea value={brief.socials} onChange={e=>setBrief(p=>({...p,socials:e.target.value}))} placeholder={t.fSocialsPh} rows={2} style={{resize:'vertical'}}/></Field>
+          <Field label={t.fBrandColors}><input value={brief.brandColors} onChange={e=>setBrief(p=>({...p,brandColors:e.target.value}))} placeholder={t.fBrandColorsPh}/></Field>
+          <Field label={t.fBrandFonts}><input value={brief.brandFonts} onChange={e=>setBrief(p=>({...p,brandFonts:e.target.value}))} placeholder={t.fBrandFontsPh}/></Field>
+          <Field label={t.fBrandLogo}><input value={brief.brandLogo} onChange={e=>setBrief(p=>({...p,brandLogo:e.target.value}))} placeholder={t.fBrandLogoPh}/></Field>
         </div>
 
         {(brief.services||[]).length > 0 && (
@@ -7543,9 +7775,9 @@ function App() {
       </div>
 
       {proj ? (
-        <button className="btn-primary" onClick={()=>{saveBriefToProject();setSc('work');}}
+        <button className="btn-primary" onClick={()=>{saveBriefToProject();setBriefEdit(false);setSc('work');}}
           style={{width:'100%',padding:'13px',fontSize:14}}>
-          Save & back to project →
+          {uiLang==='ru' ? 'Сохранить и вернуться →' : 'Save & back to project →'}
         </button>
       ) : (
         <React.Fragment>
@@ -7554,10 +7786,11 @@ function App() {
           )}
           <button className="btn-primary" onClick={()=>run()} disabled={!brief.name||!mods.length}
             style={{width:'100%',padding:'13px',fontSize:14,opacity:brief.name&&mods.length?1:0.4}}>
-            {t.startBtn} {lang} → {mods.length} module{mods.length!==1?'s':''} · {MODEL}
+            {t.startBtn} {lang} → {mods.length} {uiLang==='ru' ? plural(mods.length,'модуль','модуля','модулей') : ('module'+(mods.length!==1?'s':''))} · {MODEL}
           </button>
         </React.Fragment>
       )}
+    </div>
     </div>
   );
 
@@ -7841,7 +8074,10 @@ function App() {
       {embedded && (
         <div style={{display:'flex',gap:8,flexWrap:'wrap',alignItems:'center',marginBottom:14}}>
           {!isRun && pending.length > 0 && (
-            <button className="btn-primary" onClick={()=>run()}>▶ Прогнать: {pending.map(m=>m.id).join(', ')}</button>
+            <button className="btn-primary" onClick={()=>run()}>▶ Прогнать: {pending.map(m=>m.id).join(', ')}{(() => {
+              const c = сметаЦентов(pending.map(m=>m.id), nichesOf(brief).length || 1);
+              return c != null ? ' · ≈ ' + деньгами(c) : '';
+            })()}</button>
           )}
           {!isRun && pending.length === 0 && doneCount > 0 && (
             <button className="btn-primary" onClick={()=>setSc('form')}>＋ Добавить модули</button>
@@ -7849,9 +8085,14 @@ function App() {
           {!isRun && modDone('M2') && (
             <button onClick={openNichePicker} style={{fontSize:12,padding:'7px 12px'}}>＋ Добавить ниши</button>
           )}
-          {!isRun && doneCount > 0 && (
-            <button onClick={()=>dlMd(buildFullMd())} style={{fontSize:12,padding:'7px 12px'}}>⤓ Выгрузить отчёт</button>
-          )}
+          {(() => {
+            const c = потраченоЦентов();
+            return c != null && c > 0 ? (
+              <span style={{fontSize:12,color:'var(--ink-2)',marginLeft:'auto'}}>
+                Потрачено в проекте: <b>{деньгами(c)}</b>
+              </span>
+            ) : null;
+          })()}
         </div>
       )}
 

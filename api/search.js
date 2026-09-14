@@ -13,13 +13,31 @@ export default async function handler(req, res) {
   const auth = await requireUser(req, res);
   if (!auth) return;
 
-  if (!process.env.TAVILY_API_KEY) {
-    return res.status(503).json({ error: { message: 'Search is not configured (TAVILY_API_KEY missing)', code: 'search_unconfigured' } });
-  }
-
-  const { query, max_results, depth, days, include_domains, exclude_domains, include_raw_content } = req.body || {};
+  const { query, client_id, max_results, depth, days, include_domains, exclude_domains, include_raw_content } = req.body || {};
   if (!query || typeof query !== 'string') {
     return res.status(400).json({ error: { message: 'query is required', code: 'bad_request' } });
+  }
+
+  // Поисковый ключ клиента, если заведён, — тот же порядок, что у OpenAI в
+  // proxy.js: спрашиваем базу ОТ ИМЕНИ ПОЛЬЗОВАТЕЛЯ (функция вернёт секрет
+  // только владельцу клиента), нет ключа/функции/ответа — работаем на ключе
+  // платформы: поиск важнее экономии, молча падать нельзя.
+  let key = process.env.TAVILY_API_KEY || '';
+  if (client_id) {
+    try {
+      const r = await fetch(auth.pgBase + 'rpc/provider_key_for', {
+        method: 'POST', headers: auth.pgHeaders,
+        body: JSON.stringify({ p_client: client_id, p_provider: 'tavily', p_purpose: 'search' }),
+      });
+      if (r.ok) {
+        const d = await r.json().catch(() => null);
+        const свой = typeof d === 'string' ? d : (d && d.provider_key_for);
+        if (свой && String(свой).trim()) key = String(свой).trim();
+      }
+    } catch { /* остаёмся на ключе платформы */ }
+  }
+  if (!key) {
+    return res.status(503).json({ error: { message: 'Search is not configured (TAVILY_API_KEY missing)', code: 'search_unconfigured' } });
   }
 
   try {
@@ -27,7 +45,7 @@ export default async function handler(req, res) {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${process.env.TAVILY_API_KEY}`,
+        'Authorization': `Bearer ${key}`,
       },
       body: JSON.stringify({
         query,
