@@ -28,11 +28,27 @@ console.log('tests/app-smoke.test.js');
 // чисто, ошибка вылезала только на живом отчёте. Теперь тест рисует модуль.
 var провалов = 0;
 try {
-  (new Function(readFile(ROOT+'/app.js') + ';globalThis.renderResearchHTML=renderResearchHTML;')).call(g);
+  (new Function(readFile(ROOT+'/app.js') + ';globalThis.renderResearchHTML=renderResearchHTML;globalThis.App=App;')).call(g);
   console.log('  ok   app.js выполняется без ошибок');
 } catch(e){
   провалов++;
   console.log('  FAIL app.js падает на загрузке: '+e.message+' (строка '+(e.line||'?')+')');
+}
+// Сам компонент App тоже вызываем: 15.09 эффект обратился к isRun выше его
+// объявления — файл выполнялся чисто, а интерфейс падал при первой отрисовке
+// («Cannot access 'isRun' before initialization»). Хуки заглушены так, чтобы
+// выполнить тело функции целиком, а не только её начало.
+if (!провалов) {
+  try {
+    g.React.useMemo = function(f){ return f(); };
+    g.React.useCallback = function(f){ return f; };
+    g.React.useEffect = function(f){ try { f(); } catch(e) {} };
+    g.App();
+    console.log('  ok   App отрисовывается без ошибок');
+  } catch(e) {
+    провалов++;
+    console.log('  FAIL App падает при отрисовке: '+e.message);
+  }
 }
 if (!провалов) {
   try {

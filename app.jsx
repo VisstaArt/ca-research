@@ -7550,16 +7550,7 @@ function App() {
   // всегда. Владелица 15.09: «свернуть отчёт, а внизу кнопка запустить нишу
   // и отдельно стрелочка — смотреть полный отчёт».
   const [отчётРазвёрнут, setОтчётРазвёрнут] = React.useState(false);
-  // Прогон закончился — зовём платформу открыть «Прогон» и обновить ту рамку:
-  // она своя, и без перезагрузки результатов в ней не появится.
-  const шёлПрогон = React.useRef(false);
-  React.useEffect(() => {
-    if (isRun) { шёлПрогон.current = true; return; }
-    if (!шёлПрогон.current) return;
-    шёлПрогон.current = false;
-    if (!embedded) return;
-    try { window.parent.postMessage({ ca: 'прогон-готов' }, '*'); } catch (e) {}
-  }, [isRun, embedded]);
+
   // Цена — на каждом платном этапе (владелица, 14.09): «сколько стоит запуск,
   // выбрал одну нишу — одна цена, все — другая; что тратится и на что».
   // Цены приходят с сервера (api/usage GET) — смета и счёт по одним цифрам.
@@ -9008,6 +8999,16 @@ function App() {
   const doneCount = allMods.filter(m => modDone(m.id)).length;
   const pending = allMods.filter(m => !modDone(m.id) && m.id !== curMod);
   const isRun = !!curMod;
+  // Прогон закончился — зовём платформу открыть «Прогон» и обновить ту рамку:
+  // она своя, и без перезагрузки результатов в ней не появится.
+  const шёлПрогон = React.useRef(false);
+  React.useEffect(() => {
+    if (isRun) { шёлПрогон.current = true; return; }
+    if (!шёлПрогон.current) return;
+    шёлПрогон.current = false;
+    if (!embedded) return;
+    try { window.parent.postMessage({ ca: 'прогон-готов' }, '*'); } catch (e) {}
+  }, [isRun, embedded]);
   const curModData = MODULES.find(m=>m.id===curMod);
   // Порядок вывода: глобальные модули сверху, затем ниша за нишей (внутри — по порядку модулей).
   const orderedResults = dropOrphans(proj?.results||[]).sort((a,b)=>{
