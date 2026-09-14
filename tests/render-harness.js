@@ -41,10 +41,16 @@ eval(grab('escHtml')); globalThis.escHtml=escHtml;
 // метки, живые ссылки, сноски к источникам) живут ВЫШЕ renderResearchHTML и в
 // его кусок не попадают — подтягиваем отдельно, иначе разбор падает на них.
 try { eval(grabConstBlock('BLOCK_TITLES','{','}').replace(/^const /,'var ')); globalThis.BLOCK_TITLES=BLOCK_TITLES; } catch(e){}
-try { try { eval(grabConstBlock('ШКАЛА_УВЕРЕННОСТИ','[',']').replace(/^const /,'var ')); globalThis.ШКАЛА_УВЕРЕННОСТИ=ШКАЛА_УВЕРЕННОСТИ; } catch(e){}
+try { // Пороги вердикта живут выше renderResearchHTML и в его кусок не попадают,
+// а renderNiches считает по ним цвет и порядок — без них блок ниш молча
+// переставал собираться.
+try { var iП=SRC.indexOf('const ПОРОГ_БЕРЁМ');
+  globalThis.eval(SRC.slice(iП, SRC.indexOf('\n', iП)).replace(/^const /,'var ')); } catch(e){}
+try { eval(grabConstBlock('ШКАЛА_УВЕРЕННОСТИ','[',']').replace(/^const /,'var ')); globalThis.ШКАЛА_УВЕРЕННОСТИ=ШКАЛА_УВЕРЕННОСТИ; } catch(e){}
+try { eval(grabConstBlock('ШКАЛА_ДОСТАТКА','[',']').replace(/^const /,'var ')); globalThis.ШКАЛА_ДОСТАТКА=ШКАЛА_ДОСТАТКА; } catch(e){}
 try { eval(grabConstBlock('ФРАЗЫ_РУ','{','}').replace(/^const /,'var ')); globalThis.ФРАЗЫ_РУ=ФРАЗЫ_РУ; } catch(e){}
 eval(grabConstBlock('МЕТКИ_РУ','{','}').replace(/^const /,'var ')); globalThis.МЕТКИ_РУ=МЕТКИ_РУ; } catch(e){}
-['поТексту','внеСсылок','поЧеловечески','поРусскиСтроку','поРусски','сноскиНаИсточники','оживитьКусок','оживитьСсылки','подсказкиТерминов','оформитьТекст','почиститьХвост','почиститьУзлы','собратьВыводы','найтиБлокАббревиатур','собратьСловарь','легендаУверенности']
+['поТексту','внеСсылок','поЧеловечески','поРусскиСтроку','поРусски','сноскиНаИсточники','оживитьКусок','оживитьСсылки','подсказкиТерминов','оформитьТекст','почиститьХвост','почиститьУзлы','собратьВыводы','найтиБлокАббревиатур','собратьСловарь','легендаУверенности','выделитьЧисла']
   .forEach(function(имя){
     var i=SRC.indexOf('\nfunction '+имя+'('); if(i<0) return;
     var j=SRC.indexOf('\n}\n', i);

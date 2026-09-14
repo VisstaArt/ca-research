@@ -446,6 +446,15 @@ a{color:inherit}
 .confleg .cl-h{font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--ink-3)}
 .confleg .cl-i{white-space:nowrap}
 .confleg .cl-i b{color:var(--ink);font-weight:700}
+/* Кнопка «взять в работу» в карточке ниши. Стоит в углу карточки, не спорит
+   с её данными: видно, что это действие, а не ещё одно поле. */
+.ncard2{position:relative}
+.ntake{position:absolute;right:14px;bottom:12px;font-size:11.5px;font-weight:600;
+  padding:5px 11px;border-radius:999px;border:1px solid var(--line);
+  background:var(--card-solid);color:var(--ink-2);cursor:pointer}
+.ntake:hover{border-color:var(--ink-3);color:var(--ink)}
+.ntake.on{border-color:color-mix(in srgb, var(--acc-strong) 55%, black);
+  background:color-mix(in srgb, var(--acc-strong) 14%, var(--card-solid));color:var(--ink)}
 /* Сноска-номер: ведёт к списку источников этого модуля. Подчёркивания нет —
    в таблице их было бы слишком много; цвет и надстрочность и так читаются. */
 .ref{font-size:10.5px;font-weight:700;vertical-align:super;line-height:0;color:var(--acc-ink);text-decoration:none;padding:0 1px}
