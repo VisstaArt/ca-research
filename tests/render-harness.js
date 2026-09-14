@@ -43,7 +43,7 @@ eval(grab('escHtml')); globalThis.escHtml=escHtml;
 try { eval(grabConstBlock('BLOCK_TITLES','{','}').replace(/^const /,'var ')); globalThis.BLOCK_TITLES=BLOCK_TITLES; } catch(e){}
 try { try { eval(grabConstBlock('ФРАЗЫ_РУ','{','}').replace(/^const /,'var ')); globalThis.ФРАЗЫ_РУ=ФРАЗЫ_РУ; } catch(e){}
 eval(grabConstBlock('МЕТКИ_РУ','{','}').replace(/^const /,'var ')); globalThis.МЕТКИ_РУ=МЕТКИ_РУ; } catch(e){}
-['поТексту','внеСсылок','поЧеловечески','поРусски','сноскиНаИсточники','оживитьКусок','оживитьСсылки','оформитьТекст']
+['поТексту','внеСсылок','поЧеловечески','поРусскиСтроку','поРусски','сноскиНаИсточники','оживитьКусок','оживитьСсылки','оформитьТекст','почиститьХвост','почиститьУзлы']
   .forEach(function(имя){
     var i=SRC.indexOf('\nfunction '+имя+'('); if(i<0) return;
     var j=SRC.indexOf('\n}\n', i);
