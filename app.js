@@ -1,6 +1,6 @@
 // СОБРАНО АВТОМАТИЧЕСКИ из app.jsx — не править руками.
 // Правки вносить в app.jsx, затем: osascript -l JavaScript tools/build.js
-// отпечаток-исходника: c3d1e0d5056a2333
+// отпечаток-исходника: 90ca163d7f1dec57
 // Функции контракта живут в lib/contract.js. Разбираем их сюда, чтобы весь
 // остальной код обращался к ним по прежним именам и не менялся.
 const{GLOBAL_MODS,isPerNiche,dropOrphans,nichesOf,resKey,splitMdRow,isMdSeparator,parseMdTables,buildModuleEntry,pickTable,pickColumn,withStableIds}=CAContract;// Название модуля берётся из MODULES — это конфиг ИНТЕРФЕЙСА, и сборщик
@@ -880,7 +880,7 @@ Rules: C001, C002… IDs. If price not public — "по запросу". No inve
 ═══════════════════════════════════════════════
 BLOCK 06B — Смежные конкуренты и заменители (06B_Смежные)
 ═══════════════════════════════════════════════
-Task: 3–8 СМЕЖНЫХ игроков — решают ту же боль клиента ДРУГИМ способом/категорией продукта (не прямой аналог). ОТДЕЛЬНАЯ таблица, не смешивай с прямыми конкурентами из BLOCK 06 — у клиента разная логика выбора между «сравниваю похожие продукты» и «рассматриваю совсем другой подход к той же проблеме».
+Task: 8–12 СМЕЖНЫХ игроков — решают ту же боль клиента ДРУГИМ способом/категорией продукта (не прямой аналог). Пять строк — это только очевидные соседи по полке; считай заменителем всё, чем задачу решают вместо покупки: соседние категории, ручной труд и таблицы, штатный сотрудник, подрядчик, бесплатные и самодельные решения, «ничего не делать». ОТДЕЛЬНАЯ таблица, не смешивай с прямыми конкурентами из BLOCK 06 — у клиента разная логика выбора между «сравниваю похожие продукты» и «рассматриваю совсем другой подход к той же проблеме».
 
 Format:
 | Comp_ID | Название | Категория продукта (чем отличается от нашей) | Сайт/URL | Почему клиент может выбрать это вместо нас | Наш контраргумент | Заметки |
@@ -1943,7 +1943,9 @@ function renderSources(headers,rows,ctx){const kU=col(headers,'url','ссылк'
 const kN=col(headers,'канал','источник','площадк','сайт');if(!kU&&!kN)return null;const kW=col(headers,'что из него','что взяли','что видно','описан');// Четвёртый слот — «где используем». У радара его роль играет «Чей»
 // (конкурент / смежная ниша / медиа). «Площадку» сюда не берём: в
 // обычных источниках она же стоит именем строки, и слот дублировал имя.
-let kB=col(headers,'блок','куда','использ','чей');if(kB===kN)kB=null;const kD=col(headers,'дата');const d=rows.map((r,i)=>{const url=kU?String(r[kU]||'').replace(/\*\*|\[|\]/g,'').trim():'';const name=kN?String(r[kN]||'').replace(/\*\*/g,'').trim():url.replace(/^https?:\/\//,'').split('/')[0];if(!name&&!url)return null;const num=numOf(Object.values(r)[0])||i+1;return[num,name,kW?String(r[kW]||''):'',kB?String(r[kB]||''):kD?String(r[kD]||''):'',url.indexOf('http')===0?url:url?'https://'+url:''];}).filter(Boolean);if(!d.length)return null;const проверяемых=d.filter(x=>/^https?:\/\//i.test(String(x[4]||''))).length;// Свой заголовок печатаем сами — чужой снимаем всегда, а не только когда
+let kB=col(headers,'блок','куда','использ','чей');if(kB===kN)kB=null;const kD=col(headers,'дата');const d=rows.map((r,i)=>{const url=kU?String(r[kU]||'').replace(/\*\*|\[|\]/g,'').trim():'';const name=kN?String(r[kN]||'').replace(/\*\*/g,'').trim():url.replace(/^https?:\/\//,'').split('/')[0];if(!name&&!url)return null;const num=numOf(Object.values(r)[0])||i+1;return[num,name,kW?String(r[kW]||''):'',kB?String(r[kB]||''):kD?String(r[kD]||''):'',url.indexOf('http')===0?url:url?'https://'+url:''];}).filter(Boolean);if(!d.length)return null;const проверяемых=d.filter(x=>/^https?:\/\//i.test(String(x[4]||''))).length;// Радар: список источников убран совсем (владелица 14.09, трижды).
+// Сноски [n] в тексте остаются — они ведут на сам адрес через подсказку.
+if(/BLOCK\s*24_0\b|Источники\s+радара/i.test(String(ctx&&ctx.заголовок||''))){if(ctx&&ctx.headStart!=null)ctx.dropHead=true;ctx.источникиРадара=d;return'';}// Свой заголовок печатаем сами — чужой снимаем всегда, а не только когда
 // он вплотную: между ним и таблицей модель ставит пустой отступ.
 if(ctx&&ctx.headStart!=null)ctx.dropHead=true;if(!проверяемых){// Ни одной ссылки — доказывать нечем. Блок не печатаем вовсе.
 return'';}blockScripts.push('renderSources('+safeJson(d)+');');// Список источников — не находка, а доказательство: он нужен, когда к
@@ -2159,7 +2161,7 @@ ctx.signals[nm]=hdrs.filter(h=>h!==kn&&String(r[h]||'').trim()).map(h=>[h.replac
 // хотя данные просто показаны в другом месте.
 if(/BLOCK\s*04_1\b/i.test(lastHeading)&&ctx.has042){if(ctx.mark041!=null){html=html.slice(0,ctx.mark041);ctx.mark041=null;}tableRows=[];inTable=false;return;}// Длина разметки на момент вызова нужна блоку, который хочет снять
 // свой же заголовок (список источников сворачивается и печатает свой).
-ctx.htmlLen=html.length;ctx.dropHead=false;let special=renderKnownBlock(lastHeading,hdrs,asObjs,ctx);if(special!=null){if(ctx.dropHead&&ctx.headStart!=null){// Якорь снятого заголовка переезжает на блок: сноски [n] в тексте
+ctx.htmlLen=html.length;ctx.dropHead=false;ctx.заголовок=lastHeading;let special=renderKnownBlock(lastHeading,hdrs,asObjs,ctx);if(special!=null){if(ctx.dropHead&&ctx.headStart!=null){// Якорь снятого заголовка переезжает на блок: сноски [n] в тексте
 // ведут именно на него, и потерять его значит сделать их мёртвыми.
 const снятый=html.slice(ctx.headStart,ctx.headEnd);const я=(снятый.match(/\sid="([^"]+)"/)||[])[1];if(я&&!/^<[a-z]+[^>]*\sid=/.test(special)){special=special.replace(/^<([a-z]+)/,'<$1 id="'+я+'"');}html=html.slice(0,ctx.headStart);ctx.headStart=null;ctx.headEnd=-1;}ctx.dropHead=false;html+=special+сноска();tableRows=[];inTable=false;return;}// Числовая колонка узнаётся по содержимому, а не по названию: правило
 // «числа снаружи полосы, чернилами» начинается с того, что число вообще
