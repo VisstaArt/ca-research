@@ -639,11 +639,20 @@ let модельМодуля = '';
 async function callGPT(system, user, temperature, maxTokens, попытка) {
   lastGptUsage = null;
   user = поместить(system, user);
+  const мод = модельМодуля || currentModel();
+  const старая = /^(gpt-4|gpt-3)/.test(String(мод || ''));
   const res = await authFetch('/api/proxy', {
     method: 'POST', headers: {'Content-Type':'application/json'},
-    body: JSON.stringify({model: модельМодуля || currentModel(), max_tokens: maxTokens || 8000, stream:false,
+    body: JSON.stringify({model: мод, stream:false,
+      // У моделей нового поколения параметр переименован: max_tokens они не
+      // принимают вовсе и отвечают 400 (владелица 14.09, первый же прогон на
+      // terra). Старые, наоборот, не знают max_completion_tokens.
+      ...(старая ? { max_tokens: maxTokens || 8000 }
+                 : { max_completion_tokens: maxTokens || 8000 }),
       ...(clientIdFromUrl ? { client_id: clientIdFromUrl } : {}),
-      ...(temperature != null ? { temperature } : {}),
+      // Температуру шлём только старым: у новых она либо не принимается,
+      // либо принимается лишь значение по умолчанию.
+      ...(temperature != null && старая ? { temperature } : {}),
       messages:[{role:'system',content:system},{role:'user',content:user}]}),
   });
   // Читаем тело ошибки, а не бросаем сразу «API 429». Без причины невозможно

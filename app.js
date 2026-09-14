@@ -1,6 +1,6 @@
 // СОБРАНО АВТОМАТИЧЕСКИ из app.jsx — не править руками.
 // Правки вносить в app.jsx, затем: osascript -l JavaScript tools/build.js
-// отпечаток-исходника: af3c1861bf642ee3
+// отпечаток-исходника: 5ee852556175658f
 // Функции контракта живут в lib/contract.js. Разбираем их сюда, чтобы весь
 // остальной код обращался к ним по прежним именам и не менялся.
 const{GLOBAL_MODS,isPerNiche,dropOrphans,nichesOf,resKey,splitMdRow,isMdSeparator,parseMdTables,buildModuleEntry,pickTable,pickColumn,withStableIds}=CAContract;// Название модуля берётся из MODULES — это конфиг ИНТЕРФЕЙСА, и сборщик
@@ -121,7 +121,12 @@ const ПОТОЛОК_ЗНАКОВ=55000;const ПОТОЛОК_БОЛЬШОЙ=6000
 // «откуда пользователь будет знать, что ему тыкать»). Модель прописана у
 // каждого модуля; ручной выбор остаётся только для тарифа «Разработчик»
 // и перекрывает карту.
-let модельМодуля='';async function callGPT(system,user,temperature,maxTokens,попытка){lastGptUsage=null;user=поместить(system,user);const res=await authFetch('/api/proxy',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:модельМодуля||currentModel(),max_tokens:maxTokens||8000,stream:false,...(clientIdFromUrl?{client_id:clientIdFromUrl}:{}),...(temperature!=null?{temperature}:{}),messages:[{role:'system',content:system},{role:'user',content:user}]})});// Читаем тело ошибки, а не бросаем сразу «API 429». Без причины невозможно
+let модельМодуля='';async function callGPT(system,user,temperature,maxTokens,попытка){lastGptUsage=null;user=поместить(system,user);const мод=модельМодуля||currentModel();const старая=/^(gpt-4|gpt-3)/.test(String(мод||''));const res=await authFetch('/api/proxy',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:мод,stream:false,// У моделей нового поколения параметр переименован: max_tokens они не
+// принимают вовсе и отвечают 400 (владелица 14.09, первый же прогон на
+// terra). Старые, наоборот, не знают max_completion_tokens.
+...(старая?{max_tokens:maxTokens||8000}:{max_completion_tokens:maxTokens||8000}),...(clientIdFromUrl?{client_id:clientIdFromUrl}:{}),// Температуру шлём только старым: у новых она либо не принимается,
+// либо принимается лишь значение по умолчанию.
+...(temperature!=null&&старая?{temperature}:{}),messages:[{role:'system',content:system},{role:'user',content:user}]})});// Читаем тело ошибки, а не бросаем сразу «API 429». Без причины невозможно
 // отличить два совершенно разных случая с одинаковым кодом: кончились деньги
 // на счету OpenAI (insufficient_quota — повторять бесполезно, надо пополнить)
 // и слишком частые запросы (rate_limit_exceeded — повтор как раз помогает).
