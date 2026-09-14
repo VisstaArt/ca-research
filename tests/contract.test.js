@@ -48,8 +48,8 @@ var pkg = C.buildAgentPackage({ name: 'Тест', selectedNiche: 'Ниша А, �
 check('schema_version', pkg.schema_version, 3);
 check('brand_assets собирается из брифа',
   C.buildAgentPackage({ name: 'Т', selectedNiche: 'Н',
-    brandLogo: 'https://x.ru/l.svg', brandColors: '#0ABAB5, #171512',
-    brandFonts: 'Montserrat, Source Serif 4',
+    brandLogo: 'https://x.ru/l.svg', brandColors: '#0ABAB5, inherit, #171512,rgba(0',
+    brandFonts: 'Montserrat, Source Serif 4, Montserrat',
     socials: 'https://t.me/x\nне ссылка\nhttps://vk.com/x' }, 'Russian', [], '').brand_assets,
   { logo: 'https://x.ru/l.svg', colors: ['#0ABAB5', '#171512'],
     fonts: ['Montserrat', 'Source Serif 4'],

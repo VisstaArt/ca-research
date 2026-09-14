@@ -2073,8 +2073,11 @@ async function fetchSite(url) {
       const счёт = {};
       for (const m of html.match(/#[0-9a-fA-F]{6}\b/g) || []) {
         const c = m.toLowerCase();
-        // белый/чёрный/серые не характеризуют бренд
-        if (/^#(?:fff...|......)$/.test(c) && /^#(.)\1(.)\2(.)\3$/.test('#'+c[1]+c[2]+c[3]+c[4]+c[5]+c[6])) continue;
+        // Белый/чёрный/серые не характеризуют бренд. Серый — это когда каналы
+        // почти равны; проверяем численно, а не узором символов (первый
+        // вариант с узором #aabbcc отбрасывал и настоящие фирменные цвета).
+        const r = parseInt(c.slice(1,3),16), g = parseInt(c.slice(3,5),16), b = parseInt(c.slice(5,7),16);
+        if (Math.max(r,g,b) - Math.min(r,g,b) < 24) continue;
         счёт[c] = (счёт[c] || 0) + 1;
       }
       for (const [c] of Object.entries(счёт).sort((a,b)=>b[1]-a[1]).slice(0,5))
