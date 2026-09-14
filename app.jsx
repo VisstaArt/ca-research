@@ -7862,8 +7862,8 @@ function App() {
               правка брифа бесплатна.
             </p>
             <div style={{display:'flex',gap:9,flexWrap:'wrap',alignItems:'center'}}>
-              <button className="kbtn kbtn-pri" onClick={()=>setBriefEdit(true)}>Править бриф</button>
-              <button className="kbtn kbtn-quiet" onClick={()=>{ if (window.confirm('Начать заново? Текущий проект останется в списке, бриф заполните с нуля.')) goNew(); }}>Начать заново</button>
+              <button className="cm-btn cm-btn-pri" onClick={()=>setBriefEdit(true)}>Исправить данные</button>
+              <button className="cm-btn" onClick={()=>{ if (window.confirm('Начать заново? Текущий проект останется в списке, бриф заполните с нуля.')) goNew(); }}>Начать заново</button>
             </div>
           </div>
         </div>
@@ -8302,7 +8302,7 @@ function App() {
           </p>
           <div style={{display:'flex',gap:9,flexWrap:'wrap',alignItems:'center'}}>
             {pending.length > 0 && (
-              <button className="kbtn kbtn-pri" onClick={()=>run()}>
+              <button className="cm-btn cm-btn-pri" onClick={()=>run()}>
                 Прогнать: {pending.map(m=>m.id).join(', ')}{(() => {
                   const c = сметаЦентов(pending.map(m=>m.id), nichesOf(brief).length || 1);
                   return c != null ? ' · ≈ ' + деньгами(c) : '';
@@ -8310,10 +8310,10 @@ function App() {
               </button>
             )}
             {pending.length === 0 && doneCount > 0 && (
-              <button className="kbtn kbtn-pri" onClick={()=>setSc('form')}>Добавить модули</button>
+              <button className="cm-btn cm-btn-pri" onClick={()=>setSc('form')}>Добавить модули</button>
             )}
             {modDone('M2') && (
-              <button className="kbtn" onClick={openNichePicker}>Добавить ниши</button>
+              <button className="cm-btn" onClick={openNichePicker}>Добавить ниши</button>
             )}
           </div>
         </div>

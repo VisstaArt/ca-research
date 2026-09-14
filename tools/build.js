@@ -167,6 +167,24 @@ TARGETS.forEach(function (t) {
   console.log('  app.jsx → lib/report.css  (' + Math.round(css.length / 1024) + ' КБ)');
 })();
 
+// Кнопки платформы. Владелица 15.09: «кнопки мы от неё (капсулы отчёта)
+// отказались, сейчас кнопка чёрная и слегка скруглённая» — это .cm-btn-pri
+// из согласованного макета оболочки. Инструмент живёт в отдельной рамке и
+// стилей оболочки не видит, поэтому правила кнопок вынимаем из того же
+// источника, что собирает shell.html, и кладём отдельным файлом. Копии в
+// коде нет: поменяется макет — поменяется и здесь.
+(function () {
+  var src = rd(BASE + 'design/оболочка/эталон.css');
+  var правила = [];
+  var re = /(^|\n)([^{}\n]*\.(?:cm-btn|btn-pri)[^{}\n]*)\{([^}]*)\}/g, m;
+  while ((m = re.exec(src))) правила.push(m[2].trim() + '{' + m[3].trim() + '}');
+  if (!правила.length) throw new Error('кнопки макета не нашлись в эталон.css');
+  wr(BASE + 'lib/buttons.css',
+    '/* Кнопки платформы, взяты из design/оболочка/эталон.css. Не править руками. */\n'
+    + правила.join('\n') + '\n');
+  console.log('  оболочка → lib/buttons.css  (правил: ' + правила.length + ')');
+})();
+
 // Экран ниш: вёрстка взята со страницы «Платформа — стиль ZIXO» (артефакт
 // 3d2c6dbd), правила лежат в design/исследование/ниши.css и копируются в lib
 // как есть — не пересказ, копия. Владелица: «вот это красиво, почему не так».
@@ -186,7 +204,7 @@ TARGETS.forEach(function (t) {
   var page = rd(BASE + страница);
   if (!page) return;
   ['platform.js', 'app.js', 'lib/auth.js', 'lib/logo.js', 'lib/platform.css',
-   'lib/nacre.css', 'lib/tokens.css', 'lib/niches.css', 'lib/migrate.js'].forEach(function (f) {
+   'lib/nacre.css', 'lib/tokens.css', 'lib/niches.css', 'lib/buttons.css', 'lib/migrate.js'].forEach(function (f) {
     var body = rd(BASE + f);
     if (!body) return;
     var fp = fingerprint(body).slice(0, 8);

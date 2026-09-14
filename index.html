@@ -17,8 +17,14 @@
 /* Внутри платформы инструмент следует теме ПЛАТФОРМЫ, а не системе: платформа
    сейчас светлая, а тёмная система переключала рамку в тёмные токены — и
    данные брифа ложились на чёрный фон под светлой жемчужной плашкой. */
-try{if(new URLSearchParams(location.search).get('embed')==='1')
-  document.documentElement.setAttribute('data-theme','light');}catch(e){}
+try{if(new URLSearchParams(location.search).get('embed')==='1'){
+  document.documentElement.setAttribute('data-theme','light');
+  /* Внутри платформы рамка НЕ красит свой фон: иначе поверх жемчужного фона
+     платформы ложится сплошная плита, и плашка-заголовок читается как
+     «плашка на плашке» (владелица 15.09: «вынеси перламутровую отдельно на
+     фон, не надо плашка на плашке»). */
+  document.documentElement.setAttribute('data-embed','1');
+}}catch(e){}
 </script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -26,6 +32,7 @@ try{if(new URLSearchParams(location.search).get('embed')==='1')
 <link rel="stylesheet" href="lib/tokens.css?v=cf9db2aa">
 <link rel="stylesheet" href="lib/nacre.css?v=d8b962d4">
 <link rel="stylesheet" href="lib/niches.css?v=638a6a37">
+<link rel="stylesheet" href="lib/buttons.css?v=87ce7a93">
 <style>
 /* Оформление инструмента — ЭТАЛОН, тот же, что у отчёта и платформы
    (lib/report.css подключён выше). Здесь только то, чего в нём нет: поля
@@ -115,6 +122,19 @@ tr:nth-child(even) td { background: none; }
 /* Таблица эталона просит минимум 600px ширины — на узкой рамке её должен
    прокручивать свой контейнер, а не страница. */
 .worksurface .tbl { overflow-x: auto; }
+/* Приписка под данными не должна сливаться с ними: владелица 15.09 —
+   «она сейчас сливается со всеми данными, надо отступ побольше или
+   звёздочку». Отбиваем чертой, отступом и знаком-звёздочкой. */
+.worksurface .card > .note { margin-top: 20px; padding-top: 13px;
+  border-top: 1px solid var(--line-2); padding-left: 20px; position: relative; }
+.worksurface .card > .note::before { content: "✳"; position: absolute; left: 0;
+  top: 12px; color: var(--acc-ink); font-size: 12px; line-height: 1; }
+
+/* ── Встроенный режим: рамка внутри платформы ──────────────────────────────
+   Свой фон и свои поля рамка не рисует — их задаёт платформа. Иначе жемчужная
+   плашка лежит на собственной плите инструмента, а не на фоне страницы. */
+html[data-embed] body { background: transparent; }
+html[data-embed] #root { max-width: none; padding: 0; }
 
 .field-opt { font-size: var(--fs-caption); color: var(--ink-3); text-transform: none; letter-spacing: 0; }
 </style>
@@ -126,6 +146,6 @@ tr:nth-child(even) td { background: none; }
      без сборки — как и весь остальной проект. -->
 <script src="lib/contract.js?v=c5d82d20"></script>
 <script src="lib/auth.js?v=c0e4610f"></script>
-<script src="app.js?v=e0dc9bc3"></script>
+<script src="app.js?v=653cb601"></script>
 </body>
 </html>

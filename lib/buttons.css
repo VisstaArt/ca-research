@@ -1,0 +1,12 @@
+/* Кнопки платформы, взяты из design/оболочка/эталон.css. Не править руками. */
+.btn-pri,.cm-btn,.cm-btn-pri,.cm-btn-back,.cm-btn-quiet{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line);border-radius:12px;padding:9px 17px;font-family:var(--sans);font-size:var(--fs-body);font-weight:600;color:var(--ink);cursor:pointer;background:linear-gradient(180deg, var(--card-solid), color-mix(in srgb, var(--card-solid) 93%, var(--ink)));transition:background .16s ease, border-color .16s ease, color .16s ease}
+.cm-btn:hover:not(:disabled),.cm-btn.hov{border-color:var(--ink-3);background:linear-gradient(180deg, color-mix(in srgb, var(--card-solid) 96%, var(--ink)),color-mix(in srgb, var(--card-solid) 88%, var(--ink)))}
+.cm-btn:active:not(:disabled),.cm-btn.act{box-shadow:inset 0 2px 4px rgba(23,21,18,.16)}
+.cm-btn:disabled{opacity:.45;cursor:default}
+.btn-pri,.cm-btn-pri{color:#FFFFFF;border:2px solid #0D0C0A;padding:8px 16px;background:linear-gradient(180deg, #262320, #171512)}
+.btn-pri:hover,.cm-btn-pri:hover:not(:disabled),.cm-btn-pri.hov{border-color:var(--mid);background:linear-gradient(180deg, #2E2A25, #1B1916);box-shadow:0 0 0 3px color-mix(in srgb, var(--mid) 22%, transparent)}
+.btn-pri:active,.cm-btn-pri:active:not(:disabled),.cm-btn-pri.act{box-shadow:inset 0 2px 5px rgba(0,0,0,.5);background:linear-gradient(180deg, #1B1916, #121110)}
+.cm-btn-back{border-color:var(--acc-mid);color:var(--ink)}
+.cm-btn-back:hover:not(:disabled),.cm-btn-back.hov{border-color:var(--acc-mid-ink);background:color-mix(in srgb, var(--acc-mid) 8%, var(--card-solid))}
+.cm-btn-quiet{border-color:transparent;background:none;color:var(--ink-2);font-weight:500}
+.cm-btn-quiet:hover:not(:disabled),.cm-btn-quiet.hov{background:color-mix(in srgb, var(--ink) 6%, transparent);color:var(--ink);border-color:transparent}
