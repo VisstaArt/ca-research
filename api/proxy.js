@@ -23,21 +23,39 @@ export default async function handler(req, res) {
     // не применена), нет ответа — работаем на своём: прогон важнее экономии,
     // и молча падать из-за незаведённого ключа нельзя.
     let key = process.env.OPENAI_API_KEY;
+    let провайдер = 'openai';
     if (client_id) {
-      try {
-        const r = await fetch(auth.pgBase + 'rpc/provider_key_for', {
-          method: 'POST', headers: auth.pgHeaders,
-          body: JSON.stringify({ p_client: client_id, p_provider: 'openai', p_purpose: 'writing' }),
-        });
-        if (r.ok) {
-          const d = await r.json().catch(() => null);
-          const свой = typeof d === 'string' ? d : (d && d.provider_key_for);
-          if (свой && String(свой).trim()) key = String(свой).trim();
-        }
-      } catch { /* остаёмся на своём ключе */ }
+      // Сначала ключ OpenAI, нет — OpenRouter: владелица заводит «одну
+      // платформу с разными нейронками», и её ключ может быть от OpenRouter.
+      for (const п of ['openai', 'openrouter']) {
+        try {
+          const r = await fetch(auth.pgBase + 'rpc/provider_key_for', {
+            method: 'POST', headers: auth.pgHeaders,
+            body: JSON.stringify({ p_client: client_id, p_provider: п, p_purpose: 'writing' }),
+          });
+          if (r.ok) {
+            const d = await r.json().catch(() => null);
+            const свой = typeof d === 'string' ? d : (d && d.provider_key_for);
+            if (свой && String(свой).trim()) { key = String(свой).trim(); провайдер = п; break; }
+          }
+        } catch { /* пробуем следующего / остаёмся на своём ключе */ }
+      }
     }
 
-    const r = await fetch('https://api.openai.com/v1/chat/completions', {
+    // Маршрутизация по ФАКТИЧЕСКОМУ ключу, не только по строке в базе:
+    // первый живой ключ владелицы был OpenRouter (sk-or-v1…), сохранённый
+    // под провайдером openai, — уходил на api.openai.com и молча ловил 401.
+    // Ключ OpenRouter узнаваем по префиксу, шлём его туда, где он работает.
+    if (/^sk-or-/i.test(key)) провайдер = 'openrouter';
+    if (провайдер === 'openrouter' && body.model && body.model.indexOf('/') < 0) {
+      // У OpenRouter имена моделей с вендором: gpt-4.1 → openai/gpt-4.1
+      body.model = 'openai/' + body.model;
+    }
+    const адрес = провайдер === 'openrouter'
+      ? 'https://openrouter.ai/api/v1/chat/completions'
+      : 'https://api.openai.com/v1/chat/completions';
+
+    const r = await fetch(адрес, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

@@ -6646,17 +6646,24 @@ function App() {
   const [searchDraft, setSearchDraft] = React.useState('');
   const [searchBusy, setSearchBusy] = React.useState(false);
   const [searchMsg, setSearchMsg] = React.useState('');
+  // Провайдер ключа модели. Не только OpenAI: первый живой ключ владелицы
+  // оказался от OpenRouter (sk-or-v1…) — сохранённый под openai, он уходил
+  // на api.openai.com и молча ловил 401. Claude и Gemini доступны через
+  // OpenRouter — это и есть «одна платформа с разными нейронками».
+  const [keyProvider, setKeyProvider] = React.useState('openai');
   React.useEffect(() => {
     if (!clientIdFromUrl) { setOwnKey(''); setOwnSearchKey(''); return; }
     const A = window.CAAuth;
     fetch(A.SUPABASE_URL + '/rest/v1/provider_keys?select=hint,provider&client_id=eq.'
-          + encodeURIComponent(clientIdFromUrl) + '&provider=in.(openai,tavily)',
+          + encodeURIComponent(clientIdFromUrl) + '&provider=in.(openai,openrouter,tavily)',
       { headers: { apikey: A.SUPABASE_ANON_KEY, Authorization: 'Bearer ' + A.getAccessToken() } })
       .then(r => r.ok ? r.json() : [])
       .then(d => {
         const по = п => (Array.isArray(d) ? d : []).find(x => x.provider === п);
-        const о = по('openai'), т = по('tavily');
-        setOwnKey(о ? (о.hint || 'заведён') : '');
+        const о = по('openai'), ор = по('openrouter'), т = по('tavily');
+        const ключ = о || ор;
+        setOwnKey(ключ ? (ключ.hint || 'заведён') : '');
+        if (ор && !о) setKeyProvider('openrouter');
         setOwnSearchKey(т ? (т.hint || 'заведён') : '');
       })
       .catch(() => { setOwnKey(''); setOwnSearchKey(''); });
@@ -6686,8 +6693,19 @@ function App() {
   const saveOwnKey = async () => {
     setKeyBusy(true); setKeyMsg('');
     try {
-      const hint = await saveProviderKey('openai', 'OpenAI клиента', 'writing', keyDraft.trim());
-      setOwnKey(hint); setKeyDraft(''); setKeyMsg('Ключ сохранён. Дальше работа идёт на нём.');
+      // Ключ сам говорит, чей он: sk-or-… — OpenRouter, под openai его
+      // сохранять нельзя (уйдёт не туда и словит 401). Форма не спорит с
+      // человеком молча — переключает провайдера и говорит об этом.
+      const сырой = keyDraft.trim();
+      let провайдер = keyProvider;
+      let заметка = '';
+      if (/^sk-or-/i.test(сырой) && провайдер !== 'openrouter') {
+        провайдер = 'openrouter'; setKeyProvider('openrouter');
+        заметка = ' Ключ по виду от OpenRouter — сохранён под ним.';
+      }
+      const имя = провайдер === 'openrouter' ? 'OpenRouter клиента' : 'OpenAI клиента';
+      const hint = await saveProviderKey(провайдер, имя, 'writing', сырой);
+      setOwnKey(hint); setKeyDraft(''); setKeyMsg('Ключ сохранён. Дальше работа идёт на нём.' + заметка);
     } catch (e) { setKeyMsg(e.message); }
     setKeyBusy(false);
   };
@@ -7578,13 +7596,20 @@ function App() {
                 : 'Свой ключ не заведён — работа идёт на ключе платформы и тратит кредиты.'}
             </p>
             {!ownKey && (
-              <div style={{display:'flex',gap:6}}>
-                <input type="password" value={keyDraft} autoComplete="new-password"
-                  onChange={e=>setKeyDraft(e.target.value)}
-                  placeholder="ключ OpenAI клиента — вставьте, если работаем на нём"
-                  style={{flex:1}} />
-                <button onClick={saveOwnKey} disabled={!keyDraft.trim()||keyBusy}>
-                  {keyBusy ? 'Сохраняю…' : 'Сохранить'}</button>
+              <div>
+                <select value={keyProvider} onChange={e=>setKeyProvider(e.target.value)}
+                  style={{width:'100%',marginBottom:6}}>
+                  <option value="openai">OpenAI (ключ sk-…)</option>
+                  <option value="openrouter">OpenRouter (ключ sk-or-…) — Claude и Gemini через него</option>
+                </select>
+                <div style={{display:'flex',gap:6}}>
+                  <input type="password" value={keyDraft} autoComplete="new-password"
+                    onChange={e=>setKeyDraft(e.target.value)}
+                    placeholder={keyProvider==='openrouter' ? 'ключ OpenRouter клиента (sk-or-…)' : 'ключ OpenAI клиента — вставьте, если работаем на нём'}
+                    style={{flex:1}} />
+                  <button onClick={saveOwnKey} disabled={!keyDraft.trim()||keyBusy}>
+                    {keyBusy ? 'Сохраняю…' : 'Сохранить'}</button>
+                </div>
               </div>
             )}
             {keyMsg && <p style={{fontSize:12,color:'var(--ink-2)',marginTop:6}}>{keyMsg}</p>}
