@@ -1,6 +1,6 @@
 // СОБРАНО АВТОМАТИЧЕСКИ из app.jsx — не править руками.
 // Правки вносить в app.jsx, затем: osascript -l JavaScript tools/build.js
-// отпечаток-исходника: d85ac3bed4e88910
+// отпечаток-исходника: ca3dc54f4e8d3337
 // Функции контракта живут в lib/contract.js. Разбираем их сюда, чтобы весь
 // остальной код обращался к ним по прежним именам и не менялся.
 const{GLOBAL_MODS,isPerNiche,dropOrphans,nichesOf,resKey,splitMdRow,isMdSeparator,parseMdTables,buildModuleEntry,pickTable,pickColumn,withStableIds}=CAContract;// Название модуля берётся из MODULES — это конфиг ИНТЕРФЕЙСА, и сборщик
@@ -2113,8 +2113,11 @@ function Field({label,optional,info,children}){return/*#__PURE__*/React.createEl
 // стилях есть правила на голые table/th/td и на .page — без ограничения они
 // переписали бы оформление всего приложения. @media и @supports сохраняются,
 // внутри них селекторы ограничиваются так же.
-let blockStyleInjected=false;function injectBlockStyles(){if(blockStyleInjected||typeof document==='undefined')return;blockStyleInjected=true;const scope=sel=>sel.split(',').map(one=>{const t=one.trim();if(!t||t.startsWith('@')||t.startsWith('from')||t.startsWith('to')||/^\d+%$/.test(t))return t;if(t.startsWith(':root'))return'.rview';// токены уже заданы страницей
-return'.rview '+t;}).join(',');// Начало правила — это начало строки, ИЛИ закрывающая скобка, ИЛИ открывающая
+let blockStyleInjected=false;function injectBlockStyles(){if(blockStyleInjected||typeof document==='undefined')return;blockStyleInjected=true;const scope=sel=>sel.split(',').map(one=>{const t=one.trim();if(!t||t.startsWith('@')||t.startsWith('from')||t.startsWith('to')||/^\d+%$/.test(t))return t;if(t.startsWith(':root')){// Хвост селектора — условие темы, его НЕЛЬЗЯ терять: тёмные токены
+// живут в «:root:not([data-theme=light])», и без хвоста они красили
+// .rview-плашку на тёмной macOS даже при принудительно светлой теме —
+// светлый текст на светлом перламутре, «просто белая плашка» (14.09).
+const хвост=t.slice(':root'.length).trim();return хвост?'html'+хвост+' .rview':'.rview';}return'.rview '+t;}).join(',');// Начало правила — это начало строки, ИЛИ закрывающая скобка, ИЛИ открывающая
 // скобка @media/@supports. Без третьего случая первое правило внутри каждого
 // @media оставалось без ограничения и утекало на всю страницу.
 const prefix=css=>css.replace(/(^|[{}])\s*([^{}@]+)\{/g,(m,br,sel)=>br+'\n'+scope(sel)+'{');const el=document.createElement('style');el.id='research-block-styles';// Константы — сразу, чтобы блоки не мигали голыми. Затем ПОЛНЫЙ стиль

@@ -6223,7 +6223,14 @@ function injectBlockStyles() {
   const scope = sel => sel.split(',').map(one => {
     const t = one.trim();
     if (!t || t.startsWith('@') || t.startsWith('from') || t.startsWith('to') || /^\d+%$/.test(t)) return t;
-    if (t.startsWith(':root')) return '.rview';       // токены уже заданы страницей
+    if (t.startsWith(':root')) {
+      // Хвост селектора — условие темы, его НЕЛЬЗЯ терять: тёмные токены
+      // живут в «:root:not([data-theme=light])», и без хвоста они красили
+      // .rview-плашку на тёмной macOS даже при принудительно светлой теме —
+      // светлый текст на светлом перламутре, «просто белая плашка» (14.09).
+      const хвост = t.slice(':root'.length).trim();
+      return хвост ? 'html' + хвост + ' .rview' : '.rview';
+    }
     return '.rview ' + t;
   }).join(',');
   // Начало правила — это начало строки, ИЛИ закрывающая скобка, ИЛИ открывающая
