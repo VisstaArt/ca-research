@@ -6422,7 +6422,7 @@ function NicheHero({ list, canPick, selected, onToggle, onContinue, statusOf, ш
         ? {background:'none', border:0, boxShadow:'none', padding:0, marginBottom:22}
         : {padding:0, overflow:'hidden', marginBottom:14}}>
       {шапка}
-      <div className="hero">
+      <div className="hero" style={наПерламутре ? {height:232} : undefined}>
         <div className="fan">
           {слоты.map(k => {
             const д = at(k);
@@ -6448,6 +6448,22 @@ function NicheHero({ list, canPick, selected, onToggle, onContinue, statusOf, ш
             );
           })}
         </div>
+        {/* Точки-пагинация: по вееру не видно, что он листается, и сколько ниш
+            всего. Владелица 15.09: «непонятно, что это надо как-то листать».
+            Точки кликабельны — это и подсказка, и второй способ переключения. */}
+        {n > 1 && (
+          <div style={{position:'absolute',left:0,right:0,bottom:6,zIndex:7,
+              display:'flex',justifyContent:'center',alignItems:'center',gap:7}}>
+            {list.map((_, i) => (
+              <button key={i} onClick={()=>{ setC(i); if (onPick) onPick(i); }}
+                title={list[i] && list[i].name}
+                style={{width:i===c?20:7,height:7,borderRadius:99,padding:0,border:0,
+                  cursor:'pointer',transition:'width .2s ease, background .2s ease',
+                  background:i===c ? 'var(--ink)' : 'var(--ink-3)',
+                  opacity:i===c ? 1 : .38}}/>
+            ))}
+          </div>
+        )}
         {n > 1 && <>
           <button onClick={()=>{ const i=((c - 1) % n + n) % n; setC(i); if (onPick) onPick(i); }}
             style={{position:'absolute',left:10,top:'50%',transform:'translateY(-50%)',zIndex:6,width:34,height:34,borderRadius:'50%',padding:0}}>←</button>
@@ -8728,8 +8744,12 @@ function App() {
         why: String(ключ(r, 'коммент', 'почему', 'обоснов') || '').trim(),
       })).filter(x => x.name);
     })();
+    // Порядок слияния: JSON ПЕРВЫМ, таблица последней и потому главной.
+    // 15.09 владелица увидела на карте 15 баллов, а в данных под ней 18:
+    // выжимка JSON спорила с таблицей «Приоритет ниш», и побеждала выжимка.
+    // Таблица — то, что человек видит и проверяет глазами; она и авторитет.
     const поИмени = new Map();
-    изТаблицы.concat(изJson).forEach(н => {
+    изJson.concat(изТаблицы).forEach(н => {
       const ключ = String(н.name || '').toLowerCase().trim();
       if (!ключ) return;
       const было = поИмени.get(ключ) || {};
@@ -8778,6 +8798,7 @@ function App() {
         <div className="coveract">
           <span className="note">Найдено: {всеНиши.length}</span>
           <span className="note">В работе: {вРаботе.length}</span>
+          <span className="note">Листайте карты стрелками или точками</span>
           <span className="note">{дата}</span>
         </div>
       </div>

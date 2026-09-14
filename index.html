@@ -135,6 +135,17 @@ tr:nth-child(even) td { background: none; }
    плашка лежит на собственной плите инструмента, а не на фоне страницы. */
 html[data-embed] body { background: transparent; }
 html[data-embed] #root { max-width: none; padding: 0; }
+
+/* Перламутр на картах ниш даёт материал, но НЕ позиционирование. .nacre ставит
+   position:relative и, загружаясь после tokens.css, перебивал
+   .fcard{position:absolute} — все пять карт падали в поток и прятались под
+   первой внутри .hero{overflow:hidden}. Владелица: «появляется всего одна».
+   Правило короткое, но снимать его нельзя, пока карты перламутровые. */
+.fcard.nacre { position: absolute; }
+/* Карты в веере стоят лесенкой: верхняя на 30px от верха, крайние на 74px.
+   Пустоты сверху быть не должно — поднимаем всю лесенку на 22px, ровно на
+   отступ верхней карты. Владелица: «столько места сверху». */
+.cover .hero .fcard { margin-top: -22px; }
 /* Разбор ниши: на узкой рамке круговая и полосы встают друг под друга,
    иначе полосы сжимаются до нечитаемых огрызков. */
 @media (max-width: 700px) {
@@ -151,6 +162,6 @@ html[data-embed] #root { max-width: none; padding: 0; }
      без сборки — как и весь остальной проект. -->
 <script src="lib/contract.js?v=c5d82d20"></script>
 <script src="lib/auth.js?v=c0e4610f"></script>
-<script src="app.js?v=09ceedfb"></script>
+<script src="app.js?v=a92264fc"></script>
 </body>
 </html>
