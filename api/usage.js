@@ -17,7 +17,18 @@ import { requireUser, setCorsHeaders } from './_auth.js';
 
 // Цены за миллион токенов, в центах. Держим здесь, а не в браузере: цена
 // меняется у провайдера, и правка в одном месте не требует пересборки страницы.
-const PRICE = { in: 200, out: 800 };      // gpt-4.1: $2 и $8 за миллион
+// Прейскурант со страницы цен OpenAI (скрины владелицы 14.09.2026), короткий
+// контекст. Цены за миллион токенов, в центах.
+const PRICES = {
+  'gpt-6-astra':   { in: 1000, out: 5000 },   // $10 / $50
+  'gpt-5.6-sol':   { in:  400, out: 2000 },   // $4  / $20
+  'gpt-5.6-terra': { in:  200, out: 1200 },   // $2  / $12
+  'gpt-5.6-luna':  { in:   20, out:  120 },   // $0.20 / $1.20
+  'gpt-5':         { in:  125, out: 1000 },   // $1.25 / $10
+  'gpt-4.1':       { in:  200, out:  800 },   // $2  / $8
+  'gpt-4.1-mini':  { in:   40, out:  160 },
+};
+const PRICE = PRICES['gpt-4.1'];           // запасной вариант, если модель не названа
 const SEARCH_CENTS = 1;                    // Tavily: ~$0.01 за поиск
 
 export default async function handler(req, res) {
@@ -32,7 +43,7 @@ export default async function handler(req, res) {
   // (см. комментарий выше), браузер их спрашивает, а не хранит копию:
   // смета и счёт обязаны сходиться, а две копии цен молча расходятся.
   if (req.method === 'GET') {
-    return res.status(200).json({ price: PRICE, search_cents: SEARCH_CENTS });
+    return res.status(200).json({ price: PRICE, prices: PRICES, search_cents: SEARCH_CENTS });
   }
 
   const b = req.body || {};

@@ -8150,6 +8150,12 @@ function App() {
   React.useEffect(() => {
     authFetch('/api/usage').then(r => r.ok ? r.json() : null)
       .then(d => { if (d && d.price) setПрайс(d); }).catch(() => {});
+  // Цена зависит от ВЫБРАННОЙ модели: на gpt-6-astra выход в шесть раз дороже,
+  // чем на gpt-4.1, и смета по старой цене врала бы в разы.
+  const ценаМодели = () => {
+    if (!прайс) return null;
+    return (прайс.prices && прайс.prices[model]) || прайс.price;
+  };
   }, []);
   // Оценка модуля: СРЕДНЕЕ по фактическим прогонам этого же модуля (замер
   // дороже догадки); фактов нет — ориентир, помеченный в подписи «≈».
@@ -8165,7 +8171,8 @@ function App() {
       tin = ср(r => r.usage.prompt); tout = ср(r => r.usage.completion);
       поиск = ср(r => r.searchCalls); частот = ср(r => r.keywordCalls);
     }
-    return (tin * прайс.price.in + tout * прайс.price.out) / 1e6
+    const ц = ценаМодели();
+    return (tin * ц.in + tout * ц.out) / 1e6
       + (поиск + частот) * прайс.search_cents;
   };
   const сметаЦентов = (ids, ниш) => {
@@ -8183,7 +8190,7 @@ function App() {
   const потраченоЦентов = () => {
     if (!прайс || !proj) return null;
     return (proj.results || []).reduce((s, r) => s
-      + (r.usage ? (r.usage.prompt * прайс.price.in + r.usage.completion * прайс.price.out) / 1e6 : 0)
+      + (r.usage ? (r.usage.prompt * ценаМодели().in + r.usage.completion * ценаМодели().out) / 1e6 : 0)
       + ((r.searchCalls || 0) + (r.keywordCalls || 0)) * прайс.search_cents, 0);
   };
   const [blockMsg, setBlockMsg] = React.useState(''); // «модуль не стартует без предыдущих стадий»
