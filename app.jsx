@@ -7692,19 +7692,22 @@ function App() {
   );
 
   if (embedded && sc === 'form' && proj && !briefEdit) {
-    // Что мы ЗНАЕМ — только заполненные поля; пустые не показываем вовсе:
-    // страница говорит «вот что у нас есть», а не «вот чего вы не дали».
-    // Оформление — СЛОВАРЁМ ЭТАЛОНА (.rview даёт карточкам стекло отчёта,
-    // .sech/.coverdl/.kbtn/.note — его же классы), не самодельными стилями.
-    const пары = [
+    // Что мы ЗНАЕМ — только заполненные поля, пустые не показываем.
+    // Оформление словарём эталона, но с разделением по ДЛИНЕ значения:
+    // .coverdl (пары обложки отчёта) рассчитан на короткие значения —
+    // длинный текст в нём рвёт сетку, «всё наезжает» (владелица 14.09).
+    // Короткое — парами, длинное — абзацем под надписью .eyebrow.
+    const все = [
       [t.fName, brief.name], ['Сайт', brief.siteUrl], [t.fNiche, brief.niche],
       [t.fGeoMarket, brief.geoMarket], [t.fGeoComp, brief.geoCompany],
+      ['Язык исследования', langSelf(lang)], [t.fFormat, brief.format],
+      ['Выбранные ниши', brief.selectedNiche],
       [t.fAudience, brief.audience], [t.fResult, brief.result],
-      [t.fFormat, brief.format], [t.fPrice, brief.price],
-      [t.fCompetitors, brief.competitors],
-      ['Выбранные ниши', brief.selectedNiche], [t.fExtra, brief.extra],
-      ['Язык исследования', langSelf(lang)],
-    ].filter(([, v]) => String(v || '').trim());
+      [t.fPrice, brief.price], [t.fCompetitors, brief.competitors],
+      [t.fExtra, brief.extra],
+    ].map(([м, з]) => [м, String(з || '').trim()]).filter(([, з]) => з);
+    const короткие = все.filter(([, з]) => з.length <= 64);
+    const длинные = все.filter(([, з]) => з.length > 64);
     const цвета = String(brief.brandColors || '').match(/#[0-9a-fA-F]{3,8}/g) || [];
     const соц = String(brief.socials || '').split(/[\n,\s]+/).filter(x => /^https?:/.test(x));
     return (
@@ -7712,12 +7715,20 @@ function App() {
         <StageHeader имя="Бриф" lang={lang}/>
         <div className="worksurface rview">
           <div className="sech" style={{marginTop:6}}>Что мы знаем о проекте</div>
-          <div className="card" style={{marginBottom:0}}>
-            <dl className="coverdl" style={{margin:0,paddingTop:0,borderTop:0}}>
-              {пары.map(([м, з]) => (
-                <div key={м}><dt>{м}</dt><dd style={{whiteSpace:'pre-wrap'}}>{String(з)}</dd></div>
-              ))}
-            </dl>
+          <div className="card">
+            {короткие.length > 0 && (
+              <dl className="coverdl" style={{margin:0,paddingTop:0,borderTop:0}}>
+                {короткие.map(([м, з]) => (
+                  <div key={м}><dt>{м}</dt><dd>{з}</dd></div>
+                ))}
+              </dl>
+            )}
+            {длинные.map(([м, з]) => (
+              <div key={м} style={{marginTop:16,paddingTop:14,borderTop:'1px solid var(--line-2)'}}>
+                <span className="eyebrow">{м}</span>
+                <p style={{margin:0,fontSize:13.5,lineHeight:1.6,maxWidth:'74ch',whiteSpace:'pre-wrap'}}>{з}</p>
+              </div>
+            ))}
             <p className="note">Эти данные собраны с сайта и из ваших ответов —
               на них строится всё исследование. Если что-то устарело или неверно,
               поправьте до запуска модулей.</p>
@@ -7725,32 +7736,52 @@ function App() {
           {(цвета.length > 0 || brief.brandFonts || brief.brandLogo || соц.length > 0) && (
             <React.Fragment>
               <div className="sech">Дизайн и каналы</div>
-              <div className="card" style={{marginBottom:0}}>
-                {brief.brandLogo && (
-                  <img src={brief.brandLogo} alt="Логотип" style={{maxHeight:44,maxWidth:220,display:'block',marginBottom:12}}
-                    onError={e=>{ e.target.style.display='none'; }}/>
-                )}
-                <dl className="coverdl" style={{margin:0,paddingTop:0,borderTop:0}}>
-                  {цвета.length > 0 && (
-                    <div><dt>Цвета</dt><dd style={{display:'flex',gap:8,alignItems:'center',flexWrap:'wrap'}}>
-                      {цвета.map(c => (
-                        <span key={c} title={c} style={{display:'inline-flex',alignItems:'center',gap:5}}>
-                          <span style={{width:15,height:15,borderRadius:5,background:c,border:'1px solid var(--line)',display:'inline-block'}}/>{c}
-                        </span>
-                      ))}
-                    </dd></div>
+              <div className="card">
+                <div style={{display:'flex',gap:24,alignItems:'flex-start',flexWrap:'wrap'}}>
+                  {brief.brandLogo && (
+                    <img src={brief.brandLogo} alt="Логотип" style={{maxHeight:48,maxWidth:200,flexShrink:0}}
+                      onError={e=>{ e.target.style.display='none'; }}/>
                   )}
-                  {brief.brandFonts && <div><dt>Шрифты</dt><dd>{brief.brandFonts}</dd></div>}
-                  {соц.length > 0 && (
-                    <div><dt>Соцсети</dt><dd style={{display:'flex',gap:10,flexWrap:'wrap'}}>
-                      {соц.map(u => <a key={u} href={u} target="_blank" rel="noreferrer">{u.replace(/^https?:\/\/(www\.)?/,'').replace(/\/$/,'')}</a>)}
-                    </dd></div>
-                  )}
-                </dl>
+                  <div style={{flex:1,minWidth:240,display:'grid',gap:12}}>
+                    {цвета.length > 0 && (
+                      <div>
+                        <span className="eyebrow">Цвета</span>
+                        <div style={{display:'flex',gap:12,alignItems:'center',flexWrap:'wrap'}}>
+                          {цвета.map(c => (
+                            <span key={c} title={c} style={{display:'inline-flex',alignItems:'center',gap:6,fontSize:12.5}}>
+                              <span style={{width:18,height:18,borderRadius:6,background:c,border:'1px solid var(--line)',
+                                boxShadow:'inset 0 1px 0 rgba(255,255,255,.4)',display:'inline-block'}}/>
+                              <span style={{fontVariantNumeric:'tabular-nums'}}>{c}</span>
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    {brief.brandFonts && (
+                      <div>
+                        <span className="eyebrow">Шрифты</span>
+                        <p style={{margin:0,fontSize:13.5}}>{brief.brandFonts}</p>
+                      </div>
+                    )}
+                    {соц.length > 0 && (
+                      <div>
+                        <span className="eyebrow">Соцсети</span>
+                        <div style={{display:'flex',gap:8,flexWrap:'wrap'}}>
+                          {соц.map(u => (
+                            <a key={u} href={u} target="_blank" rel="noreferrer" className="kchip"
+                              style={{textDecoration:'none'}}>
+                              {u.replace(/^https?:\/\/(www\.)?/,'').replace(/\/$/,'')}
+                            </a>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
               </div>
             </React.Fragment>
           )}
-          <div style={{display:'flex',gap:10,marginTop:18,flexWrap:'wrap'}}>
+          <div style={{display:'flex',gap:10,marginTop:20,flexWrap:'wrap'}}>
             <button className="kbtn" onClick={()=>setBriefEdit(true)}>Править бриф</button>
             <button className="kbtn" onClick={()=>{ if (window.confirm('Начать заново? Текущий проект останется в списке, бриф заполните с нуля.')) goNew(); }}>Начать заново</button>
           </div>
