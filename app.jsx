@@ -7463,7 +7463,7 @@ function ХодПрогона({ модули, готов, текущий, ниш
   );
 }
 
-function StageHeader({ имя, подпись, бровь, раздел, факты, lang }) {
+function StageHeader({ имя, подпись, раздел, факты, lang }) {
   // Плашка-заголовок страницы — ДОСЛОВНО по согласованному макету оболочки
   // (артефакт 5a34980c): там КАЖДЫЙ экран открывается одним и тем же блоком
   //   <div class="card nacre cover"><div class="chead"><div>
@@ -7479,13 +7479,23 @@ function StageHeader({ имя, подпись, бровь, раздел, фак�
   // приходят как «.rview .cover .covername» — это потомок, и когда оба
   // класса висели на одном элементе, серифный заголовок не применялся вовсе.
   const дата = new Date().toLocaleDateString('ru-RU', { day:'numeric', month:'long', year:'numeric' });
-  const строки = (факты || []).filter(ф => ф && String(ф[1] || '').trim());
+  // Ниш бывает десять, и перечислять их все в шапке нельзя: строка уезжает
+  // за край (владелица 14.09). Показываем две и число остальных.
+  const короче = (к, в) => {
+    const т = String(в).trim();
+    if (!/ниш/i.test(к) || т.length < 40) return т;
+    const части = т.split(/\s*[,;·]\s*/).filter(Boolean);
+    if (части.length < 3) return т;
+    return части.slice(0, 2).join(', ') + ' и ещё ' + (части.length - 2);
+  };
+  const строки = (факты || [])
+    .filter(ф => ф && String(ф[1] || '').trim())
+    .map(([к, в]) => [к, короче(к, в)]);
   return (
     <div className="rview">
       <div className="card nacre cover" style={{marginBottom:22}}>
         <div className="chead"><div>
           <span className="kchip kchip-go rpt-mark"><span className="d"></span>{раздел || 'Исследование'}</span>
-          {бровь && <span className="eyebrow">{бровь}</span>}
           <h1 className="covername">{имя}</h1>
           {подпись && <p className="coversub">{подпись}</p>}
         </div></div>
@@ -9014,7 +9024,6 @@ function App() {
     <div>
       <StageHeader
         имя={шагИзАдреса === 'niches' ? 'Ниши' : 'Ход исследования'}
-        бровь={шагИзАдреса === 'niches' ? 'Стоп-точка выбора' : 'Ещё не запускалось'}
         подпись={шагИзАдреса === 'niches'
           ? 'Какие ниши нашла разведка и с какими работаем дальше.'
           : 'Модули идут один за другим; каждый оставляет свой блок отчёта.'}
@@ -9185,7 +9194,7 @@ function App() {
   // Квиз вместо анкеты — только в платформе и только для нового брифа.
   if (embedded && !proj && sc === 'form') return (
     <div>
-      <StageHeader имя="Бриф" бровь="Начало пути"
+      <StageHeader имя="Бриф"
         подпись="Дайте сайт — соберу бриф сама и спрошу только то, чего не нашла."
         lang={lang}/>
       <div className="worksurface">
@@ -9222,7 +9231,7 @@ function App() {
     const естьДизайн = цвета.length || соц.length || шрифты || зн(brief.brandLogo);
     return (
       <div>
-        <StageHeader имя="Бриф" бровь="Что мы знаем о клиенте"
+        <StageHeader имя="Бриф"
           подпись="На этих данных строятся все модули исследования."
           факты={[['Проект', brief.name], ['Сайт', домен],
                   ['Рынок', brief.geoMarket], ['Ниши', brief.selectedNiche]]}
@@ -9337,7 +9346,7 @@ function App() {
 
   if (sc === 'form') return (
     <div>
-      {embedded && <StageHeader имя="Бриф" бровь="Правка данных"
+      {embedded && <StageHeader имя="Бриф"
         подпись="Поправьте, что устарело, и вернитесь к прогону."
         факты={[['Проект', brief.name]]} lang={lang}/>}
       <div className={embedded ? 'worksurface' : undefined}>
@@ -9922,7 +9931,7 @@ function App() {
           </React.Fragment>
         ) : (
           <React.Fragment>
-            <StageHeader имя="Ниши" бровь="Что нашла разведка"
+            <StageHeader имя="Ниши"
               подпись="Здесь появятся карты ниш со спросом, конкуренцией и экономикой."
               факты={[['Проект', brief.name]]} lang={lang}/>
             <div className="worksurface rview">
@@ -9950,7 +9959,6 @@ function App() {
       {embedded ? (
         <StageHeader
           имя={шагИзАдреса === 'niches' ? 'Ниши' : 'Ход исследования'}
-          бровь={шагИзАдреса === 'niches' ? 'Стоп-точка выбора' : 'Что уже собрано'}
           подпись={шагИзАдреса === 'niches'
             ? 'Какие ниши нашла разведка и с какими работаем дальше.'
             : 'Модули идут один за другим; каждый оставляет свой блок отчёта.'}
