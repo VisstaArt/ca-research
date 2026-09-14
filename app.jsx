@@ -6113,10 +6113,32 @@ const ОСИ_НИШИ = [
   ['economics', 'Экономика', 'сходится ли по деньгам'],
   ['fit', 'Соответствие', 'наш ли это клиент'],
 ];
+// Вердикт считаем ПО БАЛЛАМ, а не берём у модели: владелица 15.09 показала
+// нишу с 18 из 20, помеченную «под вопросом», — противоречие видно сразу и
+// подрывает доверие ко всей таблице. Пороги простые и объяснимые: от 15 —
+// берём, 10–14 — под вопросом, ниже 10 — не идём.
+const ПОРОГ_БЕРЁМ = 15, ПОРОГ_ВОПРОС = 10;
+function вердиктПоБаллам(score) {
+  // Number(null) === 0, и без этой проверки ниша без оценки получала бы
+  // «не идём» — утверждение, которого разведка не делала.
+  const б = (score === null || score === undefined || score === '') ? NaN : Number(score);
+  if (!Number.isFinite(б)) return 'под вопросом';
+  if (б >= ПОРОГ_БЕРЁМ) return 'идём';
+  if (б >= ПОРОГ_ВОПРОС) return 'под вопросом';
+  return 'не идём';
+}
+// Порядок на экране: сначала те, что берём, потом спорные, в конце отброшенные.
+function весВердикта(v) {
+  const t = String(v || '').toLowerCase();
+  if (/не идём|no-?go|нет/.test(t)) return 2;
+  if (/вопрос|maybe/.test(t)) return 1;
+  return 0;
+}
+
 function цветВердикта(v) {
   const t = String(v || '').toLowerCase();
-  if (/no|не идём|нет/.test(t)) return 'var(--acc-quiet)';
-  if (/maybe|вопрос/.test(t)) return 'var(--acc-mid)';
+  if (/не идём|no-?go|нет/.test(t)) return 'var(--acc-quiet)';
+  if (/вопрос|maybe/.test(t)) return 'var(--acc-mid)';
   return 'var(--acc-strong)';
 }
 function РозаНиши({ ниша, размер }) {
@@ -6186,8 +6208,18 @@ function NicheHero({ list, canPick, selected, onToggle, onContinue, statusOf, ш
             return (
               <div key={k} className={'fcard nacre '+кл[String(k)]}
                 onClick={()=>{ if (k!==0) { const i=((c + k) % n + n) % n; setC(i); if (onPick) onPick(i); } }}
-                style={k !== 0 ? {cursor:'pointer'} : undefined}>
-                <div className="tag">{выбрана(д.name) ? '✓ берём в работу' : 'не берём'}{д.verdict ? ' · '+д.verdict : ''}</div>
+                style={{
+                  // Цвет карты — по вердикту, а не по месту в веере: владелица
+                  // 15.09 — «если берём, она зелёная, под вопросом — фиолетовая».
+                  // Подкрашиваем свечение карты, сама перламутровая основа цела.
+                  '--glow': цветВердикта(д.verdict),
+                  ...(k !== 0 ? { cursor:'pointer' } : {}),
+                }}>
+                <div className="tag" style={{display:'flex',alignItems:'center',gap:6}}>
+                  <span style={{width:7,height:7,borderRadius:'50%',flex:'0 0 auto',
+                    background:цветВердикта(д.verdict)}}/>
+                  {д.verdict || 'без оценки'}{выбрана(д.name) ? ' · берём' : ''}
+                </div>
                 <div className="name">{д.name}</div>
                 <div className="foot"><span>{st || 'Оценка'}</span><b>{д.score != null ? д.score : '—'}</b></div>
               </div>
@@ -8438,9 +8470,46 @@ function App() {
   if (embedded && proj && шагИзАдреса === 'niches') {
     const м2 = (proj.results || []).find(r => r.id === 'M2' && r.content && !r.failed);
     const нд = м2 ? (м2.nicheData || extractNicheData(м2.content || '')) : null;
-    const всеНиши = (nicheOpts.length ? nicheOpts
-      : (нд && Array.isArray(нд.niches) ? нд.niches : []))
-      .slice().sort((a, b) => (b.score || 0) - (a.score || 0));
+    // Ниши берём из ДВУХ источников и сливаем: JSON разведки (NICHE_DATA) даёт
+    // разбор по осям, а таблица «Приоритет ниш» — полный список. 15.09
+    // владелица увидела в веере одну карту при нескольких нишах в таблице:
+    // модель обрезала JSON. Таблица авторитетнее по составу, JSON — по осям.
+    const изJson = (nicheOpts.length ? nicheOpts
+      : (нд && Array.isArray(нд.niches) ? нд.niches : [])).slice();
+    const изТаблицы = (() => {
+      if (!м2) return [];
+      const число = v => { const n = parseFloat(String(v || '').replace(',', '.')); return Number.isFinite(n) ? n : null; };
+      const таблицы = CAContract.parseMdTables(м2.content || '');
+      const т = таблицы.find(x => /04_2|приоритет/i.test(x.heading || ''));
+      if (!т) return [];
+      const ключ = (строка, ...части) => {
+        const k = Object.keys(строка).find(k2 => части.some(ч => k2.toLowerCase().includes(ч)));
+        return k ? строка[k] : '';
+      };
+      return (т.rows || []).map(r => ({
+        name: String(ключ(r, 'ниша', 'сегмент') || '').replace(/\*\*/g, '').trim(),
+        demand: число(ключ(r, 'спрос')),
+        competition: число(ключ(r, 'конкурен')),
+        economics: число(ключ(r, 'эконом')),
+        fit: число(ключ(r, 'соответств')),
+        score: число(ключ(r, 'итого', 'итог', 'балл')),
+        why: String(ключ(r, 'коммент', 'почему', 'обоснов') || '').trim(),
+      })).filter(x => x.name);
+    })();
+    const поИмени = new Map();
+    изТаблицы.concat(изJson).forEach(н => {
+      const ключ = String(н.name || '').toLowerCase().trim();
+      if (!ключ) return;
+      const было = поИмени.get(ключ) || {};
+      // Непустые значения побеждают: JSON доливает оси там, где таблица пуста.
+      const слитая = { ...было };
+      Object.keys(н).forEach(k => { if (н[k] !== null && н[k] !== '' && н[k] != null) слитая[k] = н[k]; });
+      поИмени.set(ключ, слитая);
+    });
+    const всеНиши = [...поИмени.values()]
+      .map(н => ({ ...н, verdict: вердиктПоБаллам(н.score) }))
+      .sort((a, b) => (весВердикта(a.verdict) - весВердикта(b.verdict))
+        || ((b.score || 0) - (a.score || 0)));
     // На перламутре — самое ценное: до шести главных ниш веером. Остальные
     // никуда не деваются, они ниже в «Приоритете ниш» со своими оценками.
     // Владелица 15.09: «показывать надо главные, предположим пять-шесть».
@@ -8535,6 +8604,7 @@ function App() {
                 <div style={{display:'flex',flexWrap:'wrap',gap:'12px 18px',alignItems:'center',
                     justifyContent:'space-between',marginTop:16}}>
                   <p className="note" style={{margin:0,maxWidth:'52ch',paddingLeft:0}}>
+                    Берём — от 15 баллов из 20, под вопросом — от 10, ниже — не идём.
                     Можно взять одну — ту, что рекомендует разведка, — можно все.
                     Каждая ниша исследуется отдельно и стоит отдельных денег;
                     уже посчитанное не пересчитывается.
