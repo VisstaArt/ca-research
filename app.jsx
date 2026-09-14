@@ -4873,7 +4873,7 @@ function renderResearchHTML(content, opts) {
     "function renderHeat(cols,rows){\n  \n  const tint=v=>v===0?'color-mix(in srgb, var(--ink) 3%, transparent)'\n    :`color-mix(in srgb, var(--mid) ${v*22}%, var(--card-solid))`;\n  document.getElementById('rpt-heat').innerHTML =\n    '<thead><tr><th></th>'+cols.map(c=>`<th>${c}</th>`).join('')+'</tr></thead><tbody>'+\n    rows.map(([n,vs])=>`<tr><td>${esc(n)}</td>`+\n      vs.map(v=>`<td style=\"background:${tint(v)}\">${v?'':'—'}</td>`).join('')+'</tr>').join('')+\n    '</tbody>';\n}",
     "function renderVoc(D){\n  const box=document.getElementById('rpt-voc'); if(!box) return;\n  const V={ok:['сверено с источником','ok'],nopage:['страница не открылась','nopage']};\n  \n  box.innerHTML=D.map(c=>{\n    const [txt,cls]=V[c.v];\n    const INT={3:['высокая',100],2:['средняя',62],1:['низкая',30]};\n    const [word,pct]=INT[c.int];\n    return `<div class=\"vq2\">\n      <div class=\"vtop\">\n        <span class=\"vmark ${cls}\"><i></i>${txt}</span>\n        <blockquote>${c.q}</blockquote>\n      </div>\n      <div class=\"vtheme\"><b>${c.theme}</b><span class=\"seg2\">${c.seg}</span></div>\n      <div class=\"vsrc2\">${L(c.src,c.url)} · ${c.date}</div>\n      <div class=\"vnums\">\n        <div><span class=\"lab\">как часто встречается</span>\n          <span class=\"big2\">${c.freq.split(' ')[0]}<em>${c.freq.split(' ').slice(1).join(' ')}</em></span></div>\n        <div><span class=\"lab\">сила боли</span>\n          <span class=\"pain\"><span class=\"rail2\"><i style=\"width:${pct}%\"></i></span><b>${word}</b></span></div>\n      </div>\n      <div class=\"vans\"><span>формула ответа</span>${c.ans}</div>\n    </div>`;\n  }).join('');\n  const ok=D.filter(x=>x.v==='ok').length;\n  const bad=D.length-ok;\n  /* Фраза про непрочитанные страницы раньше стояла в тексте всегда — отчёт\n     сообщал о сбое, которого не было. Считаем по факту. */\n  const tail = bad\n    ? `; у ${bad} ${bad===1?'страница не открылась':'страниц не открылось'} — ${bad===1?'она оставлена':'они оставлены'} с пометкой, а не удалена.`\n    : '; все страницы открылись.';\n  var biasBox=document.getElementById('rpt-bias'); if(biasBox) biasBox.innerHTML=\n    `<b>Смещение выборки.</b> Поиск шёл по жалобам и отзывам, а там пишут в основном\n     недовольные и опытные пользователи — молчаливое большинство сюда не попало.\n     Без этой оговорки список болей читается как «мнение рынка», а это мнение\n     самой громкой его части.\n     <br><b>Проверено ${ok} из ${D.length}</b> цитат${tail}`;\n}",
     "function renderAlt(d){\n  var box=document.getElementById('rpt-alt'); if(!box) return;\n  /* Альтернатива — предмет разговора, а не строка: её называют, объясняют,\n     чем она берёт, и отвечают на неё. Тот же формат, что у ограничений. */\n  box.innerHTML=d.map(function(r,i){\n    var n=r[0],ty=r[1],why=r[2],say=r[3],main=r[4];\n    return '<div class=\"rule-card'+(main?' lead':'')+'\"><b>'+(i+1)+'</b>'\n      +'<span class=\"eb\">'+escText(main?'главный конкурент':(ty||'альтернатива'))+'</span>'\n      +'<span class=\"nm\">'+escText(n)+'</span>'\n      +(why?'<span>'+escText(why)+'</span>':'')\n      +(say?'<span class=\"ft\">Отвечаем: '+escText(say)+'</span>':'')\n      +'</div>';\n  }).join('');\n}",
-    "function renderChannels(d){\n  const box=document.getElementById('rpt-chn');\n  if(!box) return;\n  const G={\n    forum:'<path d=\"M3 6.5A2.5 2.5 0 015.5 4h13A2.5 2.5 0 0121 6.5v7a2.5 2.5 0 01-2.5 2.5H9l-5 4v-4H5.5A2.5 2.5 0 013 13.5z\"/>',\n    star:'<path d=\"M12 3l2.7 5.9 6.3.7-4.7 4.3 1.3 6.2L12 17l-5.6 3.1 1.3-6.2L3 9.6l6.3-.7z\"/>',\n    tg:'<rect x=\"6\" y=\"2.5\" width=\"12\" height=\"19\" rx=\"2.6\"/><path d=\"M9 9h6M9 12.5h4\"/>',\n    video:'<path d=\"M3 7.5A2.5 2.5 0 015.5 5h8A2.5 2.5 0 0116 7.5v9a2.5 2.5 0 01-2.5 2.5h-8A2.5 2.5 0 013 16.5z\"/><path d=\"M16 10.6l5-2.6v8l-5-2.6z\"/>',\n    news:'<rect x=\"3\" y=\"4.5\" width=\"18\" height=\"15\" rx=\"2.2\"/><path d=\"M7 9h6M7 12.5h10M7 16h10\"/>',\n  };\n  \n  box.innerHTML=d.map(([n,ty,ic,what,live,use,ref,url])=>\n    `<div class=\"ccard\">\n       <div class=\"ch\">\n         <span class=\"ci\"><svg viewBox=\"0 0 24 24\">${G[ic]}</svg></span>\n         <div class=\"cn\">${url?'<a href=\"'+url+'\" target=\"_blank\" rel=\"noopener\">'+n+'</a>':n}${ref?' <a class=\"rn2\" href=\"#src\">['+ref+']</a>':''}<span>${ty||''}</span></div>\n       </div>\n       ${what?'<div class=\"cd\">'+what+'</div>':''}\n       <div class=\"cf\">\n         ${live?'<div><span>признак живости</span><b>'+live+'</b></div>':''}\n         ${use?'<div class=\"r\"><span>как использовать</span><b>'+use+'</b></div>':''}\n       </div>\n     </div>`).join('');\n\n  /* Доли по площадкам — те же 41 цитата, разложенные по источникам. */\n  const sh=[['vc.ru',14],['oborot.ru',9],['Отзывы на картах',8],\n            ['Telegram-чаты',6],['YouTube-разборы',4]];\n  const tot=sh.reduce((a,b)=>a+b[1],0), mx=Math.max(...sh.map(x=>x[1]));\n  /* Округляем по наибольшему остатку, а не каждое число по отдельности:\n     при обычном округлении сумма даёт 101%, и это первое, что бросается\n     в глаза в отчёте. */\n  const ex=sh.map(([n,v])=>({n,v,f:Math.floor(v/tot*100),r:(v/tot*100)%1}));\n  let left=100-ex.reduce((a,b)=>a+b.f,0);\n  ex.slice().sort((a,b)=>b.r-a.r).forEach(o=>{ if(left>0){o.f++;left--;} });\n  document.getElementById('v-chn-share').innerHTML=ex.map(o=>\n    `<div class=\"dbar\"><span class=\"t\">${o.n}</span>\n       <span class=\"g\"><i style=\"width:${(o.v/mx*100).toFixed(0)}%\"></i></span>\n       <span class=\"n\">${o.f}%</span></div>`).join('');\n}",
+    "function renderChannels(d){\n  const box=document.getElementById('rpt-chn');\n  if(!box) return;\n  /* Значки площадок — узнаваемой формы, но одним цветом чернил: цветные\n     логотипы спорили бы с палитрой отчёта (владелица 15.09: «значки соцсетей,\n     только не цветные, а чёрно-белые, чтобы в наш стиль»). */\n  const G={\n    youtube:'<rect x=\"2\" y=\"5.5\" width=\"20\" height=\"13\" rx=\"4\"/><path d=\"M10 9.5l5 2.5-5 2.5z\" fill=\"currentColor\" stroke=\"none\"/>',\n    rutube:'<rect x=\"2.5\" y=\"5\" width=\"19\" height=\"14\" rx=\"3.5\"/><path d=\"M7 9h6a2 2 0 010 4H7zM7 13l5 3\"/>',\n    telegram:'<path d=\"M21 4.5L2.8 11.4c-.6.2-.6.8 0 1l4.6 1.4 1.7 5c.2.5.6.6 1 .3l2.6-2.3 4.7 3.5c.5.4 1 .1 1.2-.5L22 5.3c.1-.6-.4-1-1-.8z\"/><path d=\"M7.4 13.8L18 7.2l-8 7.5\"/>',\n    vk:'<rect x=\"2.5\" y=\"4\" width=\"19\" height=\"16\" rx=\"5\"/><path d=\"M7 9.5c.6 3 2.4 5 4.6 5V9.5\"/><path d=\"M11.6 12.2c1.4 0 2.6 1 3.3 2.3M17 9.5c-.4 1.1-1.1 2-2 2.7\"/>',\n    instagram:'<rect x=\"3.5\" y=\"3.5\" width=\"17\" height=\"17\" rx=\"5\"/><circle cx=\"12\" cy=\"12\" r=\"3.6\"/><circle cx=\"17\" cy=\"7\" r=\"1\" fill=\"currentColor\" stroke=\"none\"/>',\n    tiktok:'<path d=\"M14 4v9.5a3.5 3.5 0 11-3.5-3.5\"/><path d=\"M14 4c.4 2.2 2 3.7 4.3 3.9\"/>',\n    whatsapp:'<path d=\"M20 12a8 8 0 01-11.8 7L4 20l1.1-3.9A8 8 0 1120 12z\"/><path d=\"M9 9.5c0 3 2.5 5.5 5.5 5.5\"/>',\n    dzen:'<circle cx=\"12\" cy=\"12\" r=\"9\"/><path d=\"M12 3c0 5-4 9-9 9 5 0 9 4 9 9 0-5 4-9 9-9-5 0-9-4-9-9z\"/>',\n    site:'<circle cx=\"12\" cy=\"12\" r=\"9\"/><path d=\"M3 12h18M12 3c2.5 2.6 2.5 15 0 18M12 3c-2.5 2.6-2.5 15 0 18\"/>',\n    forum:'<path d=\"M3 6.5A2.5 2.5 0 015.5 4h13A2.5 2.5 0 0121 6.5v7a2.5 2.5 0 01-2.5 2.5H9l-5 4v-4H5.5A2.5 2.5 0 013 13.5z\"/>',\n    star:'<path d=\"M12 3l2.7 5.9 6.3.7-4.7 4.3 1.3 6.2L12 17l-5.6 3.1 1.3-6.2L3 9.6l6.3-.7z\"/>',\n    tg:'<path d=\"M21 4.5L2.8 11.4c-.6.2-.6.8 0 1l4.6 1.4 1.7 5c.2.5.6.6 1 .3l2.6-2.3 4.7 3.5c.5.4 1 .1 1.2-.5L22 5.3c.1-.6-.4-1-1-.8z\"/><path d=\"M7.4 13.8L18 7.2l-8 7.5\"/>',\n    video:'<rect x=\"2\" y=\"5.5\" width=\"20\" height=\"13\" rx=\"4\"/><path d=\"M10 9.5l5 2.5-5 2.5z\" fill=\"currentColor\" stroke=\"none\"/>',\n    news:'<rect x=\"3\" y=\"4.5\" width=\"18\" height=\"15\" rx=\"2.2\"/><path d=\"M7 9h6M7 12.5h10M7 16h10\"/>',\n  };  \n  box.innerHTML=d.map(([n,ty,ic,what,live,use,ref,url])=>\n    `<div class=\"ccard\">\n       <div class=\"ch\">\n         <span class=\"ci\"><svg viewBox=\"0 0 24 24\">${G[ic]||G.star}</svg></span>\n         <div class=\"cn\">${url?'<a href=\"'+url+'\" target=\"_blank\" rel=\"noopener\">'+n+'</a>':n}${ref?' <a class=\"rn2\" href=\"#src\">['+ref+']</a>':''}<span>${ty||''}</span></div>\n       </div>\n       ${what?'<div class=\"cd\">'+what+'</div>':''}\n       <div class=\"cf\">\n         ${live?'<div><span>признак живости</span><b>'+live+'</b></div>':''}\n         ${use?'<div class=\"r\"><span>как использовать</span><b>'+use+'</b></div>':''}\n       </div>\n     </div>`).join('');\n\n  /* Доли по площадкам — те же 41 цитата, разложенные по источникам. */\n  const sh=[['vc.ru',14],['oborot.ru',9],['Отзывы на картах',8],\n            ['Telegram-чаты',6],['YouTube-разборы',4]];\n  const tot=sh.reduce((a,b)=>a+b[1],0), mx=Math.max(...sh.map(x=>x[1]));\n  /* Округляем по наибольшему остатку, а не каждое число по отдельности:\n     при обычном округлении сумма даёт 101%, и это первое, что бросается\n     в глаза в отчёте. */\n  const ex=sh.map(([n,v])=>({n,v,f:Math.floor(v/tot*100),r:(v/tot*100)%1}));\n  let left=100-ex.reduce((a,b)=>a+b.f,0);\n  ex.slice().sort((a,b)=>b.r-a.r).forEach(o=>{ if(left>0){o.f++;left--;} });\n  document.getElementById('v-chn-share').innerHTML=ex.map(o=>\n    `<div class=\"dbar\"><span class=\"t\">${o.n}</span>\n       <span class=\"g\"><i style=\"width:${(o.v/mx*100).toFixed(0)}%\"></i></span>\n       <span class=\"n\">${o.f}%</span></div>`).join('');\n}",
     "function renderObj(d){\n  const box=document.getElementById('rpt-obj');\n  if(!box) return;\n  \n  box.innerHTML='<div class=\"ohead\"><span>Что говорит клиент</span>'+\n    '<span>Чем снимаем</span></div>'+\n    d.map(([f,a])=>\n    `<div class=\"orow\"><div class=\"of\">${f}</div><div class=\"oa\">${a}</div></div>`).join('');\n}",
     "function renderHooks(d){\n  var box=document.getElementById('rpt-hooks'); if(!box) return;\n  /* Хук — это чужая фраза, поэтому антиквой и в кавычках, как цитата.\n     Под ней — где её брать и о чём она. */\n  box.innerHTML=d.map(function(r,i){\n    var t=r[0],topic=r[1],place=r[2];\n    var tail=[topic,place].filter(Boolean).join(' · ');\n    return '<div class=\"rule-card\"><b>'+(i+1)+'</b>'\n      +'<span class=\"q\">«'+escText(t)+'»</span>'\n      +(tail?'<span class=\"ft\">'+escText(tail)+'</span>':'')\n      +'</div>';\n  }).join('');\n}",
     "function renderCompCards(D){\n  const box=document.getElementById('rpt-comp'); if(!box) return;\n  \n  box.innerHTML=D.map(c=>{\n    const t=v=>typeof v==='string'?v:v.h;\n    /* Место справа сверху задумано под ЦЕНУ — число, которое сравнивают\n       глазами по карточкам. Когда цены нет и стоит слово («масс-маркет»),\n       крупный кегль делает его главнее имени конкурента (владелица 14.09:\n       «шрифт крупнее, чем сам конкурент, нелепо»). Слово идёт пометкой. */\n    const цифра=/\\d/.test(String(c.price||''));\n    return `<div class=\"ccard2\">\n      <div class=\"chead\">\n        <div>\n          <div class=\"cid\">${c.id} · ${c.niche}</div>\n          <div class=\"cnm\">${c.n}</div>\n          <div class=\"cmeta\"><span class=\"scale\">${c.scale}</span>${L(c.dom,c.url)}</div>\n        </div>\n        <div class=\"price${цифра?'':' word'}\"><b>${c.price}</b><span>${c.per}</span></div>\n      </div>\n      <div class=\"cgrid\">\n        <div class=\"cbox\"><h5>Оффер</h5><p>${c.offer}</p></div>\n        <div class=\"cbox\"><h5>Позиционирование</h5><p>${c.pos}</p>\n          <p style=\"color:var(--ink-3)\">${c.cta}</p></div>\n        <div class=\"cbox pro\"><h5>Сильные стороны</h5><ul>${c.pro.map(x=>`<li>${x}</li>`).join('')}</ul></div>\n        <div class=\"cbox con\"><h5>Слабые стороны</h5><ul>${c.con.map(x=>`<li>${x}</li>`).join('')}</ul></div>\n        <div class=\"cbox\"><h5>Что мешает клиенту</h5><p>${c.bar}</p></div>\n        <div class=\"cbox\"><h5>Как он это снимает</h5><p>${c.ans}</p></div>\n        <div class=\"cbox\"><h5>Доказательства</h5><p>${c.proof}</p></div>\n        <div class=\"cbox\"><h5>Триггеры дефицита</h5><p>${t(c.trig)}</p></div>\n        <div class=\"cbox gap2\"><h5>Наша возможность</h5><p>${c.gap}</p></div>\n      </div></div>`;\n  }).join('');\n}",
@@ -4891,6 +4891,7 @@ function renderResearchHTML(content, opts) {
     "function renderNotSell(D){\n  var box=document.getElementById('rpt-notsell'); if(!box) return;\n  /* Отказ читают по одному: «а этот наш?». Признак вынесен отдельной\n     строкой — по нему и узнают, а не по общему описанию. */\n  box.innerHTML=D.map(function(r,i){\n    return '<div class=\"rule-card\"><b>'+(i+1)+'</b>'\n      +'<span class=\"eb\">не наш клиент</span>'\n      +'<span class=\"nm\">'+escText(r[0])+'</span>'\n      +(r[1]?'<span>'+escText(r[1])+'</span>':'')\n      +(r[2]?'<span class=\"ft\">Как узнать: '+escText(r[2])+'</span>':'')\n      +'</div>';\n  }).join('');\n}",
     "function renderShareRing(D){\n  var box=document.getElementById('rpt-share'), leg=document.getElementById('rpt-share-leg');\n  if(!box||!leg) return;\n  /* Кольцо доли внимания. Доли складываются в целое, поэтому круг честен:\n     видно и кто забирает почти всё, и что остальным достаются крохи.\n     Оттенки — одна фирменная шкала, дальше серая: цвет тут не значение,\n     а порядок, и различать девять брендов цветом всё равно нельзя. */\n  var сумма=D.reduce(function(s,x){return s+(x[1]||0);},0)||1;\n  var R=92,SW=30,C=115,GAP=0.008;\n  var ТОН=[100,68,44], СЕР=[34,24,17,12,9,7];\n  var цвет=function(i){ return i<ТОН.length\n    ? 'color-mix(in srgb, var(--mid) '+ТОН[i]+'%, var(--line-2))'\n    : 'color-mix(in srgb, var(--ink) '+СЕР[Math.min(i-ТОН.length,СЕР.length-1)]+'%, var(--line-2))'; };\n  var NS='http://www.w3.org/2000/svg';\n  var el=function(t,a){var e=document.createElementNS(NS,t);for(var k in a)e.setAttribute(k,a[k]);return e;};\n  var svg=el('svg',{viewBox:'0 0 230 230',width:230,height:230});\n  var pt=function(a){return [C+R*Math.cos(a*Math.PI/180), C+R*Math.sin(a*Math.PI/180)];};\n  var a0=-90;\n  D.forEach(function(row,i){\n    var v=row[1]||0, a1=a0+v/сумма*360, g0=a0+GAP*360, g1=a1-GAP*360;\n    if(g1>g0){\n      var p0=pt(g0), p1=pt(g1);\n      svg.appendChild(el('path',{d:'M '+p0[0]+' '+p0[1]+' A '+R+' '+R+' 0 '+((g1-g0)>180?1:0)+' 1 '+p1[0]+' '+p1[1],\n        fill:'none',stroke:цвет(i),'stroke-width':SW,'stroke-linecap':'butt'}));\n    }\n    a0=a1;\n  });\n  /* В середине — лидер: главное число читается без легенды. */\n  var ц=el('text',{x:C,y:C-4,'text-anchor':'middle',class:'ring-n'});\n  ц.textContent=Math.round((D[0][1]||0))+'%'; svg.appendChild(ц);\n  var п=el('text',{x:C,y:C+16,'text-anchor':'middle',class:'ring-t'});\n  п.textContent=D[0][0].length>16?D[0][0].slice(0,15)+'…':D[0][0]; svg.appendChild(п);\n  box.appendChild(svg);\n  leg.innerHTML='<div class=\"leghead\"><span></span><span>Компания</span><span>Доля</span><span>Запросов</span></div>'\n    +D.map(function(row,i){\n      return '<div class=\"sl rich\"><span class=\"sw\" style=\"background:'+цвет(i)+'\"></span>'\n        +'<span class=\"nm\">'+escText(row[0])+'</span>'\n        +'<span class=\"n\">'+(Math.round((row[1]||0)*10)/10)+'%</span>'\n        +'<span class=\"t\">'+escText(row[2]||'—')+'</span></div>';\n    }).join('');\n}",
     "function renderTopContent(D){\n  var box=document.getElementById('rpt-topc'); if(!box) return;\n  /* Мера как везде: полоса 14px на дорожке, торцы прямые, число снаружи\n     полосы чернилами. Считаем от максимума — сравнивают единицы между собой,\n     а не с абсолютной шкалой, которой у просмотров не бывает. */\n  var max=Math.max.apply(null,D.map(function(x){return x.v;}).concat([1]));\n  /* Telegram и часть YouTube просмотры не показывают. Когда не замерено\n     НИЧЕГО, полосы сравнивать нечем: пустая дорожка у каждой строки\n     выглядит как поломка. Тогда дорожку убираем совсем и печатаем\n     список — то, что видно, всё равно полезно. */\n  var мерено=D.some(function(x){return x.v>0;});\n  box.className=мерено?'topc':'topc nomeasure';\n  box.innerHTML=D.map(function(d){\n    var w=d.v>0?Math.max(d.v/max*100,1.5):0;\n    var head=d.url?('<a href=\"'+d.url+'\" target=\"_blank\" rel=\"noopener\">'+escText(d.t)+'</a>'):escText(d.t);\n    var sub=[d.p,d.meta].filter(Boolean).join(' · ');\n    return '<div class=\"tcrow\">'\n      +'<div class=\"tcn\">'+head+(sub?'<span>'+escText(sub)+'</span>':'')+'</div>'\n      +(мерено?'<div class=\"rail\"><i style=\"width:'+w.toFixed(1)+'%\"></i></div>':'')\n      +'<div class=\"tcv\">'+escText(d.raw)+(d.resp?'<span>'+escText(d.resp)+'</span>':'')+'</div>'\n      +(d.hook?'<div class=\"tch\">Хук: '+escText(d.hook)+'</div>':'')\n      +'</div>';\n  }).join('');\n}",
+    "function renderGapCards(D){\n  var box=document.getElementById('rpt-gapc'); if(!box) return;\n  var СЛ={win:'var(--mid)',parity:'var(--ink-3)',lose:'var(--ink-2)'};\n  box.innerHTML=D.map(function(r){\n    var имя=r[0],вид=r[1],слово=r[2],наше=r[3],их=r[4],об=r[5],url=r[6];\n    var поле=function(п,в){ return в?'<div class=\"gf\"><span>'+п+'</span><b>'+escText(в)+'</b></div>':''; };\n    return '<div class=\"gcard g-'+вид+'\">'\n      +'<div class=\"gh\"><b>'+escText(имя)+'</b>'\n      +'<span class=\"gv\" style=\"color:'+СЛ[вид]+'\">'+слово+'</span></div>'\n      +поле('у нас',наше)+поле('лучшее у конкурентов',их)+поле('почему так',об)\n      +(url?'<a class=\"gl\" href=\"'+url+'\" target=\"_blank\" rel=\"noopener\">пример</a>':'')\n      +'</div>';\n  }).join('');\n}",
     "function renderPatterns(D){\n  var box=document.getElementById('rpt-patterns'); if(!box) return;\n  /* Паттерн — вывод, по которому принимают решение. Название крупно, под ним\n     почему срабатывает, внизу за линией — что делать и на чём основано. */\n  box.innerHTML=D.map(function(r,i){\n    var foot=[r[2]?'Делаем: '+r[2]:'', r[3]?'Основано на: '+r[3]:''].filter(Boolean).join(' · ');\n    return '<div class=\"rule-card\"><b>'+(i+1)+'</b>'\n      +'<span class=\"eb\">что работает</span>'\n      +'<span class=\"nm\">'+escText(r[0])+'</span>'\n      +(r[1]?'<span>'+escText(r[1])+'</span>':'')\n      +(foot?'<span class=\"ft\">'+escText(foot)+'</span>':'')\n      +'</div>';\n  }).join('');\n}",
     "function renderJtbd(D){\n  var box=document.getElementById('rpt-jtbd'); if(!box) return;\n  /* Фраза собрана целиком: связки «когда / я хочу / чтобы» приглушены, чтобы\n     читалось предложение, а не заполненная анкета. */\n  var lead=function(w){return '<i>'+w+'</i> ';};\n  box.innerHTML=D.map(function(r,i){\n    var seg=r[0], when=r[1], want=r[2], so=r[3], win=r[4], gap=r[5], fear=r[6];\n    var foot=[win?'Успех: '+win:'', gap?'Пробел: '+gap:'', fear?'Страх: '+fear:''].filter(Boolean).join(' · ');\n    return '<div class=\"rule-card\"><b>'+(i+1)+'</b>'\n      +(seg?'<span class=\"eb\">'+escText(seg)+'</span>':'')\n      +'<span class=\"q\">'+(when?lead('Когда')+escText(when)+', ':'')\n        +(want?lead('я хочу')+escText(want):'')\n        +(so?', '+lead('чтобы')+escText(so):'')+'</span>'\n      +(foot?'<span class=\"ft\">'+escText(foot)+'</span>':'')\n      +'</div>';\n  }).join('');\n}",
     "function renderTactics(D){\n  var box=document.getElementById('rpt-tactics'); if(!box) return;\n  /* Риск стоит прямо под примером формулировки, а не в дальней колонке:\n     его читают вместе с ней или не читают вовсе. */\n  box.innerHTML=D.map(function(r,i){\n    return '<div class=\"rule-card\"><b>'+(i+1)+'</b>'\n      +(r[1]?'<span class=\"eb\">'+escText(r[1])+'</span>':'')\n      +'<span class=\"nm\">'+escText(r[0])+'</span>'\n      +(r[2]?'<span class=\"q\">«'+escText(r[2])+'»</span>':'')\n      +(r[3]&&r[3]!=='—'?'<span class=\"warnline\">Риск: '+escText(r[3])+'</span>':'')\n      +(r[4]?'<span class=\"ft\">'+escText(r[4])+'</span>':'')\n      +'</div>';\n  }).join('');\n}",
@@ -5135,6 +5136,36 @@ function renderResearchHTML(content, opts) {
   // ── BLOCK 06_1: гэп-анализ матрицей ─────────────────────────────────────────
   // Тепловая карта вместо таблицы с галочками: пустые столбцы сразу показывают,
   // где мы одни. Насыщенность = наличие функции.
+  // Гэп-анализ карточками: критерий, наше состояние, лучшее у конкурентов и
+  // вердикт. Шесть колонок строкой не читаются ни на каком экране — это та
+  // самая «широкая таблица, которую надо листать вбок». Карточка показывает
+  // те же поля друг под другом и помещается в колонку отчёта.
+  function renderGapCards(headers, rows, kC, kСтатус) {
+    const kНаше = col(headers,'наше','у нас','текущее');
+    const kИх = col(headers,'лучшее','у конкурент','у сопостав');
+    const kОб = col(headers,'обоснован','коммент','поч');
+    const kU = col(headers,'url','ссылк','пример');
+    const g = (r,k) => k ? String(r[k]||'').replace(/\*\*/g,'').trim() : '';
+    const пусто = в => !в || /^(нет данных|не видно|не замерено|—|-)/i.test(в);
+    const D = rows.map(r => {
+      const имя = g(r,kC);
+      if (!имя) return null;
+      const с = g(r,kСтатус).toLowerCase();
+      const вид = /win|выигр|сильн/.test(с) ? 'win'
+        : /lose|проигр|слаб|отстаём/.test(с) ? 'lose' : 'parity';
+      const слово = вид === 'win' ? 'выигрываем' : вид === 'lose' ? 'проигрываем' : 'наравне';
+      const адрес = g(r,kU);
+      return [ имя, вид, слово,
+        пусто(g(r,kНаше)) ? '' : g(r,kНаше),
+        пусто(g(r,kИх)) ? '' : g(r,kИх),
+        пусто(g(r,kОб)) ? '' : g(r,kОб),
+        /^https?:/i.test(адрес) ? адрес : '' ];
+    }).filter(Boolean);
+    if (D.length < 2) return null;
+    blockScripts.push('renderGapCards('+safeJson(D)+');');
+    return '<div class="gapc" id="rpt-gapc"></div>';
+  }
+
   function renderGap(headers, rows) {
     const kC = col(headers,'критер','функц','парамет');
     if (!kC) return null;
@@ -5155,7 +5186,17 @@ function renderResearchHTML(content, opts) {
       return похожих / значения.length >= 0.7;
     };
     const comps = кандидаты.filter(оценочная);
-    if (comps.length < 2) return null;
+    // Форма «Критерий | наше | лучшее у них | статус Win/Parity/Lose» — самая
+    // частая у гэп-анализа, и оценочная колонка в ней ровно одна. Прежнее
+    // требование двух отправляло её в сырую широкую таблицу на шесть колонок,
+    // которую приходилось листать вбок (владелица 15.09: «таблицы сломались,
+    // мы же специально делали другой формат»). Такой случай рисуем карточками
+    // сравнения — они и были задуманы для него.
+    const kСтатус = col(headers,'статус','win','вердикт');
+    if (comps.length < 2) {
+      if (!kСтатус) return null;
+      return renderGapCards(headers, rows, kC, kСтатус);
+    }
     const lvl = v => {
       const s = String(v||'').toLowerCase().trim();
       if (!s || s === '—' || /нет|отсут|—/.test(s)) return 0;
@@ -5299,6 +5340,26 @@ function renderResearchHTML(content, opts) {
     return '<div class="rules" id="rpt-hooks"></div>';
   }
 
+  // Какой значок ставить. Один определитель на «Каналы конкурентов» и «Где
+  // сидит аудитория»: площадки там одни и те же, а два списка признаков
+  // разъехались бы со временем.
+  function опознатьПлощадку(п) {
+    const t = String(п || '').toLowerCase();
+    if (/youtube|ютуб/.test(t)) return 'youtube';
+    if (/rutube|рутуб/.test(t)) return 'rutube';
+    if (/telegram|телеграм|t\.me/.test(t)) return 'telegram';
+    if (/instagram|инстаграм/.test(t)) return 'instagram';
+    if (/tiktok|тикток/.test(t)) return 'tiktok';
+    if (/whatsapp|вотсап|ватсап/.test(t)) return 'whatsapp';
+    if (/vk|вконтакте/.test(t)) return 'vk';
+    if (/дзен|dzen/.test(t)) return 'dzen';
+    if (/форум|reddit|отзыв|обсужд|сообществ|пикабу|pikabu/.test(t)) return 'forum';
+    if (/vc\.|хабр|habr|блог|сми|новост|медиа|журнал|dtf/.test(t)) return 'news';
+    if (/сайт|лендинг|site/.test(t)) return 'site';
+    if (/видео|подкаст|вебинар/.test(t)) return 'video';
+    return 'star';
+  }
+
   // ── BLOCK 08A: где сидит аудитория ──────────────────────────────────────────
   function renderChannelsBlock(headers, rows) {
     const kP = col(headers,'площадк','канал');
@@ -5312,14 +5373,7 @@ function renderResearchHTML(content, opts) {
     // Рисовалка ждёт восемь полей. Блок отдавал пять, и остальные печатались
     // словом «undefined», а адрес площадки уезжал в строку «признак живости»
     // (скрин М5, владелица 14.09). Та же поломка, что уже чинили в M4.
-    const значок = п => {
-      const t = String(п || '').toLowerCase();
-      if (/telegram|телеграм|tg|мессендж/.test(t)) return 'tg';
-      if (/youtube|ютуб|видео|rutube/.test(t)) return 'video';
-      if (/форум|reddit|отзыв|обсужд|сообществ/.test(t)) return 'forum';
-      if (/vc|хабр|дзен|блог|сми|новост|медиа|журнал/.test(t)) return 'news';
-      return 'star';
-    };
+    const значок = опознатьПлощадку;
     const d = rows.map(r => {
       const n = String(r[kP]||'').replace(/\*\*|\[|\]/g,'').trim();
       if (!n) return null;
@@ -5474,8 +5528,22 @@ function renderResearchHTML(content, opts) {
     if (!kSt) return null;
     const kG = col(headers,'цель','что делаем','действ'), kR = col(headers,'риск','барьер');
     const kD = col(headers,'доход','конверс','%');
-    const st = rows.map(r => {
-      const n = String(r[kSt]||'').replace(/\*\*/g,'').trim();
+    const kPers = col(headers,'персона','сегмент');
+    // Путь строится ПО ОДНОЙ персоне. В таблице их несколько подряд, и
+    // лесенка шла сплошняком: после седьмого этапа снова «1. Осознание
+    // проблемы» — как будто человек проходит круг дважды (скрин владелицы
+    // 15.09). Берём первую персону, остальные остаются таблицей ниже.
+    let строки = rows;
+    if (kPers) {
+      const первая = String(rows[0] && rows[0][kPers] || '').trim();
+      const свои = rows.filter(r => String(r[kPers]||'').trim() === первая);
+      if (свои.length >= 3) строки = свои;
+    }
+    const st = строки.map(r => {
+      // Модель нумерует этапы сама («4. Проверка продукта»), а лесенка рисует
+      // свой номер слева — выходило «03 · 4. Проверка продукта».
+      const n = String(r[kSt]||'').replace(/\*\*/g,'')
+        .replace(/^\s*\d{1,2}\s*[.)]\s*/, '').trim();
       if (!n) return null;
       return [ n, 0, 'high', kG?String(r[kG]||''):'', kR?String(r[kR]||''):'' ];
     }).filter(Boolean);
@@ -5483,7 +5551,7 @@ function renderResearchHTML(content, opts) {
     // Доли: из таблицы, если есть; иначе ровное сужение — форма лесенки важнее
     // выдуманных процентов, а числа на ней не печатаются.
     const STEP = st.map((_,i) => {
-      const v = kD ? numOf(rows[i][kD]) : null;
+      const v = kD ? numOf(строки[i][kD]) : null;
       return v != null ? Math.max(8, Math.min(100, v)) : Math.round(100 - i*(70/(st.length-1)));
     });
     st.forEach((x,i) => { x[1] = STEP[i]; });
@@ -5662,14 +5730,7 @@ function renderResearchHTML(content, opts) {
     // живости, как использовать, номер источника. Блок отдавал пять — и на
     // месте недостающих в отчёте печаталось «undefined» (скрин владелицы
     // 15.09). Собираем ровно те поля, что она ждёт; чего нет — пустая строка.
-    const значок = п => {
-      const t = String(п || '').toLowerCase();
-      if (/telegram|телеграм|tg/.test(t)) return 'tg';
-      if (/youtube|ютуб|видео|rutube|vk видео/.test(t)) return 'video';
-      if (/форум|reddit|отзыв|обсужд/.test(t)) return 'forum';
-      if (/vc|хабр|дзен|блог|媒|сми|новост/.test(t)) return 'news';
-      return 'star';
-    };
+    const значок = опознатьПлощадку;
     // В колонке источника модель ставит markdown-ссылку «[5](https://…)».
     // Прежний разбор снимал только скобки, и в карточку уезжала строка
     // «5(https://…» синим — владелица 15.09: «к номеру подтягивается ссылка,
@@ -5988,17 +6049,38 @@ function renderResearchHTML(content, opts) {
     { re: /BLOCK\s*17\s*FINAL|Final\s+Offers|Финальные\s+офферы/i, fn: renderOffers },
   ];
   function renderKnownBlock(heading, headers, rows, ctx) {
-    if (!heading) return null;
-    for (const v of BLOCK_VIEWS) {
+    const попробовать = v => {
+      let res = null;
+      try { res = v.fn(headers, rows, ctx || {}); } catch (e) { res = null; }
+      return res;
+    };
+    // Узнавание по ЗАГОЛОВКУ — первый и главный путь.
+    if (heading) for (const v of BLOCK_VIEWS) {
       if (!v.re.test(heading)) continue;
       // Формат не подошёл (не хватило колонок) — пробуем следующий, и только
       // если не подошёл ни один, печатаем таблицей. Под одним заголовком блока
       // может лежать несколько разных таблиц: у BLOCK 06 это карта рынка и
       // разбор вглубь, и различаются они только набором колонок.
-      let res = null;
-      try { res = v.fn(headers, rows, ctx || {}); } catch (e) { res = null; }
+      const res = попробовать(v);
       if (res) return res;
       if (res === '') return '';   // блок сознательно пуст (вторая таблица SWOT)
+    }
+    if (heading && BLOCK_VIEWS.some(v => v.re.test(heading))) return null;
+    // Перебор — только для ШИРОКИХ таблиц: пять колонок и больше. Узкую
+    // таблицу читать строками нормально, а подбор по колонкам на ней слишком
+    // легко промахивается — «Ниша | Спрос» подходит доброму десятку разборов.
+    if (headers.length < 5) return null;
+    // Заголовок не опознан — узнаём по НАБОРУ КОЛОНОК. Модели нового
+    // поколения переписывают заголовки по-своему («Гэп-анализ: где выигрываем
+    // и где проигрываем» вместо «BLOCK 06_1»), и все разборы разом
+    // превращались в сырые широкие таблицы: владелица 15.09 — «таблицы
+    // сломались, мы же специально делали другой формат, чтобы не листать
+    // вбок». Колонки модель не переименовывает: по ним и опознаём. Каждая
+    // рисовалка сама проверяет, что нужные колонки на месте, и отдаёт null,
+    // если это не её таблица.
+    for (const v of BLOCK_VIEWS) {
+      const res = попробовать(v);
+      if (res) return res;
     }
     return null;
   }
@@ -6778,6 +6860,16 @@ function generateHTMLReport(brief, results, lang, priceLayers, selectedLayers, s
     +'\n.srcfold[open]>summary::before{content:\"▾\"}'
     +'\n.srcfold>summary:hover{color:var(--ink-2)}'
     +'\n.srcfold[open]>summary{border-bottom-color:transparent}'
+    +'\n/* Гэп-анализ карточками: шесть колонок строкой не читаются. */'
+    +'\n.gapc{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px;margin:14px 0 22px}'
+    +'\n.gcard{border:1px solid var(--line);border-radius:16px;padding:14px 16px;background:var(--card-solid)}'
+    +'\n.gcard .gh{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:9px}'
+    +'\n.gcard .gh b{font-size:13.5px;line-height:1.3}'
+    +'\n.gcard .gv{font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;white-space:nowrap}'
+    +'\n.gcard .gf{margin-top:7px}'
+    +'\n.gcard .gf span{display:block;font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--ink-3)}'
+    +'\n.gcard .gf b{display:block;font-size:12.5px;font-weight:400;color:var(--ink-2);line-height:1.45;margin-top:2px}'
+    +'\n.gcard .gl{display:inline-block;margin-top:9px;font-size:11.5px;color:var(--acc-mid-ink)}'
     +'\n.topc{display:flex;flex-direction:column;gap:0}'
     +'\n.tcrow{display:grid;grid-template-columns:minmax(0,300px) 1fr 116px;'
       +'gap:14px;align-items:center;padding:10px 0;border-top:1px solid var(--line-2)}'
@@ -9174,11 +9266,12 @@ function App() {
           На чём считаем и за чей счёт. Меняется в любой момент — модели улучшаются,
           и выбор не должен быть вшит навсегда.
         </p>
-        <select value={model} onChange={e=>{ setModel(e.target.value);
-            try { localStorage.setItem('ca_model', e.target.value); } catch {} }}
-          style={{width:'100%',marginBottom:8}}>
-          {MODELS.map(([v,n2]) => <option key={v} value={v}>{n2}</option>)}
-        </select>
+        <p style={{fontSize:13,margin:'0 0 8px',color:'var(--ink-2)'}}>
+          Считаем на <b style={{color:'var(--ink)'}}>{
+            (MODELS.find(([v]) => v === model) || [model, model])[1].split(' — ')[0]
+          }</b>. Модель выбрана под этот модуль и не меняется из интерфейса:
+          промпты и разбор ответа подогнаны под неё, и подмена ломает разбор.
+        </p>
         {clientIdFromUrl && тарифРазработчика ? (
           <>
             <p style={{fontSize:12,color:'var(--ink-2)',marginBottom:6}}>
