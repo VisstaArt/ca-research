@@ -261,6 +261,22 @@
   }
   setInterval(подогнать, 500);
 
+  // Переход между этапами по просьбе самой рамки. Нужен ровно в одном месте:
+  // человек выбирает ниши на вкладке «Ниши», прогон продолжается — и смотреть
+  // его надо на «Прогоне». Оставлять его на экране ниш значит показывать
+  // пустую карту, пока где-то рядом идёт работа.
+  // Переключаем не своей копией логики, а нажатием на тот же пункт меню,
+  // которым пользуется человек, — тогда подсветка и прокрутка отработают сами.
+  window.addEventListener('message', function (e) {
+    var d = e && e.data;
+    if (!d || d.ca !== 'шаг' || typeof d.шаг !== 'string') return;
+    var ключи = { brief: 'rbrief', niches: 'rniches', run: 'rrun', report: 'rreport' };
+    var ключ = ключи[d.шаг];
+    if (!ключ) return;
+    var пункт = document.querySelector('[data-screen="' + ключ + '"]');
+    if (пункт) пункт.click();
+  });
+
   function показатьШаг() {
     var экран = document.querySelector('.screen.on iframe[data-step]');
     if (!экран || экран.getAttribute('src')) return;

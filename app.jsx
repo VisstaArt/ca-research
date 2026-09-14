@@ -6045,13 +6045,12 @@ function NicheHero({ list, canPick, selected, onToggle, onContinue, statusOf }) 
         <div style={{display:'flex',gap:8,flexWrap:'wrap',alignItems:'center',marginBottom:16}}>
           {canPick ? (
             <>
-              <button className="btn-primary" onClick={()=>onToggle(тек.name)}>
-                {выбрана(тек.name) ? '✓ Выбрана — убрать' : 'Выбрать нишу'}
+              <button className="cm-btn" onClick={()=>onToggle(тек.name)}>
+                {выбрана(тек.name) ? 'Убрать из работы' : 'Взять в работу'}
               </button>
-              <button className="btn-primary" disabled={!(selected||[]).length}
-                onClick={onContinue}
-                style={(selected||[]).length ? {} : undefined}>
-                Продолжить с выбранными ({(selected||[]).length})
+              <button className="cm-btn cm-btn-pri" disabled={!(selected||[]).length}
+                onClick={onContinue}>
+                Запустить ниши ({(selected||[]).length})
               </button>
             </>
           ) : (
@@ -8230,6 +8229,94 @@ function App() {
     return MODULES.findIndex(x=>x.id===a.id)-MODULES.findIndex(x=>x.id===b.id);
   });
 
+  // ── ЭКРАН «НИШИ» в платформе ────────────────────────────────────────────
+  // Веер карт по образцу ZIXO. До 15.09 компонент существовал, но его никто
+  // не выводил: вкладка «Ниши» показывала то же, что «Прогон», и владелица
+  // справедливо спросила «мы прогон ниш сделали — куда делись данные».
+  // Данные берём из стоп-точки (nicheOpts), а когда её уже прошли — из
+  // сохранённого результата разведки: прогон не обязан идти прямо сейчас.
+  if (embedded && proj && шагИзАдреса === 'niches') {
+    const м2 = (proj.results || []).find(r => r.id === 'M2' && r.content && !r.failed);
+    const нд = м2 ? (м2.nicheData || extractNicheData(м2.content || '')) : null;
+    const список = (nicheOpts.length ? nicheOpts
+      : (нд && Array.isArray(нд.niches) ? нд.niches : []))
+      .slice().sort((a, b) => (b.score || 0) - (a.score || 0));
+    const вРаботе = nichesOf(brief);
+    const нужноМодулей = MODULES.filter(m => !m.disabled && !m.offChain
+      && m.id !== 'CONTENT' && CAContract.isPerNiche(m.id)).length;
+    const готовоПоНише = имя => (proj.results || [])
+      .filter(r => (r.niche || '') === имя && r.content && !r.failed).length;
+    const статус = имя => {
+      if (!вРаботе.includes(имя)) return 'не в работе';
+      const г = готовоПоНише(имя);
+      return г >= нужноМодулей ? 'готова' : (г ? г + ' из ' + нужноМодулей : 'в работе');
+    };
+    // На стоп-точке выбор ведёт пауза прогона; после неё — правим состав ниш
+    // прямо здесь: run() сам досчитает только недостающие пары (модуль, ниша).
+    const наСтопТочке = showNiches && nicheOpts.length > 0;
+    const переключить = имя => {
+      const есть = вРаботе.includes(имя);
+      const новые = есть ? вРаботе.filter(x => x !== имя) : [...вРаботе, имя];
+      const новыйБриф = { ...brief, selectedNiche: новые.join(', ') };
+      setBrief(новыйБриф);
+      if (proj) { const u = { ...proj, brief: новыйБриф, updatedAt: new Date().toISOString() }; setProj(u); sv(u); }
+    };
+    return (
+      <div>
+        <StageHeader имя="Ниши"
+          бровь={наСтопТочке ? 'Стоп-точка выбора' : 'Что нашла разведка'}
+          подпись="Жмите на карту — увидите спрос, конкуренцию и экономику ниши."
+          факты={[['Проект', brief.name], ['Найдено', список.length ? String(список.length) : ''],
+                  ['В работе', вРаботе.length ? String(вРаботе.length) : '']]}
+          lang={lang}/>
+        <div className="worksurface rview">
+          {список.length > 0 ? (
+            <React.Fragment>
+              <NicheHero
+                list={список}
+                canPick={true}
+                selected={наСтопТочке ? selNiches.map(i => nicheOpts[i] ? nicheOpts[i].name : '').filter(Boolean) : вРаботе}
+                statusOf={статус}
+                onToggle={имя => {
+                  if (наСтопТочке) {
+                    const i = nicheOpts.findIndex(x => x.name === имя);
+                    if (i >= 0) setSelNiches(p => p.includes(i) ? p.filter(x => x !== i) : [...p, i]);
+                  } else переключить(имя);
+                }}
+                onContinue={() => {
+                  if (наСтопТочке) continueAfterNiche(); else run(mods, brief);
+                  // Работа пошла — показывать её надо на «Прогоне», а не на
+                  // карте ниш. Просим платформу переключить этап.
+                  try { window.parent.postMessage({ ca: 'шаг', шаг: 'run' }, '*'); } catch (e) {}
+                }}/>
+              <div className="card">
+                <h2>Как читать оценку</h2>
+                <p style={{fontSize:13.5,color:'var(--ink-2)',lineHeight:1.6,maxWidth:'74ch',margin:0}}>
+                  Спрос, конкуренция и экономика считаются по двадцатибалльной
+                  шкале и складываются в итог. Высокий спрос при высокой
+                  конкуренции — не отказ, а предупреждение: входить придётся
+                  через узкую тему, а не в лоб.
+                </p>
+                <p className="note">
+                  Оценки поставила разведка по открытым источникам. Спорную нишу
+                  можно взять в работу вопреки оценке — решение за вами.
+                </p>
+              </div>
+            </React.Fragment>
+          ) : (
+            <div className="card">
+              <h2>Разведка ниш ещё не отработала</h2>
+              <p style={{fontSize:13.5,color:'var(--ink-2)',lineHeight:1.6,maxWidth:'70ch',margin:0}}>
+                Ниши находит модуль разведки. Запустите его на вкладке «Прогон» —
+                сюда лягут карты ниш со спросом, конкуренцией и экономикой.
+              </p>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div>
       {/* В платформе заголовок экрана и имя проекта даёт сама платформа:
@@ -8290,6 +8377,25 @@ function App() {
           меню (владелица сверила — совпадают), шапка-плашка отдельно выше.
           Действия — на поверхности, не в шапке. */}
       <div className={embedded ? 'worksurface rview' : undefined}>
+      {/* Прогон встал на стоп-точке: выбор живёт на вкладке «Ниши», и человек
+          должен узнать об этом здесь, а не гадать, почему ничего не движется. */}
+      {embedded && showNiches && nicheOpts.length > 0 && (
+        <div className="card" style={{marginBottom:16}}>
+          <h2>Прогон ждёт выбора ниш</h2>
+          <p style={{fontSize:13.5,color:'var(--ink-2)',lineHeight:1.6,maxWidth:'70ch',margin:0}}>
+            Разведка нашла {nicheOpts.length} {plural(nicheOpts.length,'нишу','ниши','ниш')}.
+            Дальше исследование идёт по выбранным — откройте вкладку «Ниши»,
+            посмотрите карты и отметьте те, с которыми работаем.
+          </p>
+          <div style={{marginTop:14}}>
+            <button className="cm-btn cm-btn-pri"
+              onClick={()=>{ try { window.parent.postMessage({ ca:'шаг', шаг:'niches' }, '*'); } catch(e){} }}>
+              Перейти к нишам
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Строка действий — по образцу макета: слева пояснение о цене, справа
           кнопки эталона. Цена стоит ДО траты, как просила владелица. */}
       {embedded && !isRun && (pending.length > 0 || doneCount > 0) && (
