@@ -6710,6 +6710,51 @@ function NicheHero({ list, canPick, selected, onToggle, onContinue, statusOf, ш
 // Жемчужная плашка — ЗАГОЛОВОК, отдельно и выше рабочей поверхности, без
 // свалки данных (владелица, 14.09: «просто бриф, дата, язык — модули здесь
 // не нужны»). Имя этапа антиквой, как имя на обложке отчёта.
+// Ход прогона. Его нужно показывать В ТОЙ ЖЕ рамке, где прогон запущен:
+// вкладки платформы — это отдельные рамки со своими копиями приложения, и
+// вкладка «Прогон» про работу, запущенную с «Ниш», ничего не знает. Владелица
+// 15.09: «запустила — и непонятно, работает оно или нет».
+function ХодПрогона({ модули, готов, текущий, ниша, шаг, шагИдx, всегоШагов }) {
+  return (
+    <div className="card" style={{marginBottom:16}}>
+      <div style={{display:'flex',alignItems:'baseline',gap:12,flexWrap:'wrap',marginBottom:10}}>
+        <span className="kchip kchip-go"><span className="d"></span>Идёт прогон</span>
+        <b style={{fontSize:15}}>{текущий ? текущий.title : 'Готовим запуск…'}</b>
+        {ниша && <span className="note" style={{margin:0,paddingLeft:0}}>ниша: {ниша}</span>}
+        <span className="note" style={{margin:0,marginLeft:'auto',paddingLeft:0}}>
+          {готов} из {модули.length} {plural(модули.length,'модуль','модуля','модулей')} готово
+        </span>
+      </div>
+      {шаг && (
+        <p style={{fontSize:13.5,margin:'0 0 10px'}}>
+          {шаг}{всегоШагов ? ' · шаг ' + (шагИдx + 1) + ' из ' + всегоШагов : ''}
+        </p>
+      )}
+      {/* Полоса модулей: сделанные закрашены, текущий мигает. Так видно, что
+          работа движется, даже когда очередной модуль думает долго. */}
+      <div style={{display:'flex',gap:4}}>
+        {модули.map(м => {
+          const сделан = м.сделан, идёт = м.идёт;
+          return (
+            <div key={м.id} title={м.title}
+              style={{flex:1,height:8,borderRadius:3,
+                background: сделан ? 'var(--acc-strong)' : (идёт ? 'var(--acc-mid)' : 'var(--line-2)'),
+                animation: идёт ? 'ca-пульс 1.4s ease-in-out infinite' : undefined}}/>
+          );
+        })}
+      </div>
+      <div style={{display:'flex',gap:4,marginTop:6}}>
+        {модули.map(м => (
+          <span key={м.id} style={{flex:1,fontSize:10,textAlign:'center',
+            color: м.сделан ? 'var(--acc-strong-ink)' : 'var(--ink-3)'}}>
+            {м.сделан ? '✓ ' : ''}{м.id}
+          </span>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function StageHeader({ имя, подпись, бровь, раздел, факты, lang }) {
   // Плашка-заголовок страницы — ДОСЛОВНО по согласованному макету оболочки
   // (артефакт 5a34980c): там КАЖДЫЙ экран открывается одним и тем же блоком
@@ -7437,6 +7482,16 @@ function App() {
   // всегда. Владелица 15.09: «свернуть отчёт, а внизу кнопка запустить нишу
   // и отдельно стрелочка — смотреть полный отчёт».
   const [отчётРазвёрнут, setОтчётРазвёрнут] = React.useState(false);
+  // Прогон закончился — зовём платформу открыть «Прогон» и обновить ту рамку:
+  // она своя, и без перезагрузки результатов в ней не появится.
+  const шёлПрогон = React.useRef(false);
+  React.useEffect(() => {
+    if (isRun) { шёлПрогон.current = true; return; }
+    if (!шёлПрогон.current) return;
+    шёлПрогон.current = false;
+    if (!embedded) return;
+    try { window.parent.postMessage({ ca: 'прогон-готов' }, '*'); } catch (e) {}
+  }, [isRun, embedded]);
   // Цена — на каждом платном этапе (владелица, 14.09): «сколько стоит запуск,
   // выбрал одну нишу — одна цена, все — другая; что тратится и на что».
   // Цены приходят с сервера (api/usage GET) — смета и счёт по одним цифрам.
@@ -9023,10 +9078,26 @@ function App() {
                 } else переключить(имя);
               }}
               onContinue={() => {
+                // На «Прогон» не прыгаем: работа идёт в ЭТОЙ рамке и видна
+                // здесь же. Туда перейдём сами, когда прогон закончится.
                 if (наСтопТочке) continueAfterNiche(); else run(mods, brief);
-                try { window.parent.postMessage({ ca: 'шаг', шаг: 'run' }, '*'); } catch (e) {}
               }}/>
             <div className="worksurface rview">
+              {/* Ход прогона показываем здесь же: прогон запускается из этой
+                  рамки, и соседняя вкладка «Прогон» о нём не знает — рамки
+                  у вкладок разные. Владелица 15.09: «непонятно, работает или
+                  нет». */}
+              {isRun && (
+                <ХодПрогона
+                  модули={allMods.map(м => ({ id: м.id, title: м.titleRu || м.title,
+                    сделан: modDone(м.id), идёт: curMod === м.id }))}
+                  готов={doneCount}
+                  текущий={curModData ? { title: curModData.titleRu || curModData.title } : null}
+                  ниша={curNiche}
+                  шаг={curStep}
+                  шагИдx={curStepIdx}
+                  всегоШагов={curModData ? curModData.steps.length : 0}/>
+              )}
               {/* Остальные блоки разведки: источники, сегменты, эффективность
                   услуг, матрица приоритета. Владелица 15.09 спросила, куда они
                   делись, — они всегда были в результате M2, но лежали на
@@ -9038,16 +9109,24 @@ function App() {
               <div style={{display:'flex',flexWrap:'wrap',gap:'12px 18px',alignItems:'center',
                   justifyContent:'space-between',marginTop:4}}>
                 <p className="note" style={{margin:0,maxWidth:'56ch',paddingLeft:0}}>
-                  {вРаботе.length
-                    ? 'Отмечено ' + вРаботе.length + ' ' + plural(вРаботе.length,'ниша','ниши','ниш')
-                      + ': ' + вРаботе.join(', ') + '. Каждая исследуется отдельно и стоит отдельных денег; уже посчитанное не пересчитывается.'
-                    : 'Ниши отмечаются кнопкой «Взять в работу» на карте вверху. Отметьте те, с которыми работаем, — и запускайте.'}
+                  {вРаботе.length ? (
+                    <React.Fragment>
+                      {'Отмечено ' + вРаботе.length + ' ' + plural(вРаботе.length,'ниша','ниши','ниш') + ': '}
+                      {/* Имена ниш выделяем: в ряду одинакового мелкого текста
+                          именно они и есть решение (владелица 15.09). */}
+                      {вРаботе.map((имя, i) => (
+                        <React.Fragment key={имя}>
+                          {i ? ', ' : ''}<span className="strong">{имя}</span>
+                        </React.Fragment>
+                      ))}
+                      {'. Каждая исследуется отдельно и стоит отдельных денег; уже посчитанное не пересчитывается.'}
+                    </React.Fragment>
+                  ) : 'Ниши отмечаются кнопкой «Взять в работу» на карте вверху. Отметьте те, с которыми работаем, — и запускайте.'}
                 </p>
                 <button className="cm-btn cm-btn-pri"
                   disabled={!(наСтопТочке ? selNiches.length : вРаботе.length)}
                   onClick={()=>{
                     if (наСтопТочке) continueAfterNiche(); else run(mods, brief);
-                    try { window.parent.postMessage({ ca: 'шаг', шаг: 'run' }, '*'); } catch (e) {}
                   }}>
                   Запустить {наСтопТочке ? selNiches.length : вРаботе.length}{' '}
                   {plural(наСтопТочке ? selNiches.length : вРаботе.length, 'нишу', 'ниши', 'ниш')}

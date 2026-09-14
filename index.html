@@ -137,6 +137,11 @@ tr:nth-child(even) td { background: none; }
 .rview.модуль .seg, .rview.модуль .aud, .rview.модуль .kit { margin-bottom: 26px; }
 /* Итог модуля стоит первым и отбивается от первого блока сильнее прочего. */
 .rview.модуль .msum { margin-bottom: 40px; }
+
+/* Мигание текущего модуля в полосе прогона: единственный признак, по которому
+   видно, что работа идёт, пока модуль думает минуту-другую. */
+@keyframes ca-пульс { 0%,100% { opacity: 1 } 50% { opacity: .45 } }
+@media (prefers-reduced-motion: reduce) { @keyframes ca-пульс { 0%,100% { opacity: 1 } } }
 /* Таблица эталона просит минимум 600px ширины — на узкой рамке её должен
    прокручивать свой контейнер, а не страница. */
 .worksurface .tbl { overflow-x: auto; }
@@ -225,6 +230,6 @@ html[data-embed] #root { max-width: none; padding: 0; }
      без сборки — как и весь остальной проект. -->
 <script src="lib/contract.js?v=c5d82d20"></script>
 <script src="lib/auth.js?v=c0e4610f"></script>
-<script src="app.js?v=cccb20cb"></script>
+<script src="app.js?v=9edaa2fd"></script>
 </body>
 </html>

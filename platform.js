@@ -277,6 +277,19 @@
     if (пункт) пункт.click();
   });
 
+  // Прогон закончился в рамке «Ниши». Результаты лежат в проекте, но рамка
+  // «Прогон» своя и всё ещё показывает состояние до запуска — перезагружаем
+  // её и переходим туда. Без этого человек открывает пустую вкладку и думает,
+  // что прогон не сработал.
+  window.addEventListener('message', function (e) {
+    var d = e && e.data;
+    if (!d || d.ca !== 'прогон-готов') return;
+    var рамка = document.querySelector('iframe[data-step="run"]');
+    if (рамка) рамка.src = адресШага('run');
+    var пункт = document.querySelector('[data-screen="rrun"]');
+    if (пункт) пункт.click();
+  });
+
   function показатьШаг() {
     var экран = document.querySelector('.screen.on iframe[data-step]');
     if (!экран || экран.getAttribute('src')) return;
