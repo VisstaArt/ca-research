@@ -442,6 +442,10 @@ a{color:inherit}
    внутри .dtbl, и в карточках ниш выделение молча не срабатывало: разметка
    была, вида не было (владелица 15.09: «цифры опять не жирные»). */
 .strong{color:var(--ink);font-weight:700}
+/* Число в середине кольца доли внимания: главное значение читается без
+   легенды, поэтому оно и стоит в центре. */
+.ring-n{fill:var(--ink);font-size:30px;font-weight:700;letter-spacing:-.02em;font-family:var(--sans)}
+.ring-t{fill:var(--ink-3);font-size:11.5px;font-family:var(--sans)}
 /* Шкала уверенности сноской под таблицей, где стоит эта колонка. Цифры
    выделены, пояснения нет: глазами находишь свою цифру, а не читаешь
    строку целиком. Пункты не переносятся по одному слову — каждый держится
@@ -1237,12 +1241,18 @@ td b{color:var(--ink);font-weight:600}
 .att .dbar .n{white-space:nowrap}
 
 /* ── Тепловая матрица ── */
-.heat{width:100%;border-collapse:separate;border-spacing:3px;font-size:12px}
+/* Ровные колонки: первая (критерий) раньше растягивалась по самой длинной
+   строке и съедала ширину у остальных — владелица 15.09: «слишком широкая,
+   надо равномерно, заголовок перенести». Фиксируем раскладку и разрешаем
+   переносы в шапке. */
+.heat{width:100%;border-collapse:separate;border-spacing:3px;font-size:12px;table-layout:fixed}
+.heat th{white-space:normal;word-break:normal;overflow-wrap:anywhere}
+.heat th:first-child,.heat td:first-child{width:210px}
 .heat th{font-weight:600;color:var(--ink-3);font-size:10.5px;letter-spacing:.05em;
   text-transform:uppercase;padding:0 6px 6px;text-align:center;vertical-align:bottom}
 .heat th:first-child{text-align:left}
 .heat td{text-align:center;padding:9px 6px;border-radius:8px;font-weight:700;color:var(--ink)}
-.heat td:first-child{text-align:left;font-weight:600;color:var(--ink-2);
+.heat td:first-child{text-align:left;font-weight:600;color:var(--ink-2);white-space:normal;
   background:none;padding-left:0;white-space:nowrap}
 
 
@@ -2515,7 +2525,11 @@ table.raw td.num{font-variant-numeric:tabular-nums;text-align:center;white-space
 .bcell .bnote{display:block;font-size:11.5px;color:var(--ink-3);margin-top:6px;line-height:1.45}
 .rules .rule-card.lead{box-shadow:inset 3px 0 0 var(--mid),inset 0 1px 0 var(--hi), 0 10px 26px -20px rgba(45,36,22,.3)}
 .bet .rule-card.wide{grid-column:1/-1}
-.bet .rule-card.wide>span:last-child{font-family:var(--serif);font-size:19px;line-height:1.45;color:var(--ink);max-width:48ch}
+/* Последняя строка широкой карточки — служебная приписка «у соперников
+   занято / рискуем», а не цитата. Серифом 19px она выглядела как главная
+   мысль карточки и спорила с такой же строкой в соседней узкой карточке,
+   набранной мелким серым (скрин владелицы 15.09). Приводим к одному виду. */
+.bet .rule-card.wide>span:last-child{max-width:52ch}
 @media (max-width:900px){.bet .rule-card.wide{grid-column:auto}}
 body{overflow-x:clip}
 .side{position:sticky;top:14px;max-height:calc(100vh - 28px);overflow-y:auto;scrollbar-width:thin}
