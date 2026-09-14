@@ -12,7 +12,7 @@ function grab(n){
 }
 console.log('tests/module-summary.test.js');
 eval(grab('escHtml')); eval(grab('mdInlineSafe'));
-eval(grab('splitModuleSummary')); eval(grab('renderModuleSummary'));
+eval(grab('splitModuleSummary')); eval(grab('renderModuleSummary')); eval(grab('собратьШаги')); eval(grab('сБольшой'));
 var fails=0;
 function check(n,g,w){var ok=JSON.stringify(g)===JSON.stringify(w);
  if(!ok){fails++;console.log('  FAIL '+n+' | ждали '+JSON.stringify(w)+' | факт '+JSON.stringify(g));}
@@ -43,4 +43,17 @@ check('без итога карточки нет', renderModuleSummary(c2.summar
 var withTail=text+'\n## BLOCK 25 — Хвост\n\n| B |\n|---|\n| y |\n';
 check('хвост после итога сохранён', /BLOCK 25/.test(splitModuleSummary(withTail).body), true);
 
+
+// Модель ставит двоеточие ВНУТРИ звёздочек: «**Итог / Следующие шаги:**».
+// Прежняя маска ждала его снаружи, раздел не находился — а почиститьХвост
+// его всё равно вырезал как дубль. Шаги пропадали из отчёта совсем
+// (владелица 14.09: «этот отчёт в начале всё такой же кривой»).
+var сЖирным='# Модуль\n\n## BLOCK 06 — Карта\n\n| A |\n|---|\n| x |\n\n'
+ +'**Итог / Следующие шаги:**\n\n- Сформировать отличие\n- Готовить кейсы\n';
+check('шаги найдены при двоеточии внутри звёздочек',
+      собратьШаги(сЖирным), ['Сформировать отличие','Готовить кейсы']);
+var своднаяКарта=renderModuleSummary({learned:[], means:[], next:собратьШаги(сЖирным)});
+check('и доехали до карточки', /Готовить кейсы/.test(своднаяКарта), true);
+check('пункт сводки с заглавной',
+      /<li>Публичных/.test(renderModuleSummary({learned:['публичных источников мало'],means:[],next:[]})), true);
 console.log(fails? '\nПРОВАЛОВ: '+fails : '\nвсё сошлось');

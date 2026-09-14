@@ -1,6 +1,6 @@
 // СОБРАНО АВТОМАТИЧЕСКИ из app.jsx — не править руками.
 // Правки вносить в app.jsx, затем: osascript -l JavaScript tools/build.js
-// отпечаток-исходника: d4ac5267d0f1f8a9
+// отпечаток-исходника: 1ffbb846125f0652
 // Функции контракта живут в lib/contract.js. Разбираем их сюда, чтобы весь
 // остальной код обращался к ним по прежним именам и не менялся.
 const{GLOBAL_MODS,isPerNiche,dropOrphans,nichesOf,resKey,splitMdRow,isMdSeparator,parseMdTables,buildModuleEntry,pickTable,pickColumn,withStableIds}=CAContract;// Название модуля берётся из MODULES — это конфиг ИНТЕРФЕЙСА, и сборщик
@@ -1728,7 +1728,7 @@ const толк=п[2].replace(/\s*\([^)]*\)\s*$/,'').trim();if(термин&&то
 const строки=String(тело||'').split('\n');const выводы=[];for(let i=0;i<строки.length;i++){const м=строки[i].match(/^\s*\*{0,2}(?:Вывод|CONCLUSION|ИТОГ БЛОКА)\*{0,2}\s*:?\s*(.*)$/i);if(!м)continue;if(м[1].trim()){выводы.push(м[1].trim());continue;}let j=i+1;while(j<строки.length&&!строки[j].trim())j++;const абзац=[];while(j<строки.length&&строки[j].trim()&&!/^#{1,4}\s|^\|/.test(строки[j])){абзац.push(строки[j].trim());j++;}if(абзац.length)выводы.push(абзац.join(' '));i=j-1;}return выводы;}// «Итог / Следующие шаги» в конце модуля — это его план действий. Если своего
 // «ИТОГА МОДУЛЯ» модуль не выдал, эти пункты становятся строкой «что делаем
 // дальше» в карточке наверху, а из хвоста уходят: место итогов — в начале.
-function собратьШаги(тело){const строки=String(тело||'').split('\n');const начало=строки.findIndex(х=>/^#{1,4}\s*\**\s*(итог\s*\/\s*следующие\s+шаги|следующие\s+шаги)\b/i.test(х)||/^\s*\**(итог\s*\/\s*следующие\s+шаги|следующие\s+шаги)\**\s*:?\s*$/i.test(х));if(начало<0)return[];const пункты=[];for(let i=начало+1;i<строки.length;i++){const х=строки[i];if(/^#{1,4}\s+\S/.test(х))break;const т=х.replace(/^\s*(?:[-*•]|\d+[.)])\s*/,'').trim();if(т)пункты.push(т);}return пункты;}// Подписи, за которыми ничего нет. Содержимое SWOT уезжает в карточки, а
+function собратьШаги(тело){const строки=String(тело||'').split('\n');const заголовокШагов=/^\s*#{0,4}\s*\*{0,2}\s*(?:итог\s*\/\s*следующие\s+шаги|следующие\s+шаги|что\s+делаем\s+дальше)\s*:?\s*\*{0,2}\s*:?\s*$/i;const начало=строки.findIndex(х=>заголовокШагов.test(х));if(начало<0)return[];const пункты=[];for(let i=начало+1;i<строки.length;i++){const х=строки[i];if(/^#{1,4}\s+\S/.test(х))break;const т=х.replace(/^\s*(?:[-*•]|\d+[.)])\s*/,'').trim();if(т)пункты.push(т);}return пункты;}// Подписи, за которыми ничего нет. Содержимое SWOT уезжает в карточки, а
 // строки «Слабые стороны:», «Возможности:», «Угрозы:» остаются висеть пустыми
 // (скрин владелицы 15.09). Убираем подпись, если до следующей подписи или
 // заголовка между ними нет ни одной строки с содержимым.
@@ -2111,11 +2111,12 @@ const asObjs=rows.map(r=>{const o={};hdrs.forEach((h,i)=>o[h]=r[i]||'');return o
 // бюджет, осведомлённость, демография — пусто; если мы это пока не можем
 // собирать, надо припрятать». Считаем таблицу пустой, когда во ВСЕХ
 // клетках, кроме первой колонки, нет ничего, кроме пометок об отсутствии.
-const пусто=v=>!String(v==null?'':v).trim()||/^(—|-|н\/д|нет данных|нет публичных данных|не замерено|не задано|не применимо|не определено|n\/a|none)\s*[.,;)]?\s*$/i.test(String(v).trim());const колонкиДанных=hdrs.length>1?hdrs.slice(1):hdrs;const естьДанные=asObjs.some(o=>колонкиДанных.some(h=>!пусто(o[h])));// Демография — исключение: владелица 14.09 просила оставить её блоком
-// на месте, даже пустую. Она не «не собралась», а ждёт подключения
-// рекламного кабинета, и заказчик должен видеть, чего именно не хватает
-// и что надо дать, чтобы поле заполнилось.
-if(!естьДанные&&/BLOCK\s*09B\b|Демограф/i.test(lastHeading)){html+='<p class="note">Пол, возраст и достаток нашими средствами не '+'добываются: поисковая частотность отвечает на «что ищут» и «откуда», '+'но не на «кто ищет». Эти строки заполнятся, когда будет доступ к '+'рекламному кабинету (Google Ads, VK) или к Метрике заказчика — '+'там демография считается по живой аудитории, а не оценивается.</p>';tableRows=[];inTable=false;return;}if(!естьДанные){// Если после заголовка ничего, кроме этой таблицы, не печаталось —
+const пусто=v=>!String(v==null?'':v).trim()||/^(—|-|н\/д|нет данных|нет публичных данных|не замерено|не задано|не применимо|не определено|n\/a|none)\s*[.,;)]?\s*$/i.test(String(v).trim());const колонкиДанных=hdrs.length>1?hdrs.slice(1):hdrs;const естьДанные=asObjs.some(o=>колонкиДанных.some(h=>!пусто(o[h])));// Демография прячется ЦЕЛИКОМ, вместе с заголовком и вводным абзацем
+// модели: владелица 14.09 — «не показывать её, просто скрыть от
+// отображения; когда будут данные, добавим». Не сообщение об отсутствии,
+// а отсутствие. Код блока и промпт остаются на месте: подключим
+// рекламный кабинет — блок оживёт сам, без переписывания.
+if(!естьДанные&&/BLOCK\s*09B\b|Демограф/i.test(lastHeading)&&ctx.headStart!=null){html=html.slice(0,ctx.headStart);ctx.headStart=null;ctx.headEnd=-1;tableRows=[];inTable=false;return;}if(!естьДанные){// Если после заголовка ничего, кроме этой таблицы, не печаталось —
 // снимаем и заголовок: пустой раздел читается как поломка.
 if(ctx.headEnd===html.length&&ctx.headStart!=null){html=html.slice(0,ctx.headStart);ctx.headStart=null;ctx.headEnd=-1;}tableRows=[];inTable=false;return;}// 04_1 сам не рисуется — он кормит карточки ниш ниже.
 if(/BLOCK\s*04_1\b/i.test(lastHeading)){const kn=hdrs.find(h=>h.toLowerCase().includes('ниш'));if(kn)for(const r of asObjs){const nm=String(r[kn]||'').replace(/\*\*/g,'').trim().toLowerCase();if(!nm)continue;// Значение идёт в карточку как РАЗМЕТКА: там жирная цена и ссылки
@@ -2212,7 +2213,7 @@ const nxt=tail.search(/\n#{1,2}\s+\S/);const part=nxt>=0?tail.slice(0,nxt):tail;
 // и антиква покрупнее; «что это значит» и «что делаем» — следствия, они
 // стоят справа столбиком и набраны мельче. Три равные колонки читались как
 // три одинаково важных списка, то есть ни один не был важным.
-function renderModuleSummary(s){if(!s)return'';const esc=escHtml;const part=(title,items,cls)=>items&&items.length?'<div class="'+cls+'"><span class="smh">'+esc(title)+'</span><ul>'+items.map(x=>'<li>'+mdInlineSafe(x)+'</li>').join('')+'</ul></div>':'';const main=part('Что узнали',s.learned,'sm-main');const side=part('Что это значит',s.means,'sm-side')+part('Что делаем дальше',s.next,'sm-side');if(!main&&!side)return'';return'<div class="msum">'+'<div class="msum-h">Что дал этот модуль</div>'+'<div class="msum-body">'+main+(side?'<div class="sm-col">'+side+'</div>':'')+'</div>'+'</div>';}function generateHTMLReport(brief,results,lang,priceLayers,selectedLayers,singleModId){const esc=escHtml;// Якорь на модуль. По-нишевые модули встречаются несколько раз, поэтому в
+function renderModuleSummary(s){if(!s)return'';const esc=escHtml;const part=(title,items,cls)=>items&&items.length?'<div class="'+cls+'"><span class="smh">'+esc(title)+'</span><ul>'+items.map(x=>'<li>'+mdInlineSafe(сБольшой(x))+'</li>').join('')+'</ul></div>':'';const main=part('Что узнали',s.learned,'sm-main');const side=part('Что это значит',s.means,'sm-side')+part('Что делаем дальше',s.next,'sm-side');if(!main&&!side)return'';return'<div class="msum">'+'<div class="msum-h">Что дал этот модуль</div>'+'<div class="msum-body">'+main+(side?'<div class="sm-col">'+side+'</div>':'')+'</div>'+'</div>';}function generateHTMLReport(brief,results,lang,priceLayers,selectedLayers,singleModId){const esc=escHtml;// Якорь на модуль. По-нишевые модули встречаются несколько раз, поэтому в
 // адрес входит и ниша — иначе все ссылки вели бы в первое вхождение.
 const slug=t=>String(t||'').toLowerCase().replace(/[^a-zа-яё0-9]+/gi,'-').replace(/^-|-$/g,'');const anchorOf=r=>'mod-'+r.id+(r.niche?'--'+slug(r.niche):'');// Скрипты рисования собираются, пока строятся секции, — объявляем до цикла.
 const blockScripts=[];let blockJS='';const targetResults=dropOrphans(singleModId?results.filter(r=>r.id===singleModId):results);const completedMods=MODULES.filter(m=>targetResults.find(r=>r.id===m.id));const date=new Date().toLocaleDateString('ru-RU');const hasCompany=brief.currentRevenue||brief.currentClients||brief.currentAvgCheck;const chosenLayer=selectedLayers&&selectedLayers.length>0&&priceLayers&&priceLayers.length>0?selectedLayers.map(i=>priceLayers[i]&&priceLayers[i].name).filter(Boolean).join(', '):null;// Extract key insights from M1 content for executive summary
