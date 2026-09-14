@@ -6410,21 +6410,25 @@ function NicheHero({ list, canPick, selected, onToggle, onContinue, statusOf, ш
   React.useEffect(() => { if (c >= list.length) setC(0); }, [list.length]);
   const n = list.length;
   const at = k => list[((c + k) % n + n) % n];
-  const слоты = n >= 2 ? [-2, -1, 0, 1, 2].slice(n >= 5 ? 0 : (n === 2 ? 2 : (n === 3 ? 1 : 1)),
-    n >= 5 ? 5 : (n === 2 ? 4 : (n === 3 ? 4 : 5))) : [0];
+  // Сколько карт показываем разом. Семь — по просьбе владелицы 15.09: пять
+  // оставляли пустые поля по краям, «как-то лысовато». Меньше семи ниш —
+  // берём сколько есть, центр всегда посередине.
+  const всеСлоты = [-3, -2, -1, 0, 1, 2, 3];
+  const слоты = n >= 7 ? всеСлоты
+    : (n >= 2 ? всеСлоты.slice(3 - Math.ceil((n - 1) / 2), 4 + Math.floor((n - 1) / 2)) : [0]);
   const тек = at(0);
   const выбрана = имя => (selected || []).includes(имя);
   // Полосы сравнения ниш рисовал этот же компонент; теперь их показывает
   // блок «Приоритет ниш» — второй такой же график на одном экране был лишним.
 
-  const кл = { '-2':'f1', '-1':'f2', '0':'f3', '1':'f4', '2':'f5' };
+  const кл = { '-3':'f0', '-2':'f1', '-1':'f2', '0':'f3', '1':'f4', '2':'f5', '3':'f6' };
   return (
     <div className={наПерламутре ? 'cover' : 'card'}
       style={наПерламутре
         ? {background:'none', border:0, boxShadow:'none', padding:0, marginBottom:22}
         : {padding:0, overflow:'hidden', marginBottom:14}}>
       {шапка}
-      <div className="hero" style={наПерламутре ? {height:232} : undefined}>
+      <div className="hero">
         <div className="fan">
           {слоты.map(k => {
             const д = at(k);
@@ -6450,22 +6454,6 @@ function NicheHero({ list, canPick, selected, onToggle, onContinue, statusOf, ш
             );
           })}
         </div>
-        {/* Точки-пагинация: по вееру не видно, что он листается, и сколько ниш
-            всего. Владелица 15.09: «непонятно, что это надо как-то листать».
-            Точки кликабельны — это и подсказка, и второй способ переключения. */}
-        {n > 1 && (
-          <div style={{position:'absolute',left:0,right:0,bottom:6,zIndex:7,
-              display:'flex',justifyContent:'center',alignItems:'center',gap:7}}>
-            {list.map((_, i) => (
-              <button key={i} onClick={()=>{ setC(i); if (onPick) onPick(i); }}
-                title={list[i] && list[i].name}
-                style={{width:i===c?20:7,height:7,borderRadius:99,padding:0,border:0,
-                  cursor:'pointer',transition:'width .2s ease, background .2s ease',
-                  background:i===c ? 'var(--ink)' : 'var(--ink-3)',
-                  opacity:i===c ? 1 : .38}}/>
-            ))}
-          </div>
-        )}
         {n > 1 && <>
           <button onClick={()=>{ const i=((c - 1) % n + n) % n; setC(i); if (onPick) onPick(i); }}
             style={{position:'absolute',left:10,top:'50%',transform:'translateY(-50%)',zIndex:6,width:34,height:34,borderRadius:'50%',padding:0}}>←</button>
@@ -6478,6 +6466,17 @@ function NicheHero({ list, canPick, selected, onToggle, onContinue, statusOf, ш
             «живых данных» в этом месте, а четыре крупные плитки с числами
             занимали полосу и ничего не показывали. Мера полос — эталонная:
             дорожка обязательна, высота 14, торцы прямые. */}
+        {/* Подпись данных именем ниши: по одному вееру не всегда видно, чья
+            карта сейчас открыта, и владелица 15.09 читала чужие цифры. */}
+        <div style={{display:'flex',alignItems:'baseline',gap:12,flexWrap:'wrap',marginBottom:12}}>
+          <span className="eyebrow" style={{marginBottom:0}}>Разбор ниши</span>
+          <b style={{fontSize:17,letterSpacing:'-.01em'}}>{тек.name}</b>
+          {тек.verdict && (
+            <span className={'kchip ' + (/не идём|no-?go|нет/i.test(тек.verdict) ? 'kchip-no'
+              : (/вопрос|maybe/i.test(тек.verdict) ? 'kchip-mb' : 'kchip-go'))}>
+              <span className="d"></span>{тек.verdict}</span>
+          )}
+        </div>
         <div style={{display:'grid',gridTemplateColumns:'minmax(0,190px) minmax(0,1fr)',
             gap:22,alignItems:'center',marginBottom:16,maxWidth:760}} className="ниша-разбор">
           <РозаНиши ниша={тек}/>
@@ -6515,34 +6514,34 @@ function NicheHero({ list, canPick, selected, onToggle, onContinue, statusOf, ш
             </div>
           </div>
         </div>
-        {тек.why && <p style={{fontSize:12.5,color:'var(--ink-2)',lineHeight:1.55,margin:'0 0 14px',maxWidth:'70ch'}}>{тек.why}</p>}
-        <div style={{display:'flex',gap:8,flexWrap:'wrap',alignItems:'center',marginBottom:16}}>
+        {/* Порядок по просьбе владелицы 15.09: сначала обоснование — почему
+            эта ниша, — и только потом решение по ней. «Запустить» отсюда
+            убрано: запуск идёт ниже, когда все ниши уже проклацаны и видно,
+            сколько их. Две кнопки рядом сбивали: непонятно, эта одна пойдёт
+            в работу или все отмеченные. */}
+        {тек.why && (
+          <div style={{marginBottom:14,maxWidth:'74ch'}}>
+            <span className="eyebrow" style={{marginBottom:6}}>Почему эта ниша</span>
+            <p style={{fontSize:13,color:'var(--ink-2)',lineHeight:1.6,margin:0}}>{тек.why}</p>
+          </div>
+        )}
+        <div style={{display:'flex',gap:10,flexWrap:'wrap',alignItems:'center',marginBottom:16}}>
           {canPick ? (
-            <>
-              <button className="cm-btn" onClick={()=>onToggle(тек.name)}>
+            <React.Fragment>
+              <button className={'cm-btn' + (выбрана(тек.name) ? '' : ' cm-btn-pri')}
+                onClick={()=>onToggle(тек.name)}>
                 {выбрана(тек.name) ? 'Убрать из работы' : 'Взять в работу'}
               </button>
-              <button className="cm-btn cm-btn-pri" disabled={!(selected||[]).length}
-                onClick={onContinue}>
-                Запустить ниши ({(selected||[]).length})
-              </button>
-            </>
+              <span className="note" style={{margin:0}}>
+                {выбрана(тек.name)
+                  ? 'Ниша отмечена — запустим её вместе с остальными отмеченными.'
+                  : 'Отметьте нужные ниши, запуск — одной кнопкой ниже.'}
+              </span>
+            </React.Fragment>
           ) : (
             <span className="tag">{statusOf ? statusOf(тек.name) : ''}</span>
           )}
         </div>
-        {/* «Сравнение ниш» отсюда убрано: те же полосы рисует блок
-            «Приоритет ниш» ниже, и владелица 15.09 справедливо сказала, что
-            одно и то же показано слишком много раз. Оставляем обоснование —
-            оно про открытую нишу и в блоке приоритета его нет. */}
-        {тек.why && (
-          <div className="card" style={{marginBottom:8}}>
-            <div className="chead" style={{display:'flex',justifyContent:'space-between',alignItems:'baseline',marginBottom:8}}>
-              <h2 style={{fontSize:16,fontWeight:600}}>Почему эта ниша</h2>
-              <span className="tag">{тек.verdict || ''}</span></div>
-            <p style={{fontSize:12.5,color:'var(--ink-2)',lineHeight:1.6,margin:0}}>{тек.why}</p>
-          </div>
-        )}
       </div>
     </div>
   );
@@ -8776,10 +8775,10 @@ function App() {
       .map(н => ({ ...н, verdict: вердиктПоБаллам(н.score) }))
       .sort((a, b) => (весВердикта(a.verdict) - весВердикта(b.verdict))
         || ((b.score || 0) - (a.score || 0)));
-    // На перламутре — самое ценное: до шести главных ниш веером. Остальные
+    // На перламутре — самое ценное: до семи главных ниш веером. Остальные
     // никуда не деваются, они ниже в «Приоритете ниш» со своими оценками.
     // Владелица 15.09: «показывать надо главные, предположим пять-шесть».
-    const список = всеНиши.slice(0, 6);
+    const список = всеНиши.slice(0, 7);
     const вРаботе = nichesOf(brief);
     const нужноМодулей = MODULES.filter(m => !m.disabled && !m.offChain
       && m.id !== 'CONTENT' && CAContract.isPerNiche(m.id)).length;
@@ -8839,60 +8838,6 @@ function App() {
                 try { window.parent.postMessage({ ca: 'шаг', шаг: 'run' }, '*'); } catch (e) {}
               }}/>
             <div className="worksurface rview">
-              {/* Один компактный выбор вместо трёх списков ниш. Владелица
-                  15.09: «мы эти ниши много раз дублируем, неудобно». Оценки,
-                  вердикты и полосы живут в «Приоритете ниш» ниже — здесь
-                  только имена и галочка «берём». */}
-              <div className="card">
-                <h2>Берём в работу</h2>
-                <div style={{display:'flex',flexWrap:'wrap',gap:8,marginTop:10}}>
-                  {всеНиши.map(н => {
-                    const отмечена = наСтопТочке
-                      ? selNiches.some(i => nicheOpts[i] && nicheOpts[i].name === н.name)
-                      : вРаботе.includes(н.name);
-                    return (
-                      <button key={н.name} className={'kchip ' + (отмечена ? 'kchip-go' : '')}
-                        title={статус(н.name)}
-                        style={{border:'1px solid var(--line)',cursor:'pointer',
-                          background: отмечена ? undefined : 'var(--card-solid)',
-                          opacity: отмечена ? 1 : .72}}
-                        onClick={()=>{
-                          if (наСтопТочке) {
-                            const i = nicheOpts.findIndex(x => x.name === н.name);
-                            if (i >= 0) setSelNiches(p => p.includes(i) ? p.filter(x => x !== i) : [...p, i]);
-                          } else переключить(н.name);
-                        }}>
-                        <span className="d" style={{background: отмечена ? undefined : 'var(--line)'}}></span>
-                        {н.name}{н.recommended ? ' · рекомендуем' : ''}
-                      </button>
-                    );
-                  })}
-                </div>
-                <div style={{display:'flex',flexWrap:'wrap',gap:'12px 18px',alignItems:'center',
-                    justifyContent:'space-between',marginTop:16}}>
-                  <p className="note" style={{margin:0,maxWidth:'52ch',paddingLeft:0}}>
-                    Берём — от 15 баллов из 20, под вопросом — от 10, ниже — не идём.
-                    Можно взять одну — ту, что рекомендует разведка, — можно все.
-                    Каждая ниша исследуется отдельно и стоит отдельных денег;
-                    уже посчитанное не пересчитывается.
-                  </p>
-                  <div style={{display:'flex',gap:9,flexWrap:'wrap'}}>
-                    <button className="cm-btn" onClick={()=>{
-                      if (наСтопТочке) setSelNiches(nicheOpts.map((_, i) => i));
-                      else {
-                        const нб = { ...brief, selectedNiche: всеНиши.map(н => н.name).join(', ') };
-                        setBrief(нб);
-                        const u = { ...proj, brief: нб, updatedAt: new Date().toISOString() }; setProj(u); sv(u);
-                      }
-                    }}>Отметить все</button>
-                    <button className="cm-btn cm-btn-pri" onClick={()=>{
-                      if (наСтопТочке) continueAfterNiche(); else run(mods, brief);
-                      try { window.parent.postMessage({ ca: 'шаг', шаг: 'run' }, '*'); } catch (e) {}
-                    }}>Запустить отмеченные</button>
-                  </div>
-                </div>
-              </div>
-
               {/* Остальные блоки разведки: источники, сегменты, эффективность
                   услуг, матрица приоритета. Владелица 15.09 спросила, куда они
                   делись, — они всегда были в результате M2, но лежали на
@@ -8914,6 +8859,35 @@ function App() {
                   </p>
                 </div>
               )}
+
+              {/* Запуск — в самом конце, после всех данных: владелица 15.09 —
+                  «пока они не посмотрели всю информацию обо всех нишах, нет
+                  смысла ставить этот блок выше». Сколько ниш и почём — видно
+                  прямо на кнопке, до траты. */}
+              <div style={{display:'flex',flexWrap:'wrap',gap:'12px 18px',alignItems:'center',
+                  justifyContent:'space-between',marginTop:26,paddingTop:20,
+                  borderTop:'1px solid var(--line)'}}>
+                <p className="note" style={{margin:0,maxWidth:'56ch',paddingLeft:0}}>
+                  {вРаботе.length
+                    ? 'Отмечено ' + вРаботе.length + ' ' + plural(вРаботе.length,'ниша','ниши','ниш')
+                      + ': ' + вРаботе.join(', ') + '. Каждая исследуется отдельно и стоит отдельных денег; уже посчитанное не пересчитывается.'
+                    : 'Ниши отмечаются кнопкой «Взять в работу» на карте вверху. Отметьте те, с которыми работаем, — и запускайте.'}
+                </p>
+                <button className="cm-btn cm-btn-pri"
+                  disabled={!(наСтопТочке ? selNiches.length : вРаботе.length)}
+                  onClick={()=>{
+                    if (наСтопТочке) continueAfterNiche(); else run(mods, brief);
+                    try { window.parent.postMessage({ ca: 'шаг', шаг: 'run' }, '*'); } catch (e) {}
+                  }}>
+                  Запустить {наСтопТочке ? selNiches.length : вРаботе.length}{' '}
+                  {plural(наСтопТочке ? selNiches.length : вРаботе.length, 'нишу', 'ниши', 'ниш')}
+                  {(() => {
+                    const ниш = наСтопТочке ? selNiches.length : вРаботе.length;
+                    const c = ниш ? сметаЦентов(mods, ниш) : null;
+                    return c != null ? ' · ≈ ' + деньгами(c) : '';
+                  })()}
+                </button>
+              </div>
             </div>
           </React.Fragment>
         ) : (
