@@ -5,7 +5,7 @@ export const config = { api: { bodyParser: true } };
 // модель работает ТОЛЬКО с переданным материалом (антигаллюцинационный пайплайн).
 // Б1+Б2+Б3 (24.08.2026): общий APP_PASSWORD заменён на проверку JWT пользователя
 // (Supabase Auth) — без него платный Tavily-поиск был бы доступен всем.
-import { requireUser, setCorsHeaders } from './_auth.js';
+import { requireUser, setCorsHeaders, ownKeysMode } from './_auth.js';
 export default async function handler(req, res) {
   setCorsHeaders(res, 'POST, OPTIONS');
   if (req.method === 'OPTIONS') return res.status(200).end();
@@ -23,7 +23,9 @@ export default async function handler(req, res) {
   // только владельцу клиента), нет ключа/функции/ответа — работаем на ключе
   // платформы: поиск важнее экономии, молча падать нельзя.
   let key = process.env.TAVILY_API_KEY || '';
-  if (client_id) {
+  // Тот же порядок, что у пишущей модели: поисковый ключ клиента идёт в дело
+  // только на тарифе «Разработчик».
+  if (client_id && await ownKeysMode(auth, client_id)) {
     try {
       const r = await fetch(auth.pgBase + 'rpc/provider_key_for', {
         method: 'POST', headers: auth.pgHeaders,

@@ -60,3 +60,18 @@ export async function requireUser(req, res) {
     pgBase: base + '/rest/v1/',
   };
 }
+
+// Тариф клиента решает, ЧЕЙ ключ идёт в дело. До 14.09 он переключал только
+// то, что видно в интерфейсе: поля ключей прятались, а сервер всё равно брал
+// клиентский ключ — вернуть расход на платформу было нечем. Владелице это
+// нужно для сравнения моделей: прогоны на её счёт, потом обратно на клиента.
+export async function ownKeysMode(auth, clientId) {
+  if (!clientId) return false;
+  try {
+    const r = await fetch(auth.pgBase + 'clients?select=billing_mode&id=eq.'
+      + encodeURIComponent(clientId), { headers: auth.pgHeaders });
+    if (!r.ok) return false;
+    const d = await r.json().catch(() => null);
+    return Array.isArray(d) && d[0] && d[0].billing_mode === 'own_keys';
+  } catch { return false; }   // не знаем — работаем на своём ключе
+}

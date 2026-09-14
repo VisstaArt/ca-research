@@ -4,7 +4,7 @@ export const config = { api: { bodyParser: true } };
 // Auth — вход/проверку пароля с экрана логина теперь делает index.html
 // напрямую через Auth REST API (см. index.html: signIn), эта функция больше
 // не участвует в проверке пароля (старый ping-путь убран как мёртвый код).
-import { requireUser, setCorsHeaders } from './_auth.js';
+import { requireUser, setCorsHeaders, ownKeysMode } from './_auth.js';
 export default async function handler(req, res) {
   setCorsHeaders(res, 'POST, OPTIONS');
   if (req.method === 'OPTIONS') return res.status(200).end();
@@ -24,7 +24,10 @@ export default async function handler(req, res) {
     // и молча падать из-за незаведённого ключа нельзя.
     let key = process.env.OPENAI_API_KEY;
     let провайдер = 'openai';
-    if (client_id) {
+    // Ключ клиента берём ТОЛЬКО на тарифе «Разработчик». На подписке работа
+    // идёт на ключах платформы — так написано в интерфейсе, и так теперь на
+    // самом деле.
+    if (client_id && await ownKeysMode(auth, client_id)) {
       // Сначала ключ OpenAI, нет — OpenRouter: владелица заводит «одну
       // платформу с разными нейронками», и её ключ может быть от OpenRouter.
       for (const п of ['openai', 'openrouter']) {
