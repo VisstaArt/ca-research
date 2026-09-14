@@ -27,12 +27,26 @@ const MODELS = [
   ['gpt-4.1',      'GPT-4.1 — старая рабочая лошадь, лимит всего 30 000 в минуту'],
   ['gpt-4.1-mini', 'GPT-4.1 mini — для черновых прогонов, вчетверо дешевле'],
 ];
-const MODEL_DEFAULT = 'gpt-4.1';
+// Решение владелицы 14.09.2026: gpt-5.6-terra. Вход стоит столько же, сколько
+// у gpt-4.1 ($2 за миллион), выход дороже в полтора, зато лимит 500 000
+// токенов в минуту вместо 30 000 — из-за него падал «Голос клиента».
+const MODEL_DEFAULT = 'gpt-5.6-terra';
+// Модели, которые выбирались раньше. Оставить их — значит оставить и старый
+// лимит: человек выбрал их до того, как новые вообще появились в списке.
+// Переносим ОДИН раз, дальше выбор снова за человеком.
+const МОДЕЛИ_ПРОШЛОГО = ['gpt-4.1', 'gpt-4.1-mini', 'gpt-5', 'o3'];
 const MODEL = (() => {
   try {
     const u = new URLSearchParams(location.search).get('model');
     if (u) return u;
-    return localStorage.getItem('ca_model') || MODEL_DEFAULT;
+    const сохранена = localStorage.getItem('ca_model');
+    if (!сохранена) return MODEL_DEFAULT;
+    if (МОДЕЛИ_ПРОШЛОГО.indexOf(сохранена) >= 0 && !localStorage.getItem('ca_model_перенос')) {
+      localStorage.setItem('ca_model', MODEL_DEFAULT);
+      localStorage.setItem('ca_model_перенос', '1');
+      return MODEL_DEFAULT;
+    }
+    return сохранена;
   } catch { return MODEL_DEFAULT; }
 })();
 const PROXY = 'https://red-wave-3f83.art-vissta-442.workers.dev';
