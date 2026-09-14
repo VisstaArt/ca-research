@@ -1,6 +1,6 @@
 // СОБРАНО АВТОМАТИЧЕСКИ из app.jsx — не править руками.
 // Правки вносить в app.jsx, затем: osascript -l JavaScript tools/build.js
-// отпечаток-исходника: a527cea66d0800dc
+// отпечаток-исходника: ea6a08fabe955780
 // Функции контракта живут в lib/contract.js. Разбираем их сюда, чтобы весь
 // остальной код обращался к ним по прежним именам и не менялся.
 const{GLOBAL_MODS,isPerNiche,dropOrphans,nichesOf,resKey,splitMdRow,isMdSeparator,parseMdTables,buildModuleEntry,pickTable,pickColumn,withStableIds}=CAContract;// Название модуля берётся из MODULES — это конфиг ИНТЕРФЕЙСА, и сборщик
@@ -1888,9 +1888,13 @@ const perMonth=t=>{const s=String(t||'').toLowerCase();const n=numOf(s);if(n==nu
 // Разметка и поведение перенесены из design/РАЗБОР-M2.html дословно.
 function renderMarket(headers,rows,ctx,brief){const kN=col(headers,'назван'),kP=col(headers,'ценовой'),kF=col(headers,'известн');if(!kN||!kP||!kF)return null;const priceIdx=t=>{const s=String(t||'').toLowerCase();if(/vip|вип/.test(s))return 3;if(/дорог/.test(s))return 2;if(/средн/.test(s))return 1;return 0;// масс-маркет и всё неопознанное
 };const fameIdx=t=>{const s=String(t||'').toLowerCase();if(/лидер/.test(s))return 0;if(/заметн/.test(s))return 1;return 2;// нишевый-малый / не замерено
-};const our=String(ctx&&ctx.ourName||'').toLowerCase();const P=rows.map(r=>{const n=String(r[kN]||'').replace(/\*\*|\[|\]/g,'').trim();if(!n)return null;const dem=numOf(r[kF]);// «лидер · 41 300/мес» → число
-const row=[n,priceIdx(r[kP]),fameIdx(r[kF]),dem];if(our&&n.toLowerCase().includes(our))row.push(true);return row;}).filter(Boolean);if(P.length<4)return null;// на трёх точках карта бессмысленна
-if(!P.some(x=>x[4]))P[P.length-1].push(true);// без «нас» подсветка не работает
+};// Имена сравниваем по буквам и цифрам: в брифе «Ловец Лидов», в таблице
+// «Ловец-Лидов.рф» — при прямом сравнении мы себя не узнавали.
+const голо=t=>String(t||'').toLowerCase().replace(/[^a-zа-яё0-9]/g,'');const our=голо(ctx&&ctx.ourName||'');const P=rows.map(r=>{const n=String(r[kN]||'').replace(/\*\*|\[|\]/g,'').trim();if(!n)return null;const dem=numOf(r[kF]);// «лидер · 41 300/мес» → число
+const row=[n,priceIdx(r[kP]),fameIdx(r[kF]),dem];const имя=голо(n);if(our&&имя&&(имя.includes(our)||our.includes(имя)))row.push(true);return row;}).filter(Boolean);if(P.length<4)return null;// на трёх точках карта бессмысленна
+// Раньше, не найдя себя, подсветка вешалась на ПОСЛЕДНЮЮ строку — и в
+// отчёте чужая компания была подписана «мы» (владелица 14.09: «Adpass —
+// мы»). Ложная подпись хуже отсутствующей: по ней принимают решения.
 blockScripts.push('renderMarketMap('+safeJson(P)+');');return'<div class="mktwrap"><div class="mkt" id="rpt-mkt"></div></div>'+'<div class="mktleg">'+'<span><i style="background:var(--mid)"></i>мы</span>'+'<span><i style="background:var(--sw-grey)"></i>игрок рынка</span>'+'<span>подсвечен наш ценовой уровень — <b>сравнение идёт внутри него</b></span>'+'</div><div class="mktlist" id="rpt-mkt-col"></div>';}// ── BLOCK 11: осведомлённость лентой ────────────────────────────────────────
 // Распределение по пяти ступеням — одна шкала светлоты, как утверждено:
 // разные тона читались бы как разные ВЕЩИ, а тут одна величина.

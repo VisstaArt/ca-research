@@ -4736,17 +4736,23 @@ function renderResearchHTML(content, opts) {
       if (/заметн/.test(s)) return 1;
       return 2;                                   // нишевый-малый / не замерено
     };
-    const our = String((ctx && ctx.ourName) || '').toLowerCase();
+    // Имена сравниваем по буквам и цифрам: в брифе «Ловец Лидов», в таблице
+    // «Ловец-Лидов.рф» — при прямом сравнении мы себя не узнавали.
+    const голо = t => String(t||'').toLowerCase().replace(/[^a-zа-яё0-9]/g, '');
+    const our = голо((ctx && ctx.ourName) || '');
     const P = rows.map(r => {
       const n = String(r[kN]||'').replace(/\*\*|\[|\]/g,'').trim();
       if (!n) return null;
       const dem = numOf(r[kF]);                   // «лидер · 41 300/мес» → число
       const row = [ n, priceIdx(r[kP]), fameIdx(r[kF]), dem ];
-      if (our && n.toLowerCase().includes(our)) row.push(true);
+      const имя = голо(n);
+      if (our && имя && (имя.includes(our) || our.includes(имя))) row.push(true);
       return row;
     }).filter(Boolean);
     if (P.length < 4) return null;                // на трёх точках карта бессмысленна
-    if (!P.some(x => x[4])) P[P.length-1].push(true); // без «нас» подсветка не работает
+    // Раньше, не найдя себя, подсветка вешалась на ПОСЛЕДНЮЮ строку — и в
+    // отчёте чужая компания была подписана «мы» (владелица 14.09: «Adpass —
+    // мы»). Ложная подпись хуже отсутствующей: по ней принимают решения.
     blockScripts.push('renderMarketMap('+safeJson(P)+');');
     return '<div class="mktwrap"><div class="mkt" id="rpt-mkt"></div></div>'
       + '<div class="mktleg">'
