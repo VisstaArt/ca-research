@@ -3617,7 +3617,12 @@ function renderSources(d){
   const адрес=u=>/^https?:\/\//i.test(String(u||''));
   const коротко=u=>{ const v=String(u||'').replace(/^https?:\/\/(www\.)?/i,'').replace(/\/$/,'');
     return v.length>46?v.slice(0,44)+'…':v; };
-  box.innerHTML=d.map(([n,dom,t,use,url])=>{
+  /* Источник без адреса проверить нельзя, а в списке он стоит наравне с
+     настоящим: владелица 15.09 — «пять источников, публичный один, в чём
+     польза». Такие сводим в одну честную строку под списком. */
+  const сАдресом=d.filter(x=>адрес(x[4]));
+  const безАдреса=d.filter(x=>!адрес(x[4]));
+  box.innerHTML=сАдресом.map(([n,dom,t,use,url])=>{
     /* Показываем ПОНЯТНОЕ имя, если оно есть (название площадки, канала),
        и только при его отсутствии — сам адрес, сокращённый. */
     const подпись=String(dom||'').trim();
@@ -3630,7 +3635,10 @@ function renderSources(d){
       +(use?'<span class="dt">'+escText(use)+'</span>':'')+'</span>'
       +(t?'<span class="took"><span>что взяли</span><em>'+escText(t)+'</em></span>':'')
       +'</span></div>';
-  }).join('');
+  }).join('')
+   +(безАдреса.length?'<p class="note">Ещё '+безАдреса.length+' упоминаний без публичного адреса: '
+     +безАдреса.map(x=>escText(x[1])).join(', ')
+     +' — проверить их по ссылке нельзя, поэтому в списке источников они не стоят.</p>':'');
 }
 function renderMarketSize(d){
   var box=document.getElementById('rpt-tam'); if(!box) return;
@@ -4193,11 +4201,13 @@ function renderPositioning(D){
 }
 function renderArchetype(D){
   var box=document.getElementById('rpt-arch'); if(!box) return;
-  /* Первая карточка широкая: архетип — утверждение обо всём бренде, от него
-     зависит тон всего, что напишет контент-завод. */
+  /* Карточки равной ширины. Широкая первая и узкая вторая читались как
+     сбой вёрстки: владелица 15.09 — «один такой большой на всю ширину,
+     снизу другой маленький, непонятно». Роль и так подписана сверху
+     («основной» / «поддерживающий»), размером её дублировать незачем. */
   box.innerHTML=D.map(function(r,i){
     var foot=[r[3]?'У соперников занято: '+r[3]:'', r[4]?'Рискуем: '+r[4]:''].filter(Boolean).join(' · ');
-    return '<div class="rule-card'+(i?'':' wide')+'"><b>'+(i+1)+'</b>'
+    return '<div class="rule-card"><b>'+(i+1)+'</b>'
       +(r[1]?'<span class="eb">'+escText(r[1])+'</span>':'')
       +'<span class="nm">'+escText(r[0])+'</span>'
       +(r[2]?'<span>'+escText(r[2])+'</span>':'')
