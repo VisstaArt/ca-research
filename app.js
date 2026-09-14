@@ -1,6 +1,6 @@
 // СОБРАНО АВТОМАТИЧЕСКИ из app.jsx — не править руками.
 // Правки вносить в app.jsx, затем: osascript -l JavaScript tools/build.js
-// отпечаток-исходника: 8fc7374b1d4c8e29
+// отпечаток-исходника: 1d7712ded87fbc8a
 // Функции контракта живут в lib/contract.js. Разбираем их сюда, чтобы весь
 // остальной код обращался к ним по прежним именам и не менялся.
 const{GLOBAL_MODS,isPerNiche,dropOrphans,nichesOf,resKey,splitMdRow,isMdSeparator,parseMdTables,buildModuleEntry,pickTable,pickColumn,withStableIds}=CAContract;// Название модуля берётся из MODULES — это конфиг ИНТЕРФЕЙСА, и сборщик
@@ -98,7 +98,13 @@ function оценкаСекунд(id,проекты){const свои=[];(прое
 // на ключе платформы, как раньше.
 const clientIdFromUrl=(()=>{try{return new URLSearchParams(location.search).get('client')||'';}catch{return'';}})();// Выбранная модель на момент вызова: её меняют в настройке прогона, и держать
 // её в замыкании старта значит игнорировать смену до перезагрузки страницы.
-const currentModel=()=>{try{return localStorage.getItem('ca_model')||MODEL;}catch{return MODEL;}};async function callGPT(system,user,temperature,maxTokens,попытка){lastGptUsage=null;const res=await authFetch('/api/proxy',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:currentModel(),max_tokens:maxTokens||8000,stream:false,...(clientIdFromUrl?{client_id:clientIdFromUrl}:{}),...(temperature!=null?{temperature}:{}),messages:[{role:'system',content:system},{role:'user',content:user}]})});// Читаем тело ошибки, а не бросаем сразу «API 429». Без причины невозможно
+const currentModel=()=>{try{return localStorage.getItem('ca_model')||MODEL;}catch{return MODEL;}};// Потолок запроса. У счёта владелицы лимит 30 000 токенов в минуту, и при
+// полном материале M5 просил 33 619 — модуль падал с 429 «Request too large»
+// ещё до всякого повтора. Токен русского текста ≈ 2.5 знака, плюс ответ
+// модели тоже считается в лимит: оставляем запасом 55 000 знаков на всё.
+// Режем ХВОСТ пользовательской части — там выдержки, а правила и формат
+// таблиц стоят выше и терять их нельзя.
+const ПОТОЛОК_ЗНАКОВ=55000;function поместить(system,user){const запас=ПОТОЛОК_ЗНАКОВ-String(system||'').length;const u=String(user||'');if(запас<=2000||u.length<=запас)return u;return u.slice(0,запас)+'\n\n[материал урезан под минутный лимит модели: дальше выдержки не поместились]';}async function callGPT(system,user,temperature,maxTokens,попытка){lastGptUsage=null;user=поместить(system,user);const res=await authFetch('/api/proxy',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:currentModel(),max_tokens:maxTokens||8000,stream:false,...(clientIdFromUrl?{client_id:clientIdFromUrl}:{}),...(temperature!=null?{temperature}:{}),messages:[{role:'system',content:system},{role:'user',content:user}]})});// Читаем тело ошибки, а не бросаем сразу «API 429». Без причины невозможно
 // отличить два совершенно разных случая с одинаковым кодом: кончились деньги
 // на счету OpenAI (insufficient_quota — повторять бесполезно, надо пополнить)
 // и слишком частые запросы (rate_limit_exceeded — повтор как раз помогает).

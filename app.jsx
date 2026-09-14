@@ -580,8 +580,24 @@ const currentModel = () => {
   try { return localStorage.getItem('ca_model') || MODEL; } catch { return MODEL; }
 };
 
+// Потолок запроса. У счёта владелицы лимит 30 000 токенов в минуту, и при
+// полном материале M5 просил 33 619 — модуль падал с 429 «Request too large»
+// ещё до всякого повтора. Токен русского текста ≈ 2.5 знака, плюс ответ
+// модели тоже считается в лимит: оставляем запасом 55 000 знаков на всё.
+// Режем ХВОСТ пользовательской части — там выдержки, а правила и формат
+// таблиц стоят выше и терять их нельзя.
+const ПОТОЛОК_ЗНАКОВ = 55000;
+function поместить(system, user) {
+  const запас = ПОТОЛОК_ЗНАКОВ - String(system || '').length;
+  const u = String(user || '');
+  if (запас <= 2000 || u.length <= запас) return u;
+  return u.slice(0, запас)
+    + '\n\n[материал урезан под минутный лимит модели: дальше выдержки не поместились]';
+}
+
 async function callGPT(system, user, temperature, maxTokens, попытка) {
   lastGptUsage = null;
+  user = поместить(system, user);
   const res = await authFetch('/api/proxy', {
     method: 'POST', headers: {'Content-Type':'application/json'},
     body: JSON.stringify({model: currentModel(), max_tokens: maxTokens || 8000, stream:false,
