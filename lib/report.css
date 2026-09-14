@@ -454,6 +454,14 @@ a{color:inherit}
 .confleg .cl-row{display:flex;flex-wrap:wrap;gap:4px 16px;align-items:baseline}
 .confleg .cl-h{font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--ink-3)}
 .confleg .cl-i{white-space:nowrap}
+/* Пояснения к SWOT длиннее шкал: каждое с nowrap занимало свою строку,
+   и легенда съедала пол-экрана (владелица 14.09). В тесном виде они
+   текут строкой и разделяются точкой с запятой. */
+.confleg.tight{gap:2px}
+.confleg.tight .cl-row{display:block}
+.confleg.tight .cl-h{margin-right:7px}
+.confleg.tight .cl-i{white-space:normal}
+.confleg.tight .cl-i + .cl-i:before{content:'; '}
 .confleg .cl-i b{color:var(--ink);font-weight:700}
 /* Кнопка «взять в работу» в карточке ниши. Стоит ПОД круговой, в общем
    потоке: приклеенная к углу, она налезала на последнюю строку сигналов
