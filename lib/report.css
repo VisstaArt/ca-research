@@ -458,6 +458,7 @@ a{color:inherit}
    и легенда съедала пол-экрана (владелица 14.09). В тесном виде они
    текут строкой и разделяются точкой с запятой. */
 .confleg.tight{gap:2px}
+.swot>.confleg{grid-column:1/-1}
 .confleg.tight .cl-row{display:block}
 .confleg.tight .cl-h{margin-right:7px}
 .confleg.tight .cl-i{white-space:normal}
