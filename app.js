@@ -1,6 +1,6 @@
 // СОБРАНО АВТОМАТИЧЕСКИ из app.jsx — не править руками.
 // Правки вносить в app.jsx, затем: osascript -l JavaScript tools/build.js
-// отпечаток-исходника: db626bb6303a84de
+// отпечаток-исходника: d62d3764a7df7888
 // Функции контракта живут в lib/contract.js. Разбираем их сюда, чтобы весь
 // остальной код обращался к ним по прежним именам и не менялся.
 const{GLOBAL_MODS,isPerNiche,dropOrphans,nichesOf,resKey,splitMdRow,isMdSeparator,parseMdTables,buildModuleEntry,pickTable,pickColumn,withStableIds}=CAContract;// Название модуля берётся из MODULES — это конфиг ИНТЕРФЕЙСА, и сборщик
@@ -128,7 +128,10 @@ let модельМодуля='';async function callGPT(system,user,temperature,m
 // рассуждение, и оно считается в тот же лимит. При 8000 ответ приходил
 // ПУСТЫМ: бюджет кончался до того, как модель начинала писать таблицы
 // (владелица 14.09: «прогон стоил 15 центов, а пришло вообще ничего»).
-...(старая?{max_tokens:maxTokens||8000}:{max_completion_tokens:Math.max(maxTokens||8000,32000)}),...(clientIdFromUrl?{client_id:clientIdFromUrl}:{}),// Температуру шлём только старым: у новых она либо не принимается,
+// Потолок берём с запасом: платим за фактически написанное, а не за
+// лимит, поэтому высокий потолок ничего не стоит — он только не даёт
+// оборваться на середине таблицы.
+...(старая?{max_tokens:maxTokens||8000}:{max_completion_tokens:Math.max(maxTokens||8000,64000)}),...(clientIdFromUrl?{client_id:clientIdFromUrl}:{}),// Температуру шлём только старым: у новых она либо не принимается,
 // либо принимается лишь значение по умолчанию.
 ...(temperature!=null&&старая?{temperature}:{}),messages:[{role:'system',content:system},{role:'user',content:user}]})});// Читаем тело ошибки, а не бросаем сразу «API 429». Без причины невозможно
 // отличить два совершенно разных случая с одинаковым кодом: кончились деньги
