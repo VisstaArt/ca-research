@@ -1,6 +1,6 @@
 // СОБРАНО АВТОМАТИЧЕСКИ из app.jsx — не править руками.
 // Правки вносить в app.jsx, затем: osascript -l JavaScript tools/build.js
-// отпечаток-исходника: 5ee852556175658f
+// отпечаток-исходника: db626bb6303a84de
 // Функции контракта живут в lib/contract.js. Разбираем их сюда, чтобы весь
 // остальной код обращался к ним по прежним именам и не менялся.
 const{GLOBAL_MODS,isPerNiche,dropOrphans,nichesOf,resKey,splitMdRow,isMdSeparator,parseMdTables,buildModuleEntry,pickTable,pickColumn,withStableIds}=CAContract;// Название модуля берётся из MODULES — это конфиг ИНТЕРФЕЙСА, и сборщик
@@ -124,7 +124,11 @@ const ПОТОЛОК_ЗНАКОВ=55000;const ПОТОЛОК_БОЛЬШОЙ=6000
 let модельМодуля='';async function callGPT(system,user,temperature,maxTokens,попытка){lastGptUsage=null;user=поместить(system,user);const мод=модельМодуля||currentModel();const старая=/^(gpt-4|gpt-3)/.test(String(мод||''));const res=await authFetch('/api/proxy',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:мод,stream:false,// У моделей нового поколения параметр переименован: max_tokens они не
 // принимают вовсе и отвечают 400 (владелица 14.09, первый же прогон на
 // terra). Старые, наоборот, не знают max_completion_tokens.
-...(старая?{max_tokens:maxTokens||8000}:{max_completion_tokens:maxTokens||8000}),...(clientIdFromUrl?{client_id:clientIdFromUrl}:{}),// Температуру шлём только старым: у новых она либо не принимается,
+// У моделей нового поколения часть бюджета уходит на внутреннее
+// рассуждение, и оно считается в тот же лимит. При 8000 ответ приходил
+// ПУСТЫМ: бюджет кончался до того, как модель начинала писать таблицы
+// (владелица 14.09: «прогон стоил 15 центов, а пришло вообще ничего»).
+...(старая?{max_tokens:maxTokens||8000}:{max_completion_tokens:Math.max(maxTokens||8000,32000)}),...(clientIdFromUrl?{client_id:clientIdFromUrl}:{}),// Температуру шлём только старым: у новых она либо не принимается,
 // либо принимается лишь значение по умолчанию.
 ...(temperature!=null&&старая?{temperature}:{}),messages:[{role:'system',content:system},{role:'user',content:user}]})});// Читаем тело ошибки, а не бросаем сразу «API 429». Без причины невозможно
 // отличить два совершенно разных случая с одинаковым кодом: кончились деньги
@@ -136,7 +140,10 @@ if(!res.ok){let detail='';try{const body=await res.json();const msg=body?.error?
 // Режем выдержки вдвое и пробуем снова: лучше модуль на половине
 // материала, чем красная ошибка вместо модуля (владелица 14.09, M5).
 if(res.status===429&&/too large|tokens per min|TPM/i.test(detail)&&!попытка){const короче=String(user).slice(0,Math.floor(String(user).length*0.55))+'\n\n[материал урезан вдвое: полный объём не проходит по минутному лимиту модели]';return callGPT(system,короче,temperature,maxTokens,1);}// Слишком частые запросы — здесь повтор как раз помогает, ждём и пробуем.
-if(res.status===429&&!попытка){await new Promise(р=>setTimeout(р,20000));return callGPT(system,user,temperature,maxTokens,1);}throw new Error('API '+res.status+(detail?' — '+detail:''));}const d=await res.json();if(d.error)throw new Error(d.error.message||'API error');if(d.usage)lastGptUsage={prompt:d.usage.prompt_tokens||0,completion:d.usage.completion_tokens||0,total:d.usage.total_tokens||0};return d.choices?.[0]?.message?.content||'';}// Реальный веб-поиск (Tavily). Возвращает выдержки с URL; [] при недоступности поиска.
+if(res.status===429&&!попытка){await new Promise(р=>setTimeout(р,20000));return callGPT(system,user,temperature,maxTokens,1);}throw new Error('API '+res.status+(detail?' — '+detail:''));}const d=await res.json();if(d.error)throw new Error(d.error.message||'API error');if(d.usage)lastGptUsage={prompt:d.usage.prompt_tokens||0,completion:d.usage.completion_tokens||0,total:d.usage.total_tokens||0};const текст=d.choices?.[0]?.message?.content||'';// Пустой ответ — это НЕ «ничего не нашлось». Это либо кончился бюджет
+// ответа, либо модель отказалась. Молча вернуть пустоту значит показать
+// человеку пустые таблицы и взять за это деньги.
+if(!текст.trim()){const причина=d.choices?.[0]?.finish_reason||'неизвестно';const думала=d.usage?.completion_tokens_details?.reasoning_tokens;throw new Error('Модель вернула пустой ответ (причина: '+причина+')'+(думала?', из них на рассуждение ушло '+думала+' токенов':'')+'. Повторите модуль — если повторится, нужен больший бюджет ответа.');}return текст;}// Реальный веб-поиск (Tavily). Возвращает выдержки с URL; [] при недоступности поиска.
 async function callSearch(query,opts){searchCallCount++;// считаем попытку вызова Tavily — платится независимо от числа результатов
 try{const res=await authFetch('/api/search',{method:'POST',headers:{'Content-Type':'application/json'},// client_id — чтобы сервер взял поисковый ключ клиента, если заведён
 body:JSON.stringify({query,...(clientIdFromUrl?{client_id:clientIdFromUrl}:{}),...(opts||{})})});if(!res.ok)return[];const d=await res.json();return d.results||[];}catch{return[];}}// Реальная частотность (M7): Yandex Wordstat (только для рынка России —

@@ -647,8 +647,12 @@ async function callGPT(system, user, temperature, maxTokens, попытка) {
       // У моделей нового поколения параметр переименован: max_tokens они не
       // принимают вовсе и отвечают 400 (владелица 14.09, первый же прогон на
       // terra). Старые, наоборот, не знают max_completion_tokens.
+      // У моделей нового поколения часть бюджета уходит на внутреннее
+      // рассуждение, и оно считается в тот же лимит. При 8000 ответ приходил
+      // ПУСТЫМ: бюджет кончался до того, как модель начинала писать таблицы
+      // (владелица 14.09: «прогон стоил 15 центов, а пришло вообще ничего»).
       ...(старая ? { max_tokens: maxTokens || 8000 }
-                 : { max_completion_tokens: maxTokens || 8000 }),
+                 : { max_completion_tokens: Math.max(maxTokens || 8000, 32000) }),
       ...(clientIdFromUrl ? { client_id: clientIdFromUrl } : {}),
       // Температуру шлём только старым: у новых она либо не принимается,
       // либо принимается лишь значение по умолчанию.
@@ -690,7 +694,18 @@ async function callGPT(system, user, temperature, maxTokens, попытка) {
   const d = await res.json();
   if (d.error) throw new Error(d.error.message||'API error');
   if (d.usage) lastGptUsage = { prompt: d.usage.prompt_tokens||0, completion: d.usage.completion_tokens||0, total: d.usage.total_tokens||0 };
-  return d.choices?.[0]?.message?.content||'';
+  const текст = d.choices?.[0]?.message?.content || '';
+  // Пустой ответ — это НЕ «ничего не нашлось». Это либо кончился бюджет
+  // ответа, либо модель отказалась. Молча вернуть пустоту значит показать
+  // человеку пустые таблицы и взять за это деньги.
+  if (!текст.trim()) {
+    const причина = d.choices?.[0]?.finish_reason || 'неизвестно';
+    const думала = d.usage?.completion_tokens_details?.reasoning_tokens;
+    throw new Error('Модель вернула пустой ответ (причина: ' + причина + ')'
+      + (думала ? ', из них на рассуждение ушло ' + думала + ' токенов' : '')
+      + '. Повторите модуль — если повторится, нужен больший бюджет ответа.');
+  }
+  return текст;
 }
 
 // Реальный веб-поиск (Tavily). Возвращает выдержки с URL; [] при недоступности поиска.
