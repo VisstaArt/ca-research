@@ -7597,6 +7597,19 @@ function App() {
   const [blockMsg, setBlockMsg] = React.useState(''); // «модуль не стартует без предыдущих стадий»
 
   const [curMod, setCurMod] = React.useState(null);
+  const шёлПрогон = React.useRef(false);
+  React.useEffect(() => {
+    if (curMod) { шёлПрогон.current = true; return; }
+    if (!шёлПрогон.current) return;
+    шёлПрогон.current = false;
+    // Условие «мы внутри платформы» берём прямо из окна, а не из embedded:
+    // тот объявлен ниже, а хук обязан стоять выше всех ранних возвратов.
+    try {
+      if (window.parent && window.parent !== window) {
+        window.parent.postMessage({ ca: 'прогон-готов' }, '*');
+      }
+    } catch (e) {}
+  }, [curMod]);
   const [curNiche, setCurNiche] = React.useState('');
   const [curStep, setCurStep] = React.useState('');
   const [curStepIdx, setCurStepIdx] = React.useState(0);
@@ -9001,14 +9014,7 @@ function App() {
   const isRun = !!curMod;
   // Прогон закончился — зовём платформу открыть «Прогон» и обновить ту рамку:
   // она своя, и без перезагрузки результатов в ней не появится.
-  const шёлПрогон = React.useRef(false);
-  React.useEffect(() => {
-    if (isRun) { шёлПрогон.current = true; return; }
-    if (!шёлПрогон.current) return;
-    шёлПрогон.current = false;
-    if (!embedded) return;
-    try { window.parent.postMessage({ ca: 'прогон-готов' }, '*'); } catch (e) {}
-  }, [isRun, embedded]);
+
   const curModData = MODULES.find(m=>m.id===curMod);
   // Порядок вывода: глобальные модули сверху, затем ниша за нишей (внутри — по порядку модулей).
   const orderedResults = dropOrphans(proj?.results||[]).sort((a,b)=>{

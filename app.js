@@ -1,6 +1,6 @@
 // СОБРАНО АВТОМАТИЧЕСКИ из app.jsx — не править руками.
 // Правки вносить в app.jsx, затем: osascript -l JavaScript tools/build.js
-// отпечаток-исходника: b8179f838807e599
+// отпечаток-исходника: 75c99572345878e8
 // Функции контракта живут в lib/contract.js. Разбираем их сюда, чтобы весь
 // остальной код обращался к ним по прежним именам и не менялся.
 const{GLOBAL_MODS,isPerNiche,dropOrphans,nichesOf,resKey,splitMdRow,isMdSeparator,parseMdTables,buildModuleEntry,pickTable,pickColumn,withStableIds}=CAContract;// Название модуля берётся из MODULES — это конфиг ИНТЕРФЕЙСА, и сборщик
@@ -2444,7 +2444,9 @@ const[прайс,setПрайс]=React.useState(null);React.useEffect(()=>{authFe
 // дороже догадки); фактов нет — ориентир, помеченный в подписи «≈».
 const центыМодуля=id=>{if(!прайс)return null;const факты=[];(projs||[]).forEach(п=>(п.results||[]).forEach(r=>{if(r.id===id&&r.usage&&!r.failed)факты.push(r);}));let tin=25000,tout=8000,поиск=12,частот=id==='M8'?10:0;if(факты.length){const ср=f=>факты.reduce((s,r)=>s+(f(r)||0),0)/факты.length;tin=ср(r=>r.usage.prompt);tout=ср(r=>r.usage.completion);поиск=ср(r=>r.searchCalls);частот=ср(r=>r.keywordCalls);}return(tin*прайс.price.in+tout*прайс.price.out)/1e6+(поиск+частот)*прайс.search_cents;};const сметаЦентов=(ids,ниш)=>{if(!прайс)return null;let всего=0;for(const id of ids){const c=центыМодуля(id);if(c==null)return null;всего+=c*(CAContract.isPerNiche(id)?Math.max(1,ниш):1);}return всего;};const деньгами=c=>c==null?'':c>=100?'$'+(c/100).toFixed(2):Math.round(c)+' ¢';// Уже потрачено в этом проекте — по фактическим usage результатов.
 const потраченоЦентов=()=>{if(!прайс||!proj)return null;return(proj.results||[]).reduce((s,r)=>s+(r.usage?(r.usage.prompt*прайс.price.in+r.usage.completion*прайс.price.out)/1e6:0)+((r.searchCalls||0)+(r.keywordCalls||0))*прайс.search_cents,0);};const[blockMsg,setBlockMsg]=React.useState('');// «модуль не стартует без предыдущих стадий»
-const[curMod,setCurMod]=React.useState(null);const[curNiche,setCurNiche]=React.useState('');const[curStep,setCurStep]=React.useState('');const[curStepIdx,setCurStepIdx]=React.useState(0);const[exp,setExp]=React.useState({});// Human-in-the-loop: ручное редактирование результата модуля (бесплатно, без вызова модели)
+const[curMod,setCurMod]=React.useState(null);const шёлПрогон=React.useRef(false);React.useEffect(()=>{if(curMod){шёлПрогон.current=true;return;}if(!шёлПрогон.current)return;шёлПрогон.current=false;// Условие «мы внутри платформы» берём прямо из окна, а не из embedded:
+// тот объявлен ниже, а хук обязан стоять выше всех ранних возвратов.
+try{if(window.parent&&window.parent!==window){window.parent.postMessage({ca:'прогон-готов'},'*');}}catch(e){}},[curMod]);const[curNiche,setCurNiche]=React.useState('');const[curStep,setCurStep]=React.useState('');const[curStepIdx,setCurStepIdx]=React.useState(0);const[exp,setExp]=React.useState({});// Human-in-the-loop: ручное редактирование результата модуля (бесплатно, без вызова модели)
 const[editKey,setEditKey]=React.useState(null);const[editDraft,setEditDraft]=React.useState('');// Re-run с замечанием: панель у ↺ вместо мгновенной слепой перегенерации
 const[regenKey,setRegenKey]=React.useState(null);const[regenNote,setRegenNote]=React.useState('');// M10 — трекер публикаций (по проекту)
 const[publications,setPublications]=React.useState(null);// null = загрузка/БД недоступна, [] = пусто
@@ -2655,7 +2657,7 @@ const Bn=trendNiche?{...brief,selectedNiche:trendNiche}:brief;const evidence=awa
 const allMods=MODULES.filter(m=>mods.includes(m.id));const workNiches=nichesOf(brief);// Модуль «полностью готов»: глобальный — если есть его результат; по-нишевой — если сделан у ВСЕХ выбранных ниш.
 const modDone=id=>{const rs=proj?.results||[];if(isPerNiche(id))return workNiches.length>0&&workNiches.every(n=>rs.some(r=>r.id===id&&(r.niche||'')===n));return rs.some(r=>r.id===id);};const doneCount=allMods.filter(m=>modDone(m.id)).length;const pending=allMods.filter(m=>!modDone(m.id)&&m.id!==curMod);const isRun=!!curMod;// Прогон закончился — зовём платформу открыть «Прогон» и обновить ту рамку:
 // она своя, и без перезагрузки результатов в ней не появится.
-const шёлПрогон=React.useRef(false);React.useEffect(()=>{if(isRun){шёлПрогон.current=true;return;}if(!шёлПрогон.current)return;шёлПрогон.current=false;if(!embedded)return;try{window.parent.postMessage({ca:'прогон-готов'},'*');}catch(e){}},[isRun,embedded]);const curModData=MODULES.find(m=>m.id===curMod);// Порядок вывода: глобальные модули сверху, затем ниша за нишей (внутри — по порядку модулей).
+const curModData=MODULES.find(m=>m.id===curMod);// Порядок вывода: глобальные модули сверху, затем ниша за нишей (внутри — по порядку модулей).
 const orderedResults=dropOrphans(proj?.results||[]).sort((a,b)=>{const ga=!a.niche,gb=!b.niche;if(ga!==gb)return ga?-1:1;if((a.niche||'')!==(b.niche||'')){const ia=workNiches.indexOf(a.niche||''),ib=workNiches.indexOf(b.niche||'');return(ia<0?99:ia)-(ib<0?99:ib);}return MODULES.findIndex(x=>x.id===a.id)-MODULES.findIndex(x=>x.id===b.id);});// ── ЭКРАН «НИШИ» в платформе ────────────────────────────────────────────
 // Веер карт по образцу ZIXO. До 15.09 компонент существовал, но его никто
 // не выводил: вкладка «Ниши» показывала то же, что «Прогон», и владелица
