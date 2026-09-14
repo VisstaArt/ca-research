@@ -6015,7 +6015,7 @@ function generateHTMLReport(brief, results, lang, priceLayers, selectedLayers, s
     // их читают подряд, а не окидывают взглядом. Внутри карточки блоки тоже
     // разведены: слипшиеся таблицы читаются как одна.
     +'\n.main > .card{margin-bottom:30px;padding:26px 28px 28px}'
-    +'\n.main > .card > h2,.main > .card > h3{margin-top:30px}'
+    +'\n.main > .card > h2,.main > .card > h3{margin-top:46px}'
     +'\n.main > .card > h2:first-of-type,.main > .card > h3:first-of-type{margin-top:14px}'
     +'\n.main .tbl,.main .geo,.main .seg,.main .swot,.main .comp,.main .pers,.main .kan{margin:14px 0 22px}'
     +'\n.main .chead{margin-bottom:14px}'
@@ -6793,7 +6793,10 @@ function ResearchView({ content, ourName }) {
     // отрисовки: до неё этих узлов ещё нет.
     try { почиститьУзлы(ref.current); } catch (e) {}
   }, [out]);
-  return <div className="rview" ref={ref} dangerouslySetInnerHTML={{__html: out.html}}/>;
+  // Класс «модуль» — чтобы отбить блоки друг от друга: внутри рамки заголовки
+  // блоков идут без отступов (правило эталона привязано к колонке .main,
+  // которой здесь нет), и всё слипалось в сплошную ленту.
+  return <div className="rview модуль" ref={ref} dangerouslySetInnerHTML={{__html: out.html}}/>;
 }
 
 function ModuleCard({ m, on, onToggle, uiLang }) {
