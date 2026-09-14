@@ -1,6 +1,6 @@
 // СОБРАНО АВТОМАТИЧЕСКИ из app.jsx — не править руками.
 // Правки вносить в app.jsx, затем: osascript -l JavaScript tools/build.js
-// отпечаток-исходника: e8d9b432abcdfae0
+// отпечаток-исходника: a441946c70008e6e
 // Функции контракта живут в lib/contract.js. Разбираем их сюда, чтобы весь
 // остальной код обращался к ним по прежним именам и не менялся.
 const{GLOBAL_MODS,isPerNiche,dropOrphans,nichesOf,resKey,splitMdRow,isMdSeparator,parseMdTables,buildModuleEntry,pickTable,pickColumn,withStableIds}=CAContract;// Название модуля берётся из MODULES — это конфиг ИНТЕРФЕЙСА, и сборщик
@@ -290,7 +290,14 @@ for(const u of clientSocials(brief))queries.push(u);// 4. ГДЕ СИДИТ АУ
 // потому, что всё выше ищет ЖАЛОБЫ — и находит площадки жалоб, а не места, где
 // аудитория живёт постоянно. Два запроса, не больше: каждый стоит платного
 // вызова поиска, а блок 08A и так опирается на весь собранный материал.
-const audienceTopic=topics[0]||product;queries.push(audienceTopic+' '+market+' '+Q.communities);queries.push(audienceTopic+' '+market+' '+Q.bloggers);// Реестр площадок (ТЗ-M3-VOC.md, п.2) — ПОКА НЕ ограничивает сам поиск VoC.
+const audienceTopic=topics[0]||product;queries.push(audienceTopic+' '+market+' '+Q.communities);queries.push(audienceTopic+' '+market+' '+Q.bloggers);// 5. ТУДА, ГДЕ ЛЮДИ ПИШУТ САМИ. Модель 15.09 объяснила пустой блок прямым
+// текстом: «в предоставленных материалах не найдено валидных дословных
+// высказываний, видимые фрагменты — редакционные статьи и описания
+// сервисов». Общие запросы приводят на статьи, потому что статьи и
+// оптимизированы под них. Живая речь лежит на отзовиках, форумах и в
+// обсуждениях — ищем прицельно по площадкам.
+const площадки=['otzovik.com','irecommend.ru','pikabu.ru','vc.ru','searchengines.guru','forum.searchengines.ru','reddit.com','dtf.ru','habr.com'];for(const n of topics.slice(0,2)){for(const п of площадки.slice(0,5))queries.push('site:'+п+' '+n+' '+Q.discussion);}for(const c of competitors.slice(0,3)){queries.push(c+' отзывы реальных пользователей форум');queries.push(c+' «не советую» ИЛИ «разочаровался» отзыв');}// Прямая речь узнаётся по кавычкам: так ищут цитату, а не статью о теме.
+for(const n of topics.slice(0,2)){queries.push('"'+n+'" '+market+' «мы пробовали» отзыв владельца');queries.push('"'+n+'" '+market+' «столкнулись с проблемой» обсуждение');}// Реестр площадок (ТЗ-M3-VOC.md, п.2) — ПОКА НЕ ограничивает сам поиск VoC.
 // Живой прогон 25.08 показал: сужение include_domains до реестра дало 0 цитат
 // там, где открытый веб раньше находил реальные (12 цитат с 8 площадок, 20 июля).
 // Причина — реестр строится из доменов КОНКУРЕНТОВ (они не публикуют жалобы на
@@ -2041,7 +2048,11 @@ function renderVocBlock(headers,rows){const kQ=col(headers,'цитата');if(!k
 // верификация идёт на стороне модуля, в отчёт приходит уже отобранное,
 // поэтому все цитаты помечаются «сверено»; «страница не открылась» ставится
 // только если это прямо написано в строке.
-const D=rows.map(r=>{const q=String(r[kQ]||'').trim();if(!q)return null;const raw=Object.values(r).join(' ').toLowerCase();return{q:/^[«"']/.test(q)?q:'«'+q+'»',v:/не открыл|недоступн|404/.test(raw)?'nopage':'ok',theme:kT?String(r[kT]||''):'',seg:kSeg?String(r[kSeg]||''):'',src:kS?String(r[kS]||''):'',url:kU?String(r[kU]||''):'',date:kD?String(r[kD]||'дата не указана'):'дата не указана',freq:kN?String(r[kN]||''):'',int:kI?intOf(r[kI]):2,ans:kA?String(r[kA]||''):''};}).filter(Boolean);if(!D.length)return null;blockScripts.push('renderVoc('+safeJson(D)+');');return'<div class="voc" id="rpt-voc"></div><p class="bias" id="rpt-bias"></p>';}// ── BLOCK 07A: банк живого языка ────────────────────────────────────────────
+// «нет данных (публично)» в колонке цитаты — это не цитата, а пометка.
+// Она приходила в отчёт карточкой с зелёной галочкой «сверено с
+// источником» (скрин владелицы 15.09) — то есть отсутствие данных
+// выглядело как проверенная находка.
+const непусто=т=>{const в=String(т||'').replace(/^[«"']|[»"']$/g,'').trim();return в&&!/^(нет\s+данных|нет\s+публичных|не\s+найдено|не\s+видно|не\s+замерено|н\/д|—|-)/i.test(в)?в:'';};const D=rows.map(r=>{const q=непусто(r[kQ]);if(!q)return null;const raw=Object.values(r).join(' ').toLowerCase();return{q:/^[«"']/.test(q)?q:'«'+q+'»',v:/не открыл|недоступн|404/.test(raw)?'nopage':'ok',theme:kT?String(r[kT]||''):'',seg:kSeg?String(r[kSeg]||''):'',src:kS?String(r[kS]||''):'',url:kU?String(r[kU]||''):'',date:kD?String(r[kD]||'дата не указана'):'дата не указана',freq:kN?String(r[kN]||''):'',int:kI?intOf(r[kI]):2,ans:kA?String(r[kA]||''):''};}).filter(Boolean);if(!D.length)return null;blockScripts.push('renderVoc('+safeJson(D)+');');return'<div class="voc" id="rpt-voc"></div><p class="bias" id="rpt-bias"></p>';}// ── BLOCK 07A: банк живого языка ────────────────────────────────────────────
 // Фразы сгруппированы по эмоции: она определяет, каким тоном отвечать.
 function renderLangBankBlock(headers,rows){const kQ=col(headers,'цитата','фраза');const kE=col(headers,'эмоц');if(!kQ||!kE)return null;const kT=col(headers,'тема'),kP=col(headers,'площадк');const TONE={// Четыре цвета по решению владелицы: синий, чёрный, серый, бирюза.
 // Проверять теперь только по СОБРАННОЙ странице: переменные в отчёте
