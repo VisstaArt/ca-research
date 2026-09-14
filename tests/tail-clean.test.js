@@ -5,8 +5,10 @@ ObjC.import('Foundation');
 function readFile(p){return $.NSString.stringWithContentsOfFileEncodingError($(p),$.NSUTF8StringEncoding,null).js;}
 var ROOT=$.NSFileManager.defaultManager.currentDirectoryPath.js;
 var SRC=readFile(ROOT+'/app.jsx');
-var i=SRC.indexOf('\nfunction почиститьХвост('), j=SRC.indexOf('\n}\n', i);
-globalThis.eval(SRC.slice(i+1, j+3));
+['почиститьХвост','собратьВыводы'].forEach(function(имя){
+  var i=SRC.indexOf('\nfunction '+имя+'('), j=SRC.indexOf('\n}\n', i);
+  globalThis.eval(SRC.slice(i+1, j+3));
+});
 console.log('tests/tail-clean.test.js');
 var fails=0;
 function check(n,ok){ if(ok) console.log('  ok   '+n); else {fails++; console.log('  FAIL '+n);} }
@@ -64,5 +66,25 @@ var ч3 = почиститьХвост(внутриБлока, true);
 check('вывод внутри блока убран вместе с абзацем', ч3.indexOf('Наиболее перспективные') < 0);
 check('описание блока цело', ч3.indexOf('в каких вертикалях продукт может работать') >= 0);
 check('следующий блок цел', ч3.indexOf('| Магазины | 18 |') >= 0);
+
+
+// Выводы внутри блоков не пропадают: если «ИТОГА МОДУЛЯ» нет, из них
+// собирается карточка наверху — владелица 15.09 дважды спросила про них,
+// и ответ «нужны, но один раз и в начале».
+var сВыводами = [
+'## BLOCK 04 — Сегменты аудитории',
+'| Сегмент | Доля |',
+'|---|---|',
+'| Магазины | 30% |',
+'',
+'Вывод:',
+'',
+'Наиболее сильные сегменты — интернет-магазины (30%), сервисные компании (20%).',
+].join('\n');
+var собрано = собратьВыводы(сВыводами);
+check('вывод блока подобран для карточки', собрано.length === 1
+  && собрано[0].indexOf('интернет-магазины (30%)') >= 0);
+check('после переноса в теле его нет', почиститьХвост(сВыводами, true).indexOf('Наиболее сильные') < 0);
+check('таблица блока не пострадала', почиститьХвост(сВыводами, true).indexOf('| Магазины | 30% |') >= 0);
 
 console.log(fails===0 ? '\nвсё сошлось' : '\nПРОВАЛОВ: '+fails);

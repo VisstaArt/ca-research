@@ -1,6 +1,6 @@
 // СОБРАНО АВТОМАТИЧЕСКИ из app.jsx — не править руками.
 // Правки вносить в app.jsx, затем: osascript -l JavaScript tools/build.js
-// отпечаток-исходника: a50fefa6b523e3ae
+// отпечаток-исходника: 10fe8cffd888c7c3
 // Функции контракта живут в lib/contract.js. Разбираем их сюда, чтобы весь
 // остальной код обращался к ним по прежним именам и не менялся.
 const{GLOBAL_MODS,isPerNiche,dropOrphans,nichesOf,resKey,splitMdRow,isMdSeparator,parseMdTables,buildModuleEntry,pickTable,pickColumn,withStableIds}=CAContract;// Название модуля берётся из MODULES — это конфиг ИНТЕРФЕЙСА, и сборщик
@@ -1622,7 +1622,12 @@ return слово[0]===слово[0].toLowerCase()?русское.toLowerCase():
 // тексте не попадаются вовсе. Убираем то, что дублируется или не нужно,
 // но только когда наверху ДЕЙСТВИТЕЛЬНО есть итог: потерять единственные
 // выводы хуже, чем показать их дважды.
-function почиститьХвост(тело,естьИтог){let t=String(тело||'');// Следы промпта: «Вывод (in Russian):» — служебная пометка, не текст.
+// Выводы, которые модель печатает внутри блоков («Вывод: …»). Они по делу —
+// в них проценты и обоснование, — но место им одно: наверху, в карточке
+// «Что дал этот модуль». Владелица 15.09 спросила про них дважды: «итоги у
+// нас в начале». Если модуль не выдал «ИТОГ МОДУЛЯ», собираем карточку из
+// этих выводов, а из тела их убираем — так они видны ровно один раз.
+function собратьВыводы(тело){const строки=String(тело||'').split('\n');const выводы=[];for(let i=0;i<строки.length;i++){const м=строки[i].match(/^\s*\*{0,2}Вывод\*{0,2}\s*:?\s*(.*)$/i);if(!м)continue;if(м[1].trim()){выводы.push(м[1].trim());continue;}let j=i+1;while(j<строки.length&&!строки[j].trim())j++;const абзац=[];while(j<строки.length&&строки[j].trim()&&!/^#{1,4}\s|^\|/.test(строки[j])){абзац.push(строки[j].trim());j++;}if(абзац.length)выводы.push(абзац.join(' '));i=j-1;}return выводы;}function почиститьХвост(тело,естьИтог){let t=String(тело||'');// Следы промпта: «Вывод (in Russian):» — служебная пометка, не текст.
 t=t.replace(/\s*\((?:in|на)\s+Russian\)/gi,'');// Раздел = заголовок и всё до следующего заголовка того же или высшего уровня.
 const вырезать=условие=>{const строки=t.split('\n');const вышло=[];let пропускаем=false,уровень=0;for(const строка of строки){const з=строка.match(/^(#{1,4})\s*(.+?)\s*$/);if(з){const у=з[1].length;if(пропускаем&&у<=уровень)пропускаем=false;if(!пропускаем&&условие(з[2],у)){пропускаем=true;уровень=у;continue;}}if(!пропускаем)вышло.push(строка);}t=вышло.join('\n');};if(естьИтог){// Без \b: в JS он опирается на латиницу, и после кириллического «итог»
 // границы слова не находит — раздел «Итог / Следующие шаги» так и оставался.
@@ -1960,7 +1965,7 @@ for(const r of orderedResults){// Разделитель «Ниша: …» пе�
 if(r.niche&&r.niche!==lastNiche&&nichesOf(brief).length>1){sections+='<div class="nicheband"><span class="lab">Ниша</span>'+'<span class="nm">'+esc(r.niche)+'</span></div>';}lastNiche=r.niche;const m=MODULES.find(x=>x.id===r.id);const charts=r.id==='M1'?chartDivs:moduleChartDivs[resKey(r)]||'';// Итог модуля вынимаем ДО отрисовки и показываем над блоками: это ответ на
 // вопрос «что мне это дало», и в конце трёхэкранного модуля до него просто
 // не доходят. В теле он после этого не повторяется.
-const cut=splitModuleSummary(r.content);const rendered=renderResearchHTML(почиститьХвост(cut.body,!!cut.summary),{ourName:brief.name});const summary=оформитьТекст(renderModuleSummary(cut.summary),rendered.источники);blockScripts.push(...rendered.scripts);blockJS=rendered.js;// Модуль различается ПОДПИСЬЮ, а не своим цветом. Семь фирменных цветов
+const cut=splitModuleSummary(r.content);const свод=cut.summary||(собратьВыводы(cut.body).length?{learned:собратьВыводы(cut.body),means:[],next:[]}:null);const rendered=renderResearchHTML(почиститьХвост(cut.body,!!свод),{ourName:brief.name});const summary=оформитьТекст(renderModuleSummary(свод),rendered.источники);blockScripts.push(...rendered.scripts);blockJS=rendered.js;// Модуль различается ПОДПИСЬЮ, а не своим цветом. Семь фирменных цветов
 // модулей (зелёный, бирюзовый, синий, фиолетовый, коричневый, красный,
 // малиновый) остались от старого отчёта и спорят с правилом «палитра ровно
 // четыре цвета»: читатель ищет в них значение и не находит.
@@ -2240,7 +2245,9 @@ el.textContent=prefix(REPORT_BLOCK_CSS)+'\n'+prefix(REPORT_RULES_CSS)+'\n.rview{
 function ResearchView({content,ourName}){const ref=React.useRef(null);// Итог модуля вырезается и встаёт карточкой наверх — ровно как в выгрузке.
 // Без этого на сайте раздел «ИТОГ МОДУЛЯ» лежал сырым текстом в хвосте,
 // и владелица справедливо сказала «нет выводов».
-const out=React.useMemo(()=>{const cut=splitModuleSummary(content||'');const r=renderResearchHTML(почиститьХвост(cut.body,!!cut.summary),{ourName});const итог=оформитьТекст(renderModuleSummary(cut.summary),r.источники);return{...r,html:итог+r.html};},[content,ourName]);React.useEffect(()=>{injectBlockStyles();},[]);React.useEffect(()=>{if(!ref.current||!out.scripts.length)return;// Кольцо и ниши рисуются скриптом — выполняем после вставки разметки.
+const out=React.useMemo(()=>{const cut=splitModuleSummary(content||'');// Нет «ИТОГА МОДУЛЯ» — собираем его из выводов внутри блоков: иначе они
+// либо останутся вразнобой по тексту, либо пропадут вместе с ними.
+const свод=cut.summary||(собратьВыводы(cut.body).length?{learned:собратьВыводы(cut.body),means:[],next:[]}:null);const r=renderResearchHTML(почиститьХвост(cut.body,!!свод),{ourName});const итог=оформитьТекст(renderModuleSummary(свод),r.источники);return{...r,html:итог+r.html};},[content,ourName]);React.useEffect(()=>{injectBlockStyles();},[]);React.useEffect(()=>{if(!ref.current||!out.scripts.length)return;// Кольцо и ниши рисуются скриптом — выполняем после вставки разметки.
 // Своя область видимости на каждый запуск: иначе повторное открытие
 // модуля переопределяет функции и рисует поверх старого.
 try{new Function(out.js+'\n'+out.scripts.join('\n'))();}catch(e){/* блок не нарисовался — таблицы под ним всё равно на месте */}// Подписи в нарисованных скриптом таблицах — по-русски. Только после

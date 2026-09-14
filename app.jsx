@@ -3798,6 +3798,30 @@ function поРусски(html) {
 // тексте не попадаются вовсе. Убираем то, что дублируется или не нужно,
 // но только когда наверху ДЕЙСТВИТЕЛЬНО есть итог: потерять единственные
 // выводы хуже, чем показать их дважды.
+// Выводы, которые модель печатает внутри блоков («Вывод: …»). Они по делу —
+// в них проценты и обоснование, — но место им одно: наверху, в карточке
+// «Что дал этот модуль». Владелица 15.09 спросила про них дважды: «итоги у
+// нас в начале». Если модуль не выдал «ИТОГ МОДУЛЯ», собираем карточку из
+// этих выводов, а из тела их убираем — так они видны ровно один раз.
+function собратьВыводы(тело) {
+  const строки = String(тело || '').split('\n');
+  const выводы = [];
+  for (let i = 0; i < строки.length; i++) {
+    const м = строки[i].match(/^\s*\*{0,2}Вывод\*{0,2}\s*:?\s*(.*)$/i);
+    if (!м) continue;
+    if (м[1].trim()) { выводы.push(м[1].trim()); continue; }
+    let j = i + 1;
+    while (j < строки.length && !строки[j].trim()) j++;
+    const абзац = [];
+    while (j < строки.length && строки[j].trim() && !/^#{1,4}\s|^\|/.test(строки[j])) {
+      абзац.push(строки[j].trim()); j++;
+    }
+    if (абзац.length) выводы.push(абзац.join(' '));
+    i = j - 1;
+  }
+  return выводы;
+}
+
 function почиститьХвост(тело, естьИтог) {
   let t = String(тело || '');
   // Следы промпта: «Вывод (in Russian):» — служебная пометка, не текст.
@@ -5600,8 +5624,11 @@ function generateHTMLReport(brief, results, lang, priceLayers, selectedLayers, s
     // вопрос «что мне это дало», и в конце трёхэкранного модуля до него просто
     // не доходят. В теле он после этого не повторяется.
     const cut = splitModuleSummary(r.content);
-    const rendered = renderResearchHTML(почиститьХвост(cut.body, !!cut.summary), { ourName: brief.name });
-    const summary = оформитьТекст(renderModuleSummary(cut.summary), rendered.источники);
+    const свод = cut.summary
+      || (собратьВыводы(cut.body).length
+          ? { learned: собратьВыводы(cut.body), means: [], next: [] } : null);
+    const rendered = renderResearchHTML(почиститьХвост(cut.body, !!свод), { ourName: brief.name });
+    const summary = оформитьТекст(renderModuleSummary(свод), rendered.источники);
     blockScripts.push(...rendered.scripts);
     blockJS = rendered.js;
     // Модуль различается ПОДПИСЬЮ, а не своим цветом. Семь фирменных цветов
@@ -6633,8 +6660,13 @@ function ResearchView({ content, ourName }) {
   // и владелица справедливо сказала «нет выводов».
   const out = React.useMemo(() => {
     const cut = splitModuleSummary(content || '');
-    const r = renderResearchHTML(почиститьХвост(cut.body, !!cut.summary), { ourName });
-    const итог = оформитьТекст(renderModuleSummary(cut.summary), r.источники);
+    // Нет «ИТОГА МОДУЛЯ» — собираем его из выводов внутри блоков: иначе они
+    // либо останутся вразнобой по тексту, либо пропадут вместе с ними.
+    const свод = cut.summary
+      || (собратьВыводы(cut.body).length
+          ? { learned: собратьВыводы(cut.body), means: [], next: [] } : null);
+    const r = renderResearchHTML(почиститьХвост(cut.body, !!свод), { ourName });
+    const итог = оформитьТекст(renderModuleSummary(свод), r.источники);
     return { ...r, html: итог + r.html };
   }, [content, ourName]);
   React.useEffect(() => { injectBlockStyles(); }, []);
