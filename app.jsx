@@ -1985,9 +1985,13 @@ async function gatherCompetitorEvidence(brief) {
     // отжимает типичные листикл-заголовки от выдачи по этому запросу.
     queries.push(c+' '+Q.officialPrices+' -топ -рейтинг -обзор -сравнение');
   }
-  // Двадцать выдержек на запрос вместо пятнадцати: потолок источника, и
-  // именно широта выдачи решает, сколько игроков вообще попадёт в таблицу.
-  return gatherEvidence(queries, 20, 4);
+  // Числа здесь: сколько ЗАПРОСОВ выполнить, сколько ссылок брать с каждого и
+  // сколько выдержек оставить всего. Последнее и было потолком: по умолчанию
+  // 24 выдержки — из них никак не выпишешь два десятка игроков, сколько бы
+  // запросов мы ни слали. Владелица 15.09: «нашлось пять, это ничего».
+  // Поднимаем все три: 20 запросов, по 6 ссылок, до 44 выдержек.
+  return gatherEvidence(queries, 20, 6,
+    { depth:'advanced', raw:true, contentChars:1200, perDomain:3, maxItems:44 });
 }
 
 // M9 (контент-радар): конкуренты как МЕДИА, а не как бизнесы. M2 уже нашёл,
@@ -9489,6 +9493,18 @@ function App() {
                   <span style={{flex:1,fontSize:16,fontWeight:600,color:'var(--ink)'}}>{m.titleRu||m.title}</span>
                   <span className="tag">{m.id}</span>
                   {r.usage && <span style={{fontSize:10,color:'var(--ink-3)',marginRight:8}} title={'запрос '+r.usage.prompt.toLocaleString('ru-RU')+' + ответ '+r.usage.completion.toLocaleString('ru-RU')+' токенов'}>≈{(r.usage.total/1000).toFixed(1)}k т.</span>}
+                  {/* Сколько раз модуль ходил в поиск. Ноль означает, что он писал
+                      по памяти модели, без живых источников — а это и есть причина
+                      пустых данных (владелица 15.09: «данных ценных нет»). Признак
+                      должен быть на виду, а не выясняться разбором. */}
+                  <span style={{fontSize:10,marginRight:8,
+                      color: r.searchCalls ? 'var(--ink-3)' : 'var(--acc-quiet-ink)',
+                      fontWeight: r.searchCalls ? 400 : 700}}
+                    title={r.searchCalls
+                      ? 'Модуль сделал ' + r.searchCalls + ' поисковых запросов — данные заземлены на живые источники'
+                      : 'Поиск не отработал: модуль писал без живых источников. Проверьте ключ поисковой системы в настройке.'}>
+                    {r.searchCalls ? 'поиск: ' + r.searchCalls : 'без поиска'}
+                  </span>
                   <span style={{fontSize:10,color:'var(--ink-3)',marginRight:4}}>{r.at?new Date(r.at).toLocaleDateString():''}</span>
                   <span style={{fontSize:12,color:m.color}}>{open?'▲':'▼'}</span>
                 </div>
