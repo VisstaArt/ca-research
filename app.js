@@ -1,6 +1,6 @@
 // СОБРАНО АВТОМАТИЧЕСКИ из app.jsx — не править руками.
 // Правки вносить в app.jsx, затем: osascript -l JavaScript tools/build.js
-// отпечаток-исходника: ac4ee1a624f4ca9e
+// отпечаток-исходника: af3c1861bf642ee3
 // Функции контракта живут в lib/contract.js. Разбираем их сюда, чтобы весь
 // остальной код обращался к ним по прежним именам и не менялся.
 const{GLOBAL_MODS,isPerNiche,dropOrphans,nichesOf,resKey,splitMdRow,isMdSeparator,parseMdTables,buildModuleEntry,pickTable,pickColumn,withStableIds}=CAContract;// Название модуля берётся из MODULES — это конфиг ИНТЕРФЕЙСА, и сборщик
@@ -2693,9 +2693,10 @@ const[briefEdit,setBriefEdit]=React.useState(false);// Полный отчёт �
 const[отчётРазвёрнут,setОтчётРазвёрнут]=React.useState(false);// Цена — на каждом платном этапе (владелица, 14.09): «сколько стоит запуск,
 // выбрал одну нишу — одна цена, все — другая; что тратится и на что».
 // Цены приходят с сервера (api/usage GET) — смета и счёт по одним цифрам.
-const[прайс,setПрайс]=React.useState(null);React.useEffect(()=>{authFetch('/api/usage').then(r=>r.ok?r.json():null).then(d=>{if(d&&d.price)setПрайс(d);}).catch(()=>{});// Цена зависит от ВЫБРАННОЙ модели: на gpt-6-astra выход в шесть раз дороже,
-// чем на gpt-4.1, и смета по старой цене врала бы в разы.
-const ценаМодели=id=>{if(!прайс)return null;const м=!тарифРазработчика&&id&&(MODULES.find(x=>x.id===id)||{}).model||model;return прайс.prices&&прайс.prices[м]||прайс.price;};},[]);// Оценка модуля: СРЕДНЕЕ по фактическим прогонам этого же модуля (замер
+const[прайс,setПрайс]=React.useState(null);React.useEffect(()=>{authFetch('/api/usage').then(r=>r.ok?r.json():null).then(d=>{if(d&&d.price)setПрайс(d);}).catch(()=>{});},[]);// Цена зависит от модели, которая реально пойдёт в работу: у каждого модуля
+// она своя, и на sol выход вдвое дороже, чем на terra. На тарифе
+// «Разработчик» главнее ручной выбор — там человек платит своим ключом.
+const ценаМодели=id=>{if(!прайс)return null;const м=!тарифРазработчика&&id&&(MODULES.find(x=>x.id===id)||{}).model||model;return прайс.prices&&прайс.prices[м]||прайс.price;};// Оценка модуля: СРЕДНЕЕ по фактическим прогонам этого же модуля (замер
 // дороже догадки); фактов нет — ориентир, помеченный в подписи «≈».
 const центыМодуля=id=>{if(!прайс)return null;const факты=[];(projs||[]).forEach(п=>(п.results||[]).forEach(r=>{if(r.id===id&&r.usage&&!r.failed)факты.push(r);}));let tin=25000,tout=8000,поиск=12,частот=id==='M8'?10:0;if(факты.length){const ср=f=>факты.reduce((s,r)=>s+(f(r)||0),0)/факты.length;tin=ср(r=>r.usage.prompt);tout=ср(r=>r.usage.completion);поиск=ср(r=>r.searchCalls);частот=ср(r=>r.keywordCalls);}const ц=ценаМодели(id);return(tin*ц.in+tout*ц.out)/1e6+(поиск+частот)*прайс.search_cents;};const сметаЦентов=(ids,ниш)=>{if(!прайс)return null;let всего=0;for(const id of ids){const c=центыМодуля(id);if(c==null)return null;всего+=c*(CAContract.isPerNiche(id)?Math.max(1,ниш):1);}return всего;};const деньгами=c=>c==null?'':c>=100?'$'+(c/100).toFixed(2):Math.round(c)+' ¢';// Уже потрачено в этом проекте — по фактическим usage результатов.
 const потраченоЦентов=()=>{if(!прайс||!proj)return null;return(proj.results||[]).reduce((s,r)=>s+(r.usage?(r.usage.prompt*ценаМодели(r.id).in+r.usage.completion*ценаМодели(r.id).out)/1e6:0)+((r.searchCalls||0)+(r.keywordCalls||0))*прайс.search_cents,0);};const[blockMsg,setBlockMsg]=React.useState('');// «модуль не стартует без предыдущих стадий»
