@@ -140,8 +140,11 @@ html[data-embed] #root { max-width: none; padding: 0; }
    position:relative и, загружаясь после tokens.css, перебивал
    .fcard{position:absolute} — все пять карт падали в поток и прятались под
    первой внутри .hero{overflow:hidden}. Владелица: «появляется всего одна».
-   Правило короткое, но снимать его нельзя, пока карты перламутровые. */
-.fcard.nacre { position: absolute; }
+   Правило короткое, но снимать его нельзя, пока карты перламутровые.
+   Сила селектора важна: стиль отчёта подключается скриптом ПОЗЖЕ и приходит
+   как «.rview .nacre» — при равной силе побеждал бы он. Поэтому здесь
+   «.rview .fcard.nacre»: на класс больше. */
+.rview .fcard.nacre, .fcard.nacre { position: absolute; }
 /* Карты в веере стоят лесенкой: верхняя на 30px от верха, крайние на 74px.
    Пустоты сверху быть не должно — поднимаем всю лесенку на 22px, ровно на
    отступ верхней карты. Владелица: «столько места сверху». */
@@ -162,6 +165,6 @@ html[data-embed] #root { max-width: none; padding: 0; }
      без сборки — как и весь остальной проект. -->
 <script src="lib/contract.js?v=c5d82d20"></script>
 <script src="lib/auth.js?v=c0e4610f"></script>
-<script src="app.js?v=a92264fc"></script>
+<script src="app.js?v=56890b05"></script>
 </body>
 </html>
