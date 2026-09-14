@@ -1,6 +1,6 @@
 // СОБРАНО АВТОМАТИЧЕСКИ из app.jsx — не править руками.
 // Правки вносить в app.jsx, затем: osascript -l JavaScript tools/build.js
-// отпечаток-исходника: 2f614cb536c5c983
+// отпечаток-исходника: 942fcc3137cafc71
 // Функции контракта живут в lib/contract.js. Разбираем их сюда, чтобы весь
 // остальной код обращался к ним по прежним именам и не менялся.
 const{GLOBAL_MODS,isPerNiche,dropOrphans,nichesOf,resKey,splitMdRow,isMdSeparator,parseMdTables,buildModuleEntry,pickTable,pickColumn,withStableIds}=CAContract;// Название модуля берётся из MODULES — это конфиг ИНТЕРФЕЙСА, и сборщик
@@ -1643,7 +1643,10 @@ const толк=п[2].replace(/\s*\([^)]*\)\s*$/,'').trim();if(термин&&то
 // исходнике модуля стоит именно это слово — русский «Вывод» появляется уже
 // при переводе подписей, то есть ПОСЛЕ чистки. Из-за этого первые два
 // захода чистку просто не находили (владелица 15.09: «опять лишние выводы»).
-const строки=String(тело||'').split('\n');const выводы=[];for(let i=0;i<строки.length;i++){const м=строки[i].match(/^\s*\*{0,2}(?:Вывод|CONCLUSION|ИТОГ БЛОКА)\*{0,2}\s*:?\s*(.*)$/i);if(!м)continue;if(м[1].trim()){выводы.push(м[1].trim());continue;}let j=i+1;while(j<строки.length&&!строки[j].trim())j++;const абзац=[];while(j<строки.length&&строки[j].trim()&&!/^#{1,4}\s|^\|/.test(строки[j])){абзац.push(строки[j].trim());j++;}if(абзац.length)выводы.push(абзац.join(' '));i=j-1;}return выводы;}function почиститьХвост(тело,естьИтог){let t=String(тело||'');// Следы промпта: «Вывод (in Russian):» — служебная пометка, не текст.
+const строки=String(тело||'').split('\n');const выводы=[];for(let i=0;i<строки.length;i++){const м=строки[i].match(/^\s*\*{0,2}(?:Вывод|CONCLUSION|ИТОГ БЛОКА)\*{0,2}\s*:?\s*(.*)$/i);if(!м)continue;if(м[1].trim()){выводы.push(м[1].trim());continue;}let j=i+1;while(j<строки.length&&!строки[j].trim())j++;const абзац=[];while(j<строки.length&&строки[j].trim()&&!/^#{1,4}\s|^\|/.test(строки[j])){абзац.push(строки[j].trim());j++;}if(абзац.length)выводы.push(абзац.join(' '));i=j-1;}return выводы;}// «Итог / Следующие шаги» в конце модуля — это его план действий. Если своего
+// «ИТОГА МОДУЛЯ» модуль не выдал, эти пункты становятся строкой «что делаем
+// дальше» в карточке наверху, а из хвоста уходят: место итогов — в начале.
+function собратьШаги(тело){const строки=String(тело||'').split('\n');const начало=строки.findIndex(х=>/^#{1,4}\s*\**\s*(итог\s*\/\s*следующие\s+шаги|следующие\s+шаги)\b/i.test(х)||/^\s*\**(итог\s*\/\s*следующие\s+шаги|следующие\s+шаги)\**\s*:?\s*$/i.test(х));if(начало<0)return[];const пункты=[];for(let i=начало+1;i<строки.length;i++){const х=строки[i];if(/^#{1,4}\s+\S/.test(х))break;const т=х.replace(/^\s*(?:[-*•]|\d+[.)])\s*/,'').trim();if(т)пункты.push(т);}return пункты;}function почиститьХвост(тело,естьИтог){let t=String(тело||'');// Следы промпта: «Вывод (in Russian):» — служебная пометка, не текст.
 t=t.replace(/\s*\((?:in|на)\s+Russian\)/gi,'');// Раздел = заголовок и всё до следующего заголовка того же или высшего уровня.
 const вырезать=условие=>{const строки=t.split('\n');const вышло=[];let пропускаем=false,уровень=0;for(const строка of строки){const з=строка.match(/^(#{1,4})\s*(.+?)\s*$/);if(з){const у=з[1].length;if(пропускаем&&у<=уровень)пропускаем=false;if(!пропускаем&&условие(з[2],у)){пропускаем=true;уровень=у;continue;}}if(!пропускаем)вышло.push(строка);}t=вышло.join('\n');};if(естьИтог){// Без \b: в JS он опирается на латиницу, и после кириллического «итог»
 // границы слова не находит — раздел «Итог / Следующие шаги» так и оставался.
@@ -2054,7 +2057,7 @@ for(const r of orderedResults){// Разделитель «Ниша: …» пе�
 if(r.niche&&r.niche!==lastNiche&&nichesOf(brief).length>1){sections+='<div class="nicheband"><span class="lab">Ниша</span>'+'<span class="nm">'+esc(r.niche)+'</span></div>';}lastNiche=r.niche;const m=MODULES.find(x=>x.id===r.id);const charts=r.id==='M1'?chartDivs:moduleChartDivs[resKey(r)]||'';// Итог модуля вынимаем ДО отрисовки и показываем над блоками: это ответ на
 // вопрос «что мне это дало», и в конце трёхэкранного модуля до него просто
 // не доходят. В теле он после этого не повторяется.
-const cut=splitModuleSummary(r.content);const свод=cut.summary||(собратьВыводы(cut.body).length?{learned:собратьВыводы(cut.body),means:[],next:[]}:null);const словарь=собратьСловарь(cut.body);const rendered=renderResearchHTML(почиститьХвост(cut.body,!!свод),{ourName:brief.name,словарь});const summary=оформитьТекст(renderModuleSummary(свод),rendered.источники,словарь);blockScripts.push(...rendered.scripts);blockJS=rendered.js;// Модуль различается ПОДПИСЬЮ, а не своим цветом. Семь фирменных цветов
+const cut=splitModuleSummary(r.content);const выводы=собратьВыводы(cut.body),шаги=собратьШаги(cut.body);const свод=cut.summary||(выводы.length||шаги.length?{learned:выводы,means:[],next:шаги}:null);const словарь=собратьСловарь(cut.body);const rendered=renderResearchHTML(почиститьХвост(cut.body,!!свод),{ourName:brief.name,словарь});const summary=оформитьТекст(renderModuleSummary(свод),rendered.источники,словарь);blockScripts.push(...rendered.scripts);blockJS=rendered.js;// Модуль различается ПОДПИСЬЮ, а не своим цветом. Семь фирменных цветов
 // модулей (зелёный, бирюзовый, синий, фиолетовый, коричневый, красный,
 // малиновый) остались от старого отчёта и спорят с правилом «палитра ровно
 // четыре цвета»: читатель ищет в них значение и не находит.
@@ -2341,7 +2344,7 @@ function ResearchView({content,ourName,выбранные,наВыбор}){const
 // и владелица справедливо сказала «нет выводов».
 const out=React.useMemo(()=>{const cut=splitModuleSummary(content||'');// Нет «ИТОГА МОДУЛЯ» — собираем его из выводов внутри блоков: иначе они
 // либо останутся вразнобой по тексту, либо пропадут вместе с ними.
-const свод=cut.summary||(собратьВыводы(cut.body).length?{learned:собратьВыводы(cut.body),means:[],next:[]}:null);// Словарь берём ДО чистки: список аббревиатур она выкидывает.
+const выводы=собратьВыводы(cut.body),шаги=собратьШаги(cut.body);const свод=cut.summary||(выводы.length||шаги.length?{learned:выводы,means:[],next:шаги}:null);// Словарь берём ДО чистки: список аббревиатур она выкидывает.
 const словарь=собратьСловарь(cut.body);const r=renderResearchHTML(почиститьХвост(cut.body,!!свод),{ourName,словарь});const итог=оформитьТекст(renderModuleSummary(свод),r.источники,словарь);return{...r,html:итог+r.html};},[content,ourName]);React.useEffect(()=>{injectBlockStyles();},[]);React.useEffect(()=>{if(!ref.current||!out.scripts.length)return;// Кольцо и ниши рисуются скриптом — выполняем после вставки разметки.
 // Своя область видимости на каждый запуск: иначе повторное открытие
 // модуля переопределяет функции и рисует поверх старого.

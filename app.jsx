@@ -3867,6 +3867,25 @@ function собратьВыводы(тело) {
   return выводы;
 }
 
+// «Итог / Следующие шаги» в конце модуля — это его план действий. Если своего
+// «ИТОГА МОДУЛЯ» модуль не выдал, эти пункты становятся строкой «что делаем
+// дальше» в карточке наверху, а из хвоста уходят: место итогов — в начале.
+function собратьШаги(тело) {
+  const строки = String(тело || '').split('\n');
+  const начало = строки.findIndex(х =>
+    /^#{1,4}\s*\**\s*(итог\s*\/\s*следующие\s+шаги|следующие\s+шаги)\b/i.test(х)
+    || /^\s*\**(итог\s*\/\s*следующие\s+шаги|следующие\s+шаги)\**\s*:?\s*$/i.test(х));
+  if (начало < 0) return [];
+  const пункты = [];
+  for (let i = начало + 1; i < строки.length; i++) {
+    const х = строки[i];
+    if (/^#{1,4}\s+\S/.test(х)) break;
+    const т = х.replace(/^\s*(?:[-*•]|\d+[.)])\s*/, '').trim();
+    if (т) пункты.push(т);
+  }
+  return пункты;
+}
+
 function почиститьХвост(тело, естьИтог) {
   let t = String(тело || '');
   // Следы промпта: «Вывод (in Russian):» — служебная пометка, не текст.
@@ -5852,9 +5871,10 @@ function generateHTMLReport(brief, results, lang, priceLayers, selectedLayers, s
     // вопрос «что мне это дало», и в конце трёхэкранного модуля до него просто
     // не доходят. В теле он после этого не повторяется.
     const cut = splitModuleSummary(r.content);
+    const выводы = собратьВыводы(cut.body), шаги = собратьШаги(cut.body);
     const свод = cut.summary
-      || (собратьВыводы(cut.body).length
-          ? { learned: собратьВыводы(cut.body), means: [], next: [] } : null);
+      || ((выводы.length || шаги.length)
+          ? { learned: выводы, means: [], next: шаги } : null);
     const словарь = собратьСловарь(cut.body);
     const rendered = renderResearchHTML(почиститьХвост(cut.body, !!свод), { ourName: brief.name, словарь });
     const summary = оформитьТекст(renderModuleSummary(свод), rendered.источники, словарь);
@@ -6909,9 +6929,10 @@ function ResearchView({ content, ourName, выбранные, наВыбор }) 
     const cut = splitModuleSummary(content || '');
     // Нет «ИТОГА МОДУЛЯ» — собираем его из выводов внутри блоков: иначе они
     // либо останутся вразнобой по тексту, либо пропадут вместе с ними.
+    const выводы = собратьВыводы(cut.body), шаги = собратьШаги(cut.body);
     const свод = cut.summary
-      || (собратьВыводы(cut.body).length
-          ? { learned: собратьВыводы(cut.body), means: [], next: [] } : null);
+      || ((выводы.length || шаги.length)
+          ? { learned: выводы, means: [], next: шаги } : null);
     // Словарь берём ДО чистки: список аббревиатур она выкидывает.
     const словарь = собратьСловарь(cut.body);
     const r = renderResearchHTML(почиститьХвост(cut.body, !!свод), { ourName, словарь });
