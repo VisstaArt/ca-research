@@ -2366,7 +2366,7 @@ function buildSystem(brief, lang) {
     'GEOGRAPHY RULES — CRITICAL:\n'+
     '- Use Research Market ('+(brief.geoMarket||brief.geo||'—')+') for ALL statistics, competitor search, pricing, keyword volumes.\n'+
     '- Use Company Geography ('+(brief.geoCompany||'—')+') only as context about business scale.\n\n'+
-    'COMPANY DATA — CRITICAL: If brief contains currentRevenue, currentClients, or currentAvgCheck — you MUST include a dedicated section called \'## Company Market Position\' that calculates: current market share (company revenue / SOM revenue * 100%), growth potential (SOM clients - current clients), and revenue gap (SOM - current revenue). If these fields are empty, write \'No company data provided — fill Current Revenue, Clients and Avg Check in the brief for market position analysis.\' in that section.\n\n'+
+    'ДАННЫЕ КОМПАНИИ: если в брифе заполнены выручка, число клиентов или средний чек — добавь раздел «## Позиция компании на рынке» и посчитай в нём долю рынка (выручка компании / выручка SOM × 100%), запас роста (клиенты SOM − текущие клиенты) и разрыв по выручке (SOM − текущая выручка). ЕСЛИ ЭТИХ ПОЛЕЙ В БРИФЕ НЕТ — раздел НЕ ПИШИ ВООБЩЕ. Не печатай ни заголовок, ни объяснение, почему его нет: пустой раздел в отчёте читается как поломка.\n\n'+
     'RULES:\n'+
     '0. Today\'s date: '+new Date().toISOString().slice(0,10)+'. Never date anything "as of" past years unless the source says so.\n'+
     '1. ALL output in '+lang+' only. No exceptions.\n'+
