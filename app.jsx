@@ -254,7 +254,7 @@ const MODULES = [
     whatRu: 'Отвечает: Каков размер рынка (TAM→SAM→SOM)? Где компания относительно адресного рынка? Строится на официальной статистике (блоки 01–03).',
     outputsEn: ['Geo & open statistics','TAM → SAM → SOM model','Market share vs company position'],
     outputsRu: ['Гео и открытая статистика','Модель TAM → SAM → SOM','Доля рынка и позиция компании'],
-    estimatedMin: 8,
+    estimatedMin: 3,
     steps: ['Collecting geo & demographic statistics (Block 01)…','Mapping open data sources (Block 02)…','Building TAM→SAM→SOM model (Block 03)…'],
   },
   {
@@ -267,7 +267,7 @@ const MODULES = [
     whatRu: 'Отвечает: Какие ниши есть вокруг ваших услуг? В какие стоит входить — по спросу, конкуренции и экономике? Заканчивается стопом: вы (или заказчик) выбираете ОДНУ нишу, и все следующие модули исследуют только её. Блоки 04, 04_1, 04_2 методологии, заземление на реальный веб-поиск.',
     outputsEn: ['Audience segments map','Service effectiveness per niche','Niche prioritization matrix (scoring)','Niche selection stop-point'],
     outputsRu: ['Карта сегментов аудитории','Эффективность услуг по нишам','Матрица приоритизации ниш (скоринг)','Стоп-точка выбора ниши'],
-    estimatedMin: 6,
+    estimatedMin: 2,
     steps: ['Searching real market signals (web search)…','Describing target audience segments (Block 04)…','Evaluating service effectiveness per niche (Block 04_1)…','Prioritizing niches with scoring (Block 04_2)…','Preparing niche cards…'],
   },
   {
@@ -280,7 +280,7 @@ const MODULES = [
     whatRu: 'Отвечает: Кто реальные конкуренты в вашем ценовом слое? Что предлагают и по какой цене? Где гэпы (Win/Parity/Lose) которые можно использовать?',
     outputsEn: ['Competitor map (10–20)','Win / Parity / Lose table','Positioning gaps & opportunities','Competitor positioning chart'],
     outputsRu: ['Карта конкурентов (10–20)','Таблица Win / Parity / Lose','Гэпы и возможности','График позиционирования'],
-    estimatedMin: 8,
+    estimatedMin: 3,
     steps: ['Building open sources index (Block 05)…','Mapping competitors — offers, pricing, positioning (Block 06)…','Running Win/Parity/Lose gap analysis (Block 06_1)…','Generating competitor positioning chart…'],
   },
   {
@@ -296,7 +296,7 @@ const MODULES = [
     whatRu: 'Отвечает: Какие форматы, хуки и длительности реально работают в нише? Смотрит на тех же конкурентов, что нашёл M2, но как на медиа: каналы, топ-контент, паттерны и бенчмарки ниши. Только публично видимые числа — ничего из закрытых источников.',
     outputsEn: ['Radar sources','Competitor channels','Top content breakdown','Working patterns','Niche benchmarks'],
     outputsRu: ['Источники радара','Каналы конкурентов','Разбор того, что залетает','Работающие паттерны','Бенчмарки ниши'],
-    estimatedMin: 7,
+    estimatedMin: 3,
     steps: ['Collecting competitor channels (Block 24_0)…','Measuring channel size and cadence (Block 24)…','Breaking down top content (Block 24A)…','Deriving what works (Block 24B)…','Computing niche benchmarks (Block 24C)…'],
   },
   {
@@ -312,7 +312,7 @@ const MODULES = [
     whatRu: 'Отвечает: Какими словами клиенты описывают проблему? Чего боятся? Чего хотят? Используется для текстов рекламы, заголовков лендинга и скриптов продаж.',
     outputsEn: ['VoC table (25–40 real quotes)','Intent clusters by awareness stage','Customer language glossary'],
     outputsRu: ['Таблица VoC (25–40 реальных цитат)','Кластеры намерений по стадиям','Словарь языка клиента'],
-    estimatedMin: 7,
+    estimatedMin: 3,
     steps: ['Collecting VoC quotes from reviews, forums, social media (Block 07)…','Clustering search intents by awareness stage (Block 08)…','Mapping funnel roles and headline formulas…'],
   },
   {
@@ -327,7 +327,7 @@ const MODULES = [
     whatRu: 'Отвечает: Зачем клиент нанимает ваш продукт? На какой стадии осознанности он находится? Какие страхи и критерии движут решением? Какие когнитивные триггеры использовать?',
     outputsEn: ['LPR personas (4–8)','JTBD map','Fears & decision criteria','Customer Journey Map','Cognitive tactics'],
     outputsRu: ['Персоны LPR (4–8)','Карта JTBD','Страхи и критерии выбора','Карта пути клиента CJM','Когнитивные тактики'],
-    estimatedMin: 10,
+    estimatedMin: 2,
     steps: ['Building LPR personas with real language (Block 09)…','Mapping Jobs-to-be-Done per segment (Block 10)…','Assessing awareness levels by Schwartz (Block 11)…','Cataloguing fears and doubts (Block 12)…','Mapping decision criteria and trust triggers (Block 13)…','Building customer journey map CJM (Block 14)…','Identifying cognitive tactics and influence patterns (Block 15)…'],
   },
   {
@@ -348,7 +348,7 @@ const MODULES = [
     whatRu: 'Отвечает: Какие гипотезы тестировать первыми? Какой оффер сильнейший по сегменту? Как структурировать ценностное предложение для максимальной конверсии?',
     outputsEn: ['Marketing hypotheses (10–15)','Offer workshop (draft variants)','Final offers per segment'],
     outputsRu: ['Маркетинговые гипотезы (10–15)','Воркшоп офферов (черновики)','Финальные офферы по сегментам'],
-    estimatedMin: 8,
+    estimatedMin: 2,
     steps: ['Generating marketing hypotheses (Block 16)…','Collecting offer input data (Block 17A)…','Running offer workbench — draft options (Block 17B)…','Finalising offers per segment (Block 17 Final)…'],
   },
   {
@@ -366,7 +366,7 @@ const MODULES = [
     whatRu: 'Отвечает: По каким запросам ищет ваша аудитория и сколько их на самом деле? Какие страницы уже находятся по этим запросам? Что и как часто публикуют конкуренты?',
     outputsEn: ['Search competitor analysis','Semantic core by clusters with real volumes','Competitor content audit','Full keyword export as returned by the source'],
     outputsRu: ['Анализ поисковых конкурентов','Семантическое ядро по кластерам с реальной частотностью','Контент-аудит конкурентов','Полная выгрузка запросов как её вернул источник'],
-    estimatedMin: 7,
+    estimatedMin: 3,
     steps: ['Collecting sources (SEO-00)…','Analysing search competitors (SEO-01)…','Building semantic core by clusters (SEO-02)…','Auditing competitor content (SEO-03)…'],
   },
   {
@@ -394,7 +394,7 @@ const MODULES = [
     whatRu: 'Отвечает: Какие форматы контента работают для каждого сегмента? Как должны выглядеть реклама и креативы? Какова полная структура лендинга с текстами?',
     outputsEn: ['Persona archetypes & visual strategy','Content system by channel (20–30 formats)','Creative briefs (8–12)','Landing page TZ with screen structure'],
     outputsRu: ['Архетипы персон и визуальная стратегия','Контент-система по каналам (20–30 форматов)','Креативные брифы (8–12)','ТЗ на лендинг со структурой экранов'],
-    estimatedMin: 10,
+    estimatedMin: 2,
     steps: ['Building persona archetypes and archetype map (Blocks 18–19A)…','Designing content system by channel (Block 20)…','Writing creative briefs (Block 21)…','Creating landing page TZ with screen structure (Block 22)…'],
   },
 ];
@@ -528,6 +528,27 @@ let keywordCallCount = 0;
 // написала условие «n<10 || n>20» — и оно врало на 21 («21 запросов») и на 81
 // («81 запросов»). Правило на самом деле такое: 11–14 в пределах СОТНИ всегда
 // множественное, дальше смотрим последнюю цифру.
+// Сколько ждать модуль. Сначала смотрим, сколько он шёл РАНЬШЕ — по всем
+// сохранённым прогонам; своих замеров нет — берём умолчание из карточки.
+// Умолчания тоже пересчитаны по факту: они стояли втрое выше настоящего.
+function оценкаСекунд(id, проекты) {
+  const свои = [];
+  (проекты || []).forEach(п => (п && п.results || []).forEach(r => {
+    if (r && r.id === id && r.sec > 0 && !r.failed) свои.push(r.sec);
+  }));
+  if (свои.length) {
+    свои.sort((a, b) => a - b);
+    return свои[Math.floor(свои.length / 2)];   // медиана: один затык не сдвигает
+  }
+  const m = MODULES.find(x => x.id === id);
+  return (m && m.estimatedMin ? m.estimatedMin : 2) * 60;
+}
+function времяСловами(сек) {
+  if (!сек) return '';
+  const м = Math.round(сек / 60);
+  return м < 1 ? 'меньше минуты' : м + ' ' + plural(м, 'минута', 'минуты', 'минут');
+}
+
 function plural(n, one, few, many) {
   const h = Math.abs(n) % 100, t = h % 10;
   if (h > 10 && h < 20) return many;
@@ -7594,7 +7615,7 @@ function ModuleCard({ m, on, onToggle, uiLang }) {
           <div style={{fontSize:13,fontWeight:500,color:'var(--ink)'}}>{title}</div>
           <div style={{fontSize:11,color:'var(--ink-3)',marginTop:1}}>{tagline}</div>
         </div>
-        <span style={{fontSize:10,color:'var(--ink-3)',flexShrink:0}}>{m.estimatedMin} min</span>
+        <span style={{fontSize:10,color:'var(--ink-3)',flexShrink:0}}>{времяСловами(оценкаСекунд(m.id, loadAll()))}</span>
         <div style={{width:18,height:18,borderRadius:4,border:on?'none':'1.5px solid var(--line)',background:on?m.color:'transparent',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
           {on && <span style={{color:'var(--card-solid)',fontSize:11}}>✓</span>}
         </div>
@@ -8387,12 +8408,13 @@ function App() {
       // prevContent/findDep, повторно замечание им не нужно.
       if (regenNote && mod.id === allSelected[0]) Bn.regenNote = regenNote;
       const sys = buildSystem(Bn, lang);
+      const началоМодуля = Date.now();
       setCurMod(mod.id); setCurNiche(wn); setCurStep(mod.steps[0]); setCurStepIdx(0);
       let stepI = 0;
       const stepTimer = setInterval(() => {
         stepI = Math.min(stepI+1, mod.steps.length-1);
         setCurStep(mod.steps[stepI]); setCurStepIdx(stepI);
-      }, Math.floor((mod.estimatedMin*60*1000)/mod.steps.length));
+      }, Math.max(4000, Math.floor((оценкаСекунд(mod.id, loadAll())*1000)/mod.steps.length)));
 
       // Контекст берём из результатов ТОЙ ЖЕ ниши (для по-нишевых зависимостей).
       const findDep = depId => col.find(r => r.id === depId && (isPerNiche(depId) ? (r.niche||'') === wn : true));
@@ -8512,7 +8534,12 @@ function App() {
       // 429», а agent_package отдал контент-машине просто пустые VOICE_OF_CUSTOMER
       // и PAIN_BANK, и там это разобрали как дефект блока промпта.
       const failed = /^Error:/.test(cleanedContent.trim());
-      const result = { id:mod.id, niche:wn, content:cleanedContent, chartData, ...(failed?{failed:true, error:cleanedContent.trim()}:{}), ...(nicheData?{nicheData}:{}), ...(usage?{usage}:{}), ...(searchCalls?{searchCalls}:{}), ...(keywordCalls?{keywordCalls}:{}), at:new Date().toISOString() };
+      const result = { id:mod.id, niche:wn, content:cleanedContent, chartData, ...(failed?{failed:true, error:cleanedContent.trim()}:{}), ...(nicheData?{nicheData}:{}), ...(usage?{usage}:{}), ...(searchCalls?{searchCalls}:{}), ...(keywordCalls?{keywordCalls}:{}),
+        // Сколько модуль шёл на самом деле. Оценка «53 минуты» была взята из
+        // головы, а прогон занимает пять-десять (владелица 14.09). Дальше
+        // время показывается по замерам, а не по догадке.
+        sec: Math.round((Date.now() - началоМодуля)/1000),
+        at:new Date().toISOString() };
       col.push(result);
       const upd = { ...p, results:col, updatedAt:new Date().toISOString() };
       setProj(upd); sv(upd);
@@ -9253,7 +9280,9 @@ function App() {
         <p style={{fontSize:12,color:'var(--acc-quiet-ink)'}}>
           <strong>{t.modelLabel}:</strong> {MODEL} &nbsp;·&nbsp;
           <strong>{t.dataPolicy}:</strong> {t.dataPolicyVal} &nbsp;·&nbsp;
-          <strong>{t.estTime}:</strong> ~{mods.reduce((s,id)=>s+(MODULES.find(m=>m.id===id)?.estimatedMin||8),0)} min
+          <strong>{t.estTime}:</strong> ~{времяСловами(
+            mods.reduce((с,id)=>с+оценкаСекунд(id, projs)*(CAContract.isPerNiche(id)
+              ? Math.max(nichesOf(brief).length,1) : 1), 0))}
         </p>
       </div>
 
@@ -9883,7 +9912,7 @@ function App() {
               </div>
               <p style={{fontSize:10,color:'var(--ink-2)',marginTop:4}}>{curStepIdx+1} / {curModData.steps.length} steps</p>
             </div>
-            <CountdownTimer totalSeconds={curModData.estimatedMin*60} label="Est. remaining"/>
+            <CountdownTimer totalSeconds={оценкаСекунд(curModData.id, projs)} label="Осталось примерно"/>
           </div>
         </div>
       )}
