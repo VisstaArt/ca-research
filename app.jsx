@@ -256,6 +256,7 @@ const MODULES = [
     outputsRu: ['Гео и открытая статистика','Модель TAM → SAM → SOM','Доля рынка и позиция компании'],
     estimatedMin: 3,
     steps: ['Collecting geo & demographic statistics (Block 01)…','Mapping open data sources (Block 02)…','Building TAM→SAM→SOM model (Block 03)…'],
+    stepsRu: ['Собираю статистику по географии и населению…','Ищу открытые источники данных…','Считаю ёмкость рынка: весь рынок → доступный → достижимый…'],
   },
   {
     id: 'M2', color: 'var(--ink)', bg: 'var(--card-solid)', border: 'var(--line)', dark: 'var(--ink)',
@@ -269,6 +270,7 @@ const MODULES = [
     outputsRu: ['Карта сегментов аудитории','Эффективность услуг по нишам','Матрица приоритизации ниш (скоринг)','Стоп-точка выбора ниши'],
     estimatedMin: 2,
     steps: ['Searching real market signals (web search)…','Describing target audience segments (Block 04)…','Evaluating service effectiveness per niche (Block 04_1)…','Prioritizing niches with scoring (Block 04_2)…','Preparing niche cards…'],
+    stepsRu: ['Ищу живые сигналы рынка в поиске…','Описываю сегменты аудитории…','Оцениваю, какие услуги работают в каждой нише…','Расставляю ниши по приоритету и считаю баллы…','Собираю карточки ниш…'],
   },
   {
     id: 'M3', color: 'var(--ink)', bg: 'var(--card-solid)', border: 'var(--line)', dark: 'var(--ink)',
@@ -282,6 +284,7 @@ const MODULES = [
     outputsRu: ['Карта конкурентов (10–20)','Таблица Win / Parity / Lose','Гэпы и возможности','График позиционирования'],
     estimatedMin: 3,
     steps: ['Building open sources index (Block 05)…','Mapping competitors — offers, pricing, positioning (Block 06)…','Running Win/Parity/Lose gap analysis (Block 06_1)…','Generating competitor positioning chart…'],
+    stepsRu: ['Собираю индекс открытых источников…','Составляю карту конкурентов: офферы, цены, позиционирование…','Сравниваю нас с ними: где выигрываем, где наравне, где отстаём…','Рисую график позиционирования…'],
   },
   {
     // Контент-радар. Место в цепочке — по зависимостям, а не по номеру: нужен
@@ -298,6 +301,7 @@ const MODULES = [
     outputsRu: ['Источники радара','Каналы конкурентов','Разбор того, что залетает','Работающие паттерны','Бенчмарки ниши'],
     estimatedMin: 3,
     steps: ['Collecting competitor channels (Block 24_0)…','Measuring channel size and cadence (Block 24)…','Breaking down top content (Block 24A)…','Deriving what works (Block 24B)…','Computing niche benchmarks (Block 24C)…'],
+    stepsRu: ['Собираю каналы конкурентов…','Замеряю размер каналов и частоту публикаций…','Разбираю, что у них залетает…','Вывожу работающие приёмы…','Считаю опорные числа ниши…'],
   },
   {
     id: 'M5', color: 'var(--ink)', bg: 'var(--card-solid)', border: 'var(--line)', dark: 'var(--ink)',
@@ -314,6 +318,7 @@ const MODULES = [
     outputsRu: ['Таблица VoC (25–40 реальных цитат)','Кластеры намерений по стадиям','Словарь языка клиента'],
     estimatedMin: 3,
     steps: ['Collecting VoC quotes from reviews, forums, social media (Block 07)…','Clustering search intents by awareness stage (Block 08)…','Mapping funnel roles and headline formulas…'],
+    stepsRu: ['Собираю живые цитаты из отзывов, форумов и соцсетей…','Группирую запросы по стадиям осознания…','Раскладываю роли в воронке и формулы заголовков…'],
   },
   {
     id: 'M6', color: 'var(--ink)', bg: 'var(--card-solid)', border: 'var(--line)', dark: 'var(--ink)',
@@ -329,6 +334,7 @@ const MODULES = [
     outputsRu: ['Персоны LPR (4–8)','Карта JTBD','Страхи и критерии выбора','Карта пути клиента CJM','Когнитивные тактики'],
     estimatedMin: 2,
     steps: ['Building LPR personas with real language (Block 09)…','Mapping Jobs-to-be-Done per segment (Block 10)…','Assessing awareness levels by Schwartz (Block 11)…','Cataloguing fears and doubts (Block 12)…','Mapping decision criteria and trust triggers (Block 13)…','Building customer journey map CJM (Block 14)…','Identifying cognitive tactics and influence patterns (Block 15)…'],
+    stepsRu: ['Строю портреты тех, кто принимает решение…','Разбираю, ради каких задач нас нанимают…','Оцениваю уровни осведомлённости…','Собираю страхи и сомнения…','Выписываю критерии выбора и триггеры доверия…','Строю путь клиента…','Нахожу когнитивные приёмы и паттерны влияния…'],
   },
   {
     id: 'M7', color: 'var(--ink)', bg: 'var(--card-solid)', border: 'var(--line)', dark: 'var(--ink)',
@@ -350,6 +356,7 @@ const MODULES = [
     outputsRu: ['Маркетинговые гипотезы (10–15)','Воркшоп офферов (черновики)','Финальные офферы по сегментам'],
     estimatedMin: 2,
     steps: ['Generating marketing hypotheses (Block 16)…','Collecting offer input data (Block 17A)…','Running offer workbench — draft options (Block 17B)…','Finalising offers per segment (Block 17 Final)…'],
+    stepsRu: ['Формулирую маркетинговые гипотезы…','Собираю вводные для офферов…','Черновики офферов в мастерской…','Довожу финальные офферы по сегментам…'],
   },
   {
     id: 'M8', color: 'var(--ink)', bg: 'var(--card-solid)', border: 'var(--line)', dark: 'var(--ink)',
@@ -368,6 +375,7 @@ const MODULES = [
     outputsRu: ['Анализ поисковых конкурентов','Семантическое ядро по кластерам с реальной частотностью','Контент-аудит конкурентов','Полная выгрузка запросов как её вернул источник'],
     estimatedMin: 3,
     steps: ['Collecting sources (SEO-00)…','Analysing search competitors (SEO-01)…','Building semantic core by clusters (SEO-02)…','Auditing competitor content (SEO-03)…'],
+    stepsRu: ['Собираю источники…','Разбираю конкурентов в поисковой выдаче…','Строю семантическое ядро по кластерам…','Проверяю контент конкурентов…'],
   },
   {
     // Это НЕ модуль исследования. Контент-план и лендинг — отдельные разделы
@@ -396,6 +404,7 @@ const MODULES = [
     outputsRu: ['Архетипы персон и визуальная стратегия','Контент-система по каналам (20–30 форматов)','Креативные брифы (8–12)','ТЗ на лендинг со структурой экранов'],
     estimatedMin: 2,
     steps: ['Building persona archetypes and archetype map (Blocks 18–19A)…','Designing content system by channel (Block 20)…','Writing creative briefs (Block 21)…','Creating landing page TZ with screen structure (Block 22)…'],
+    stepsRu: ['Собираю архетипы персон и карту архетипов…','Проектирую контент-систему по каналам…','Пишу брифы на креативы…','Готовлю ТЗ на лендинг…'],
   },
 ];
 
@@ -7277,7 +7286,7 @@ function ХодПрогона({ модули, готов, текущий, ниш
     <div className="card" style={{marginBottom:16}}>
       <div style={{display:'flex',alignItems:'baseline',gap:12,flexWrap:'wrap',marginBottom:10}}>
         <span className="kchip kchip-go"><span className="d"></span>Идёт исследование</span>
-        <b style={{fontSize:15}}>{текущий ? текущий.title : 'Готовим запуск…'}</b>
+        <b style={{fontSize:15}}>{текущий ? (текущий.titleRu||текущий.title) : 'Готовим запуск…'}</b>
         {ниша && <span className="note" style={{margin:0,paddingLeft:0}}>ниша: {ниша}</span>}
         <span className="note" style={{margin:0,marginLeft:'auto',paddingLeft:0}}>
           {готов} из {модули.length} {plural(модули.length,'модуль','модуля','модулей')} готово
@@ -7294,7 +7303,7 @@ function ХодПрогона({ модули, готов, текущий, ниш
         {модули.map(м => {
           const сделан = м.сделан, идёт = м.идёт;
           return (
-            <div key={м.id} title={м.title}
+            <div key={м.id} title={м.titleRu||м.title}
               style={{flex:1,height:8,borderRadius:3,
                 background: сделан ? 'var(--acc-strong)' : (идёт ? 'var(--acc-mid)' : 'var(--line-2)'),
                 animation: идёт ? 'ca-пульс 1.4s ease-in-out infinite' : undefined}}/>
@@ -8409,11 +8418,11 @@ function App() {
       if (regenNote && mod.id === allSelected[0]) Bn.regenNote = regenNote;
       const sys = buildSystem(Bn, lang);
       const началоМодуля = Date.now();
-      setCurMod(mod.id); setCurNiche(wn); setCurStep(mod.steps[0]); setCurStepIdx(0);
+      setCurMod(mod.id); setCurNiche(wn); setCurStep((mod.stepsRu || mod.steps)[0]); setCurStepIdx(0);
       let stepI = 0;
       const stepTimer = setInterval(() => {
         stepI = Math.min(stepI+1, mod.steps.length-1);
-        setCurStep(mod.steps[stepI]); setCurStepIdx(stepI);
+        setCurStep((mod.stepsRu || mod.steps)[stepI]); setCurStepIdx(stepI);
       }, Math.max(4000, Math.floor((оценкаСекунд(mod.id, loadAll())*1000)/mod.steps.length)));
 
       // Контекст берём из результатов ТОЙ ЖЕ ниши (для по-нишевых зависимостей).
@@ -9895,7 +9904,7 @@ function App() {
           })}
         </div>
         <p style={{fontSize:11,color:'var(--ink-3)'}}>
-          {isRun ? (curModData ? curModData.title : '')+(curNiche?' · ниша: '+curNiche:'') : doneCount+'/'+allMods.length+' modules done'+(pending.length?' · '+pending.length+' '+t.pending:'')+(workNiches.length?' · '+workNiches.length+' ниш(и)':'')}
+          {isRun ? (curModData ? (curModData.titleRu||curModData.title) : '')+(curNiche?' · ниша: '+curNiche:'') : doneCount+' из '+allMods.length+' '+plural(allMods.length,'модуль','модуля','модулей')+' готово'+(pending.length?' · '+pending.length+' '+t.pending:'')+(workNiches.length?' · '+workNiches.length+' ниш(и)':'')}
         </p>
       </div>
 
@@ -9903,14 +9912,14 @@ function App() {
         <div className="status-bar">
           <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',gap:16}}>
             <div style={{flex:1}}>
-              <p style={{fontSize:12,color:'var(--ink-3)',marginBottom:4}}>{curModData.id} · {curModData.title}{curNiche?' · ниша: '+curNiche:''}</p>
+              <p style={{fontSize:12,color:'var(--ink-3)',marginBottom:4}}>{curModData.id} · {curModData.titleRu||curModData.title}{curNiche?' · ниша: '+curNiche:''}</p>
               <p style={{fontSize:14,fontWeight:500,marginBottom:10}}>{curStep}</p>
               <div style={{display:'flex',gap:4}}>
                 {curModData.steps.map((_,i)=>(
                   <div key={i} style={{flex:1,height:2,borderRadius:1,background:i<=curStepIdx?curModData.color:'var(--ink)'}}/>
                 ))}
               </div>
-              <p style={{fontSize:10,color:'var(--ink-2)',marginTop:4}}>{curStepIdx+1} / {curModData.steps.length} steps</p>
+              <p style={{fontSize:10,color:'var(--ink-2)',marginTop:4}}>шаг {curStepIdx+1} из {curModData.steps.length}</p>
             </div>
             <CountdownTimer totalSeconds={оценкаСекунд(curModData.id, projs)} label="Осталось примерно"/>
           </div>
