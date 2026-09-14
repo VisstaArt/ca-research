@@ -1538,6 +1538,17 @@ async function processM3Fame(full, brief) {
     if (n != null) measured.set(nm, n);
   }
 
+  // Себя меряем ТЕМ ЖЕ способом, что и конкурентов. Модель нас в таблицу не
+  // вписывает, поэтому в карте рынка напротив нас стояло «не замерено» —
+  // владелица 14.09: «мы что, сами себя замерить не можем?». Можем: брендовый
+  // спрос по своему названию считается ровно так же.
+  const мыName = cleanCompName(brief.name || '');
+  let мыСпрос = null;
+  if (мыName && !measured.has(мыName)) {
+    мыСпрос = await callBrandDemand(мыName, brief);
+    if (мыСпрос != null) measured.set(мыName, мыСпрос);
+  }
+
   // Источник не ответил ни разу — это инфраструктурный сбой, а не «известности нет».
   // Оценки модели в этом случае НЕ затираем (она могла быть права), но и за замер
   // их не выдаём: честно помечаем, что в этом прогоне замера не было.
@@ -1556,6 +1567,20 @@ async function processM3Fame(full, brief) {
   // отличаться между сборками. Разряды ставим сами, неразрывным пробелом.
   const fmt = n => String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, '\u00A0');
   let unmeasured = 0;
+  // Строка «мы» в карте рынка: заказчик смотрит на неё, чтобы понять, где он
+  // сам. Ценовой уровень — из брифа, сайт — свой, известность — замер выше.
+  const своиСтроки = (мыName && !t06.rows.some(r => cleanCompName(r[nameKey]) === мыName))
+    ? [Object.assign({}, t06.headers.reduce((о, h) => (о[h] = '', о), {}), {
+        [nameKey]: brief.name || мыName,
+        [fameKey]: 'не замерено',
+        ...(urlKey ? { [urlKey]: brief.siteUrl || '' } : {}),
+        ...(t06.headers.find(h => /ценов/i.test(h))
+            ? { [t06.headers.find(h => /ценов/i.test(h))]: brief.priceLayer || 'не задан' } : {}),
+        ...(t06.headers.find(h => /чем известен|описан/i.test(h))
+            ? { [t06.headers.find(h => /чем известен|описан/i.test(h))]: 'мы' } : {}),
+      })]
+    : [];
+  t06.rows = t06.rows.concat(своиСтроки);
   const rows = t06.rows.map(r => {
     const nm = cleanCompName(r[nameKey]);
     if (!measured.has(nm)) { unmeasured++; return { ...r, [fameKey]: 'не замерено' }; }
