@@ -1545,10 +1545,8 @@ table.raw td.num{font-variant-numeric:tabular-nums;text-align:center;white-space
   text-transform:uppercase;padding:2px 8px;border-radius:999px;background:var(--line-2);
   color:var(--ink-2);hyphens:none}
 .ccard2 .price{text-align:right}
-.ccard2 .price b{display:block;font-size:16px;font-weight:700;letter-spacing:-.02em}'
-    +'\n/* Не цена, а словесный уровень — пометкой, не заголовком. */'
-    +'\n.ccard2 .price.word b{font-size:12px;font-weight:600;letter-spacing:.02em;'
-      +'text-transform:lowercase;color:var(--ink-2)}
+.ccard2 .price b{display:block;font-size:16px;font-weight:700;letter-spacing:-.02em}
+.ccard2 .price.word b{font-size:12px;font-weight:600;letter-spacing:.02em;text-transform:lowercase;color:var(--ink-2)}
 .ccard2 .price span{display:block;font-size:10.5px;color:var(--ink-3);margin-top:2px}
 .cgrid{display:grid;grid-template-columns:1fr 1fr;gap:0}
 .cbox{padding:15px 20px;border-top:1px solid var(--line-2)}
