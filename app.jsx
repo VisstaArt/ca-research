@@ -1191,6 +1191,9 @@ async function gatherVoCEvidence(brief, discoveredCompetitors, m2Result) {
   }
   // 3. Язык самой категории продукта
   queries.push(product+' '+market+' '+Q.clientReviews);
+  // 3а. Каналы самого заказчика: комментарии под его публикациями — голос
+  // клиента из первых рук (владелица 14.09: «голос клиента оттуда взять»).
+  for (const u of clientSocials(brief)) queries.push(u);
   // 4. ГДЕ СИДИТ АУДИТОРИЯ (задача 3 от контент-машины). Отдельные запросы нужны
   // потому, что всё выше ищет ЖАЛОБЫ — и находит площадки жалоб, а не места, где
   // аудитория живёт постоянно. Два запроса, не больше: каждый стоит платного
@@ -1980,7 +1983,15 @@ async function gatherCompetitorEvidence(brief) {
 // (ТЗ-M9-ОТКУДА-ДАННЫЕ, разд. 2): YouTube, Telegram через t.me/s/, VK, Дзен,
 // vc.ru и Хабр. Instagram и TikTok не запрашиваем вовсе — они отдают страницу
 // только авторизованным, и любое число оттуда было бы выдумкой.
-async function gatherContentRadarEvidence(brief, competitors) {
+async // Соцсети самого заказчика — из брифа (владелица 14.09: «если есть соцсети,
+// нам нужно видеть, что он уже ведёт, как ведёт, какие объёмы»). Ссылки, не
+// слова: только то, что похоже на адрес профиля.
+function clientSocials(brief) {
+  return String(brief.socials || '').split(/[\s,\n]+/)
+    .filter(x => /^https?:\/\//i.test(x)).slice(0, 5);
+}
+
+function gatherContentRadarEvidence(brief, competitors) {
   const market = brief.geoMarket || brief.geoCompany || '';
   const product = brief.niche || brief.name || '';
   const topic = brief.selectedNiche || product;
@@ -1999,7 +2010,10 @@ async function gatherContentRadarEvidence(brief, competitors) {
     queries.push(c+' vk.com сообщество');
     queries.push(c+' блог статьи');
   }
-  return gatherEvidence(queries, 14, 4);
+  // Каналы самого заказчика — тем же замером, что и конкурентов: радар
+  // должен видеть, что клиент УЖЕ выкладывает и как оно живёт.
+  for (const u of clientSocials(brief)) queries.push(u);
+  return gatherEvidence(queries, 14 + clientSocials(brief).length, 4);
 }
 
 // M8 (тренд-монитор): в отличие от остальных gather-функций явно ограничена
@@ -2606,7 +2620,14 @@ function buildM4Prompt(brief, lang, prev, evidence, competitors) {
     ? `\nCOMPETITORS FOUND IN M2 (look at their channels, not at articles about them):\n- `
       + competitors.slice(0,8).join('\n- ') + '\n'
     : '';
-  return `${ctx}${comps}${evidenceSection(evidence)}
+  const своиКаналы = clientSocials(brief).length
+    ? `\nКАНАЛЫ САМОГО ЗАКАЗЧИКА (он уже ведёт):\n- ` + clientSocials(brief).join('\n- ')
+      + `\nРассмотри их тем же замером, что и каналы конкурентов: какие форматы
+выкладывает, как часто, какие объёмы и отклик видны публично. В выводах
+сравни с рынком: чего заказчику не хватает на фоне ниши. Данные — только из
+доказательств выше, по тем же правилам ссылок.\n`
+    : '';
+  return `${ctx}${comps}${своиКаналы}${evidenceSection(evidence)}
 Fill the following research blocks for module M9 «Контент-радар». ALL output in ${lang}.
 
 ЧТО ЭТО ЗА МОДУЛЬ. M2 смотрел на конкурентов как на БИЗНЕСЫ — цены, офферы,
@@ -2676,7 +2697,13 @@ Format:
 function buildM5Prompt(brief, lang, prev, evidence, competitors) {
   const compList = (competitors && competitors.length) ? competitors.join(', ') : (brief.competitors || '—');
   const ctx = prev ? `\nCONTEXT:\n${prev.slice(0,1500)}\n` : '';
-  return `${ctx}${evidenceSection(evidence)}
+  const своиКаналы = clientSocials(brief).length
+    ? `\nСОЦСЕТИ САМОГО ЗАКАЗЧИКА:\n- ` + clientSocials(brief).join('\n- ')
+      + `\nКомментарии и отзывы под ЕГО публикациями — тоже голос клиента, причём
+самый близкий к его аудитории. Если такие цитаты есть в доказательствах,
+бери их наравне с остальными и помечай источником «канал заказчика».\n`
+    : '';
+  return `${ctx}${своиКаналы}${evidenceSection(evidence)}
 Fill module M3 blocks. ALL output in ${lang}. Only open sources, no invented data.
 
 ═══════════════════════════════════════════════

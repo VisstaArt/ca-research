@@ -46,6 +46,14 @@ var pkg = C.buildAgentPackage({ name: 'Тест', selectedNiche: 'Ниша А, �
   { titleOf: function (id) { return 'Название ' + id; } });
 
 check('schema_version', pkg.schema_version, 3);
+check('brand_assets собирается из брифа',
+  C.buildAgentPackage({ name: 'Т', selectedNiche: 'Н',
+    brandLogo: 'https://x.ru/l.svg', brandColors: '#0ABAB5, #171512',
+    brandFonts: 'Montserrat, Source Serif 4',
+    socials: 'https://t.me/x\nне ссылка\nhttps://vk.com/x' }, 'Russian', [], '').brand_assets,
+  { logo: 'https://x.ru/l.svg', colors: ['#0ABAB5', '#171512'],
+    fonts: ['Montserrat', 'Source Serif 4'],
+    socials: ['https://t.me/x', 'https://vk.com/x'] });
 check('обе ниши на месте', Object.keys(pkg.research_by_niche).sort(), ['Ниша А', 'Ниша Б']);
 check('упавший модуль в сводке', pkg.failed_modules, [{ module: 'M5', niche: 'Ниша А', error: 'Error: API 429', at: '2026-08-03' }]);
 check('titleOf подставлен', pkg.research_by_niche['Ниша А'].modules.M3.title, 'Название M3');
