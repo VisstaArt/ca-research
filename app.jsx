@@ -6614,6 +6614,10 @@ function LockScreen({ t, onUnlock }) {
 function App() {
   const [uiLang, setUiLang] = React.useState(loadUiLang);
   const t = T[uiLang];
+  // Стили эталона (.rview: карточки, .sech, .coverdl, .kbtn) нужны не только
+  // блокам результатов — сводка брифа тоже собрана из них. Раньше инжект жил
+  // в ResearchView, и страницы без блоков оставались «сплошным текстом».
+  React.useEffect(() => { injectBlockStyles(); }, []);
 
   // Защита доступа: null = проверяем, true = вошли, false = нужен вход.
   // Освежаем токен на загрузке страницы — заодно и проверка валидности:
