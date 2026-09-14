@@ -7556,14 +7556,17 @@ function App() {
           ? 'Какие ниши нашла разведка и с какими работаем дальше.'
           : 'Модули идут один за другим; каждый оставляет свой блок отчёта.'}
         lang={lang}/>
-      <div className="worksurface">
+            <div className="worksurface rview">
       <div className="card">
-        <p style={{fontSize:16,fontWeight:600,marginBottom:6}}>
-          {шагИзАдреса === 'niches' ? 'Ниш пока нет' : 'Прогона ещё не было'}</p>
-        <p style={{fontSize:13,color:'var(--ink-2)',lineHeight:1.6,maxWidth:'70ch'}}>
+        <h2>{шагИзАдреса === 'niches' ? 'Ниш пока нет' : 'Прогона ещё не было'}</h2>
+        <p style={{fontSize:13.5,color:'var(--ink-2)',lineHeight:1.6,maxWidth:'70ch',margin:'0 0 4px'}}>
           {шагИзАдреса === 'niches'
-            ? 'Ниши находит разведка — первый модуль прогона. Заполните бриф на вкладке «Бриф» и запустите: здесь появится веер ниш с оценками, и прогон остановится, чтобы вы выбрали.'
-            : 'Сначала бриф, затем запуск. После разведки прогон остановится на выборе ниш, а сюда лягут модули по каждой выбранной нише.'}
+            ? 'Ниши находит разведка — первый модуль прогона. Заполните бриф на вкладке «Бриф» и запустите: здесь появится веер ниш с их спросом, конкуренцией и экономикой, и вы выберете, с какими работать.'
+            : 'Сначала бриф, затем запуск. После разведки прогон остановится на выборе ниш, а сюда лягут модули по каждой выбранной нише — с графиками, таблицами и выводами.'}
+        </p>
+        <p className="note" style={{marginTop:12}}>
+          Это законное состояние, а не ошибка: пока прогона не было, показывать
+          здесь нечего, и выдумывать числа мы не станем.
         </p>
       </div>
       </div>
@@ -8286,29 +8289,33 @@ function App() {
       {/* Рабочая поверхность: подложка того же цвета, что панель бокового
           меню (владелица сверила — совпадают), шапка-плашка отдельно выше.
           Действия — на поверхности, не в шапке. */}
-      <div className={embedded ? 'worksurface' : undefined}>
-      {embedded && (
-        <div style={{display:'flex',gap:8,flexWrap:'wrap',alignItems:'center',marginBottom:14}}>
-          {!isRun && pending.length > 0 && (
-            <button className="btn-primary" onClick={()=>run()}>▶ Прогнать: {pending.map(m=>m.id).join(', ')}{(() => {
-              const c = сметаЦентов(pending.map(m=>m.id), nichesOf(brief).length || 1);
-              return c != null ? ' · ≈ ' + деньгами(c) : '';
-            })()}</button>
-          )}
-          {!isRun && pending.length === 0 && doneCount > 0 && (
-            <button className="btn-primary" onClick={()=>setSc('form')}>＋ Добавить модули</button>
-          )}
-          {!isRun && modDone('M2') && (
-            <button onClick={openNichePicker} style={{fontSize:12,padding:'7px 12px'}}>＋ Добавить ниши</button>
-          )}
-          {(() => {
-            const c = потраченоЦентов();
-            return c != null && c > 0 ? (
-              <span style={{fontSize:12,color:'var(--ink-2)',marginLeft:'auto'}}>
-                Потрачено в проекте: <b>{деньгами(c)}</b>
-              </span>
-            ) : null;
-          })()}
+      <div className={embedded ? 'worksurface rview' : undefined}>
+      {/* Строка действий — по образцу макета: слева пояснение о цене, справа
+          кнопки эталона. Цена стоит ДО траты, как просила владелица. */}
+      {embedded && !isRun && (pending.length > 0 || doneCount > 0) && (
+        <div style={{display:'flex',flexWrap:'wrap',gap:'12px 18px',alignItems:'center',
+            justifyContent:'space-between',marginBottom:18}}>
+          <p className="note" style={{margin:0,maxWidth:'52ch'}}>
+            {pending.length > 0
+              ? 'Оценка считается по расходу прошлых прогонов и умножается на число ниш. Точная сумма станет известна после прогона.'
+              : 'Все выбранные модули отработали. Добавьте модули или ниши, если нужно расширить исследование.'}
+          </p>
+          <div style={{display:'flex',gap:9,flexWrap:'wrap',alignItems:'center'}}>
+            {pending.length > 0 && (
+              <button className="kbtn kbtn-pri" onClick={()=>run()}>
+                Прогнать: {pending.map(m=>m.id).join(', ')}{(() => {
+                  const c = сметаЦентов(pending.map(m=>m.id), nichesOf(brief).length || 1);
+                  return c != null ? ' · ≈ ' + деньгами(c) : '';
+                })()}
+              </button>
+            )}
+            {pending.length === 0 && doneCount > 0 && (
+              <button className="kbtn kbtn-pri" onClick={()=>setSc('form')}>Добавить модули</button>
+            )}
+            {modDone('M2') && (
+              <button className="kbtn" onClick={openNichePicker}>Добавить ниши</button>
+            )}
+          </div>
         </div>
       )}
 
