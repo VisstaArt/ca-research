@@ -37,6 +37,17 @@ function grabStringConst(name){
 globalThis.MODULES=MODULES; globalThis.REPORT_CSS=REPORT_CSS;
 globalThis.dropOrphans=C.dropOrphans;  // живёт в контракте, не в app.jsx
 eval(grab('escHtml')); globalThis.escHtml=escHtml;
+// Текстовые проходы над готовой разметкой (человеческие имена блоков, русские
+// метки, живые ссылки, сноски к источникам) живут ВЫШЕ renderResearchHTML и в
+// его кусок не попадают — подтягиваем отдельно, иначе разбор падает на них.
+try { eval(grabConstBlock('BLOCK_TITLES','{','}').replace(/^const /,'var ')); globalThis.BLOCK_TITLES=BLOCK_TITLES; } catch(e){}
+try { eval(grabConstBlock('МЕТКИ_РУ','{','}').replace(/^const /,'var ')); globalThis.МЕТКИ_РУ=МЕТКИ_РУ; } catch(e){}
+['поТексту','поЧеловечески','поРусски','сноскиНаИсточники','оживитьКусок','оживитьСсылки']
+  .forEach(function(имя){
+    var i=SRC.indexOf('\nfunction '+имя+'('); if(i<0) return;
+    var j=SRC.indexOf('\n}\n', i);
+    globalThis.eval(SRC.slice(i+1, j+3));
+  });
 // Счёт скобок на этой функции больше не работает: внутри неё лежат строки с
 // кодом рисования, где фигурные скобки встречаются в тексте. Режем по границам
 // объявлений — они однозначны.

@@ -24,30 +24,11 @@
 .tip-pill{fill:var(--ink)}
 .tip-txt{fill:var(--mist-1);font-size:11px;font-weight:700;font-family:var(--sans)}
 .guide{stroke:var(--ink-3);stroke-width:1;stroke-dasharray:2 3}
-.stats{grid-template-columns:repeat(2,1fr)}
-.grid2,.flow,.rules{grid-template-columns:1fr}
-.f1,.f5{top:56px}
-.f2,.f4{top:40px}
-.f3{top:24px}
-.hero{height:200px}
-.dock{margin-top:-42px}
-.f1{left:calc(50% - 118px - 2 * var(--step))}
-.f2{left:calc(50% - 118px - 1 * var(--step))}
-.f3{left:calc(50% - 118px)}
-.f4{left:calc(50% - 118px + 1 * var(--step))}
-.f5{left:calc(50% - 118px + 2 * var(--step))}
-.fcard .name{font-size:13px}
-.fcard .foot b{font-size:12px}
-.f1,.f5{top:44px}
-.f2,.f4{top:32px}
-.f3{top:20px}
-.hero{height:164px}
-.dock{margin-top:-32px;padding:20px 16px 6px;border-radius:22px}
-.f1{left:calc(50% - 92px - 2 * var(--step))}
-.f2{left:calc(50% - 92px - 1 * var(--step))}
-.f3{left:calc(50% - 92px)}
-.f4{left:calc(50% - 92px + 1 * var(--step))}
-.f5{left:calc(50% - 92px + 2 * var(--step))}
+/* Ниже шли 24 правила, вытекшие из своих @media при переносе из артефакта:
+   ровно то же содержимое лежит в медиазапросах в конце файла (1080/720/460).
+   Без обёрток они применялись ВСЕГДА — веер сжимался до телефонного, а
+   показатели ниши вставали в две колонки вместо четырёх. Владелица 15.09:
+   «размазано, много места, некрасиво». Убраны 15.09.2026. */
 @media (max-width:1080px){.stats{grid-template-columns:repeat(2,1fr)} .grid2,.flow,.rules{grid-template-columns:1fr}}
 @media (max-width:720px){.fcard{width:236px;height:150px;padding:15px;--step:min(12%, 66px)} .f1,.f5{top:56px} .f2,.f4{top:40px} .f3{top:24px} .hero{height:200px} .dock{margin-top:-42px} .f1{left:calc(50% - 118px - 2 * var(--step))} .f2{left:calc(50% - 118px - 1 * var(--step))} .f3{left:calc(50% - 118px)} .f4{left:calc(50% - 118px + 1 * var(--step))} .f5{left:calc(50% - 118px + 2 * var(--step))}}
 @media (max-width:460px){.fcard{width:184px;height:126px;padding:13px;border-radius:18px;--step:min(10%, 50px)} .fcard .name{font-size:13px} .fcard .foot b{font-size:12px} .f1,.f5{top:44px} .f2,.f4{top:32px} .f3{top:20px} .hero{height:164px} .dock{margin-top:-32px;padding:20px 16px 6px;border-radius:22px} .f1{left:calc(50% - 92px - 2 * var(--step))} .f2{left:calc(50% - 92px - 1 * var(--step))} .f3{left:calc(50% - 92px)} .f4{left:calc(50% - 92px + 1 * var(--step))} .f5{left:calc(50% - 92px + 2 * var(--step))}}
