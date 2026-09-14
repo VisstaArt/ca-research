@@ -5203,7 +5203,13 @@ function mdToHtml(text) {
         }
       }
       // 04_1 напечатана в карточках ниш ниже — второй раз тот же список не нужен.
-      if (/BLOCK\s*04_1\b/i.test(lastHeading) && ctx.has042) { tableRows=[]; inTable=false; return; }
+      // Вместе с таблицей убираем заголовок и вводный абзац: владелица 15.09 —
+      // «блок есть, а данных никаких нет». Пустой раздел читается как поломка,
+      // хотя данные просто показаны в другом месте.
+      if (/BLOCK\s*04_1\b/i.test(lastHeading) && ctx.has042) {
+        if (ctx.mark041 != null) { html = html.slice(0, ctx.mark041); ctx.mark041 = null; }
+        tableRows=[]; inTable=false; return;
+      }
       const special = renderKnownBlock(lastHeading, hdrs, asObjs, ctx);
       if (special != null) { html += special; tableRows=[]; inTable=false; return; }
       // Числовая колонка узнаётся по содержимому, а не по названию: правило
@@ -5249,6 +5255,9 @@ function mdToHtml(text) {
         // До 12.09 она попадала в отчёт мелким серым абзацем, и блоки шли
         // без заголовков вовсе. Делаем её заголовком уровня блока.
         lastHeading = t;
+        // Метка на случай, если таблица блока окажется дублем и её снимут:
+        // тогда откатим и заголовок с описанием, иначе останется пустой блок.
+        if (/BLOCK\s*04_1\b/i.test(t)) ctx.mark041 = html.length;
         html += '<h2'+якорь(t)+'>'+esc(human(t))+'</h2>';
         continue;
       }
@@ -5261,7 +5270,10 @@ function mdToHtml(text) {
         if (!ctx.h1seen) { ctx.h1seen = true; }
         else html += '<h1>'+esc(human(line.slice(2)))+'</h1>';
       }
-      else if (line.startsWith('## ')) html += '<h2'+якорь(line.slice(3))+'>'+esc(human(line.slice(3)))+'</h2>';
+      else if (line.startsWith('## ')) {
+        if (/BLOCK\s*04_1\b/i.test(line.slice(3))) ctx.mark041 = html.length;
+        html += '<h2'+якорь(line.slice(3))+'>'+esc(human(line.slice(3)))+'</h2>';
+      }
       else if (line.startsWith('### ')) html += '<h3'+якорь(line.slice(4))+'>'+esc(human(line.slice(4)))+'</h3>';
       else if (line.startsWith('#### ')) html += '<h4'+якорь(line.slice(5))+'>'+esc(human(line.slice(5)))+'</h4>';
       else if (/^\*\*(.+)\*\*$/.test(t)) html += '<p><b>'+esc(t.slice(2,-2))+'</b></p>';

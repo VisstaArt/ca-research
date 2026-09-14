@@ -1,6 +1,6 @@
 // СОБРАНО АВТОМАТИЧЕСКИ из app.jsx — не править руками.
 // Правки вносить в app.jsx, затем: osascript -l JavaScript tools/build.js
-// отпечаток-исходника: 10fe8cffd888c7c3
+// отпечаток-исходника: 6477383b3272ebc5
 // Функции контракта живут в lib/contract.js. Разбираем их сюда, чтобы весь
 // остальной код обращался к ним по прежним именам и не менялся.
 const{GLOBAL_MODS,isPerNiche,dropOrphans,nichesOf,resKey,splitMdRow,isMdSeparator,parseMdTables,buildModuleEntry,pickTable,pickColumn,withStableIds}=CAContract;// Название модуля берётся из MODULES — это конфиг ИНТЕРФЕЙСА, и сборщик
@@ -1876,7 +1876,10 @@ const asObjs=rows.map(r=>{const o={};hdrs.forEach((h,i)=>o[h]=r[i]||'');return o
 if(/BLOCK\s*04_1\b/i.test(lastHeading)){const kn=hdrs.find(h=>h.toLowerCase().includes('ниш'));if(kn)for(const r of asObjs){const nm=String(r[kn]||'').replace(/\*\*/g,'').trim().toLowerCase();if(!nm)continue;// Значение идёт в карточку как РАЗМЕТКА: там жирная цена и ссылки
 // на источники — именно так это выглядит в утверждённом блоке.
 ctx.signals[nm]=hdrs.filter(h=>h!==kn&&String(r[h]||'').trim()).map(h=>[h.replace(/\s*\(.*\)/,''),mdInline(String(r[h]))]);}}// 04_1 напечатана в карточках ниш ниже — второй раз тот же список не нужен.
-if(/BLOCK\s*04_1\b/i.test(lastHeading)&&ctx.has042){tableRows=[];inTable=false;return;}const special=renderKnownBlock(lastHeading,hdrs,asObjs,ctx);if(special!=null){html+=special;tableRows=[];inTable=false;return;}// Числовая колонка узнаётся по содержимому, а не по названию: правило
+// Вместе с таблицей убираем заголовок и вводный абзац: владелица 15.09 —
+// «блок есть, а данных никаких нет». Пустой раздел читается как поломка,
+// хотя данные просто показаны в другом месте.
+if(/BLOCK\s*04_1\b/i.test(lastHeading)&&ctx.has042){if(ctx.mark041!=null){html=html.slice(0,ctx.mark041);ctx.mark041=null;}tableRows=[];inTable=false;return;}const special=renderKnownBlock(lastHeading,hdrs,asObjs,ctx);if(special!=null){html+=special;tableRows=[];inTable=false;return;}// Числовая колонка узнаётся по содержимому, а не по названию: правило
 // «числа снаружи полосы, чернилами» начинается с того, что число вообще
 // должно быть выровнено по разряду, иначе колонку не сравнить глазами.
 const isNum=v=>/^[\d\s\u00A0.,%+\u2212-]+$/.test(String(v||'').trim())&&/\d/.test(String(v||''));const numCols=hdrs.map((_,ci)=>rows.length>0&&rows.every(r=>!r[ci]||r[ci]==='—'||isNum(r[ci])));// Служебные пометки исследования приглушаем, чтобы они не спорили с данными
@@ -1891,12 +1894,14 @@ if(/BLOCK\s*06_2|SWOT/i.test(lastHeading)&&/^(сильные|слабые|воз
 else if(/^(BLOCK|SEO-)/i.test(t)){// Живой ответ модели печатает имя блока ОБЫЧНОЙ строкой, без решёток.
 // До 12.09 она попадала в отчёт мелким серым абзацем, и блоки шли
 // без заголовков вовсе. Делаем её заголовком уровня блока.
-lastHeading=t;html+='<h2'+якорь(t)+'>'+esc(human(t))+'</h2>';continue;}// Рабочие имена блоков («BLOCK 03 — Market Size», «SEO-02 — Semantic
+lastHeading=t;// Метка на случай, если таблица блока окажется дублем и её снимут:
+// тогда откатим и заголовок с описанием, иначе останется пустой блок.
+if(/BLOCK\s*04_1\b/i.test(t))ctx.mark041=html.length;html+='<h2'+якорь(t)+'>'+esc(human(t))+'</h2>';continue;}// Рабочие имена блоков («BLOCK 03 — Market Size», «SEO-02 — Semantic
 // Core») нужны нам и промпту, но не заказчику: в отчёте остаётся только
 // человеческая часть заголовка. Английский хвост тоже убираем.
 // Первый заголовок первого уровня в модуле пропускаем: модуль уже назван
 // в шапке карточки, и второе имя подряд читается как пустой блок.
-if(line.startsWith('# ')){if(!ctx.h1seen){ctx.h1seen=true;}else html+='<h1>'+esc(human(line.slice(2)))+'</h1>';}else if(line.startsWith('## '))html+='<h2'+якорь(line.slice(3))+'>'+esc(human(line.slice(3)))+'</h2>';else if(line.startsWith('### '))html+='<h3'+якорь(line.slice(4))+'>'+esc(human(line.slice(4)))+'</h3>';else if(line.startsWith('#### '))html+='<h4'+якорь(line.slice(5))+'>'+esc(human(line.slice(5)))+'</h4>';else if(/^\*\*(.+)\*\*$/.test(t))html+='<p><b>'+esc(t.slice(2,-2))+'</b></p>';else if(t.startsWith('**')&&t.includes('**')){html+='<p>'+mdInline(t)+'</p>';}else if(/^[-•·]\s/.test(t))html+='<p class="rli">'+mdInline(t.slice(2))+'</p>';else if(/^\d+\.\s/.test(t))html+='<p class="rli">'+mdInline(t)+'</p>';else if(/^[═─—_]{3,}$/.test(t))continue;// декоративная линия из промпта
+if(line.startsWith('# ')){if(!ctx.h1seen){ctx.h1seen=true;}else html+='<h1>'+esc(human(line.slice(2)))+'</h1>';}else if(line.startsWith('## ')){if(/BLOCK\s*04_1\b/i.test(line.slice(3)))ctx.mark041=html.length;html+='<h2'+якорь(line.slice(3))+'>'+esc(human(line.slice(3)))+'</h2>';}else if(line.startsWith('### '))html+='<h3'+якорь(line.slice(4))+'>'+esc(human(line.slice(4)))+'</h3>';else if(line.startsWith('#### '))html+='<h4'+якорь(line.slice(5))+'>'+esc(human(line.slice(5)))+'</h4>';else if(/^\*\*(.+)\*\*$/.test(t))html+='<p><b>'+esc(t.slice(2,-2))+'</b></p>';else if(t.startsWith('**')&&t.includes('**')){html+='<p>'+mdInline(t)+'</p>';}else if(/^[-•·]\s/.test(t))html+='<p class="rli">'+mdInline(t.slice(2))+'</p>';else if(/^\d+\.\s/.test(t))html+='<p class="rli">'+mdInline(t)+'</p>';else if(/^[═─—_]{3,}$/.test(t))continue;// декоративная линия из промпта
 else if(!t)html+='<div style="height:8px"></div>';else html+='<p>'+mdInline(line)+'</p>';}if(inTable)flushTable();return html;}const сырой=mdToHtml(content);// Куда ведут сноски: у разведки это «Источники разведки» (04_0), у остальных
 // модулей — свой список источников (02 или 05). Берём тот, что есть в этом
 // же тексте: ссылка на чужой блок увела бы в пустоту.
