@@ -3182,7 +3182,15 @@ function renderDonut(segs){
   
 ;
   /* Геометрия и оттенки — как в утверждённой библиотеке, без изменений. */
-  const TINT=[52,38,27,18,11];
+  const TINT=[100,68,44];
+  /* Бирюза раскладывается на три ступени — дальше она уходит в почти белое
+     и сегменты перестают различаться. Владелица 15.09: «серые добавить там,
+     где не хватает цветов, а не вместо бирюзы». Поэтому с четвёртого
+     сегмента идёт серая шкала — своя ступень у каждого, белых нет. */
+  const СЕРЫЕ=[34,24,17,12,9,7];
+  const тон=i=>i<TINT.length
+    ? `color-mix(in srgb, var(--mid) ${TINT[i]}%, var(--line-2))`
+    : `color-mix(in srgb, var(--ink) ${СЕРЫЕ[Math.min(i-TINT.length,СЕРЫЕ.length-1)]}%, var(--line-2))`;
   const R=84,SW=26,CX=115,CY=115,GAP=.016;
   const total=segs.reduce((s,x)=>s+x[6],0);
   const pt=a=>[CX+R*Math.cos(a*Math.PI/180),CY+R*Math.sin(a*Math.PI/180)];
@@ -3193,7 +3201,7 @@ function renderDonut(segs){
     if(g1>g0){
       const p0=pt(g0),p1=pt(g1);
       svg.appendChild(el('path',{d:`M ${p0[0]} ${p0[1]} A ${R} ${R} 0 ${(g1-g0)>180?1:0} 1 ${p1[0]} ${p1[1]}`,
-        fill:'none',stroke:`color-mix(in srgb, var(--ink) ${TINT[i]}%, var(--line-2))`,
+        fill:'none',stroke:тон(i),
         'stroke-width':SW,'stroke-linecap':'butt'}));
     }
     a0=a1;
@@ -3204,7 +3212,7 @@ function renderDonut(segs){
   t2.textContent='сегментов'; svg.appendChild(t2);
   document.getElementById('rpt-donut').appendChild(svg);
   document.getElementById('rpt-donut-leg').innerHTML=segs.map(([id,n,who,need,pay,cf,v],i)=>{
-    const bg=`color-mix(in srgb, var(--ink) ${TINT[i]}%, var(--line-2))`;
+    const bg=тон(i);
     const out=id==='S5';
     return `<div class="sl rich">
       <span class="ic" style="background:${bg}">${id}</span>
@@ -3272,26 +3280,33 @@ function renderNicheBoard(D){
   const pt=(i,v,l)=>{const [cx,cy]=C(l),a=(-90+i*90)*Math.PI/180,r=R*(v/5);
     return [cx+r*Math.cos(a),cy+r*Math.sin(a)];};
   const radar=(vals,col,labels)=>{
+    /* Круговая на четыре сектора вместо паутинки: решение владелицы 15.09 —
+       «круговая красивее и нагляднее». Радиус сектора = оценка 1–5, то есть
+       площадь и есть мера. Заливка — оттенки ОДНОГО цвета (цвет вердикта):
+       величину несёт светлота, различимость не зависит от цветовосприятия,
+       а какая ось где — говорят подписи, а не оттенок. */
     const [CX,CY]=C(labels);
+    const R2=R;
     const g=el('svg',{viewBox:`0 0 ${Wr(labels)} ${S}`,width:Wr(labels),height:S});
     [1,2,3,4,5].forEach(k=>{
-      const d=[0,1,2,3].map(i=>pt(i,k,labels).map(n=>n.toFixed(1)).join(',')).join(' ');
-      g.appendChild(el('polygon',{points:d,fill:'none',
+      g.appendChild(el('circle',{cx:CX,cy:CY,r:(R2*k/5).toFixed(1),fill:'none',
         stroke:k===5?'var(--line)':'var(--line-2)','stroke-width':1}));
     });
+    if(vals){
+      const ТОН=[100,76,56,38];
+      vals.forEach((v,i)=>{
+        const r=R2*Math.max(0,Math.min(5,v))/5; if(!(r>0)) return;
+        const a0=(-90+i*90)*Math.PI/180, a1=(-90+(i+1)*90)*Math.PI/180;
+        const x0=CX+r*Math.cos(a0), y0=CY+r*Math.sin(a0);
+        const x1=CX+r*Math.cos(a1), y1=CY+r*Math.sin(a1);
+        g.appendChild(el('path',{d:`M ${CX} ${CY} L ${x0.toFixed(1)} ${y0.toFixed(1)} `
+          +`A ${r.toFixed(1)} ${r.toFixed(1)} 0 0 1 ${x1.toFixed(1)} ${y1.toFixed(1)} Z`,
+          fill:`color-mix(in srgb, ${col} ${ТОН[i]}%, transparent)`,
+          stroke:'var(--card-solid)','stroke-width':2}));
+      });
+    }
     [0,1,2,3].forEach(i=>{const p=pt(i,5,labels);
       g.appendChild(el('line',{x1:CX,y1:CY,x2:p[0],y2:p[1],stroke:'var(--line-2)','stroke-width':1}));});
-    if(vals){
-      const d=vals.map((v,i)=>pt(i,v,labels).map(n=>n.toFixed(1)).join(',')).join(' ');
-      /* Цвет фигуры — по вердикту, тот же, что у полосы и у плашки. Иначе
-         статус назван в двух местах из трёх, а «идём» и «под вопросом»
-         выглядят одинаково — при том что и тех и других бывает по несколько. */
-      g.appendChild(el('polygon',{points:d,
-        fill:`color-mix(in srgb, ${col} 24%, transparent)`,
-        stroke:col,'stroke-width':2,'stroke-linejoin':'round'}));
-      vals.forEach((v,i)=>{const p=pt(i,v,labels);
-        g.appendChild(el('circle',{cx:p[0],cy:p[1],r:3,fill:col}));});
-    }
     if(labels){
       const off=[[0,-10],[13,4],[0,17],[-13,4]];
       AX.forEach((n,i)=>{const p=pt(i,5,labels);

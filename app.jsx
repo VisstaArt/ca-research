@@ -3967,10 +3967,10 @@ function renderResearchHTML(content, opts) {
     "var esc=escText, L=function(t,u){return '<a href=\"'+u+'\" target=\"_blank\" rel=\"noopener\">'+t+'</a>';};",
     "function renderDonut(segs){",
     "\n  /* Порядок колонок исходной таблицы сохранён целиком: ID, сегмент, кто это,\n     ключевая потребность, платёжеспособность, уверенность. Плюс доля — она в\n     BLOCK 04 сегодня НЕ выдаётся, см. оговорку под блоком. */\n  ",
-    ";\n  /* Геометрия и оттенки — как в утверждённой библиотеке, без изменений. */\n  const TINT=[52,38,27,18,11];\n  const R=84,SW=26,CX=115,CY=115,GAP=.016;\n  const total=segs.reduce((s,x)=>s+x[6],0);\n  const pt=a=>[CX+R*Math.cos(a*Math.PI/180),CY+R*Math.sin(a*Math.PI/180)];\n  const svg=el('svg',{viewBox:'0 0 230 230',width:230,height:230});\n  let a0=-90;\n  segs.forEach((row,i)=>{\n    const v=row[6], a1=a0+v/total*360, g0=a0+GAP*360, g1=a1-GAP*360;\n    if(g1>g0){\n      const p0=pt(g0),p1=pt(g1);\n      svg.appendChild(el('path',{d:`M ${p0[0]} ${p0[1]} A ${R} ${R} 0 ${(g1-g0)>180?1:0} 1 ${p1[0]} ${p1[1]}`,\n        fill:'none',stroke:`color-mix(in srgb, var(--ink) ${TINT[i]}%, var(--line-2))`,\n        'stroke-width':SW,'stroke-linecap':'butt'}));\n    }\n    a0=a1;\n  });\n  const t=el('text',{x:CX,y:CY-2,'text-anchor':'middle',class:'val',style:'font-size:30px'});\n  t.textContent='5'; svg.appendChild(t);\n  const t2=el('text',{x:CX,y:CY+17,'text-anchor':'middle',class:'axis'});\n  t2.textContent='сегментов'; svg.appendChild(t2);\n  document.getElementById('rpt-donut').appendChild(svg);\n  document.getElementById('rpt-donut-leg').innerHTML=segs.map(([id,n,who,need,pay,cf,v],i)=>{\n    const bg=`color-mix(in srgb, var(--ink) ${TINT[i]}%, var(--line-2))`;\n    const out=id==='S5';\n    return `<div class=\"sl rich\">\n      <span class=\"ic\" style=\"background:${bg}\">${id}</span>\n      <span class=\"nm\"><b>${n}</b>${who}\n        <span class=\"need\">${out?'<span class=\"no\">не наш сегмент</span>':need}</span></span>\n      <span class=\"v2 big\">${v}%</span>\n      <span class=\"v2\">${pay}</span>\n      <span class=\"v2\">${cf} из 5</span></div>`;\n  }).join('');\n\n  /* Наведение (просьба владелицы 11.09): сектор и его строка в легенде\n     подсвечиваются вместе, в обе стороны. Тот же приём, что у кругов рынка и\n     у карты рынка — один язык взаимодействия на весь отчёт. */\n  var arcs=(svg.children?[].slice.call(svg.children):[]).filter(function(nd){\n    return String(nd.tagName||nd.id||'').indexOf('path')>=0; });\n  var legRows=[].slice.call(document.getElementById('rpt-donut-leg').querySelectorAll('.sl'));\n  var hiD=function(ix){\n    arcs.forEach(function(aq,j){ aq.setAttribute('opacity', ix<0||ix===j?'1':'.32'); });\n    legRows.forEach(function(r,j){ r.classList.toggle('on', ix===j); });\n  };\n  arcs.forEach(function(aq,j){\n    aq.setAttribute('style','transition:opacity .15s ease');\n    aq.addEventListener('mouseenter',function(){hiD(j);});\n    aq.addEventListener('mouseleave',function(){hiD(-1);});\n  });\n  legRows.forEach(function(r,j){\n    r.addEventListener('mouseenter',function(){hiD(j);});\n    r.addEventListener('mouseleave',function(){hiD(-1);});\n  });\n}",
+    ";\n  /* Геометрия и оттенки — как в утверждённой библиотеке, без изменений. */\n  const TINT=[100,68,44];\n  /* Бирюза раскладывается на три ступени — дальше она уходит в почти белое\n     и сегменты перестают различаться. Владелица 15.09: «серые добавить там,\n     где не хватает цветов, а не вместо бирюзы». Поэтому с четвёртого\n     сегмента идёт серая шкала — своя ступень у каждого, белых нет. */\n  const СЕРЫЕ=[34,24,17,12,9,7];\n  const тон=i=>i<TINT.length\n    ? `color-mix(in srgb, var(--mid) ${TINT[i]}%, var(--line-2))`\n    : `color-mix(in srgb, var(--ink) ${СЕРЫЕ[Math.min(i-TINT.length,СЕРЫЕ.length-1)]}%, var(--line-2))`;\n  const R=84,SW=26,CX=115,CY=115,GAP=.016;\n  const total=segs.reduce((s,x)=>s+x[6],0);\n  const pt=a=>[CX+R*Math.cos(a*Math.PI/180),CY+R*Math.sin(a*Math.PI/180)];\n  const svg=el('svg',{viewBox:'0 0 230 230',width:230,height:230});\n  let a0=-90;\n  segs.forEach((row,i)=>{\n    const v=row[6], a1=a0+v/total*360, g0=a0+GAP*360, g1=a1-GAP*360;\n    if(g1>g0){\n      const p0=pt(g0),p1=pt(g1);\n      svg.appendChild(el('path',{d:`M ${p0[0]} ${p0[1]} A ${R} ${R} 0 ${(g1-g0)>180?1:0} 1 ${p1[0]} ${p1[1]}`,\n        fill:'none',stroke:тон(i),\n        'stroke-width':SW,'stroke-linecap':'butt'}));\n    }\n    a0=a1;\n  });\n  const t=el('text',{x:CX,y:CY-2,'text-anchor':'middle',class:'val',style:'font-size:30px'});\n  t.textContent='5'; svg.appendChild(t);\n  const t2=el('text',{x:CX,y:CY+17,'text-anchor':'middle',class:'axis'});\n  t2.textContent='сегментов'; svg.appendChild(t2);\n  document.getElementById('rpt-donut').appendChild(svg);\n  document.getElementById('rpt-donut-leg').innerHTML=segs.map(([id,n,who,need,pay,cf,v],i)=>{\n    const bg=тон(i);\n    const out=id==='S5';\n    return `<div class=\"sl rich\">\n      <span class=\"ic\" style=\"background:${bg}\">${id}</span>\n      <span class=\"nm\"><b>${n}</b>${who}\n        <span class=\"need\">${out?'<span class=\"no\">не наш сегмент</span>':need}</span></span>\n      <span class=\"v2 big\">${v}%</span>\n      <span class=\"v2\">${pay}</span>\n      <span class=\"v2\">${cf} из 5</span></div>`;\n  }).join('');\n\n  /* Наведение (просьба владелицы 11.09): сектор и его строка в легенде\n     подсвечиваются вместе, в обе стороны. Тот же приём, что у кругов рынка и\n     у карты рынка — один язык взаимодействия на весь отчёт. */\n  var arcs=(svg.children?[].slice.call(svg.children):[]).filter(function(nd){\n    return String(nd.tagName||nd.id||'').indexOf('path')>=0; });\n  var legRows=[].slice.call(document.getElementById('rpt-donut-leg').querySelectorAll('.sl'));\n  var hiD=function(ix){\n    arcs.forEach(function(aq,j){ aq.setAttribute('opacity', ix<0||ix===j?'1':'.32'); });\n    legRows.forEach(function(r,j){ r.classList.toggle('on', ix===j); });\n  };\n  arcs.forEach(function(aq,j){\n    aq.setAttribute('style','transition:opacity .15s ease');\n    aq.addEventListener('mouseenter',function(){hiD(j);});\n    aq.addEventListener('mouseleave',function(){hiD(-1);});\n  });\n  legRows.forEach(function(r,j){\n    r.addEventListener('mouseenter',function(){hiD(j);});\n    r.addEventListener('mouseleave',function(){hiD(-1);});\n  });\n}",
     "function renderNicheBoard(D){",
     "\n  const VD={go:['Идём','kchip-go','var(--acc-strong)'],\n            mb:['Под вопросом','kchip-mb','var(--acc-mid)'],\n            no:['Не идём','kchip-no','var(--acc-quiet)']};\n  ",
-    ";\n\n  /* ── полосы: мера из «Приоритета ниш», цвет — по вердикту ── */\n  const W=520,padL=196,padR=54,rowH=27,top=4,H=top+D.length*rowH+4,max=20;\n  const x=v=>padL+(W-padL-padR)*(v/max);\n  const svg=el('svg',{viewBox:`0 0 ${W} ${H}`,width:'100%',height:H});\n  const bars=[];\n  D.forEach((d,i)=>{\n    const y=top+i*rowH;\n    const t=el('text',{x:padL-10,y:y+14,class:'lbl','text-anchor':'end'});\n    t.textContent=d.n; svg.appendChild(t);\n    svg.appendChild(el('rect',{x:padL,y:y+3,width:W-padL-padR,height:14,fill:'var(--line-2)'}));\n    const bw=Math.max(x(d.t)-padL,3);\n    const r=el('rect',{x:padL,y:y+3,width:bw,height:14,fill:VD[d.vd][2]});\n    svg.appendChild(r); bars.push(r);\n    const val=el('text',{x:padL+bw+8,y:y+14,class:'val'}); val.textContent=d.t; svg.appendChild(val);\n    /* прозрачная полоса на всю ширину строки — попасть по ней легче, чем по\n       короткому столбику: цель для нажатия должна быть больше самой метки */\n    const hit=el('rect',{x:0,y,width:W,height:rowH,fill:'transparent',class:'nbar'});\n    hit.addEventListener('click',()=>pick(i));\n    svg.appendChild(hit);\n  });\n  document.getElementById('rpt-niches').appendChild(svg);\n\n  /* ── профили: только те, куда можем пойти ── */\n  const AX=['Спрос','Конкуренция','Экономика','Соответствие'];\n  const S=132, R=46;\n  const Wr=l=>l?252:S, C=l=>[Wr(l)/2,S/2];\n  const pt=(i,v,l)=>{const [cx,cy]=C(l),a=(-90+i*90)*Math.PI/180,r=R*(v/5);\n    return [cx+r*Math.cos(a),cy+r*Math.sin(a)];};\n  const radar=(vals,col,labels)=>{\n    const [CX,CY]=C(labels);\n    const g=el('svg',{viewBox:`0 0 ${Wr(labels)} ${S}`,width:Wr(labels),height:S});\n    [1,2,3,4,5].forEach(k=>{\n      const d=[0,1,2,3].map(i=>pt(i,k,labels).map(n=>n.toFixed(1)).join(',')).join(' ');\n      g.appendChild(el('polygon',{points:d,fill:'none',\n        stroke:k===5?'var(--line)':'var(--line-2)','stroke-width':1}));\n    });\n    [0,1,2,3].forEach(i=>{const p=pt(i,5,labels);\n      g.appendChild(el('line',{x1:CX,y1:CY,x2:p[0],y2:p[1],stroke:'var(--line-2)','stroke-width':1}));});\n    if(vals){\n      const d=vals.map((v,i)=>pt(i,v,labels).map(n=>n.toFixed(1)).join(',')).join(' ');\n      /* Цвет фигуры — по вердикту, тот же, что у полосы и у плашки. Иначе\n         статус назван в двух местах из трёх, а «идём» и «под вопросом»\n         выглядят одинаково — при том что и тех и других бывает по несколько. */\n      g.appendChild(el('polygon',{points:d,\n        fill:`color-mix(in srgb, ${col} 24%, transparent)`,\n        stroke:col,'stroke-width':2,'stroke-linejoin':'round'}));\n      vals.forEach((v,i)=>{const p=pt(i,v,labels);\n        g.appendChild(el('circle',{cx:p[0],cy:p[1],r:3,fill:col}));});\n    }\n    if(labels){\n      const off=[[0,-10],[13,4],[0,17],[-13,4]];\n      AX.forEach((n,i)=>{const p=pt(i,5,labels);\n        const t=el('text',{x:p[0]+off[i][0],y:p[1]+off[i][1],class:'axis',\n          'text-anchor':i===1?'start':(i===3?'end':'middle')});\n        t.textContent=n; g.appendChild(t);});\n    }\n    return g;\n  };\n  document.getElementById('rpt-rkey').appendChild(radar(null,null,true));\n\n  const box=document.getElementById('rpt-nprof'), cards=[];\n  const cls=(d,on)=>'ncard2'+(d.vd==='no'?' slim':'')+(on?' on':'');\n  D.forEach((d,i)=>{\n\n    const card=document.createElement('div');\n    card.className=cls(d,false);\n    if(d.vd==='no'){\n      /* Разбор тот же и в том же объёме — меняется только вес: нет фигуры,\n         подложка тише. Прятать данные по отброшенной нише нельзя: решение\n         «не идём» проверяется по тем же сигналам, что и «идём». */\n      card.innerHTML=`<div><div class=\"nh\"><b>${d.n}</b></div>\n        <div class=\"tot\"><i>${d.t}</i><em>из 20 баллов</em></div>\n        <span class=\"kchip ${VD[d.vd][1]}\"><span class=\"d\"></span>${VD[d.vd][0]}</span>\n        <div class=\"why2\"><b>Почему не идём.</b> ${d.why}</div>\n        <div class=\"sigrows\">${d.sig.map(([k,v])=>\n          `<div class=\"sigrow\"><span class=\"k2\">${k}</span><span class=\"v3\">${typeof v==='string'?v:v.h}</span></div>`).join('')}</div></div>`;\n    }else{\n      const left=document.createElement('div');\n      left.appendChild(radar(d.v,VD[d.vd][2],false));\n      const right=document.createElement('div');\n      right.innerHTML=`<div class=\"nh\"><b>${d.n}</b></div>\n        <div class=\"tot\"><i>${d.t}</i><em>из 20 баллов</em></div>\n        <span class=\"kchip ${VD[d.vd][1]}\"><span class=\"d\"></span>${VD[d.vd][0]}</span>\n        <div class=\"sigrows\">${d.sig.map(([k,v])=>\n          `<div class=\"sigrow\"><span class=\"k2\">${k}</span><span class=\"v3\">${v}</span></div>`).join('')}</div>`;\n      card.appendChild(left); card.appendChild(right);\n    }\n    card.addEventListener('click',()=>pick(i));\n    box.appendChild(card); cards.push(card);\n  });\n\n  const hint=document.getElementById('rpt-nhint');\n  let cur=-1;\n  function pick(i){\n    cur = (cur===i ? -1 : i);\n    bars.forEach((r,k)=>r.setAttribute('opacity', cur<0||cur===k ? '1' : '.32'));\n    cards.forEach((c,k)=>{ if(c) c.className=cls(D[k],cur===k); });\n    hint.textContent = cur<0 ? ''\n      : `Выбрана ниша «${D[cur].n}» — подсвечена ниже.`;\n  }\n}",
+    ";\n\n  /* ── полосы: мера из «Приоритета ниш», цвет — по вердикту ── */\n  const W=520,padL=196,padR=54,rowH=27,top=4,H=top+D.length*rowH+4,max=20;\n  const x=v=>padL+(W-padL-padR)*(v/max);\n  const svg=el('svg',{viewBox:`0 0 ${W} ${H}`,width:'100%',height:H});\n  const bars=[];\n  D.forEach((d,i)=>{\n    const y=top+i*rowH;\n    const t=el('text',{x:padL-10,y:y+14,class:'lbl','text-anchor':'end'});\n    t.textContent=d.n; svg.appendChild(t);\n    svg.appendChild(el('rect',{x:padL,y:y+3,width:W-padL-padR,height:14,fill:'var(--line-2)'}));\n    const bw=Math.max(x(d.t)-padL,3);\n    const r=el('rect',{x:padL,y:y+3,width:bw,height:14,fill:VD[d.vd][2]});\n    svg.appendChild(r); bars.push(r);\n    const val=el('text',{x:padL+bw+8,y:y+14,class:'val'}); val.textContent=d.t; svg.appendChild(val);\n    /* прозрачная полоса на всю ширину строки — попасть по ней легче, чем по\n       короткому столбику: цель для нажатия должна быть больше самой метки */\n    const hit=el('rect',{x:0,y,width:W,height:rowH,fill:'transparent',class:'nbar'});\n    hit.addEventListener('click',()=>pick(i));\n    svg.appendChild(hit);\n  });\n  document.getElementById('rpt-niches').appendChild(svg);\n\n  /* ── профили: только те, куда можем пойти ── */\n  const AX=['Спрос','Конкуренция','Экономика','Соответствие'];\n  const S=132, R=46;\n  const Wr=l=>l?252:S, C=l=>[Wr(l)/2,S/2];\n  const pt=(i,v,l)=>{const [cx,cy]=C(l),a=(-90+i*90)*Math.PI/180,r=R*(v/5);\n    return [cx+r*Math.cos(a),cy+r*Math.sin(a)];};\n  const radar=(vals,col,labels)=>{\n    /* Круговая на четыре сектора вместо паутинки: решение владелицы 15.09 —\n       «круговая красивее и нагляднее». Радиус сектора = оценка 1–5, то есть\n       площадь и есть мера. Заливка — оттенки ОДНОГО цвета (цвет вердикта):\n       величину несёт светлота, различимость не зависит от цветовосприятия,\n       а какая ось где — говорят подписи, а не оттенок. */\n    const [CX,CY]=C(labels);\n    const R2=R;\n    const g=el('svg',{viewBox:`0 0 ${Wr(labels)} ${S}`,width:Wr(labels),height:S});\n    [1,2,3,4,5].forEach(k=>{\n      g.appendChild(el('circle',{cx:CX,cy:CY,r:(R2*k/5).toFixed(1),fill:'none',\n        stroke:k===5?'var(--line)':'var(--line-2)','stroke-width':1}));\n    });\n    if(vals){\n      const ТОН=[100,76,56,38];\n      vals.forEach((v,i)=>{\n        const r=R2*Math.max(0,Math.min(5,v))/5; if(!(r>0)) return;\n        const a0=(-90+i*90)*Math.PI/180, a1=(-90+(i+1)*90)*Math.PI/180;\n        const x0=CX+r*Math.cos(a0), y0=CY+r*Math.sin(a0);\n        const x1=CX+r*Math.cos(a1), y1=CY+r*Math.sin(a1);\n        g.appendChild(el('path',{d:`M ${CX} ${CY} L ${x0.toFixed(1)} ${y0.toFixed(1)} `\n          +`A ${r.toFixed(1)} ${r.toFixed(1)} 0 0 1 ${x1.toFixed(1)} ${y1.toFixed(1)} Z`,\n          fill:`color-mix(in srgb, ${col} ${ТОН[i]}%, transparent)`,\n          stroke:'var(--card-solid)','stroke-width':2}));\n      });\n    }\n    [0,1,2,3].forEach(i=>{const p=pt(i,5,labels);\n      g.appendChild(el('line',{x1:CX,y1:CY,x2:p[0],y2:p[1],stroke:'var(--line-2)','stroke-width':1}));});\n    if(labels){\n      const off=[[0,-10],[13,4],[0,17],[-13,4]];\n      AX.forEach((n,i)=>{const p=pt(i,5,labels);\n        const t=el('text',{x:p[0]+off[i][0],y:p[1]+off[i][1],class:'axis',\n          'text-anchor':i===1?'start':(i===3?'end':'middle')});\n        t.textContent=n; g.appendChild(t);});\n    }\n    return g;\n  };\n  document.getElementById('rpt-rkey').appendChild(radar(null,null,true));\n\n  const box=document.getElementById('rpt-nprof'), cards=[];\n  const cls=(d,on)=>'ncard2'+(d.vd==='no'?' slim':'')+(on?' on':'');\n  D.forEach((d,i)=>{\n\n    const card=document.createElement('div');\n    card.className=cls(d,false);\n    if(d.vd==='no'){\n      /* Разбор тот же и в том же объёме — меняется только вес: нет фигуры,\n         подложка тише. Прятать данные по отброшенной нише нельзя: решение\n         «не идём» проверяется по тем же сигналам, что и «идём». */\n      card.innerHTML=`<div><div class=\"nh\"><b>${d.n}</b></div>\n        <div class=\"tot\"><i>${d.t}</i><em>из 20 баллов</em></div>\n        <span class=\"kchip ${VD[d.vd][1]}\"><span class=\"d\"></span>${VD[d.vd][0]}</span>\n        <div class=\"why2\"><b>Почему не идём.</b> ${d.why}</div>\n        <div class=\"sigrows\">${d.sig.map(([k,v])=>\n          `<div class=\"sigrow\"><span class=\"k2\">${k}</span><span class=\"v3\">${typeof v==='string'?v:v.h}</span></div>`).join('')}</div></div>`;\n    }else{\n      const left=document.createElement('div');\n      left.appendChild(radar(d.v,VD[d.vd][2],false));\n      const right=document.createElement('div');\n      right.innerHTML=`<div class=\"nh\"><b>${d.n}</b></div>\n        <div class=\"tot\"><i>${d.t}</i><em>из 20 баллов</em></div>\n        <span class=\"kchip ${VD[d.vd][1]}\"><span class=\"d\"></span>${VD[d.vd][0]}</span>\n        <div class=\"sigrows\">${d.sig.map(([k,v])=>\n          `<div class=\"sigrow\"><span class=\"k2\">${k}</span><span class=\"v3\">${v}</span></div>`).join('')}</div>`;\n      card.appendChild(left); card.appendChild(right);\n    }\n    card.addEventListener('click',()=>pick(i));\n    box.appendChild(card); cards.push(card);\n  });\n\n  const hint=document.getElementById('rpt-nhint');\n  let cur=-1;\n  function pick(i){\n    cur = (cur===i ? -1 : i);\n    bars.forEach((r,k)=>r.setAttribute('opacity', cur<0||cur===k ? '1' : '.32'));\n    cards.forEach((c,k)=>{ if(c) c.className=cls(D[k],cur===k); });\n    hint.textContent = cur<0 ? ''\n      : `Выбрана ниша «${D[cur].n}» — подсвечена ниже.`;\n  }\n}",
     "function renderSerp(D){\n  const box=document.getElementById('rpt-serp'); if(!box) return;\n  \n  box.innerHTML=D.map(([t,u,q,k,str])=>`<div class=\"s\">\n    <div class=\"t\">${L(esc(t),'https://'+u)}</div>\n    <div class=\"u\">${esc(u)}</div>\n    <div class=\"meta\"><span>найдено по: <b>${esc(q)}</b></span><span>·</span><span>${esc(k)}</span></div>\n    <div class=\"str\">${esc(str)}</div></div>`).join('');\n}",
     "function renderAudit(D){\n  const box=document.getElementById('rpt-aud'); if(!box) return;\n  /* Приводим к «публикаций в месяц», иначе «2–3 в неделю» и «1 в неделю»\n     несравнимы на глаз. Шкала общая на всех — в этом весь смысл. */\n  \n  const max=Math.max(...D.map(d=>d[2]));\n  box.innerHTML=D.map(([n,ch,per,lab,th,ok,better])=>`<div class=\"a\">\n    <div><div class=\"who\">${esc(n)}<span>${esc(ch)}</span></div>\n      <div class=\"freq\"><div class=\"rail\"><i style=\"width:${per/max*100}%\"></i></div>\n        <div class=\"lab\">${esc(lab)} · ${per}/мес</div></div></div>\n    <div><div class=\"cols\">\n      <div><h5>Что работает</h5><p>${esc(ok)}</p></div>\n      <div><h5>Как сделать лучше</h5><p>${esc(better)}</p></div>\n    </div><div class=\"themes\">Темы: ${esc(th)}</div></div></div>`).join('');\n}",
     "function renderGlue(D){\n  const box=document.getElementById('rpt-glue'); if(!box) return;\n  \n  box.innerHTML=D.map(([p,n,c])=>`<div class=\"gl${c?' cfm':''}\">\n    <span><b>${esc(p)}</b></span>\n    <span class=\"n\">${String(n).replace(/\\B(?=(\\d{3})+(?!\\d))/g,'\\u00A0')}</span>\n    <span class=\"t\">${c?'вы подтвердили':'из выдачи'}</span></div>`).join('');\n}",
@@ -6128,42 +6128,9 @@ function NicheHero({ list, canPick, selected, onToggle, onContinue, statusOf, ш
     n >= 5 ? 5 : (n === 2 ? 4 : (n === 3 ? 4 : 5))) : [0];
   const тек = at(0);
   const выбрана = имя => (selected || []).includes(имя);
-  const барRef = React.useRef(null);
-  React.useEffect(() => {
-    const box = барRef.current; if (!box || !n) return;
-    box.innerHTML = '';
-    const rows = [...list].sort((a, b) => (b.score || 0) - (a.score || 0)).slice(0, 8);
-    const NS = 'http://www.w3.org/2000/svg';
-    const el = (t, a) => { const e = document.createElementNS(NS, t);
-      for (const k in a) e.setAttribute(k, a[k]); return e; };
-    const W = 560, padL = 150, padR = 50, rowH = 28, top = 6, H = top + rows.length * rowH + 34, max = 20;
-    const x = v => padL + (W - padL - padR) * (v / max);
-    const svg = el('svg', { viewBox: '0 0 ' + W + ' ' + H, width: '100%', height: H });
-    rows.forEach((r, i) => {
-      const y = top + i * rowH;
-      const nm = el('text', { x: padL - 10, y: y + 14, class: 'lbl', 'text-anchor': 'end' });
-      nm.textContent = (r.name || '').length > 20 ? r.name.slice(0, 19) + '…' : (r.name || '');
-      svg.appendChild(nm);
-      svg.appendChild(el('rect', { x: padL, y: y + 3, width: W - padL - padR, height: 14, fill: 'var(--line-2)' }));
-      const bw = Math.max(x(r.score || 0) - padL, 3);
-      svg.appendChild(el('rect', { x: padL, y: y + 3, width: bw, height: 14,
-        fill: i === 0 ? 'var(--mid)' : 'var(--ink-3)' }));
-      const v = el('text', { x: padL + bw + 8, y: y + 14, class: 'val' });
-      v.textContent = r.score != null ? r.score : '—'; svg.appendChild(v);
-      if (i === 0) {
-        const gx = padL + bw;
-        svg.appendChild(el('line', { x1: gx, x2: gx, y1: y + 3, y2: H - 22, class: 'guide' }));
-        const label = 'лидер · ' + (r.score != null ? r.score : '—');
-        const pw = Math.round(label.length * 6.6) + 26, ph = 24;
-        const px = Math.min(Math.max(gx - pw / 2, 4), W - pw - 4), py = H - 24;
-        svg.appendChild(el('rect', { x: px, y: py, width: pw, height: ph, rx: 3, class: 'tip-pill' }));
-        const t2 = el('text', { x: px + pw / 2, y: py + 16, class: 'tip-txt', 'text-anchor': 'middle' });
-        t2.textContent = label; svg.appendChild(t2);
-      }
-    });
-    box.appendChild(svg);
-  }, [list, n]);
-  if (!n) return null;
+  // Полосы сравнения ниш рисовал этот же компонент; теперь их показывает
+  // блок «Приоритет ниш» — второй такой же график на одном экране был лишним.
+
   const кл = { '-2':'f1', '-1':'f2', '0':'f3', '1':'f4', '2':'f5' };
   return (
     <div className={наПерламутре ? 'cover' : 'card'}
@@ -6252,21 +6219,18 @@ function NicheHero({ list, canPick, selected, onToggle, onContinue, statusOf, ш
             <span className="tag">{statusOf ? statusOf(тек.name) : ''}</span>
           )}
         </div>
-        <div className="grid2" style={{marginBottom:8}}>
-          <div className="card">
-            <div className="chead" style={{display:'flex',justifyContent:'space-between',alignItems:'baseline',marginBottom:10}}>
-              <h2 style={{fontSize:16,fontWeight:600}}>Сравнение ниш</h2>
-              <span className="tag">Оценка 0–20</span></div>
-            <div ref={барRef}></div>
-          </div>
-          <div className="card">
-            <div className="chead" style={{display:'flex',justifyContent:'space-between',alignItems:'baseline',marginBottom:10}}>
+        {/* «Сравнение ниш» отсюда убрано: те же полосы рисует блок
+            «Приоритет ниш» ниже, и владелица 15.09 справедливо сказала, что
+            одно и то же показано слишком много раз. Оставляем обоснование —
+            оно про открытую нишу и в блоке приоритета его нет. */}
+        {тек.why && (
+          <div className="card" style={{marginBottom:8}}>
+            <div className="chead" style={{display:'flex',justifyContent:'space-between',alignItems:'baseline',marginBottom:8}}>
               <h2 style={{fontSize:16,fontWeight:600}}>Почему эта ниша</h2>
               <span className="tag">{тек.verdict || ''}</span></div>
-            <p style={{fontSize:12.5,color:'var(--ink-2)',lineHeight:1.6}}>
-              {тек.why || 'Обоснование появится из разведки ниш.'}</p>
+            <p style={{fontSize:12.5,color:'var(--ink-2)',lineHeight:1.6,margin:0}}>{тек.why}</p>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );
@@ -8433,9 +8397,13 @@ function App() {
   if (embedded && proj && шагИзАдреса === 'niches') {
     const м2 = (proj.results || []).find(r => r.id === 'M2' && r.content && !r.failed);
     const нд = м2 ? (м2.nicheData || extractNicheData(м2.content || '')) : null;
-    const список = (nicheOpts.length ? nicheOpts
+    const всеНиши = (nicheOpts.length ? nicheOpts
       : (нд && Array.isArray(нд.niches) ? нд.niches : []))
       .slice().sort((a, b) => (b.score || 0) - (a.score || 0));
+    // На перламутре — самое ценное: до шести главных ниш веером. Остальные
+    // никуда не деваются, они ниже в «Приоритете ниш» со своими оценками.
+    // Владелица 15.09: «показывать надо главные, предположим пять-шесть».
+    const список = всеНиши.slice(0, 6);
     const вРаботе = nichesOf(brief);
     const нужноМодулей = MODULES.filter(m => !m.disabled && !m.offChain
       && m.id !== 'CONTENT' && CAContract.isPerNiche(m.id)).length;
@@ -8466,7 +8434,7 @@ function App() {
           <h1 className="covername" style={{fontSize:26}}>Ниши</h1>
         </div>
         <div className="coveract">
-          <span className="note">Найдено: {список.length}</span>
+          <span className="note">Найдено: {всеНиши.length}</span>
           <span className="note">В работе: {вРаботе.length}</span>
           <span className="note">{дата}</span>
         </div>
@@ -8494,58 +8462,47 @@ function App() {
                 try { window.parent.postMessage({ ca: 'шаг', шаг: 'run' }, '*'); } catch (e) {}
               }}/>
             <div className="worksurface rview">
-              {/* Выбор ниш списком с галочками. Веер показывает по одной, и по
-                  нему не видно, что именно уйдёт в работу; владелица 15.09:
-                  «непонятно, какую нишу человек должен выбрать — может, он все
-                  захочет проверить, может, только предложенную». */}
+              {/* Один компактный выбор вместо трёх списков ниш. Владелица
+                  15.09: «мы эти ниши много раз дублируем, неудобно». Оценки,
+                  вердикты и полосы живут в «Приоритете ниш» ниже — здесь
+                  только имена и галочка «берём». */}
               <div className="card">
-                <h2>Какие ниши берём в работу</h2>
-                <div className="tbl">
-                  <table>
-                    <tbody>
-                      <tr><th style={{width:44}}>Берём</th><th>Ниша</th><th style={{width:90}}>Баллы</th>
-                        <th style={{width:150}}>Вердикт разведки</th><th style={{width:130}}>Состояние</th></tr>
-                      {список.map(н => {
-                        const отмечена = наСтопТочке
-                          ? selNiches.some(i => nicheOpts[i] && nicheOpts[i].name === н.name)
-                          : вРаботе.includes(н.name);
-                        return (
-                          <tr key={н.name}>
-                            <td><input type="checkbox" checked={отмечена} style={{width:17,height:17,cursor:'pointer'}}
-                              onChange={()=>{
-                                if (наСтопТочке) {
-                                  const i = nicheOpts.findIndex(x => x.name === н.name);
-                                  if (i >= 0) setSelNiches(p => p.includes(i) ? p.filter(x => x !== i) : [...p, i]);
-                                } else переключить(н.name);
-                              }}/></td>
-                            <td><span className="nm">{н.name}</span>
-                              {н.recommended && <><br/><span className="note">рекомендуем начать с неё</span></>}</td>
-                            <td><span className="strong">{н.score != null ? н.score + ' из 20' : '—'}</span></td>
-                            <td>{н.verdict
-                              ? <span className={'kchip ' + (/не идём|нет/i.test(н.verdict) ? 'kchip-no'
-                                  : (/вопрос/i.test(н.verdict) ? 'kchip-mb' : 'kchip-go'))}>
-                                  <span className="d"></span>{н.verdict}</span>
-                              : <span className="note">не указан</span>}</td>
-                            <td>{статус(н.name)}</td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
+                <h2>Берём в работу</h2>
+                <div style={{display:'flex',flexWrap:'wrap',gap:8,marginTop:10}}>
+                  {всеНиши.map(н => {
+                    const отмечена = наСтопТочке
+                      ? selNiches.some(i => nicheOpts[i] && nicheOpts[i].name === н.name)
+                      : вРаботе.includes(н.name);
+                    return (
+                      <button key={н.name} className={'kchip ' + (отмечена ? 'kchip-go' : '')}
+                        title={статус(н.name)}
+                        style={{border:'1px solid var(--line)',cursor:'pointer',
+                          background: отмечена ? undefined : 'var(--card-solid)',
+                          opacity: отмечена ? 1 : .72}}
+                        onClick={()=>{
+                          if (наСтопТочке) {
+                            const i = nicheOpts.findIndex(x => x.name === н.name);
+                            if (i >= 0) setSelNiches(p => p.includes(i) ? p.filter(x => x !== i) : [...p, i]);
+                          } else переключить(н.name);
+                        }}>
+                        <span className="d" style={{background: отмечена ? undefined : 'var(--line)'}}></span>
+                        {н.name}{н.recommended ? ' · рекомендуем' : ''}
+                      </button>
+                    );
+                  })}
                 </div>
                 <div style={{display:'flex',flexWrap:'wrap',gap:'12px 18px',alignItems:'center',
                     justifyContent:'space-between',marginTop:16}}>
                   <p className="note" style={{margin:0,maxWidth:'52ch',paddingLeft:0}}>
-                    Можно взять одну — ту, что рекомендует разведка, — а можно
-                    несколько: каждая ниша исследуется отдельно и стоит отдельных
-                    денег. Уже посчитанное не пересчитывается.
+                    Можно взять одну — ту, что рекомендует разведка, — можно все.
+                    Каждая ниша исследуется отдельно и стоит отдельных денег;
+                    уже посчитанное не пересчитывается.
                   </p>
                   <div style={{display:'flex',gap:9,flexWrap:'wrap'}}>
                     <button className="cm-btn" onClick={()=>{
                       if (наСтопТочке) setSelNiches(nicheOpts.map((_, i) => i));
                       else {
-                        const все = список.map(н => н.name);
-                        const нб = { ...brief, selectedNiche: все.join(', ') };
+                        const нб = { ...brief, selectedNiche: всеНиши.map(н => н.name).join(', ') };
                         setBrief(нб);
                         const u = { ...proj, brief: нб, updatedAt: new Date().toISOString() }; setProj(u); sv(u);
                       }
