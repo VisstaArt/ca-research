@@ -2251,7 +2251,7 @@ async function gatherCompetitorEvidence(brief) {
   // выдачи, где стоят раскрученные. Нераскрученный конкурент живёт дальше, и
   // туда никто не заглядывал (владелица 15.09). Берём предел источника — 20
   // ссылок на запрос — и поднимаем потолок выдержек.
-  const общее = await gatherEvidence(queries, 10, 20,
+  const общее = await gatherEvidence(queries, 22, 20,
     { depth:'advanced', raw:true, contentChars:1200, perDomain:2, maxItems:90,
       exclude_domains: каталоги });
   // Отдельный заход ЗА САМИМИ ПРОДУКТАМИ: так ищут не статью о рынке, а
@@ -2265,7 +2265,7 @@ async function gatherCompetitorEvidence(brief) {
     (niche || product) + ' ' + market + ' интеграция настроить за 5 минут',
     (niche || product) + ' ' + market + ' официальный сайт сервиса',
   ];
-  const свои = await gatherEvidence(продуктовые, 4, 20,
+  const свои = await gatherEvidence(продуктовые, 8, 20,
     { depth:'advanced', raw:true, contentChars:1200, perDomain:1, maxItems:40,
       exclude_domains: каталоги });
   // ПОДБОРКА — ЭТО СПИСОК АДРЕСОВ, А НЕ ИСТОЧНИК. На vc.ru и в каталогах
@@ -2276,7 +2276,7 @@ async function gatherCompetitorEvidence(brief) {
   const подборки = await gatherEvidence(
     [product + ' ' + market + ' топ сервисов подборка каталог',
      (niche || product) + ' ' + market + ' лучшие сервисы список'],
-    1, 8, { depth:'advanced', raw:true, contentChars:6000, perDomain:2, maxItems:10,
+    2, 8, { depth:'advanced', raw:true, contentChars:6000, perDomain:2, maxItems:10,
             include_domains: каталоги });
   const своиДомены = new Set(каталоги.concat([
     'youtube.com','vk.com','t.me','telegram.me','facebook.com','instagram.com',
@@ -2295,7 +2295,7 @@ async function gatherCompetitorEvidence(brief) {
   }
   // По каждому найденному сайту — отдельный заход: что это за сервис, что
   // обещает и почём. Десяти хватает: дальше идёт длинный хвост из мусора.
-  const поСайтам = найденные.slice(0, 5);
+  const поСайтам = найденные.slice(0, 10);
   const изПодборок = поСайтам.length
     ? await gatherEvidence(
         поСайтам.map(д => д + ' тарифы цена что это за сервис'),
