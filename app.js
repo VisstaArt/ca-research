@@ -1,6 +1,6 @@
 // СОБРАНО АВТОМАТИЧЕСКИ из app.jsx — не править руками.
 // Правки вносить в app.jsx, затем: osascript -l JavaScript tools/build.js
-// отпечаток-исходника: fbf1a4b2646fbddc
+// отпечаток-исходника: 13db5d54459bacc4
 // Функции контракта живут в lib/contract.js. Разбираем их сюда, чтобы весь
 // остальной код обращался к ним по прежним именам и не менялся.
 const{GLOBAL_MODS,isPerNiche,dropOrphans,nichesOf,resKey,splitMdRow,isMdSeparator,parseMdTables,buildModuleEntry,pickTable,pickColumn,withStableIds}=CAContract;// Название модуля берётся из MODULES — это конфиг ИНТЕРФЕЙСА, и сборщик
@@ -2161,7 +2161,9 @@ const STEP=st.map((_,i)=>{const v=kD?numOf(строки[i][kD]):null;return v!=n
 // На доске видно то, чего в таблице не видно вовсе: сколько всего проверяется
 // одновременно и что уже сдвинулось. Критерий успеха — единственное, ради
 // чего гипотеза существует, поэтому он в карточке отдельной строкой.
-function renderHypotheses(headers,rows){const kN=col(headers,'формулировка','гипотез');if(!kN)return null;const kW=col(headers,'что тестируем'),kM=col(headers,'ожидаемый эффект','метрик');const kS=col(headers,'статус');const D=rows.map(r=>{const n=String(r[kN]||'').replace(/\*\*/g,'').trim();if(!n)return null;return{n,what:kW?String(r[kW]||''):'',met:kM?String(r[kM]||''):'',st:kS?String(r[kS]||''):''};}).filter(Boolean);if(!D.length)return null;blockScripts.push('renderKanban('+safeJson(D)+');');return'<div class="kan" id="rpt-kan"></div>';}// ── BLOCK 17A: вход для офферов с пометкой происхождения ────────────────────
+function renderHypotheses(headers,rows){// Статус приводим к одному значению принудительно: модель ставит
+// «проверена» и «подтверждена», хотя никто ничего не проверял.
+const толькоЖдёт=в=>{const т=String(в||'').trim();return /проверен|подтвержд|отклон|готов/i.test(т)?'ждёт проверки':т||'ждёт проверки';};const kN=col(headers,'формулировка','гипотез');if(!kN)return null;const kW=col(headers,'что тестируем'),kM=col(headers,'ожидаемый эффект','метрик');const kS=col(headers,'статус');const D=rows.map(r=>{const n=String(r[kN]||'').replace(/\*\*/g,'').trim();if(!n)return null;return{n,what:kW?String(r[kW]||''):'',met:kM?String(r[kM]||''):'',st:толькоЖдёт(kS?r[kS]:'')};}).filter(Boolean);if(!D.length)return null;blockScripts.push('renderKanban('+safeJson(D)+');');return'<div class="kan" id="rpt-kan"></div>';}// ── BLOCK 17A: вход для офферов с пометкой происхождения ────────────────────
 // Пометка — вся суть блока: выдумать строку с меткой «из брифа» модель не
 // может, а пустое поле видно и превращается в вопрос заказчику.
 function renderOfferInputBlock(headers,rows){if(!rows.length)return null;const r=rows[0];const skip=/seller_id|^id$/i;const D=headers.filter(h=>!skip.test(h)).map(h=>{const v=String(r[h]||'').trim();const empty=!v||/^(—|не задано|нет данных)$/i.test(v);return[h,empty?'не задано':v,empty?'none':'brief'];});if(D.length<3)return null;blockScripts.push('renderOfferInput('+safeJson(D)+');');// Таблица пересказывает бриф — сама по себе заказчику она ничего не даёт

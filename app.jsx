@@ -5683,6 +5683,12 @@ function renderResearchHTML(content, opts) {
   // одновременно и что уже сдвинулось. Критерий успеха — единственное, ради
   // чего гипотеза существует, поэтому он в карточке отдельной строкой.
   function renderHypotheses(headers, rows) {
+    // Статус приводим к одному значению принудительно: модель ставит
+    // «проверена» и «подтверждена», хотя никто ничего не проверял.
+    const толькоЖдёт = в => {
+      const т = String(в || '').trim();
+      return /проверен|подтвержд|отклон|готов/i.test(т) ? 'ждёт проверки' : (т || 'ждёт проверки');
+    };
     const kN = col(headers,'формулировка','гипотез');
     if (!kN) return null;
     const kW = col(headers,'что тестируем'), kM = col(headers,'ожидаемый эффект','метрик');
@@ -5690,7 +5696,8 @@ function renderResearchHTML(content, opts) {
     const D = rows.map(r => {
       const n = String(r[kN]||'').replace(/\*\*/g,'').trim();
       if (!n) return null;
-      return { n, what: kW?String(r[kW]||''):'', met: kM?String(r[kM]||''):'', st: kS?String(r[kS]||''):'' };
+      return { n, what: kW?String(r[kW]||''):'', met: kM?String(r[kM]||''):'',
+               st: толькоЖдёт(kS ? r[kS] : '') };
     }).filter(Boolean);
     if (!D.length) return null;
     blockScripts.push('renderKanban('+safeJson(D)+');');
