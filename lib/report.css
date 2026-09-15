@@ -1075,6 +1075,8 @@ td b{color:var(--ink);font-weight:600}
    ничего не переносится вовсе. И задан минимум: слово от 6 букв, не меньше
    трёх до переноса и трёх после — одна буква на строке больше невозможна. */
 .dtbl .nm{font-size:13.5px;font-weight:700;color:var(--ink);line-height:1.3;display:block}
+.dtbl .tr .tag{display:block;margin-top:5px}
+.dtbl .tr .q{display:block;margin-top:5px;color:var(--ink-2);line-height:1.45}
 .dtbl .tr>div{min-width:0}
 .page{hyphens:auto;-webkit-hyphens:auto;
   hyphenate-limit-chars:6 3 3;-webkit-hyphenate-limit-before:3;-webkit-hyphenate-limit-after:3}
