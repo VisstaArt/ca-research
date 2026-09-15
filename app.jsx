@@ -652,7 +652,9 @@ let модельМодуля = '';
 async function callGPTСхема(system, user, схема, имяСхемы) {
   return callGPT(system, user, null, null, 0, {
     type: 'json_schema',
-    json_schema: { name: имяСхемы || 'ответ', strict: true, schema: схема },
+    // Имя — только латиница, цифры, _ и -: провайдер иначе отвечает 400.
+    json_schema: { name: String(имяСхемы || 'answer').replace(/[^A-Za-z0-9_-]/g, '_'),
+                   strict: true, schema: схема },
   });
 }
 
@@ -9415,6 +9417,7 @@ function App() {
 
       let full = '';
       let строгое = null;            // ответ по схеме, если у модуля она есть
+      let сбойСхемы = '';            // почему схема не сработала — показываем, не прячем
       let wordstatData = null;   // hoisted: нужен после callGPT, чтобы приклеить сырой список (см. ниже)
       searchCallCount = 0;       // для расчёта тарифов (26.08.2026) — считаем ТОЛЬКО за этот модуль
       keywordCallCount = 0;      // то же для частотности: Wordstat/Google Ads за этот модуль
@@ -9490,10 +9493,11 @@ function App() {
         // откатываемся на прежний путь, чтобы прогон не пропал (15.09).
         if (СХЕМЫ[mod.id]) {
           try {
-            const сырое = await callGPTСхема(sys, userPrompt, СХЕМЫ[mod.id], 'модуль_' + mod.id);
+            const сырое = await callGPTСхема(sys, userPrompt, СХЕМЫ[mod.id], 'module_' + mod.id);
             строгое = JSON.parse(сырое);
           } catch (e) {
             строгое = null;
+            сбойСхемы = String((e && e.message) || e).slice(0, 200);
             if (window.console) console.warn('Строгий формат не вышел, работаем как раньше:', e);
           }
         }
@@ -9542,7 +9546,8 @@ function App() {
       // и PAIN_BANK, и там это разобрали как дефект блока промпта.
       const failed = /^Error:/.test(cleanedContent.trim());
       const result = { id:mod.id, niche:wn, content:cleanedContent,
-        ...(строгое ? { строгое } : {}), chartData, ...(failed?{failed:true, error:cleanedContent.trim()}:{}), ...(nicheData?{nicheData}:{}), ...(usage?{usage}:{}), ...(searchCalls?{searchCalls}:{}), ...(keywordCalls?{keywordCalls}:{}),
+        ...(строгое ? { строгое } : {}),
+        ...(сбойСхемы ? { сбойСхемы } : {}), chartData, ...(failed?{failed:true, error:cleanedContent.trim()}:{}), ...(nicheData?{nicheData}:{}), ...(usage?{usage}:{}), ...(searchCalls?{searchCalls}:{}), ...(keywordCalls?{keywordCalls}:{}),
         // Сколько модуль шёл на самом деле. Оценка «53 минуты» была взята из
         // головы, а прогон занимает пять-десять (владелица 14.09). Дальше
         // время показывается по замерам, а не по догадке.
@@ -11005,6 +11010,18 @@ function App() {
                       по памяти модели, без живых источников — а это и есть причина
                       пустых данных (владелица 15.09: «данных ценных нет»). Признак
                       должен быть на виду, а не выясняться разбором. */}
+                  {r.строгое && (
+                    <span style={{fontSize:10,marginRight:8,color:'var(--acc-quiet-ink)',fontWeight:700}}
+                      title="Модуль собран по строгой схеме: форма блоков задана нами, модель на неё не влияет">
+                      по схеме
+                    </span>
+                  )}
+                  {r.сбойСхемы && (
+                    <span style={{fontSize:10,marginRight:8,color:'var(--acc-quiet-ink)',fontWeight:700}}
+                      title={'Схема не сработала, модуль собран свободным текстом: ' + r.сбойСхемы}>
+                      схема не сработала
+                    </span>
+                  )}
                   {(() => {
                     const свой = !(m.наДанныхПредыдущих);
                     if (!свой) return (
