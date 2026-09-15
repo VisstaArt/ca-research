@@ -5535,7 +5535,9 @@ function renderResearchHTML(content, opts) {
   // уверенность, справа боли полосами и остальные поля.
   function renderPersonasBlock(headers, rows) {
     const kId = col(headers,'persona_id','id'), kRole = col(headers,'роль','должност');
+    const kPainТест = col(headers,'боли'), kCtxТест = col(headers,'контекст','ситуац');
     if (!kRole) return null;
+    if (!kId && !kPainТест && !kCtxТест) return null;
     const kComp = col(headers,'компан','ниша'), kCtx = col(headers,'контекст','ситуац');
     const kPain = col(headers,'боли'), kObj = col(headers,'возражен'), kTrig = col(headers,'триггер');
     const kCh = col(headers,'канал'), kQ = col(headers,'цитат'), kConf = col(headers,'confidence','уверен');

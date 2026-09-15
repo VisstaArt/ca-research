@@ -1,6 +1,6 @@
 // СОБРАНО АВТОМАТИЧЕСКИ из app.jsx — не править руками.
 // Правки вносить в app.jsx, затем: osascript -l JavaScript tools/build.js
-// отпечаток-исходника: 3ecf45e50b52816d
+// отпечаток-исходника: 97e8996d7554180f
 // Функции контракта живут в lib/contract.js. Разбираем их сюда, чтобы весь
 // остальной код обращался к ним по прежним именам и не менялся.
 const{GLOBAL_MODS,isPerNiche,dropOrphans,nichesOf,resKey,splitMdRow,isMdSeparator,parseMdTables,buildModuleEntry,pickTable,pickColumn,withStableIds}=CAContract;// Название модуля берётся из MODULES — это конфиг ИНТЕРФЕЙСА, и сборщик
@@ -2116,7 +2116,7 @@ blockScripts.push('renderSwotGrid('+safeJson(ctx.swot)+');');ctx.swotRef=blockSc
 return'<div class="swot" id="rpt-swot"></div>';}// ── BLOCK 09: персоны портретом ─────────────────────────────────────────────
 // Восемнадцать колонок строкой не читаются. Портрет: слева кто это и
 // уверенность, справа боли полосами и остальные поля.
-function renderPersonasBlock(headers,rows){const kId=col(headers,'persona_id','id'),kRole=col(headers,'роль','должност');if(!kRole)return null;const kComp=col(headers,'компан','ниша'),kCtx=col(headers,'контекст','ситуац');const kPain=col(headers,'боли'),kObj=col(headers,'возражен'),kTrig=col(headers,'триггер');const kCh=col(headers,'канал'),kQ=col(headers,'цитат'),kConf=col(headers,'confidence','уверен');const split=v=>String(v||'').split(/[;,]\s*/).map(x=>x.trim()).filter(Boolean);// Портрет ждёт ровно такой набор полей — он собран под утверждённую
+function renderPersonasBlock(headers,rows){const kId=col(headers,'persona_id','id'),kRole=col(headers,'роль','должност');const kPainТест=col(headers,'боли'),kCtxТест=col(headers,'контекст','ситуац');if(!kRole)return null;if(!kId&&!kPainТест&&!kCtxТест)return null;const kComp=col(headers,'компан','ниша'),kCtx=col(headers,'контекст','ситуац');const kPain=col(headers,'боли'),kObj=col(headers,'возражен'),kTrig=col(headers,'триггер');const kCh=col(headers,'канал'),kQ=col(headers,'цитат'),kConf=col(headers,'confidence','уверен');const split=v=>String(v||'').split(/[;,]\s*/).map(x=>x.trim()).filter(Boolean);// Портрет ждёт ровно такой набор полей — он собран под утверждённую
 // разметку, а не наоборот. Чего в таблице нет, честно оставляем пустым:
 // «доля в аудитории» и «срок сделки» в BLOCK 09 не выдаются.
 const D=rows.map((r,i)=>{const role=String(r[kRole]||'').replace(/\*\*/g,'').trim();if(!role)return null;const conf=kConf?numOf(r[kConf])||2:2;// Пункты боли приходят из ячейки через запятую и написаны как попало:
