@@ -5162,10 +5162,10 @@ function renderResearchHTML(content, opts) {
     // месте: сноски [n] по-прежнему ведут сюда, и по щелчку он раскрывается.
     // Заголовок печатаем сами — свой, короткий, и убираем тот, что напечатал
     // разбор, иначе над свёрнутой полосой висит второе имя того же самого.
-    return '<div class="srcfold"><button type="button" class="srctoggle" aria-expanded="false">'
+    return '<div class="srcfold"><button type="button" class="srctoggle" aria-expanded="true">'
       + 'Источники: ' + проверяемых + ' ' + plural(проверяемых, 'ссылка', 'ссылки', 'ссылок')
       + ', по которым собран этот модуль</button>'
-      + '<div class="srcbody" hidden><div class="srcs" id="rpt-srcs-' + номерИст + '"></div></div></div>';
+      + '<div class="srcbody"><div class="srcs" id="rpt-srcs-' + номерИст + '"></div></div></div>';
   }
 
   // ── BLOCK 03: размер рынка воронкой ─────────────────────────────────────────
@@ -5293,7 +5293,7 @@ function renderResearchHTML(content, opts) {
     // выглядело как проверенная находка.
     const непусто = т => {
       const в = String(т || '').replace(/^[«"']|[»"']$/g, '').trim();
-      return в && !/^(нет\s+данных|нет\s+публичных|не\s+найдено|не\s+видно|не\s+замерено|н\/д|—|-)/i.test(в)
+      return в && !/^(нет\s|не\s+найден|не\s+видно|не\s+замерено|отсутств|недостаточно|н\/д|—|-)/i.test(в)
         ? в : '';
     };
     const D = rows.map(r => {
@@ -6446,7 +6446,7 @@ function mdToHtml(text) {
       // или более высокого уровня ничего не напечаталось.
       // Служебная метка блока. В отчёт не идёт: она для нас, не для читателя.
       const метка = t.match(/^@@\s*BLOCK\s+([0-9A-Za-z_\-]+)\s*$/i);
-      if (метка) { ctx.метка = метка[1].toUpperCase(); continue; }
+      if (метка) { ctx.ждётМетка = метка[1].toUpperCase(); continue; }
       const уровень = (line.match(/^(#{1,4})\s/) || [])[1];
       if (уровень) {
         const у = уровень.length;
@@ -6473,6 +6473,10 @@ function mdToHtml(text) {
         }
         ctx.демографияС = null; ctx.демографияЕсть = false;
         const н2 = html.length;
+        // Метку забирает ЭТОТ заголовок и держит до следующего: у блока
+        // без своей метки чужой не будет.
+        ctx.метка = ctx.ждётМетка || null;
+        ctx.ждётМетка = null;
         const имяПоМетке = ctx.метка && BLOCK_TITLES[ctx.метка];
         html += '<h2'+якорь(line.slice(3))+'>'+esc(имяПоМетке || human(line.slice(3)))+'</h2>';
         ctx.headEnd = html.length;
@@ -8084,6 +8088,19 @@ function ResearchView({ content, ourName, ourPrice, выбранные, наВы
     } catch (e) { if (window.console) console.error('Рисование не запустилось:', e); }
     // Подписи в нарисованных скриптом таблицах — по-русски. Только после
     // отрисовки: до неё этих узлов ещё нет.
+    // Пустой контейнер = рисовалка не отработала. Прячем его вместе с
+    // заголовком: пустота под именем блока читается как поломка.
+    try {
+      ref.current.querySelectorAll('[id^="rpt-"]').forEach(узел => {
+        if (узел.innerHTML.trim()) return;
+        let пред = узел.previousElementSibling;
+        while (пред && /^(DIV|P)$/.test(пред.tagName) && !пред.textContent.trim()) {
+          const ещё = пред.previousElementSibling; пред.remove(); пред = ещё;
+        }
+        if (пред && /^H[1-4]$/.test(пред.tagName)) пред.remove();
+        узел.remove();
+      });
+    } catch (e) {}
     try { почиститьУзлы(ref.current); } catch (e) {}
     try { ссылкиВУзлах(ref.current); } catch (e) {}
   }, [out]);

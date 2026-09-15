@@ -1,6 +1,6 @@
 // СОБРАНО АВТОМАТИЧЕСКИ из app.jsx — не править руками.
 // Правки вносить в app.jsx, затем: osascript -l JavaScript tools/build.js
-// отпечаток-исходника: 97e8996d7554180f
+// отпечаток-исходника: c3e450050271debd
 // Функции контракта живут в lib/contract.js. Разбираем их сюда, чтобы весь
 // остальной код обращался к ним по прежним именам и не менялся.
 const{GLOBAL_MODS,isPerNiche,dropOrphans,nichesOf,resKey,splitMdRow,isMdSeparator,parseMdTables,buildModuleEntry,pickTable,pickColumn,withStableIds}=CAContract;// Название модуля берётся из MODULES — это конфиг ИНТЕРФЕЙСА, и сборщик
@@ -2044,7 +2044,7 @@ if(ctx.источникиЗаголовок){blockScripts.push('(function(){var 
 // месте: сноски [n] по-прежнему ведут сюда, и по щелчку он раскрывается.
 // Заголовок печатаем сами — свой, короткий, и убираем тот, что напечатал
 // разбор, иначе над свёрнутой полосой висит второе имя того же самого.
-return'<div class="srcfold"><button type="button" class="srctoggle" aria-expanded="false">'+'Источники: '+проверяемых+' '+plural(проверяемых,'ссылка','ссылки','ссылок')+', по которым собран этот модуль</button>'+'<div class="srcbody" hidden><div class="srcs" id="rpt-srcs-'+номерИст+'"></div></div></div>';}// ── BLOCK 03: размер рынка воронкой ─────────────────────────────────────────
+return'<div class="srcfold"><button type="button" class="srctoggle" aria-expanded="true">'+'Источники: '+проверяемых+' '+plural(проверяемых,'ссылка','ссылки','ссылок')+', по которым собран этот модуль</button>'+'<div class="srcbody"><div class="srcs" id="rpt-srcs-'+номерИст+'"></div></div></div>';}// ── BLOCK 03: размер рынка воронкой ─────────────────────────────────────────
 // Проценты от ПРЕДЫДУЩЕЙ ступени, а не от целого: они отвечают на «почему так
 // мало» точнее, чем доля от TAM. Три оттенка одного цвета — величина одна.
 function renderMarketSize(headers,rows){const kS=col(headers,'ступен','уровень','показател','метрик');const kV=col(headers,'значен','объём','сумма','₽');if(!kV)return null;const kN=col(headers,'что входит','описан','коммент');const d=rows.map(r=>{const code=String((kS?r[kS]:Object.values(r)[0])||'').replace(/\*\*/g,'').trim();const val=String(r[kV]||'').trim();if(!/^(TAM|SAM|SOM)/i.test(code))return null;return[code.slice(0,3).toUpperCase(),kN?String(r[kN]||''):'',val,numOf(val)||0,''];}).filter(Boolean);if(d.length!==3)return null;// воронка ровно из трёх ступеней
@@ -2080,7 +2080,7 @@ function renderVocBlock(headers,rows){const kQ=col(headers,'цитата');if(!k
 // Она приходила в отчёт карточкой с зелёной галочкой «сверено с
 // источником» (скрин владелицы 15.09) — то есть отсутствие данных
 // выглядело как проверенная находка.
-const непусто=т=>{const в=String(т||'').replace(/^[«"']|[»"']$/g,'').trim();return в&&!/^(нет\s+данных|нет\s+публичных|не\s+найдено|не\s+видно|не\s+замерено|н\/д|—|-)/i.test(в)?в:'';};const D=rows.map(r=>{const q=непусто(r[kQ]);if(!q)return null;const raw=Object.values(r).join(' ').toLowerCase();return{q:/^[«"']/.test(q)?q:'«'+q+'»',v:/не открыл|недоступн|404/.test(raw)?'nopage':'ok',theme:kT?String(r[kT]||''):'',seg:kSeg?String(r[kSeg]||''):'',src:kS?String(r[kS]||''):'',url:kU?String(r[kU]||''):'',date:kD?String(r[kD]||'дата не указана'):'дата не указана',freq:kN?String(r[kN]||''):'',int:kI?intOf(r[kI]):2,ans:kA?String(r[kA]||''):''};}).filter(Boolean);if(!D.length)return null;blockScripts.push('renderVoc('+safeJson(D)+');');return'<div class="voc" id="rpt-voc"></div><p class="bias" id="rpt-bias"></p>';}// ── BLOCK 07A: банк живого языка ────────────────────────────────────────────
+const непусто=т=>{const в=String(т||'').replace(/^[«"']|[»"']$/g,'').trim();return в&&!/^(нет\s|не\s+найден|не\s+видно|не\s+замерено|отсутств|недостаточно|н\/д|—|-)/i.test(в)?в:'';};const D=rows.map(r=>{const q=непусто(r[kQ]);if(!q)return null;const raw=Object.values(r).join(' ').toLowerCase();return{q:/^[«"']/.test(q)?q:'«'+q+'»',v:/не открыл|недоступн|404/.test(raw)?'nopage':'ok',theme:kT?String(r[kT]||''):'',seg:kSeg?String(r[kSeg]||''):'',src:kS?String(r[kS]||''):'',url:kU?String(r[kU]||''):'',date:kD?String(r[kD]||'дата не указана'):'дата не указана',freq:kN?String(r[kN]||''):'',int:kI?intOf(r[kI]):2,ans:kA?String(r[kA]||''):''};}).filter(Boolean);if(!D.length)return null;blockScripts.push('renderVoc('+safeJson(D)+');');return'<div class="voc" id="rpt-voc"></div><p class="bias" id="rpt-bias"></p>';}// ── BLOCK 07A: банк живого языка ────────────────────────────────────────────
 // Фразы сгруппированы по эмоции: она определяет, каким тоном отвечать.
 function renderLangBankBlock(headers,rows){const kQ=col(headers,'цитата','фраза');const kE=col(headers,'эмоц');if(!kQ||!kE)return null;const kT=col(headers,'тема'),kP=col(headers,'площадк');const TONE={// Четыре цвета по решению владелицы: синий, чёрный, серый, бирюза.
 // Проверять теперь только по СОБРАННОЙ странице: переменные в отчёте
@@ -2358,11 +2358,13 @@ if(/BLOCK\s*04_1\b/i.test(t))ctx.mark041=html.length;ctx.headStart=html.length;h
 // Снимаем ЛЮБОЙ заголовок, под которым до следующего заголовка того же
 // или более высокого уровня ничего не напечаталось.
 // Служебная метка блока. В отчёт не идёт: она для нас, не для читателя.
-const метка=t.match(/^@@\s*BLOCK\s+([0-9A-Za-z_\-]+)\s*$/i);if(метка){ctx.метка=метка[1].toUpperCase();continue;}const уровень=(line.match(/^(#{1,4})\s/)||[])[1];if(уровень){const у=уровень.length;// Пустая строка печатает отступ — он не содержимое. Иначе любой
+const метка=t.match(/^@@\s*BLOCK\s+([0-9A-Za-z_\-]+)\s*$/i);if(метка){ctx.ждётМетка=метка[1].toUpperCase();continue;}const уровень=(line.match(/^(#{1,4})\s/)||[])[1];if(уровень){const у=уровень.length;// Пустая строка печатает отступ — он не содержимое. Иначе любой
 // заголовок с пустой строкой под ним считался бы заполненным.
 while(ctx.пустые&&ctx.пустые.length&&ctx.пустые[ctx.пустые.length-1].у>=у&&безОтступов(html).length<=ctx.пустые[ctx.пустые.length-1].конец){html=html.slice(0,ctx.пустые.pop().начало);}if(ctx.пустые)ctx.пустые=ctx.пустые.filter(x=>x.у<у);}if(line.startsWith('# ')){if(!ctx.h1seen){ctx.h1seen=true;}else html+='<h1>'+esc(human(line.slice(2)))+'</h1>';}else if(line.startsWith('## ')){if(/BLOCK\s*04_1\b/i.test(line.slice(3)))ctx.mark041=html.length;ctx.headStart=html.length;// Демография сегмента прячется целиком: и пустой таблицей, и одной
 // фразой «блок не применим». Запоминаем начало и решаем на выходе.
-if(ctx.демографияС!=null&&!ctx.демографияЕсть){html=html.slice(0,ctx.демографияС);}ctx.демографияС=null;ctx.демографияЕсть=false;const н2=html.length;const имяПоМетке=ctx.метка&&BLOCK_TITLES[ctx.метка];html+='<h2'+якорь(line.slice(3))+'>'+esc(имяПоМетке||human(line.slice(3)))+'</h2>';ctx.headEnd=html.length;(ctx.пустые=ctx.пустые||[]).push({у:2,начало:н2,конец:html.length});if(/BLOCK\s*09B\b|Демограф/i.test(line.slice(3))){ctx.демографияС=н2;ctx.демографияЕсть=false;}ctx.началоБлока=н2;}else if(line.startsWith('### ')){// В блоке SWOT стороны нарисованы карточками, и заголовок над ними —
+if(ctx.демографияС!=null&&!ctx.демографияЕсть){html=html.slice(0,ctx.демографияС);}ctx.демографияС=null;ctx.демографияЕсть=false;const н2=html.length;// Метку забирает ЭТОТ заголовок и держит до следующего: у блока
+// без своей метки чужой не будет.
+ctx.метка=ctx.ждётМетка||null;ctx.ждётМетка=null;const имяПоМетке=ctx.метка&&BLOCK_TITLES[ctx.метка];html+='<h2'+якорь(line.slice(3))+'>'+esc(имяПоМетке||human(line.slice(3)))+'</h2>';ctx.headEnd=html.length;(ctx.пустые=ctx.пустые||[]).push({у:2,начало:н2,конец:html.length});if(/BLOCK\s*09B\b|Демограф/i.test(line.slice(3))){ctx.демографияС=н2;ctx.демографияЕсть=false;}ctx.началоБлока=н2;}else if(line.startsWith('### ')){// В блоке SWOT стороны нарисованы карточками, и заголовок над ними —
 // второе имя того же самого. Владелица 15.09 показала «Strengths»
 // и «Weaknesses» подряд: по-английски и поверх готовых карточек.
 let имя3=human(line.slice(4)).trim();// «### Таблица 2. Главное обещание» шло мимо чистки: ловили только
@@ -2773,7 +2775,9 @@ const словарь=собратьСловарь(cut.body);const r=renderResear
 // ничего. В выгруженном отчёте так и сделано, на сайте не было.
 try{const рисовать=new Function('__блоки',out.js+'\n'+'for (var i=0;i<__блоки.length;i++){ try { eval(__блоки[i]); }'+' catch(e){ if(window.console) console.error("Блок не собрался:", e); } }');рисовать(out.scripts);}catch(e){if(window.console)console.error('Рисование не запустилось:',e);}// Подписи в нарисованных скриптом таблицах — по-русски. Только после
 // отрисовки: до неё этих узлов ещё нет.
-try{почиститьУзлы(ref.current);}catch(e){}try{ссылкиВУзлах(ref.current);}catch(e){}},[out]);// Кнопка «взять в работу» в карточках ниш рисуется скриптом и своего
+// Пустой контейнер = рисовалка не отработала. Прячем его вместе с
+// заголовком: пустота под именем блока читается как поломка.
+try{ref.current.querySelectorAll('[id^="rpt-"]').forEach(узел=>{if(узел.innerHTML.trim())return;let пред=узел.previousElementSibling;while(пред&&/^(DIV|P)$/.test(пред.tagName)&&!пред.textContent.trim()){const ещё=пред.previousElementSibling;пред.remove();пред=ещё;}if(пред&&/^H[1-4]$/.test(пред.tagName))пред.remove();узел.remove();});}catch(e){}try{почиститьУзлы(ref.current);}catch(e){}try{ссылкиВУзлах(ref.current);}catch(e){}},[out]);// Кнопка «взять в работу» в карточках ниш рисуется скриптом и своего
 // состояния не знает — она лишь сообщает имя ниши. Слушаем это сообщение и
 // выставляем вид кнопок по тому, что реально в работе. Владелица 15.09:
 // «веером показываем семь, а человек может захотеть больше».
