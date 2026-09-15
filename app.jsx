@@ -4892,6 +4892,7 @@ function renderResearchHTML(content, opts) {
     "function renderShareRing(D){\n  var box=document.getElementById('rpt-share'), leg=document.getElementById('rpt-share-leg');\n  if(!box||!leg) return;\n  /* Кольцо доли внимания. Доли складываются в целое, поэтому круг честен:\n     видно и кто забирает почти всё, и что остальным достаются крохи.\n     Оттенки — одна фирменная шкала, дальше серая: цвет тут не значение,\n     а порядок, и различать девять брендов цветом всё равно нельзя. */\n  var сумма=D.reduce(function(s,x){return s+(x[1]||0);},0)||1;\n  var R=92,SW=30,C=115,GAP=0.008;\n  var ТОН=[100,68,44], СЕР=[34,24,17,12,9,7];\n  var цвет=function(i){ return i<ТОН.length\n    ? 'color-mix(in srgb, var(--mid) '+ТОН[i]+'%, var(--line-2))'\n    : 'color-mix(in srgb, var(--ink) '+СЕР[Math.min(i-ТОН.length,СЕР.length-1)]+'%, var(--line-2))'; };\n  var NS='http://www.w3.org/2000/svg';\n  var el=function(t,a){var e=document.createElementNS(NS,t);for(var k in a)e.setAttribute(k,a[k]);return e;};\n  var svg=el('svg',{viewBox:'0 0 230 230',width:230,height:230});\n  var pt=function(a){return [C+R*Math.cos(a*Math.PI/180), C+R*Math.sin(a*Math.PI/180)];};\n  var a0=-90;\n  D.forEach(function(row,i){\n    var v=row[1]||0, a1=a0+v/сумма*360, g0=a0+GAP*360, g1=a1-GAP*360;\n    if(g1>g0){\n      var p0=pt(g0), p1=pt(g1);\n      svg.appendChild(el('path',{d:'M '+p0[0]+' '+p0[1]+' A '+R+' '+R+' 0 '+((g1-g0)>180?1:0)+' 1 '+p1[0]+' '+p1[1],\n        fill:'none',stroke:цвет(i),'stroke-width':SW,'stroke-linecap':'butt'}));\n    }\n    a0=a1;\n  });\n  /* В середине — лидер: главное число читается без легенды. */\n  var ц=el('text',{x:C,y:C-4,'text-anchor':'middle',class:'ring-n'});\n  ц.textContent=Math.round((D[0][1]||0))+'%'; svg.appendChild(ц);\n  var п=el('text',{x:C,y:C+16,'text-anchor':'middle',class:'ring-t'});\n  п.textContent=D[0][0].length>16?D[0][0].slice(0,15)+'…':D[0][0]; svg.appendChild(п);\n  box.appendChild(svg);\n  leg.innerHTML='<div class=\"leghead\"><span></span><span>Компания</span><span>Доля</span><span>Запросов</span></div>'\n    +D.map(function(row,i){\n      return '<div class=\"sl rich\"><span class=\"sw\" style=\"background:'+цвет(i)+'\"></span>'\n        +'<span class=\"nm\">'+escText(row[0])+'</span>'\n        +'<span class=\"n\">'+(Math.round((row[1]||0)*10)/10)+'%</span>'\n        +'<span class=\"t\">'+escText(row[2]||'—')+'</span></div>';\n    }).join('');\n}",
     "function renderTopContent(D){\n  var box=document.getElementById('rpt-topc'); if(!box) return;\n  /* Мера как везде: полоса 14px на дорожке, торцы прямые, число снаружи\n     полосы чернилами. Считаем от максимума — сравнивают единицы между собой,\n     а не с абсолютной шкалой, которой у просмотров не бывает. */\n  var max=Math.max.apply(null,D.map(function(x){return x.v;}).concat([1]));\n  /* Telegram и часть YouTube просмотры не показывают. Когда не замерено\n     НИЧЕГО, полосы сравнивать нечем: пустая дорожка у каждой строки\n     выглядит как поломка. Тогда дорожку убираем совсем и печатаем\n     список — то, что видно, всё равно полезно. */\n  var мерено=D.some(function(x){return x.v>0;});\n  box.className=мерено?'topc':'topc nomeasure';\n  box.innerHTML=D.map(function(d){\n    var w=d.v>0?Math.max(d.v/max*100,1.5):0;\n    var head=d.url?('<a href=\"'+d.url+'\" target=\"_blank\" rel=\"noopener\">'+escText(d.t)+'</a>'):escText(d.t);\n    var sub=[d.p,d.meta].filter(Boolean).join(' · ');\n    return '<div class=\"tcrow\">'\n      +'<div class=\"tcn\">'+head+(sub?'<span>'+escText(sub)+'</span>':'')+'</div>'\n      +(мерено?'<div class=\"rail\"><i style=\"width:'+w.toFixed(1)+'%\"></i></div>':'')\n      +'<div class=\"tcv\">'+escText(d.raw)+(d.resp?'<span>'+escText(d.resp)+'</span>':'')+'</div>'\n      +(d.hook?'<div class=\"tch\">Хук: '+escText(d.hook)+'</div>':'')\n      +'</div>';\n  }).join('');\n}",
     "function renderGapCards(D){\n  var box=document.getElementById('rpt-gapc'); if(!box) return;\n  var СЛ={win:'var(--mid)',parity:'var(--ink-3)',lose:'var(--ink-2)'};\n  box.innerHTML=D.map(function(r){\n    var имя=r[0],вид=r[1],слово=r[2],наше=r[3],их=r[4],об=r[5],url=r[6];\n    var поле=function(п,в){ return в?'<div class=\"gf\"><span>'+п+'</span><b>'+escText(в)+'</b></div>':''; };\n    return '<div class=\"gcard g-'+вид+'\">'\n      +'<div class=\"gh\"><b>'+escText(имя)+'</b>'\n      +'<span class=\"gv\" style=\"color:'+СЛ[вид]+'\">'+слово+'</span></div>'\n      +поле('у нас',наше)+поле('лучшее у конкурентов',их)+поле('почему так',об)\n      +(url?'<a class=\"gl\" href=\"'+url+'\" target=\"_blank\" rel=\"noopener\">пример</a>':'')\n      +'</div>';\n  }).join('');\n}",
+    "function renderManifest(D){\n  var box=document.getElementById('rpt-manif'); if(!box) return;\n  box.innerHTML=D.map(function(r,i){\n    var э=r[0],п=r[1],пр=r[2],н=r[3];\n    return '<div class=\"rule-card\"><b>'+(i+1)+'</b>'\n      +'<span class=\"eb\">'+escText(э)+'</span>'\n      +(п?'<span class=\"nm\">'+escText(п)+'</span>':'')\n      +(пр?'<span class=\"q\">'+escText(пр)+'</span>':'')\n      +(н?'<span class=\"ft\">избегаем: '+escText(н)+'</span>':'')\n      +'</div>';\n  }).join('');\n}",
     "function renderPatterns(D){\n  var box=document.getElementById('rpt-patterns'); if(!box) return;\n  /* Паттерн — вывод, по которому принимают решение. Название крупно, под ним\n     почему срабатывает, внизу за линией — что делать и на чём основано. */\n  box.innerHTML=D.map(function(r,i){\n    var foot=[r[2]?'Делаем: '+r[2]:'', r[3]?'Основано на: '+r[3]:''].filter(Boolean).join(' · ');\n    return '<div class=\"rule-card\"><b>'+(i+1)+'</b>'\n      +'<span class=\"eb\">что работает</span>'\n      +'<span class=\"nm\">'+escText(r[0])+'</span>'\n      +(r[1]?'<span>'+escText(r[1])+'</span>':'')\n      +(foot?'<span class=\"ft\">'+escText(foot)+'</span>':'')\n      +'</div>';\n  }).join('');\n}",
     "function renderJtbd(D){\n  var box=document.getElementById('rpt-jtbd'); if(!box) return;\n  /* Фраза собрана целиком: связки «когда / я хочу / чтобы» приглушены, чтобы\n     читалось предложение, а не заполненная анкета. */\n  var lead=function(w){return '<i>'+w+'</i> ';};\n  box.innerHTML=D.map(function(r,i){\n    var seg=r[0], when=r[1], want=r[2], so=r[3], win=r[4], gap=r[5], fear=r[6];\n    var foot=[win?'Успех: '+win:'', gap?'Пробел: '+gap:'', fear?'Страх: '+fear:''].filter(Boolean).join(' · ');\n    return '<div class=\"rule-card\"><b>'+(i+1)+'</b>'\n      +(seg?'<span class=\"eb\">'+escText(seg)+'</span>':'')\n      +'<span class=\"q\">'+(when?lead('Когда')+escText(when)+', ':'')\n        +(want?lead('я хочу')+escText(want):'')\n        +(so?', '+lead('чтобы')+escText(so):'')+'</span>'\n      +(foot?'<span class=\"ft\">'+escText(foot)+'</span>':'')\n      +'</div>';\n  }).join('');\n}",
     "function renderTactics(D){\n  var box=document.getElementById('rpt-tactics'); if(!box) return;\n  /* Риск стоит прямо под примером формулировки, а не в дальней колонке:\n     его читают вместе с ней или не читают вовсе. */\n  box.innerHTML=D.map(function(r,i){\n    return '<div class=\"rule-card\"><b>'+(i+1)+'</b>'\n      +(r[1]?'<span class=\"eb\">'+escText(r[1])+'</span>':'')\n      +'<span class=\"nm\">'+escText(r[0])+'</span>'\n      +(r[2]?'<span class=\"q\">«'+escText(r[2])+'»</span>':'')\n      +(r[3]&&r[3]!=='—'?'<span class=\"warnline\">Риск: '+escText(r[3])+'</span>':'')\n      +(r[4]?'<span class=\"ft\">'+escText(r[4])+'</span>':'')\n      +'</div>';\n  }).join('');\n}",
@@ -5911,6 +5912,26 @@ function renderResearchHTML(content, opts) {
     return '<div class="rules bet" id="rpt-arch"></div>';
   }
 
+  // Таблица «как это проявляется»: элемент, в чём выражается, живой пример и
+  // чего избегать. Форма повторяется в архетипе бренда, визуальной стратегии
+  // и ограничениях — общая рисовалка вместо сырой таблицы на четыре колонки,
+  // которую приходилось листать вбок (владелица 15.09).
+  function renderManifestBlock(headers, rows) {
+    const kЭ = col(headers,'элемент','приём','правило','параметр');
+    const kП = col(headers,'как проявляется','проявлен','в чём','описан');
+    if (!kЭ || !kП) return null;
+    const kПр = col(headers,'пример','формулировк'), kН = col(headers,'избега','нельзя','запрещ');
+    const g = (r,k) => k ? String(r[k]||'').replace(/\*\*/g,'').trim() : '';
+    const D = rows.map(r => {
+      const э = g(r,kЭ);
+      if (!э || э === '—') return null;
+      return [ э, g(r,kП), g(r,kПр), g(r,kН) ];
+    }).filter(Boolean);
+    if (D.length < 2) return null;
+    blockScripts.push('renderManifest('+safeJson(D)+');');
+    return '<div class="rules" id="rpt-manif"></div>';
+  }
+
   // ── BLOCK 08: кластеры намерений ────────────────────────────────────────────
   // Восемь колонок в строку не читаются. Кластер и примеры запросов — слева,
   // роль в воронке и осведомлённость — метками, формула и доказательство —
@@ -6008,44 +6029,45 @@ function renderResearchHTML(content, opts) {
   const BLOCK_VIEWS = [
     { re: /SEO-0?6\b|География\s+спроса/i, fn: renderGeo },
     { re: /BLOCK\s*04(?![_0-9])|Сегменты\s+(целевой\s+)?аудитории/i, fn: renderSegments },
-    { re: /BLOCK\s*04_2\b|Приоритет\s+ниш|Prioritization/i, fn: renderNiches },
-    { re: /SEO-0?2\b|Semantic\s+Core|Семантическое\s+ядро/i, fn: renderSemanticsBlock },
+    { re: /BLOCK\s*04_2\b|Приоритет\s+ниш|Prioritization/i, fn: renderNiches , поКолонкам: true },
+    { re: /SEO-0?2\b|Semantic\s+Core|Семантическое\s+ядро/i, fn: renderSemanticsBlock , поКолонкам: true },
     { re: /SEO-0?1\b|Search\s+Competitors|Конкуренты\s+в\s+выдаче/i, fn: renderSerpBlock },
     { re: /SEO-0?3\b|Content\s+Audit|Контент-аудит|Аудит\s+контента/i, fn: renderAuditBlock },
-    { re: /BLOCK\s*06(?![_0-9B])|Карта\s+рынка|Competitor\s+Map/i, fn: renderCompetitorCards },
+    { re: /BLOCK\s*06(?![_0-9B])|Карта\s+рынка|Competitor\s+Map/i, fn: renderCompetitorCards , поКолонкам: true },
     { re: /BLOCK\s*06(?![_0-9B])|Карта\s+рынка|Competitor\s+Map/i, fn: renderMarket },
-    { re: /BLOCK\s*06B\b|Смежные/i, fn: renderCompetitorCards },
-    { re: /BLOCK\s*06_2\b|SWOT/i, fn: renderSwot },
-    { re: /BLOCK\s*11\b|Awareness|Осведомлённост/i, fn: renderAwarenessBlock },
+    { re: /BLOCK\s*06B\b|Смежные/i, fn: renderCompetitorCards , поКолонкам: true },
+    { re: /BLOCK\s*06_2\b|SWOT/i, fn: renderSwot , поКолонкам: true },
+    { re: /BLOCK\s*11\b|Awareness|Осведомлённост/i, fn: renderAwarenessBlock , поКолонкам: true },
     { re: /BLOCK\s*(04_0|02|05)(?![_0-9])|SEO-0?0\b|Источник/i, fn: renderSources },
     { re: /BLOCK\s*03\b|Market\s+Size|Размер\s+рынка|Ёмкость/i, fn: renderMarketSize },
-    { re: /BLOCK\s*06_1\b|Gap\s+Analysis|Гэп-анализ/i, fn: renderGap },
-    { re: /BLOCK\s*07(?![A-DB0-9])|Voice\s+of\s+Customer|Голос\s+клиента/i, fn: renderVocBlock },
-    { re: /BLOCK\s*07A\b|Как\s+говорит|Банк\s+живого\s+языка/i, fn: renderLangBankBlock },
-    { re: /BLOCK\s*07B\b|Hook\s+Bank|Банк\s+хуков/i, fn: renderHooksBlock },
-    { re: /BLOCK\s*07C\b|Альтернатив/i, fn: renderAltBlock },
-    { re: /BLOCK\s*07D\b|Кому\s+не\s+прода/i, fn: renderNotSellBlock },
-    { re: /BLOCK\s*08A\b|Где\s+сидит/i, fn: renderChannelsBlock },
-    { re: /BLOCK\s*24(?![_0-9A-Z])|Каналы\s+конкурентов/i, fn: renderRadarChannelsBlock },
-    { re: /BLOCK\s*06_4\b|Доля\s+внимания/i, fn: renderShareBlock },
-    { re: /BLOCK\s*24A\b|Что\s+залетает/i, fn: renderTopContentBlock },
-    { re: /BLOCK\s*24B\b|Что\s+работает\s+в\s+нише/i, fn: renderPatternsBlock },
-    { re: /BLOCK\s*12(?!B)\b|Fears|Страхи/i, fn: renderObjBlock },
-    { re: /BLOCK\s*09(?!B)\b|LPR\s+Personas|Персоны/i, fn: renderPersonasBlock },
-    { re: /BLOCK\s*14\b|Customer\s+Journey|Путь\s+клиента/i, fn: renderJourney },
-    { re: /BLOCK\s*09B\b|Демография/i, fn: renderDemography },
-    { re: /BLOCK\s*12B\b|Ограничения\s+для/i, fn: renderGuardrailsBlock },
-    { re: /BLOCK\s*10\b|JTBD/i, fn: renderJtbdBlock },
-    { re: /BLOCK\s*15\b|Cognitive\s+Tactics|Когнитивные\s+тактики/i, fn: renderTacticsBlock },
-    { re: /BLOCK\s*06_3\b|Позиционирование\s+по\s+сегментам/i, fn: renderPositioningBlock },
-    { re: /BLOCK\s*18B\b|Архетип\s+бренда/i, fn: renderArchetypeBlock },
-    { re: /BLOCK\s*08(?![A-Z0-9])|Intent\s+Clusters|Кластеры\s+намерений/i, fn: renderIntentBlock },
-    { re: /BLOCK\s*13\b|Decision\s+Criteria|Критерии\s+выбора/i, fn: renderCriteriaBlock },
-    { re: /BLOCK\s*17B\b|Offer\s+Workbench|Мастерская\s+офферов/i, fn: renderWorkbenchBlock },
-    { re: /BLOCK\s*24C\b|Бенчмарки/i, fn: renderBenchmarksBlock },
+    { re: /BLOCK\s*06_1\b|Gap\s+Analysis|Гэп-анализ/i, fn: renderGap , поКолонкам: true },
+    { re: /BLOCK\s*07(?![A-DB0-9])|Voice\s+of\s+Customer|Голос\s+клиента/i, fn: renderVocBlock , поКолонкам: true },
+    { re: /BLOCK\s*07A\b|Как\s+говорит|Банк\s+живого\s+языка/i, fn: renderLangBankBlock , поКолонкам: true },
+    { re: /BLOCK\s*07B\b|Hook\s+Bank|Банк\s+хуков/i, fn: renderHooksBlock , поКолонкам: true },
+    { re: /BLOCK\s*07C\b|Альтернатив/i, fn: renderAltBlock , поКолонкам: true },
+    { re: /BLOCK\s*07D\b|Кому\s+не\s+прода/i, fn: renderNotSellBlock , поКолонкам: true },
+    { re: /BLOCK\s*08A\b|Где\s+сидит/i, fn: renderChannelsBlock , поКолонкам: true },
+    { re: /BLOCK\s*24(?![_0-9A-Z])|Каналы\s+конкурентов/i, fn: renderRadarChannelsBlock , поКолонкам: true },
+    { re: /BLOCK\s*06_4\b|Доля\s+внимания/i, fn: renderShareBlock , поКолонкам: true },
+    { re: /BLOCK\s*24A\b|Что\s+залетает/i, fn: renderTopContentBlock , поКолонкам: true },
+    { re: /BLOCK\s*24B\b|Что\s+работает\s+в\s+нише/i, fn: renderPatternsBlock , поКолонкам: true },
+    { re: /BLOCK\s*12(?!B)\b|Fears|Страхи/i, fn: renderObjBlock , поКолонкам: true },
+    { re: /BLOCK\s*09(?!B)\b|LPR\s+Personas|Персоны/i, fn: renderPersonasBlock , поКолонкам: true },
+    { re: /BLOCK\s*14\b|Customer\s+Journey|Путь\s+клиента/i, fn: renderJourney , поКолонкам: true },
+    { re: /BLOCK\s*09B\b|Демография/i, fn: renderDemography , поКолонкам: true },
+    { re: /BLOCK\s*12B\b|Ограничения\s+для/i, fn: renderGuardrailsBlock , поКолонкам: true },
+    { re: /BLOCK\s*10\b|JTBD/i, fn: renderJtbdBlock , поКолонкам: true },
+    { re: /BLOCK\s*15\b|Cognitive\s+Tactics|Когнитивные\s+тактики/i, fn: renderTacticsBlock , поКолонкам: true },
+    { re: /BLOCK\s*06_3\b|Позиционирование\s+по\s+сегментам/i, fn: renderPositioningBlock , поКолонкам: true },
+    { re: /как\s+(архетип\s+)?проявляется|Как\s+это\s+проявляется/i, fn: renderManifestBlock, поКолонкам: true },
+    { re: /BLOCK\s*18B\b|Архетип\s+бренда/i, fn: renderArchetypeBlock , поКолонкам: true },
+    { re: /BLOCK\s*08(?![A-Z0-9])|Intent\s+Clusters|Кластеры\s+намерений/i, fn: renderIntentBlock , поКолонкам: true },
+    { re: /BLOCK\s*13\b|Decision\s+Criteria|Критерии\s+выбора/i, fn: renderCriteriaBlock , поКолонкам: true },
+    { re: /BLOCK\s*17B\b|Offer\s+Workbench|Мастерская\s+офферов/i, fn: renderWorkbenchBlock , поКолонкам: true },
+    { re: /BLOCK\s*24C\b|Бенчмарки/i, fn: renderBenchmarksBlock , поКолонкам: true },
     { re: /BLOCK\s*23\b|Главная\s+ставка/i, fn: renderBetBlock },
-    { re: /BLOCK\s*16\b|Hypotheses|Гипотез/i, fn: renderHypotheses },
-    { re: /BLOCK\s*17A\b|Offer\s+Input|Вход\s+для\s+офферов|что\s+мы\s+знаем\s+о\s+себе/i, fn: renderOfferInputBlock },
+    { re: /BLOCK\s*16\b|Hypotheses|Гипотез/i, fn: renderHypotheses , поКолонкам: true },
+    { re: /BLOCK\s*17A\b|Offer\s+Input|Вход\s+для\s+офферов|что\s+мы\s+знаем\s+о\s+себе/i, fn: renderOfferInputBlock , поКолонкам: true },
     { re: /BLOCK\s*17\s*FINAL|Final\s+Offers|Финальные\s+офферы/i, fn: renderOffers },
   ];
   function renderKnownBlock(heading, headers, rows, ctx) {
@@ -6066,10 +6088,9 @@ function renderResearchHTML(content, opts) {
       if (res === '') return '';   // блок сознательно пуст (вторая таблица SWOT)
     }
     if (heading && BLOCK_VIEWS.some(v => v.re.test(heading))) return null;
-    // Перебор — только для ШИРОКИХ таблиц: пять колонок и больше. Узкую
-    // таблицу читать строками нормально, а подбор по колонкам на ней слишком
-    // легко промахивается — «Ниша | Спрос» подходит доброму десятку разборов.
-    if (headers.length < 5) return null;
+    // Перебор — от четырёх колонок: на трёх строка ещё читается, а подбор уже
+    // промахивается («Ниша | Спрос» подходит доброму десятку разборов).
+    if (headers.length < 4) return null;
     // Заголовок не опознан — узнаём по НАБОРУ КОЛОНОК. Модели нового
     // поколения переписывают заголовки по-своему («Гэп-анализ: где выигрываем
     // и где проигрываем» вместо «BLOCK 06_1»), и все разборы разом
@@ -6078,7 +6099,12 @@ function renderResearchHTML(content, opts) {
     // вбок». Колонки модель не переименовывает: по ним и опознаём. Каждая
     // рисовалка сама проверяет, что нужные колонки на месте, и отдаёт null,
     // если это не её таблица.
+    // И только теми разборами, которые помечены «поКолонкам»: каждый из них
+    // требует своё отличительное сочетание и на чужой таблице отдаёт null.
+    // Без этой пометки подбор однажды уже промахнулся: разбор поисковой
+    // выдачи забрал гэп-анализ, потому что в обоих есть колонка URL.
     for (const v of BLOCK_VIEWS) {
+      if (!v.поКолонкам) continue;
       const res = попробовать(v);
       if (res) return res;
     }
@@ -6245,13 +6271,24 @@ function mdToHtml(text) {
       const t = line.trim();
       // Подпись прямо перед таблицей. В SWOT четыре таблицы идут подряд под
       // одним заголовком блока, и различить их можно только по ней.
-      if (t && !t.startsWith('|') && !/^#{1,4}\s/.test(line)) ctx.lastSub = t;
+      // Модель печатает её то жирной строкой, то заголовком с решёткой
+      // («### Сильные стороны»). Раньше заголовки сюда не попадали, и SWOT
+      // разъезжался на четыре сырые таблицы (скрин владелицы 15.09).
+      if (t && !t.startsWith('|')) ctx.lastSub = t.replace(/^#{1,4}\s*/, '').replace(/\*\*/g, '').trim();
       // Сами подписи SWOT в отчёт не идут: четыре таблицы рисуются одной
       // сеткой, где эти слова уже стоят заголовками полей. Без этого под
       // сеткой оставались три висячие строки «Слабые стороны:» и соседние.
       if (/BLOCK\s*06_2|SWOT/i.test(lastHeading) &&
           /^(сильные|слабые|возможности|угрозы)/i.test(t)) continue;
-      if (/^#{1,4}\s/.test(line)) lastHeading = line.replace(/^#+\s*/,'').trim();  // сырой — по нему узнаём формат
+      if (/^#{1,4}\s/.test(line)) {
+        const имяЗ = line.replace(/^#+\s*/,'').trim();
+        // «### Сильные стороны» — это не новый блок, а четверть SWOT. Если
+        // принять её за заголовок блока, четыре таблицы перестают узнаваться
+        // и разъезжаются сырым видом (скрин владелицы 15.09).
+        const четверть = /^(сильные|слабые|возможности|угрозы)/i.test(имяЗ)
+          && /BLOCK\s*06_2|SWOT/i.test(lastHeading);
+        if (!четверть) lastHeading = имяЗ;   // сырой — по нему узнаём формат
+      }
       else if (/^(BLOCK|SEO-)/i.test(t)) {
         // Живой ответ модели печатает имя блока ОБЫЧНОЙ строкой, без решёток.
         // До 12.09 она попадала в отчёт мелким серым абзацем, и блоки шли
