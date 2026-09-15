@@ -81,11 +81,15 @@
       : '<span class="kchip kchip-stop"><span class="d"></span>' + (м.blocking || 0) + ' '
         + скл(м.blocking || 0, 'блокировка', 'блокировки', 'блокировок') + '</span>';
     // Карусель показывается ЛЕНТОЙ СЛАЙДОВ, а не списком полей: человек
-    // согласует то, что увидит читатель. Картинки лежат в закрытом ведре и
-    // требуют подписанной ссылки — пока её нет, показываем ленту подписей.
+    // согласует то, что увидит читатель. Ссылка на картинку подписывается в
+    // момент показа и живёт час — ведро закрытое, и это правильно.
     var лента = сл.length
       ? '<div class="mslides">' + сл.map(function (s, n) {
-          return '<div class="mslide"><span>' + (n + 1) + '</span>' + esc(s.alt || 'Слайд') + '</div>';
+          var url = подписанные[s.storage_key];
+          return '<div class="mslide' + (url ? ' есть' : '') + '" data-ключ="' + esc(s.storage_key) + '">'
+            + (url ? '<img src="' + esc(url) + '" alt="' + esc(s.alt || 'Слайд ' + (n + 1)) + '">' : '')
+            + '<span>' + (n + 1) + '</span>'
+            + (url ? '' : esc(s.alt || 'Слайд')) + '</div>';
         }).join('') + '</div>'
       : '';
     return '<div class="card mcard" data-ok="' + (м.can_approve ? '1' : '0') + '">'
@@ -301,6 +305,28 @@
       .catch(function () { return null; });
   }
 
+  // Подписанные ссылки на картинки слайдов. Ведро закрытое; с 15.09 владелец
+  // проекта читает свои файлы по правилу базы (миграция 004), поэтому ссылку
+  // подписываем ЕГО токеном — сервер в этом больше не участвует. Ссылка живёт
+  // час, поэтому подписываем при показе, а не складываем впрок.
+  var подписанные = {};
+  function подписать(ключи) {
+    var A = window.CAAuth;
+    if (!A || !A.getAccessToken || !A.getAccessToken() || !ключи.length) return Promise.resolve();
+    return Promise.all(ключи.map(function (к) {
+      if (подписанные[к]) return null;
+      return fetch(A.SUPABASE_URL + '/storage/v1/object/sign/content/' + к.split('/').map(encodeURIComponent).join('/'), {
+        method: 'POST',
+        headers: { apikey: A.SUPABASE_ANON_KEY, Authorization: 'Bearer ' + A.getAccessToken(),
+                   'Content-Type': 'application/json' },
+        body: JSON.stringify({ expiresIn: 3600 }),
+      }).then(function (r) { return r.ok ? r.json() : null; })
+        .then(function (d) {
+          if (d && d.signedURL) подписанные[к] = A.SUPABASE_URL + '/storage/v1' + d.signedURL;
+        }).catch(function () {});
+    })).then(function () {});
+  }
+
   // ── Живая база ─────────────────────────────────────────────────────────────
   // Запросы — от контент-агента (15.09), под токеном вошедшего: политики RLS
   // пускают только владельца клиента. secret_ref в ключах НЕ берём никогда.
@@ -401,6 +427,9 @@
       Д.живое = !!живое;
       загружено = true;
       нарисоватьВсе();
+      var ключи = (Д.экраны.slides || []).map(function (s) { return s.storage_key; })
+        .filter(Boolean).slice(0, 40);
+      return подписать(ключи).then(function () { нарисовать('inbox'); });
     });
   }
   загрузить();
