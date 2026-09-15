@@ -6210,7 +6210,7 @@ function renderResearchHTML(content, opts) {
     { re: /BLOCK\s*18B\b|Архетип\s+бренда/i, fn: renderArchetypeBlock , поКолонкам: true },
     { re: /BLOCK\s*08(?![A-Z0-9])|Intent\s+Clusters|Кластеры\s+намерений/i, fn: renderIntentBlock , поКолонкам: true },
     { re: /BLOCK\s*13\b|Decision\s+Criteria|Критерии\s+выбора/i, fn: renderCriteriaBlock , поКолонкам: true },
-    { re: /BLOCK\s*17B\b|Offer\s+Workbench|Мастерская\s+офферов/i, fn: renderWorkbenchBlock , поКолонкам: true },
+    { re: /BLOCK\s*17B\b|Offer\s+Workbench|Мастерская\s+офферов|(?:рабочие\s+варианты|черновик\w*)\s+офферов/i, fn: renderWorkbenchBlock , поКолонкам: true },
     { re: /BLOCK\s*24C\b|Бенчмарки/i, fn: renderBenchmarksBlock , поКолонкам: true },
     { re: /BLOCK\s*23\b|Главная\s+ставка/i, fn: renderBetBlock },
     { re: /BLOCK\s*16\b|Hypotheses|Гипотез/i, fn: renderHypotheses , поКолонкам: true },
