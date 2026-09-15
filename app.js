@@ -1,6 +1,6 @@
 // СОБРАНО АВТОМАТИЧЕСКИ из app.jsx — не править руками.
 // Правки вносить в app.jsx, затем: osascript -l JavaScript tools/build.js
-// отпечаток-исходника: bf866470d4dc6042
+// отпечаток-исходника: 768b7ebe8b4824f4
 // Функции контракта живут в lib/contract.js. Разбираем их сюда, чтобы весь
 // остальной код обращался к ним по прежним именам и не менялся.
 const{GLOBAL_MODS,isPerNiche,dropOrphans,nichesOf,resKey,splitMdRow,isMdSeparator,parseMdTables,buildModuleEntry,pickTable,pickColumn,withStableIds}=CAContract;// Название модуля берётся из MODULES — это конфиг ИНТЕРФЕЙСА, и сборщик
@@ -685,7 +685,12 @@ const pages=[];// Дизайн-система и соцсети достаютс
 // владелицы 14.09: бриф собирает дизайн (логотип, цвета, шрифты) и
 // соцсети клиента — они нужны контенту и мониторингу.
 const дизайн={socials:[],logo:'',colors:[],fonts:[]};const собратьДизайн=(html,у)=>{try{const соц=html.match(/https?:\/\/(?:www\.)?(?:instagram\.com|facebook\.com|t\.me|telegram\.me|vk\.com|youtube\.com|youtu\.be|tiktok\.com|x\.com|twitter\.com|linkedin\.com|ok\.ru|dzen\.ru|zen\.yandex\.ru|wa\.me|pinterest\.com|rutube\.ru)\/[^\s"'<>\\)]+/gi)||[];for(let ссылка of соц){ссылка=ссылка.replace(/[.,;]+$/,'');// кнопки «поделиться» — не профиль клиента
-if(/shar|intent|\/embed|\/plugins|\?/i.test(ссылка))continue;if(!дизайн.socials.some(x=>x.toLowerCase()===ссылка.toLowerCase()))дизайн.socials.push(ссылка);}if(!дизайн.logo){const og=html.match(/property=["']og:image["'][^>]*content=["']([^"']+)["']/i)||html.match(/content=["']([^"']+)["'][^>]*property=["']og:image["']/i);const img=html.match(/<img[^>]+src=["']([^"']*logo[^"']*)["']/i);const кандидат=img&&img[1]||og&&og[1]||'';if(кандидат)дизайн.logo=new URL(кандидат,у).href;}// Цвета: тема сайта + самые частые цвета из его же стилей.
+if(/shar|intent|\/embed|\/plugins|\?/i.test(ссылка))continue;if(!дизайн.socials.some(x=>x.toLowerCase()===ссылка.toLowerCase()))дизайн.socials.push(ссылка);}if(!дизайн.logo){const кандидаты=[];// 1. Разметка организации: сайт сам называет свой знак.
+const ld=html.match(/"logo"\s*:\s*"([^"]+)"/i)||html.match(/"logo"\s*:\s*\{[^}]*"url"\s*:\s*"([^"]+)"/i);if(ld)кандидаты.push(ld[1]);// 2. Картинка, которая называет себя логотипом — в адресе, подписи
+//    или классе. Подпись надёжнее адреса: «logo» в пути бывает у
+//    чужих значков в подвале.
+const пометки=[/<img[^>]+(?:alt|title)=["'][^"']*(?:логотип|logo)[^"']*["'][^>]*src=["']([^"']+)["']/i,/<img[^>]+src=["']([^"']+)["'][^>]*(?:alt|title)=["'][^"']*(?:логотип|logo)[^"']*["']/i,/<img[^>]+class=["'][^"']*logo[^"']*["'][^>]*src=["']([^"']+)["']/i,/<img[^>]+src=["']([^"']*logo[^"']*)["']/i];for(const м of пометки){const r=html.match(м);if(r)кандидаты.push(r[1]);}// 3. Значок сайта: всегда знак, хоть и мелкий. Последний рубеж.
+const иконка=html.match(/<link[^>]+rel=["'][^"']*apple-touch-icon[^"']*["'][^>]*href=["']([^"']+)["']/i)||html.match(/<link[^>]+rel=["'][^"']*icon[^"']*["'][^>]*href=["']([^"']+)["']/i);if(иконка)кандидаты.push(иконка[1]);const годится=а=>а&&!/^data:/i.test(а)&&!/sprite|placeholder|pixel|blank|spacer/i.test(а);const выбран=кандидаты.find(годится);if(выбран)дизайн.logo=new URL(выбран,у).href;}// Цвета: тема сайта + самые частые цвета из его же стилей.
 const тема=html.match(/name=["']theme-color["'][^>]*content=["']([^"']+)["']/i);if(тема&&!дизайн.colors.includes(тема[1]))дизайн.colors.push(тема[1]);const счёт={};for(const m of html.match(/#[0-9a-fA-F]{6}\b/g)||[]){const c=m.toLowerCase();// Белый/чёрный/серые не характеризуют бренд. Серый — это когда каналы
 // почти равны; проверяем численно, а не узором символов (первый
 // вариант с узором #aabbcc отбрасывал и настоящие фирменные цвета).

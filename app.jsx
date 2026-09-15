@@ -2409,11 +2409,29 @@ async function fetchSite(url) {
         if (!дизайн.socials.some(x => x.toLowerCase() === ссылка.toLowerCase())) дизайн.socials.push(ссылка);
       }
       if (!дизайн.logo) {
-        const og = html.match(/property=["']og:image["'][^>]*content=["']([^"']+)["']/i)
-          || html.match(/content=["']([^"']+)["'][^>]*property=["']og:image["']/i);
-        const img = html.match(/<img[^>]+src=["']([^"']*logo[^"']*)["']/i);
-        const кандидат = (img && img[1]) || (og && og[1]) || '';
-        if (кандидат) дизайн.logo = new URL(кандидат, у).href;
+        const кандидаты = [];
+        // 1. Разметка организации: сайт сам называет свой знак.
+        const ld = html.match(/"logo"\s*:\s*"([^"]+)"/i)
+          || html.match(/"logo"\s*:\s*\{[^}]*"url"\s*:\s*"([^"]+)"/i);
+        if (ld) кандидаты.push(ld[1]);
+        // 2. Картинка, которая называет себя логотипом — в адресе, подписи
+        //    или классе. Подпись надёжнее адреса: «logo» в пути бывает у
+        //    чужих значков в подвале.
+        const пометки = [
+          /<img[^>]+(?:alt|title)=["'][^"']*(?:логотип|logo)[^"']*["'][^>]*src=["']([^"']+)["']/i,
+          /<img[^>]+src=["']([^"']+)["'][^>]*(?:alt|title)=["'][^"']*(?:логотип|logo)[^"']*["']/i,
+          /<img[^>]+class=["'][^"']*logo[^"']*["'][^>]*src=["']([^"']+)["']/i,
+          /<img[^>]+src=["']([^"']*logo[^"']*)["']/i,
+        ];
+        for (const м of пометки) { const r = html.match(м); if (r) кандидаты.push(r[1]); }
+        // 3. Значок сайта: всегда знак, хоть и мелкий. Последний рубеж.
+        const иконка = html.match(/<link[^>]+rel=["'][^"']*apple-touch-icon[^"']*["'][^>]*href=["']([^"']+)["']/i)
+          || html.match(/<link[^>]+rel=["'][^"']*icon[^"']*["'][^>]*href=["']([^"']+)["']/i);
+        if (иконка) кандидаты.push(иконка[1]);
+        const годится = а => а && !/^data:/i.test(а)
+          && !/sprite|placeholder|pixel|blank|spacer/i.test(а);
+        const выбран = кандидаты.find(годится);
+        if (выбран) дизайн.logo = new URL(выбран, у).href;
       }
       // Цвета: тема сайта + самые частые цвета из его же стилей.
       const тема = html.match(/name=["']theme-color["'][^>]*content=["']([^"']+)["']/i);
