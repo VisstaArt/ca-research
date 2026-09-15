@@ -1,6 +1,6 @@
 // СОБРАНО АВТОМАТИЧЕСКИ из app.jsx — не править руками.
 // Правки вносить в app.jsx, затем: osascript -l JavaScript tools/build.js
-// отпечаток-исходника: 59cfd3b459ba9b74
+// отпечаток-исходника: 6773c93e4cf7ec92
 // Функции контракта живут в lib/contract.js. Разбираем их сюда, чтобы весь
 // остальной код обращался к ним по прежним именам и не менялся.
 const{GLOBAL_MODS,isPerNiche,dropOrphans,nichesOf,resKey,splitMdRow,isMdSeparator,parseMdTables,buildModuleEntry,pickTable,pickColumn,withStableIds}=CAContract;// Название модуля берётся из MODULES — это конфиг ИНТЕРФЕЙСА, и сборщик
@@ -679,7 +679,12 @@ return'- '+k+': '+v;}).filter(Boolean).join('\n');const nicheFilter=brief.select
 // исправить в этом модуле, вместо слепой повторной генерации с нуля.
 const editorNote=brief.regenNote?'\n\nOWNER CORRECTION — CRITICAL, HIGHEST PRIORITY:\nThe business owner reviewed the PREVIOUS version of this exact module and asked for this specific fix:\n"'+brief.regenNote+'"\nApply this correction precisely while regenerating. Keep everything else that was already correct — do not make unrelated changes.\n':'';return'You are a senior market research analyst producing a professional-grade target audience research report.\n\n'+'PROJECT BRIEF (00_Project_Brief):\n'+lines+'\n\n'+'GEOGRAPHY RULES — CRITICAL:\n'+'- Use Research Market ('+(brief.geoMarket||brief.geo||'—')+') for ALL statistics, competitor search, pricing, keyword volumes.\n'+'- Use Company Geography ('+(brief.geoCompany||'—')+') only as context about business scale.\n\n'+'ДАННЫЕ КОМПАНИИ: если в брифе заполнены выручка, число клиентов или средний чек — добавь раздел «## Позиция компании на рынке» и посчитай в нём долю рынка (выручка компании / выручка SOM × 100%), запас роста (клиенты SOM − текущие клиенты) и разрыв по выручке (SOM − текущая выручка). ЕСЛИ ЭТИХ ПОЛЕЙ В БРИФЕ НЕТ — раздел НЕ ПИШИ ВООБЩЕ. Не печатай ни заголовок, ни объяснение, почему его нет: пустой раздел в отчёте читается как поломка.\n\n'+'RULES:\n'+'0. Today\'s date: '+new Date().toISOString().slice(0,10)+'. Never date anything "as of" past years unless the source says so.\n'+'1. ALL output in '+lang+' only. No exceptions.\n'+'2. No invented data — write "нет публичных данных" + Confidence=1 if unavailable.\n'+'3. Every stat needs a real verifiable URL.\n'+// Владелица 15.09: «источников показано семнадцать, нумерация после 16
 // опять идёт с двойки, а в ссылках есть 35, 37, 42 — где остальные?»
-'3a. НУМЕРАЦИЯ ИСТОЧНИКОВ СКВОЗНАЯ ПО ВСЕМУ МОДУЛЮ и нигде не начинается заново. Каждый номер [n] из любой таблицы ОБЯЗАН быть строкой в индексе источников, с адресом. Нет адреса — нет и номера: пиши «вывод» или «не видно из источника», а не ссылку в никуда. Перед выдачей проверь: самый большой номер в тексте равен числу строк индекса.\n'+'4. Markdown pipe tables only.\n'+// Список сокращений под таблицей интерфейс всё равно снимает: пояснение
+'3a. НУМЕРАЦИЯ ИСТОЧНИКОВ СКВОЗНАЯ ПО ВСЕМУ МОДУЛЮ и нигде не начинается заново. Каждый номер [n] из любой таблицы ОБЯЗАН быть строкой в индексе источников, с адресом. Нет адреса — нет и номера: пиши «вывод» или «не видно из источника», а не ссылку в никуда. Перед выдачей проверь: самый большой номер в тексте равен числу строк индекса.\n'+'4. Markdown pipe tables only.\n'+// Имя блока модель переписывает по-своему — ей велено писать по-русски, и
+// «BLOCK 06 — Competitor Map» честно превращается в «Карта прямого рынка».
+// Формально не нарушение, а узнавание блока по имени ломается, и
+// согласованный вид таблицы подменяется сырой (владелица 15.09).
+// Метка — не текст для читателя, а код: его модель не переводит.
+'4a. ПЕРЕД КАЖДЫМ БЛОКОМ — ОТДЕЛЬНАЯ СТРОКА С МЕТКОЙ: «@@BLOCK <код>», где код — тот, что стоит в задании этого блока (06, 06_1, 24A, SEO-02 и так далее). Строка стоит САМА ПО СЕБЕ, до заголовка, без пояснений и без разметки. Пример:\n@@BLOCK 06\n## Карта рынка и конкурентов\nМетку не переводи, не переименовывай и не пропускай ни в одном блоке: по ней отчёт понимает, какой это блок, и рисует его в согласованном виде. Заголовок после метки пиши по-русски, как считаешь нужным.\n'+// Список сокращений под таблицей интерфейс всё равно снимает: пояснение
 // показывается подсказкой у самого слова. Просить его и тут же удалять —
 // тратить место в ответе и время модели.
 '5. НЕ печатай список сокращений под таблицами. Вместо этого раскрывай сокращение прямо при ПЕРВОМ употреблении в тексте: «ЛПР (тот, кто принимает решение о покупке)». Дальше пиши коротко.\n'+'5a. НЕ СМЕШИВАЙ латиницу и кириллицу ВНУТРИ СЛОВА. «confirmированные», «barъерам», «benchmarking» — брак, который сразу видно читателю. Либо русское слово целиком, либо латинское целиком.\n'+// Владелица 14.09: карточка модуля состояла из указаний самим себе —
@@ -2220,7 +2225,7 @@ function renderManifestBlock(headers,rows){const kЭ=col(headers,'элемент
 // сравнивают глазами по столбцу, и карточки этому мешают.
 function renderGenericCards(headers,rows){// До восьми колонок: шире шести строка в отчёте всё равно не читается, и
 // карточка честнее прокрутки. Выше — это уже выгрузка, не чтение.
-if(headers.length<2||headers.length>8||rows.length<2)return null;const g=(r,k)=>String(r[k]==null?'':r[k]).replace(/\*\*/g,'').trim();const число=v=>/^[\d\s\u00A0.,%+-]+$/.test(String(v||'').trim())&&/\d/.test(String(v||''));const числовая=h=>rows.filter(r=>число(g(r,h))).length>=rows.length*0.6;// Первая колонка бывает просто номером («1, 2, 3») — это не данные, а
+if(headers.length<2||rows.length<2)return null;const g=(r,k)=>String(r[k]==null?'':r[k]).replace(/\*\*/g,'').trim();const число=v=>/^[\d\s\u00A0.,%+-]+$/.test(String(v||'').trim())&&/\d/.test(String(v||''));const числовая=h=>rows.filter(r=>число(g(r,h))).length>=rows.length*0.6;// Первая колонка бывает просто номером («1, 2, 3») — это не данные, а
 // порядок, и карточка рисует его сама. Тогда именем строки становится
 // вторая колонка (владелица 15.09: «три главных приоритета» и «что
 // отложить» оставались сырыми таблицами именно из-за номера).
@@ -2312,7 +2317,8 @@ ctx.signals[nm]=hdrs.filter(h=>h!==kn&&String(r[h]||'').trim()).map(h=>[h.replac
 // хотя данные просто показаны в другом месте.
 if(/BLOCK\s*04_1\b/i.test(lastHeading)&&ctx.has042){if(ctx.mark041!=null){html=html.slice(0,ctx.mark041);ctx.mark041=null;}tableRows=[];inTable=false;return;}// Длина разметки на момент вызова нужна блоку, который хочет снять
 // свой же заголовок (список источников сворачивается и печатает свой).
-ctx.htmlLen=html.length;ctx.dropHead=false;ctx.заголовок=lastHeading;let special=renderKnownBlock(lastHeading,hdrs,asObjs,ctx);if(special!=null){if(ctx.dropHead&&ctx.headStart!=null){// Якорь снятого заголовка переезжает на блок: сноски [n] в тексте
+ctx.htmlLen=html.length;ctx.dropHead=false;ctx.заголовок=lastHeading;// Метка надёжнее имени: имя модель переписывает, метку — нет.
+const поМетке=ctx.метка?'BLOCK '+ctx.метка:'';let special=поМетке?renderKnownBlock(поМетке,hdrs,asObjs,ctx):null;if(special==null)special=renderKnownBlock(lastHeading,hdrs,asObjs,ctx);if(special!=null){if(ctx.dropHead&&ctx.headStart!=null){// Якорь снятого заголовка переезжает на блок: сноски [n] в тексте
 // ведут именно на него, и потерять его значит сделать их мёртвыми.
 const снятый=html.slice(ctx.headStart,ctx.headEnd);const я=(снятый.match(/\sid="([^"]+)"/)||[])[1];if(я&&!/^<[a-z]+[^>]*\sid=/.test(special)){special=special.replace(/^<([a-z]+)/,'<$1 id="'+я+'"');}html=html.slice(0,ctx.headStart);ctx.headStart=null;ctx.headEnd=-1;}ctx.dropHead=false;html+=special+сноска();tableRows=[];inTable=false;return;}// Числовая колонка узнаётся по содержимому, а не по названию: правило
 // «числа снаружи полосы, чернилами» начинается с того, что число вообще
@@ -2346,11 +2352,12 @@ if(/BLOCK\s*04_1\b/i.test(t))ctx.mark041=html.length;ctx.headStart=html.length;h
 // и «P3 — руководитель» подряд: два имени персон и пустота под ними.
 // Снимаем ЛЮБОЙ заголовок, под которым до следующего заголовка того же
 // или более высокого уровня ничего не напечаталось.
-const уровень=(line.match(/^(#{1,4})\s/)||[])[1];if(уровень){const у=уровень.length;// Пустая строка печатает отступ — он не содержимое. Иначе любой
+// Служебная метка блока. В отчёт не идёт: она для нас, не для читателя.
+const метка=t.match(/^@@\s*BLOCK\s+([0-9A-Za-z_\-]+)\s*$/i);if(метка){ctx.метка=метка[1].toUpperCase();continue;}const уровень=(line.match(/^(#{1,4})\s/)||[])[1];if(уровень){const у=уровень.length;// Пустая строка печатает отступ — он не содержимое. Иначе любой
 // заголовок с пустой строкой под ним считался бы заполненным.
 while(ctx.пустые&&ctx.пустые.length&&ctx.пустые[ctx.пустые.length-1].у>=у&&безОтступов(html).length<=ctx.пустые[ctx.пустые.length-1].конец){html=html.slice(0,ctx.пустые.pop().начало);}if(ctx.пустые)ctx.пустые=ctx.пустые.filter(x=>x.у<у);}if(line.startsWith('# ')){if(!ctx.h1seen){ctx.h1seen=true;}else html+='<h1>'+esc(human(line.slice(2)))+'</h1>';}else if(line.startsWith('## ')){if(/BLOCK\s*04_1\b/i.test(line.slice(3)))ctx.mark041=html.length;ctx.headStart=html.length;// Демография сегмента прячется целиком: и пустой таблицей, и одной
 // фразой «блок не применим». Запоминаем начало и решаем на выходе.
-if(ctx.демографияС!=null&&!ctx.демографияЕсть){html=html.slice(0,ctx.демографияС);}ctx.демографияС=null;ctx.демографияЕсть=false;const н2=html.length;html+='<h2'+якорь(line.slice(3))+'>'+esc(human(line.slice(3)))+'</h2>';ctx.headEnd=html.length;(ctx.пустые=ctx.пустые||[]).push({у:2,начало:н2,конец:html.length});if(/BLOCK\s*09B\b|Демограф/i.test(line.slice(3))){ctx.демографияС=н2;ctx.демографияЕсть=false;}}else if(line.startsWith('### ')){// В блоке SWOT стороны нарисованы карточками, и заголовок над ними —
+if(ctx.демографияС!=null&&!ctx.демографияЕсть){html=html.slice(0,ctx.демографияС);}ctx.демографияС=null;ctx.демографияЕсть=false;const н2=html.length;const имяПоМетке=ctx.метка&&BLOCK_TITLES[ctx.метка];html+='<h2'+якорь(line.slice(3))+'>'+esc(имяПоМетке||human(line.slice(3)))+'</h2>';ctx.headEnd=html.length;(ctx.пустые=ctx.пустые||[]).push({у:2,начало:н2,конец:html.length});if(/BLOCK\s*09B\b|Демограф/i.test(line.slice(3))){ctx.демографияС=н2;ctx.демографияЕсть=false;}}else if(line.startsWith('### ')){// В блоке SWOT стороны нарисованы карточками, и заголовок над ними —
 // второе имя того же самого. Владелица 15.09 показала «Strengths»
 // и «Weaknesses» подряд: по-английски и поверх готовых карточек.
 let имя3=human(line.slice(4)).trim();// «### Таблица 2. Главное обещание» шло мимо чистки: ловили только
