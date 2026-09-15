@@ -17,6 +17,11 @@ var кусок=SRC.slice(SRC.indexOf('async function gatherCompetitorEvidence'),
 ok('каталоги отсекаются на поиске', /exclude_domains: каталоги/.test(кусок), true);
 ok('vc.ru в списке каталогов', /'vc\.ru'/.test(кусок), true);
 ok('берём глубину выдачи, а не верхушку', /gatherEvidence\(queries, \d+, 20,/.test(кусок), true);
+// Глубина — это ссылки на запрос, а не число запросов: каждый запрос платный,
+// и бесплатная тысяча поиска кончается за день (владелица 16.09).
+var вызовы=(кусок.match(/gatherEvidence\([^,]+,\s*(\d+),/g)||[])
+  .map(function(x){return Number(x.match(/,\s*(\d+),/)[1]);});
+ok('поисковых вызовов на модуль не больше 16', вызовы.reduce(function(a,b){return a+b;},0)<=16, true);
 ok('подборки читаются ради ссылок', /include_domains: каталоги/.test(кусок), true);
 ok('из подборки достаются адреса', /https\?:\\\/\\\/\[\^/.test(кусок) || /match\(\/https/.test(кусок), true);
 ok('по найденным сайтам идёт отдельный заход', /изПодборок/.test(кусок), true);
