@@ -2503,28 +2503,19 @@ table.raw td.num{font-variant-numeric:tabular-nums;text-align:center;white-space
 .rules .ft{margin-top:12px;padding-top:10px;border-top:1px solid var(--line);font-size:11.5px;color:var(--ink-3);line-height:1.5;max-width:36ch}
 /* Источники свёрнуты: доказательство под рукой, но не поперёк отчёта. */
 .srcfold{margin:14px 0 22px}
-.srcfold>summary{cursor:pointer;list-style:none;font-size:12.5px;color:var(--ink-3);padding:9px 0;border-top:1px solid var(--line-2);border-bottom:1px solid var(--line-2)}
-.srcfold>summary::-webkit-details-marker{display:none}
-.srcfold>summary::before{content:"▸";display:inline-block;width:14px;color:var(--ink-3)}
-.srcfold[open]>summary::before{content:"▾"}
-.srcfold>summary:hover{color:var(--ink-2)}
-.srcfold[open]>summary{border-bottom-color:transparent}
-/* Гэп-анализ карточками: шесть колонок строкой не читаются. */
-.gapc{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px;margin:14px 0 22px}
-.gcard{border:1px solid var(--line);border-radius:16px;padding:14px 16px;background:var(--card-solid)}
-.gcard .gh{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:9px}
-.gcard .gh b{font-size:13.5px;line-height:1.3}
-.gcard .gv{font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;white-space:nowrap}
-.gcard .gf{margin-top:7px}
-.gcard .gf span{display:block;font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--ink-3)}
-.gcard .gf b{display:block;font-size:12.5px;font-weight:400;color:var(--ink-2);line-height:1.45;margin-top:2px}
-.gcard .gl{display:inline-block;margin-top:9px;font-size:11.5px;color:var(--acc-mid-ink)}
+.srcfold>.srctoggle{display:block;width:100%;text-align:left;cursor:pointer;font:inherit;font-size:12.5px;color:var(--ink-3);padding:9px 0;background:none;border:0;border-top:1px solid var(--line-2);border-bottom:1px solid var(--line-2)}
+.srcfold>.srctoggle:before{content:"\\25B8";display:inline-block;width:14px}
+.srcfold>.srctoggle[aria-expanded="true"]:before{content:"\\25BE"}
+.srcfold>.srctoggle:hover{color:var(--ink-2)}
+.srcfold>.srcbody{padding-top:10px}
 .topc{display:flex;flex-direction:column;gap:0}
 .tcrow{display:grid;grid-template-columns:minmax(0,300px) 1fr 116px;gap:14px;align-items:center;padding:10px 0;border-top:1px solid var(--line-2)}
 /* Нечего мерить — нет и дорожки: две колонки вместо трёх. */
 .nomeasure .tcrow{grid-template-columns:minmax(0,1fr) auto}
 .topc .tcrow:first-child{border-top:0}
 .tcn{font-size:13.5px;line-height:1.35;color:var(--ink);min-width:0}
+.tcn .tci{display:inline-block;width:15px;height:15px;vertical-align:-2px;margin-right:6px}
+.tcn .tci svg{width:15px;height:15px;stroke:var(--ink-3);fill:none;stroke-width:1.6}
 .tcn a{color:var(--ink);text-decoration:none}
 .tcn a:hover{text-decoration:underline}
 .tcn span{display:block;font-size:11.5px;color:var(--ink-3);margin-top:3px}
