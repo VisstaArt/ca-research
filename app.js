@@ -1,6 +1,6 @@
 // СОБРАНО АВТОМАТИЧЕСКИ из app.jsx — не править руками.
 // Правки вносить в app.jsx, затем: osascript -l JavaScript tools/build.js
-// отпечаток-исходника: fc57a01d8f7b7ff1
+// отпечаток-исходника: 24bd5ab7cdaf1df5
 // Функции контракта живут в lib/contract.js. Разбираем их сюда, чтобы весь
 // остальной код обращался к ним по прежним именам и не менялся.
 const{GLOBAL_MODS,isPerNiche,dropOrphans,nichesOf,resKey,splitMdRow,isMdSeparator,parseMdTables,buildModuleEntry,pickTable,pickColumn,withStableIds}=CAContract;// Название модуля берётся из MODULES — это конфиг ИНТЕРФЕЙСА, и сборщик
@@ -1916,7 +1916,9 @@ const ряд=(имя,шкала)=>'<span class="cl-row"><span class="cl-h">'+и�
 return'<p class="note confleg">'+ряд('Уверенность',ШКАЛА_УВЕРЕННОСТИ)+(сДостатком?ряд('Достаток',ШКАЛА_ДОСТАТКА):'')+'</p>';}function поТексту(html,как){// Режем по тегам и правим только то, что между ними. Прежний вариант искал
 // «>…<» и пропускал текст в начале и конце куска — а куски появляются,
 // когда разметку заранее разбили (например, чтобы не трогать готовые ссылки).
-return String(html).split(/(<[^>]*>)/).map(function(часть){return часть.charAt(0)==='<'?часть:как(часть);}).join('');}// Рабочие имена блоков — не для человека. Заголовки уже переводит BLOCK_TITLES,
+return String(html).split(/(<[^>]*>)/).map(function(часть){return часть.charAt(0)==='<'?часть:как(часть);}).join('');}// Рабочий номер в начале заголовка — «06_1. Конкурентный гэп-анализ», «24A —
+// Что залетает». Он из промпта и человеку не говорит ничего (владелица 15.09).
+function безНомераБлока(имя){return String(имя||'').replace(/^\s*(?:BLOCK\s*)?(?:SEO-)?\d{1,2}[_A-Za-zА-Яа-я]{0,3}\s*[.:—–-]\s+/i,'').trim();}// Рабочие имена блоков — не для человека. Заголовки уже переводит BLOCK_TITLES,
 // но модель ссылается на блоки и внутри текста: «см. BLOCK 04_2», «на основе
 // блока 07B». Владелица 15.09: «для пользователя это рабочие названия, они не
 // подходят». Меняем их на человеческие имена везде, где встретили.
@@ -2257,7 +2259,7 @@ const human=x=>{const t=String(x||'').trim();// Сначала — справо�
 // зависеть от того, перевела модель служебное название или скопировала
 // его по-английски (владелица нашла пять таких: Decision Criteria,
 // Cognitive Tactics, Voice of Customer, Intent Clusters, Offer Workbench).
-const byNum=t.match(/^(?:BLOCK\s*([0-9]{1,2}[_0-9A-Z]*)|(SEO-\d\d))\b/i);if(byNum){const key=(byNum[1]||byNum[2]||'').toUpperCase();if(BLOCK_TITLES[key])return BLOCK_TITLES[key];}const ru=t.match(/\(\s*[0-9A-Za-z_]*?_?([А-Яа-яЁё][^)]*)\)\s*$/);if(ru)return ru[1].replace(/_/g,' ').trim();return t.replace(/^(?:BLOCK|SEO)[\s-]*[0-9]+[A-Z_0-9]*(?:\s+[A-Z]{2,})*\s*[—:-]\s*/i,'').replace(/\s*\([0-9A-Za-z_]+\)\s*$/,'').trim();};const ctx=swotCtx;ctx.h1seen=false;// Якорь по номеру блока: по нему сноски [n] уводят к «Источникам
+const byNum=t.match(/^(?:BLOCK\s*([0-9]{1,2}[_0-9A-Z]*)|(SEO-\d\d))\b/i)||t.match(/^([0-9]{1,2}[_0-9A-Z]*)\s*[.:—–-]\s+\S/i);if(byNum){const key=(byNum[1]||byNum[2]||'').toUpperCase();if(BLOCK_TITLES[key])return BLOCK_TITLES[key];}const ru=t.match(/\(\s*[0-9A-Za-z_]*?_?([А-Яа-яЁё][^)]*)\)\s*$/);if(ru)return ru[1].replace(/_/g,' ').trim();return t.replace(/^(?:BLOCK|SEO)[\s-]*[0-9]+[A-Z_0-9]*(?:\s+[A-Z]{2,})*\s*[—:-]\s*/i,'').replace(/^[0-9]{1,2}[_0-9A-Z]*\s*[.:—–-]\s+/i,'').replace(/\s*\([0-9A-Za-z_]+\)\s*$/,'').trim();};const ctx=swotCtx;ctx.h1seen=false;// Якорь по номеру блока: по нему сноски [n] уводят к «Источникам
 // разведки» (владелица 15.09: «чтобы они переключались на ссылки в
 // источниках, а дальше человек перейдёт на конкретную ссылку»).
 const якорь=t=>{const m=String(t||'').match(/^(?:BLOCK\s*([0-9]{1,2}[_0-9A-Z]*)|(SEO-\d\d))\b/i);return m?' id="блок-'+(m[1]||m[2]||'').toUpperCase()+'"':'';};const flushTable=()=>{if(tableRows.length<2){tableRows.forEach(r=>{html+='<p>'+esc(r)+'</p>';});tableRows=[];inTable=false;return;}const hdrs=tableRows[0].split('|').map(h=>h.trim()).filter(Boolean);const rows=tableRows.slice(2).map(r=>r.split('|').map(c=>c.trim()).filter(Boolean));// Шкала уверенности встаёт под «Приоритетом ниш»: оценка относится к
@@ -2521,7 +2523,7 @@ const ICON_DL='<svg viewBox="0 0 24 24"><path d="M12 4v10"/><path d="M8 11l4 4 4
 // инструмента они не помещались и обрезались по правому краю —
 // колонка «Обоснование» просто исчезала (скрин владелицы 15.09).
 // Таблица прокручивается внутри себя, страница вбок не едет.
-+'\n.tbl{overflow-x:auto;-webkit-overflow-scrolling:touch}'+'\n.tbl>table{min-width:100%;width:max-content}'+'\n.tbl td{min-width:120px}'// Без рамки заливка шапки превращается в висящий серый брусок — вместо
++'\n.tbl{overflow-x:auto;-webkit-overflow-scrolling:touch}'+'\n.tbl>table{min-width:100%}'+'\n.tbl td{min-width:120px}'// Без рамки заливка шапки превращается в висящий серый брусок — вместо
 // неё волосяная линия под прописными. Первая строка свою верхнюю линию
 // отдаёт шапке, иначе их две подряд.
 +'\n.tbl th,.dtbl .th,table.raw th{background:none;'+'border-bottom:1px solid var(--line);padding:13px 18px 9px}'// Верхний отступ у шапки: когда убрали рамку, вместе с ней ушёл и

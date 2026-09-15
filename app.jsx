@@ -4607,6 +4607,14 @@ function поТексту(html, как) {
   }).join('');
 }
 
+// Рабочий номер в начале заголовка — «06_1. Конкурентный гэп-анализ», «24A —
+// Что залетает». Он из промпта и человеку не говорит ничего (владелица 15.09).
+function безНомераБлока(имя) {
+  return String(имя || '')
+    .replace(/^\s*(?:BLOCK\s*)?(?:SEO-)?\d{1,2}[_A-Za-zА-Яа-я]{0,3}\s*[.:—–-]\s+/i, '')
+    .trim();
+}
+
 // Рабочие имена блоков — не для человека. Заголовки уже переводит BLOCK_TITLES,
 // но модель ссылается на блоки и внутри текста: «см. BLOCK 04_2», «на основе
 // блока 07B». Владелица 15.09: «для пользователя это рабочие названия, они не
@@ -6147,7 +6155,8 @@ function mdToHtml(text) {
       // зависеть от того, перевела модель служебное название или скопировала
       // его по-английски (владелица нашла пять таких: Decision Criteria,
       // Cognitive Tactics, Voice of Customer, Intent Clusters, Offer Workbench).
-      const byNum = t.match(/^(?:BLOCK\s*([0-9]{1,2}[_0-9A-Z]*)|(SEO-\d\d))\b/i);
+      const byNum = t.match(/^(?:BLOCK\s*([0-9]{1,2}[_0-9A-Z]*)|(SEO-\d\d))\b/i)
+        || t.match(/^([0-9]{1,2}[_0-9A-Z]*)\s*[.:—–-]\s+\S/i);
       if (byNum) {
         const key = (byNum[1] || byNum[2] || '').toUpperCase();
         if (BLOCK_TITLES[key]) return BLOCK_TITLES[key];
@@ -6156,6 +6165,7 @@ function mdToHtml(text) {
       if (ru) return ru[1].replace(/_/g,' ').trim();
       return t
         .replace(/^(?:BLOCK|SEO)[\s-]*[0-9]+[A-Z_0-9]*(?:\s+[A-Z]{2,})*\s*[—:-]\s*/i,'')
+        .replace(/^[0-9]{1,2}[_0-9A-Z]*\s*[.:—–-]\s+/i,'')
         .replace(/\s*\([0-9A-Za-z_]+\)\s*$/,'')
         .trim();
     };
@@ -7069,7 +7079,7 @@ function generateHTMLReport(brief, results, lang, priceLayers, selectedLayers, s
     // колонка «Обоснование» просто исчезала (скрин владелицы 15.09).
     // Таблица прокручивается внутри себя, страница вбок не едет.
     +'\n.tbl{overflow-x:auto;-webkit-overflow-scrolling:touch}'
-    +'\n.tbl>table{min-width:100%;width:max-content}'
+    +'\n.tbl>table{min-width:100%}'
     +'\n.tbl td{min-width:120px}'
     // Без рамки заливка шапки превращается в висящий серый брусок — вместо
     // неё волосяная линия под прописными. Первая строка свою верхнюю линию
