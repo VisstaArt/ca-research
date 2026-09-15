@@ -644,7 +644,19 @@ function поместить(system, user) {
 // каждого модуля; ручной выбор остаётся только для тарифа «Разработчик»
 // и перекрывает карту.
 let модельМодуля = '';
-async function callGPT(system, user, temperature, maxTokens, попытка) {
+// Строгий ответ по схеме. Свободный текст модель каждый раз пишет иначе, и
+// разбор гадает: то заголовок переименован, то таблица другой формы, то поля
+// нет вовсе. Схему проверяет сам провайдер — вернуть что-то другое модель
+// физически не может (решение владелицы 15.09: «она должна давать строго в
+// том виде, как нам надо»).
+async function callGPTСхема(system, user, схема, имяСхемы) {
+  return callGPT(system, user, null, null, 0, {
+    type: 'json_schema',
+    json_schema: { name: имяСхемы || 'ответ', strict: true, schema: схема },
+  });
+}
+
+async function callGPT(system, user, temperature, maxTokens, попытка, формат) {
   lastGptUsage = null;
   user = поместить(system, user);
   const мод = модельМодуля || currentModel();
@@ -668,6 +680,7 @@ async function callGPT(system, user, temperature, maxTokens, попытка) {
       // Температуру шлём только старым: у новых она либо не принимается,
       // либо принимается лишь значение по умолчанию.
       ...(temperature != null && старая ? { temperature } : {}),
+      ...(формат ? { response_format: формат } : {}),
       messages:[{role:'system',content:system},{role:'user',content:user}]}),
   });
   // Читаем тело ошибки, а не бросаем сразу «API 429». Без причины невозможно
@@ -693,12 +706,12 @@ async function callGPT(system, user, temperature, maxTokens, попытка) {
     if (res.status === 429 && /too large|tokens per min|TPM/i.test(detail) && !попытка) {
       const короче = String(user).slice(0, Math.floor(String(user).length * 0.55))
         + '\n\n[материал урезан вдвое: полный объём не проходит по минутному лимиту модели]';
-      return callGPT(system, короче, temperature, maxTokens, 1);
+      return callGPT(system, короче, temperature, maxTokens, 1, формат);
     }
     // Слишком частые запросы — здесь повтор как раз помогает, ждём и пробуем.
     if (res.status === 429 && !попытка) {
       await new Promise(р => setTimeout(р, 20000));
-      return callGPT(system, user, temperature, maxTokens, 1);
+      return callGPT(system, user, temperature, maxTokens, 1, формат);
     }
     throw new Error('API ' + res.status + (detail ? ' — ' + detail : ''));
   }
@@ -2466,6 +2479,212 @@ function glossaryRule(lang) {
     + ', а исходное слово можно оставить в скобках при первом упоминании. '
     + 'Исключения ровно два: названия брендов/продуктов и общепринятые аббревиатуры (TAM, SAM, SOM, JTBD, CJM, LPR, VoC, SEO, CR, CTR).\n';
 }
+
+// ── Строгая схема модуля «Конкуренты и гэп-анализ» ─────────────────────────
+// Каждое поле названо и обязано быть в ответе. Пустых догадок больше нет:
+// у любого значения есть «откуда» — замер, вывод или нет данных, — и
+// читатель видит разницу, не спрашивая (владелица 15.09).
+const ОТКУДА = { type: 'string', enum: ['замер', 'вывод', 'нет данных'] };
+const строка = о => ({ type: 'string', description: о });
+
+const СХЕМА_M3 = {
+  type: 'object', additionalProperties: false,
+  required: ['источники', 'конкуренты', 'куда_расти', 'swot', 'гэп', 'позиционирование', 'архетип', 'итог'],
+  properties: {
+    источники: {
+      type: 'array', description: 'Только те страницы, которые реально открывались',
+      items: { type: 'object', additionalProperties: false,
+        required: ['номер', 'площадка', 'url', 'что_взяли'],
+        properties: {
+          номер: { type: 'integer' },
+          площадка: строка('Имя площадки или компании, человеческое'),
+          url: строка('Полный адрес. Нет адреса — не включай источник вовсе'),
+          что_взяли: строка('Что именно из него взято'),
+        } } },
+    конкуренты: {
+      type: 'array', description: '10-20 РЕАЛЬНЫХ продуктов. Каталоги, рейтинги, медиа и подборки сюда НЕ ВХОДЯТ',
+      items: { type: 'object', additionalProperties: false,
+        required: ['id', 'название', 'сайт', 'ценовой_уровень', 'известность', 'чем_известен',
+                   'оффер', 'сильные', 'слабые', 'мы', 'откуда', 'источники'],
+        properties: {
+          id: строка('C001, C002…'),
+          название: строка('Имя продукта'),
+          сайт: строка('Домен продукта; пусто, если сайта нет'),
+          ценовой_уровень: { type: 'string', enum: ['масс-маркет', 'средний', 'дорогой', 'VIP', 'не определён'] },
+          известность: { type: 'string', enum: ['лидер', 'заметный', 'нишевый-малый', 'не замерено'] },
+          чем_известен: строка('Одной фразой'),
+          оффер: строка('Что обещает покупателю'),
+          сильные: { type: 'array', items: { type: 'string' } },
+          слабые: { type: 'array', items: { type: 'string' } },
+          мы: { type: 'boolean', description: 'true только у строки самого заказчика' },
+          откуда: ОТКУДА,
+          источники: { type: 'array', items: { type: 'integer' }, description: 'Номера из списка источников' },
+        } } },
+    куда_расти: {
+      type: 'array',
+      items: { type: 'object', additionalProperties: false,
+        required: ['направление', 'что_отличает', 'чем_подтверждено', 'что_нужно'],
+        properties: {
+          направление: строка('«выше по цене», «выше по известности»'),
+          что_отличает: строка(''), чем_подтверждено: строка(''), что_нужно: строка(''),
+        } } },
+    swot: {
+      type: 'object', additionalProperties: false,
+      required: ['сильные', 'слабые', 'возможности', 'угрозы'],
+      properties: ['сильные', 'слабые', 'возможности', 'угрозы'].reduce((о, к) => {
+        о[к] = { type: 'array', items: { type: 'object', additionalProperties: false,
+          required: ['что', 'чем_подтверждено', 'что_делаем'],
+          properties: { что: строка(''), чем_подтверждено: строка(''), что_делаем: строка('') } } };
+        return о;
+      }, {}),
+    },
+    гэп: {
+      type: 'array',
+      items: { type: 'object', additionalProperties: false,
+        required: ['критерий', 'у_нас', 'лучшее_у_них', 'статус', 'почему', 'пример_url'],
+        properties: {
+          критерий: строка(''), у_нас: строка(''), лучшее_у_них: строка(''),
+          статус: { type: 'string', enum: ['выигрываем', 'наравне', 'проигрываем', 'не определено'] },
+          почему: строка(''), пример_url: строка('Адрес или пусто'),
+        } } },
+    позиционирование: {
+      type: 'array',
+      items: { type: 'object', additionalProperties: false,
+        required: ['сегмент', 'категория', 'выгода', 'доказательство', 'против_кого', 'отличие'],
+        properties: {
+          сегмент: строка(''), категория: строка(''), выгода: строка(''),
+          доказательство: строка(''),
+          против_кого: строка('ИМЯ конкурента, не код строки'),
+          отличие: строка(''),
+        } } },
+    архетип: {
+      type: 'object', additionalProperties: false,
+      required: ['основной', 'почему', 'занят_соперниками', 'риск', 'проявления'],
+      properties: {
+        основной: строка(''), почему: строка(''),
+        занят_соперниками: строка('Имена конкурентов и их архетипы'),
+        риск: строка(''),
+        проявления: { type: 'array', items: { type: 'object', additionalProperties: false,
+          required: ['элемент', 'как_проявляется', 'пример', 'чего_избегаем'],
+          properties: { элемент: строка(''), как_проявляется: строка(''),
+                        пример: строка('Живая фраза в кавычках'), чего_избегаем: строка('') } } },
+      },
+    },
+    итог: {
+      type: 'object', additionalProperties: false,
+      required: ['что_узнали', 'что_это_значит', 'что_делаем'],
+      properties: {
+        что_узнали: { type: 'array', items: { type: 'string' } },
+        что_это_значит: { type: 'array', items: { type: 'string' } },
+        что_делаем: { type: 'array', items: { type: 'string' } },
+      },
+    },
+  },
+};
+
+// Разметка модуля из СТРОГИХ данных. Разбирать нечего: поля названы схемой,
+// форма таблиц наша, пустое остаётся пустым и не печатается.
+function разметкаM3(д, brief) {
+  if (!д || typeof д !== 'object') return null;
+  const esc = escHtml;
+  const части = [];
+  const блок = (имя, тело) => { if (тело) части.push('<h2>' + esc(имя) + '</h2>' + тело); };
+  const непусто = в => {
+    const т = String(в == null ? '' : в).trim();
+    return т && !/^(нет данных|не замерено|не определ|—|-)$/i.test(т) ? т : '';
+  };
+
+  // Карта рынка и карточки конкурентов — те же рисовалки, что и раньше.
+  const кон = (д.конкуренты || []).filter(к => к && непусто(к.название));
+  if (кон.length) {
+    const цена = { 'масс-маркет': 0, 'средний': 1, 'дорогой': 2, 'VIP': 3 };
+    const слава = { 'лидер': 0, 'заметный': 1, 'нишевый-малый': 2, 'не замерено': 2 };
+    const точки = кон.map(к => [к.название, цена[к.ценовой_уровень] || 0,
+                                слава[к.известность] == null ? 2 : слава[к.известность],
+                                null, !!к.мы]);
+    if (точки.length >= 4) {
+      blockScriptsM3.push('renderMarketMap(' + safeJson(точки) + ');');
+      блок('Карта рынка и конкурентов',
+        '<div class="mktwrap"><div class="mkt" id="rpt-mkt"></div></div>'
+        + '<div class="mktlist" id="rpt-mkt-col"></div>');
+    }
+    const карточки = кон.map((к, i) => ({
+      id: к.id || ('C' + (i + 1)), niche: '', n: к.название,
+      scale: к.известность || '—',
+      dom: String(к.сайт || '').replace(/^https?:\/\//, ''),
+      url: к.сайт ? (/^https?:/.test(к.сайт) ? к.сайт : 'https://' + к.сайт) : '#',
+      price: к.ценовой_уровень || 'не определён', per: к.откуда || '',
+      offer: к.оффер || '', pos: к.чем_известен || '', cta: '',
+      pro: к.сильные || [], con: к.слабые || [],
+      bar: '', ans: '', proof: '', trig: '', gap: '',
+    }));
+    blockScriptsM3.push('renderCompCards(' + safeJson(карточки) + ');');
+    блок('Разбор конкурентов', '<div class="comp" id="rpt-comp"></div>');
+  }
+
+  if ((д.куда_расти || []).length) {
+    blockScriptsM3.push('renderListCards(' + safeJson(д.куда_расти.map(р => [
+      р.направление, [['что отличает', р.что_отличает], ['чем подтверждено', р.чем_подтверждено],
+                      ['что нужно', р.что_нужно]].filter(x => непусто(x[1]))
+    ])) + ');');
+    блок('Куда расти', '<div class="rules" id="rpt-generic-1"></div>');
+  }
+
+  const sw = д.swot || {};
+  if (['сильные','слабые','возможности','угрозы'].some(к => (sw[к] || []).length)) {
+    const пара = к => (sw[к] || []).map(x => [x.что, x.чем_подтверждено, x.что_делаем]);
+    blockScriptsM3.push('renderSwotGrid(' + safeJson({
+      s: пара('сильные'), w: пара('слабые'), o: пара('возможности'), t: пара('угрозы') }) + ');');
+    блок('SWOT-анализ', '<div class="swot" id="rpt-swot"></div>');
+  }
+
+  if ((д.гэп || []).length) {
+    const вид = с => /выигр/.test(с) ? 'win' : /проигр/.test(с) ? 'lose' : 'parity';
+    blockScriptsM3.push('renderGapCards(' + safeJson(д.гэп.map(г => [
+      г.критерий, вид(г.статус || ''), г.статус || 'не определено',
+      непусто(г.у_нас), непусто(г.лучшее_у_них), непусто(г.почему),
+      /^https?:/.test(г.пример_url || '') ? г.пример_url : '',
+    ])) + ');');
+    блок('Где выигрываем и где проигрываем', '<div class="gapc" id="rpt-gapc"></div>');
+  }
+
+  if ((д.позиционирование || []).length) {
+    blockScriptsM3.push('renderPositioning(' + safeJson(д.позиционирование.map(п => [
+      п.сегмент, п.категория, п.выгода, п.доказательство,
+      [п.против_кого && ('против: ' + п.против_кого), п.отличие].filter(Boolean).join(' · '),
+    ])) + ');');
+    блок('Позиционирование по сегментам', '<div class="rules" id="rpt-pos3"></div>');
+  }
+
+  const а = д.архетип || {};
+  if (непусто(а.основной)) {
+    blockScriptsM3.push('renderArchetype(' + safeJson([[
+      а.основной, 'основной', а.почему || '', а.занят_соперниками || '', а.риск || '' ]]) + ');');
+    let тело = '<div class="rules bet" id="rpt-arch"></div>';
+    if ((а.проявления || []).length) {
+      blockScriptsM3.push('renderManifest(' + safeJson(а.проявления.map(п => [
+        п.элемент, п.как_проявляется, п.пример, п.чего_избегаем])) + ');');
+      тело += '<div class="rules" id="rpt-manif"></div>';
+    }
+    блок('Архетип бренда', тело);
+  }
+
+  const ист = (д.источники || []).filter(и => и && /^https?:/.test(String(и.url || '')));
+  if (ист.length) {
+    blockScriptsM3.push('renderSources(' + safeJson(ист.map(и =>
+      [и.номер, и.площадка, и.что_взяли, '', и.url])) + ', 1);');
+    части.push('<div class="srcfold"><button type="button" class="srctoggle" aria-expanded="true">'
+      + 'Источники: ' + ист.length + ' ' + plural(ист.length, 'ссылка', 'ссылки', 'ссылок')
+      + ', по которым собран этот модуль</button>'
+      + '<div class="srcbody"><div class="srcs" id="rpt-srcs-1"></div></div></div>');
+  }
+  return части.join('');
+}
+let blockScriptsM3 = [];
+
+// Какие модули уже переведены на строгий формат. Остальные работают
+// по-прежнему: перевод идёт по одному, с проверкой на живом прогоне.
+const СХЕМЫ = { M3: СХЕМА_M3 };
 
 function buildSystem(brief, lang) {
   const lines = Object.entries(brief).filter(([,v])=>v).map(([k,v])=>{
@@ -8224,12 +8443,25 @@ function injectBlockStyles() {
 // (renderResearchHTML) — до 11.09.2026 сайт показывал голые markdown-таблицы,
 // потому что весь согласованный вид жил внутри функции отчёта. Владелица:
 // «я думала, это будет на сайте, а не только в выгрузке».
-function ResearchView({ content, ourName, ourPrice, выбранные, наВыбор }) {
+function ResearchView({ content, строгое, ourName, ourPrice, выбранные, наВыбор }) {
   const ref = React.useRef(null);
   // Итог модуля вырезается и встаёт карточкой наверх — ровно как в выгрузке.
   // Без этого на сайте раздел «ИТОГ МОДУЛЯ» лежал сырым текстом в хвосте,
   // и владелица справедливо сказала «нет выводов».
   const out = React.useMemo(() => {
+    // Строгие данные разбирать не нужно: форма задана схемой, вид — наш.
+    if (строгое) {
+      blockScriptsM3 = [];
+      const тело = разметкаM3(строгое, null) || '';
+      const свод = строгое.итог ? {
+        learned: строгое.итог.что_узнали || [],
+        means: строгое.итог.что_это_значит || [],
+        next: строгое.итог.что_делаем || [],
+      } : null;
+      return { html: renderModuleSummary(свод) + тело,
+               scripts: blockScriptsM3.slice(),
+               js: renderResearchHTML('', {}).js, источники: '' };
+    }
     const cut = splitModuleSummary(content || '');
     // Нет «ИТОГА МОДУЛЯ» — собираем его из выводов внутри блоков: иначе они
     // либо останутся вразнобой по тексту, либо пропадут вместе с ними.
@@ -8242,7 +8474,7 @@ function ResearchView({ content, ourName, ourPrice, выбранные, наВы
     const r = renderResearchHTML(почиститьХвост(cut.body, !!свод), { ourName, ourPrice, словарь });
     const итог = оформитьТекст(renderModuleSummary(свод), r.источники, словарь);
     return { ...r, html: итог + r.html };
-  }, [content, ourName, ourPrice]);
+  }, [content, строгое, ourName, ourPrice]);
   React.useEffect(() => { injectBlockStyles(); }, []);
   React.useEffect(() => {
     if (!ref.current || !out.scripts.length) return;
@@ -9151,6 +9383,7 @@ function App() {
       const findDep = depId => col.find(r => r.id === depId && (isPerNiche(depId) ? (r.niche||'') === wn : true));
 
       let full = '';
+      let строгое = null;            // ответ по схеме, если у модуля она есть
       let wordstatData = null;   // hoisted: нужен после callGPT, чтобы приклеить сырой список (см. ниже)
       searchCallCount = 0;       // для расчёта тарифов (26.08.2026) — считаем ТОЛЬКО за этот модуль
       keywordCallCount = 0;      // то же для частотности: Wordstat/Google Ads за этот модуль
@@ -9221,7 +9454,19 @@ function App() {
         // запись в JSON, плюс до 50 строк источников в 04_0 — общий потолок 8000 токенов
         // не вмещает это целиком, и модель тихо сжимается до "безопасных" ~8 ниш.
         const maxTok = mod.id === 'M2' ? 16000 : undefined;
-        full = await callGPT(sys, userPrompt, temp, maxTok);
+        // Строгий формат: у модуля есть схема — просим ответ по ней. Модель
+        // физически не может отдать другое, разбор перестаёт гадать. Сбой —
+        // откатываемся на прежний путь, чтобы прогон не пропал (15.09).
+        if (СХЕМЫ[mod.id]) {
+          try {
+            const сырое = await callGPTСхема(sys, userPrompt, СХЕМЫ[mod.id], 'модуль_' + mod.id);
+            строгое = JSON.parse(сырое);
+          } catch (e) {
+            строгое = null;
+            if (window.console) console.warn('Строгий формат не вышел, работаем как раньше:', e);
+          }
+        }
+        full = строгое ? '' : await callGPT(sys, userPrompt, temp, maxTok);
         // Приклеен кодом ПОСЛЕ ответа модели — не проходит через LLM, значит не может
         // быть урезан/отфильтрован по вкусу модели (владелица просила ровно полный
         // список системы, как при ручной проверке в самой Wordstat).
@@ -9265,7 +9510,8 @@ function App() {
       // 429», а agent_package отдал контент-машине просто пустые VOICE_OF_CUSTOMER
       // и PAIN_BANK, и там это разобрали как дефект блока промпта.
       const failed = /^Error:/.test(cleanedContent.trim());
-      const result = { id:mod.id, niche:wn, content:cleanedContent, chartData, ...(failed?{failed:true, error:cleanedContent.trim()}:{}), ...(nicheData?{nicheData}:{}), ...(usage?{usage}:{}), ...(searchCalls?{searchCalls}:{}), ...(keywordCalls?{keywordCalls}:{}),
+      const result = { id:mod.id, niche:wn, content:cleanedContent,
+        ...(строгое ? { строгое } : {}), chartData, ...(failed?{failed:true, error:cleanedContent.trim()}:{}), ...(nicheData?{nicheData}:{}), ...(usage?{usage}:{}), ...(searchCalls?{searchCalls}:{}), ...(keywordCalls?{keywordCalls}:{}),
         // Сколько модуль шёл на самом деле. Оценка «53 минуты» была взята из
         // головы, а прогон занимает пять-десять (владелица 14.09). Дальше
         // время показывается по замерам, а не по догадке.
@@ -10825,7 +11071,7 @@ function App() {
                     {/* Старые Chart.js-пироги убраны 14.09: согласованные
                         визуализации рисуют блочные скрипты отчёта, и два вида
                         графиков об одном рядом — разнобой, не богатство. */}
-                    <ResearchView content={r.content} ourName={(proj&&proj.brief&&proj.brief.name)||''}
+                    <ResearchView content={r.content} строгое={r.строгое} ourName={(proj&&proj.brief&&proj.brief.name)||''}
                       ourPrice={(proj&&proj.brief&&proj.brief.priceLayer)||''}/>
                   </>)}
                 </div>
