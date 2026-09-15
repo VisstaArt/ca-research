@@ -1,6 +1,6 @@
 // СОБРАНО АВТОМАТИЧЕСКИ из app.jsx — не править руками.
 // Правки вносить в app.jsx, затем: osascript -l JavaScript tools/build.js
-// отпечаток-исходника: cea9838e21448b2a
+// отпечаток-исходника: 59cfd3b459ba9b74
 // Функции контракта живут в lib/contract.js. Разбираем их сюда, чтобы весь
 // остальной код обращался к ним по прежним именам и не менялся.
 const{GLOBAL_MODS,isPerNiche,dropOrphans,nichesOf,resKey,splitMdRow,isMdSeparator,parseMdTables,buildModuleEntry,pickTable,pickColumn,withStableIds}=CAContract;// Название модуля берётся из MODULES — это конфиг ИНТЕРФЕЙСА, и сборщик
@@ -2030,7 +2030,9 @@ let kB=col(headers,'блок','куда','использ','чей');if(kB===kN)k
 if(/BLOCK\s*24_0\b|Источники\s+радара/i.test(String(ctx&&ctx.заголовок||''))){if(ctx&&ctx.headStart!=null)ctx.dropHead=true;ctx.источникиРадара=d;return'';}// Свой заголовок печатаем сами — чужой снимаем всегда, а не только когда
 // он вплотную: между ним и таблицей модель ставит пустой отступ.
 if(ctx&&ctx.headStart!=null)ctx.dropHead=true;if(!проверяемых){// Ни одной ссылки — доказывать нечем. Блок не печатаем вовсе.
-return'';}const номерИст=++ctxSrcN;blockScripts.push('renderSources('+safeJson(d)+', '+номерИст+');');// Список источников — не находка, а доказательство: он нужен, когда к
+return'';}if(ctx&&ctx.источникиМесто!=null){const былиАдреса=new Set((ctx.источникиСписок||[]).map(x=>x[4]));const добавка=d.filter(x=>x[4]&&!былиАдреса.has(x[4]));if(!добавка.length)return'';ctx.источникиСписок=(ctx.источникиСписок||[]).concat(добавка).map((x,i)=>[i+1,x[1],x[2],x[3],x[4]]);blockScripts[ctx.источникиМесто]='renderSources('+safeJson(ctx.источникиСписок)+', 1);';const скольких=ctx.источникиСписок.filter(x=>/^https?:\/\//i.test(String(x[4]||''))).length;// Подпись свёртки обещает число ссылок — после слияния их больше.
+// Правим прямо в готовой разметке: она уже собрана выше по тексту.
+if(ctx.источникиЗаголовок){blockScripts.push('(function(){var к=document.querySelector(".srcfold>.srctoggle");'+'if(к) к.textContent="Источники: '+скольких+' '+plural(скольких,'ссылка','ссылки','ссылок')+', по которым собран этот модуль";})();');}return'';}const номерИст=++ctxSrcN;ctx.источникиСписок=d.map((x,i)=>[i+1,x[1],x[2],x[3],x[4]]);blockScripts.push('renderSources('+safeJson(ctx.источникиСписок)+', '+номерИст+');');ctx.источникиМесто=blockScripts.length-1;ctx.источникиЗаголовок=true;// Список источников — не находка, а доказательство: он нужен, когда к
 // числу в отчёте появился вопрос, и только тогда. Владелица 14.09:
 // «нам эти данные тут нужны? здесь оно вообще не нужно». Свёрнут, но на
 // месте: сноски [n] по-прежнему ведут сюда, и по щелчку он раскрывается.
