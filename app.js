@@ -1,6 +1,6 @@
 // СОБРАНО АВТОМАТИЧЕСКИ из app.jsx — не править руками.
 // Правки вносить в app.jsx, затем: osascript -l JavaScript tools/build.js
-// отпечаток-исходника: 6e86e9fd056f29af
+// отпечаток-исходника: 7a5f3ef169368b71
 // Функции контракта живут в lib/contract.js. Разбираем их сюда, чтобы весь
 // остальной код обращался к ним по прежним именам и не менялся.
 const{GLOBAL_MODS,isPerNiche,dropOrphans,nichesOf,resKey,splitMdRow,isMdSeparator,parseMdTables,buildModuleEntry,pickTable,pickColumn,withStableIds}=CAContract;// Название модуля берётся из MODULES — это конфиг ИНТЕРФЕЙСА, и сборщик
@@ -644,7 +644,14 @@ const каталоги=['vc.ru','habr.com','dtf.ru','pikabu.ru','workspace.ru','
 // ссылок на запрос — и поднимаем потолок выдержек.
 const общее=await gatherEvidence(queries,22,20,{depth:'advanced',raw:true,contentChars:1200,perDomain:2,maxItems:90,exclude_domains:каталоги});// Отдельный заход ЗА САМИМИ ПРОДУКТАМИ: так ищут не статью о рынке, а
 // страницу сервиса — с ценой, тарифом и кнопкой «попробовать».
-const продуктовые=[(niche||product)+' '+market+' малоизвестный сервис небольшой стартап',(niche||product)+' '+market+' российский аналог импортозамещение',(niche||product)+' '+market+' самописное решение open source',(niche||product)+' '+market+' тарифы цена подключить',(niche||product)+' '+market+' попробовать бесплатно демо',(niche||product)+' '+market+' интеграция настроить за 5 минут',(niche||product)+' '+market+' официальный сайт сервиса'];const свои=await gatherEvidence(продуктовые,8,20,{depth:'advanced',raw:true,contentChars:1200,perDomain:1,maxItems:40,exclude_domains:каталоги});const вместе=(общее||[]).concat(свои||[]);const виделиАдреса=new Set();return вместе.filter(x=>x&&x.url&&!виделиАдреса.has(x.url)&&виделиАдреса.add(x.url));}// M9 (контент-радар): конкуренты как МЕДИА, а не как бизнесы. M2 уже нашёл,
+const продуктовые=[(niche||product)+' '+market+' малоизвестный сервис небольшой стартап',(niche||product)+' '+market+' российский аналог импортозамещение',(niche||product)+' '+market+' самописное решение open source',(niche||product)+' '+market+' тарифы цена подключить',(niche||product)+' '+market+' попробовать бесплатно демо',(niche||product)+' '+market+' интеграция настроить за 5 минут',(niche||product)+' '+market+' официальный сайт сервиса'];const свои=await gatherEvidence(продуктовые,8,20,{depth:'advanced',raw:true,contentChars:1200,perDomain:1,maxItems:40,exclude_domains:каталоги});// ПОДБОРКА — ЭТО СПИСОК АДРЕСОВ, А НЕ ИСТОЧНИК. На vc.ru и в каталогах
+// лежат готовые списки сервисов со ссылками. Раньше мы либо цитировали саму
+// статью (и в конкуренты попадал vc.ru), либо выбрасывали её целиком.
+// Правильно — взять из неё ССЫЛКИ и сходить по ним на сами сайты
+// (владелица 15.09: «нам нужна не статья, а те ссылки, и уже оттуда брать»).
+const подборки=await gatherEvidence([product+' '+market+' топ сервисов подборка каталог',(niche||product)+' '+market+' лучшие сервисы список'],2,8,{depth:'advanced',raw:true,contentChars:6000,perDomain:2,maxItems:10,include_domains:каталоги});const своиДомены=new Set(каталоги.concat(['youtube.com','vk.com','t.me','telegram.me','facebook.com','instagram.com','ok.ru','twitter.com','x.com','apple.com','google.com','yandex.ru','wikipedia.org']));const найденные=[];for(const кусок of подборки||[]){const текст=String(кусок.content||'');const адреса=текст.match(/https?:\/\/[^\s"'<>)\]]+/g)||[];for(const а of адреса){let домен='';try{домен=new URL(а).hostname.replace(/^www\./,'');}catch(e){continue;}if(!домен||своиДомены.has(домен))continue;if(найденные.indexOf(домен)<0)найденные.push(домен);}}// По каждому найденному сайту — отдельный заход: что это за сервис, что
+// обещает и почём. Десяти хватает: дальше идёт длинный хвост из мусора.
+const поСайтам=найденные.slice(0,10);const изПодборок=поСайтам.length?await gatherEvidence(поСайтам.map(д=>д+' тарифы цена что это за сервис'),поСайтам.length,3,{depth:'advanced',raw:true,contentChars:1200,perDomain:3,maxItems:30}):[];const вместе=(общее||[]).concat(свои||[]).concat(изПодборок||[]);const виделиАдреса=new Set();return вместе.filter(x=>x&&x.url&&!виделиАдреса.has(x.url)&&виделиАдреса.add(x.url));}// M9 (контент-радар): конкуренты как МЕДИА, а не как бизнесы. M2 уже нашёл,
 // кто они и почём продают; здесь ищем, что они публикуют и что у них залетает.
 // Берём только то, что видно на публичной странице без входа в чужой аккаунт
 // (ТЗ-M9-ОТКУДА-ДАННЫЕ, разд. 2): YouTube, Telegram через t.me/s/, VK, Дзен,

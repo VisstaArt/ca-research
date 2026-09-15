@@ -2255,7 +2255,42 @@ async function gatherCompetitorEvidence(brief) {
   const свои = await gatherEvidence(продуктовые, 8, 20,
     { depth:'advanced', raw:true, contentChars:1200, perDomain:1, maxItems:40,
       exclude_domains: каталоги });
-  const вместе = (общее || []).concat(свои || []);
+  // ПОДБОРКА — ЭТО СПИСОК АДРЕСОВ, А НЕ ИСТОЧНИК. На vc.ru и в каталогах
+  // лежат готовые списки сервисов со ссылками. Раньше мы либо цитировали саму
+  // статью (и в конкуренты попадал vc.ru), либо выбрасывали её целиком.
+  // Правильно — взять из неё ССЫЛКИ и сходить по ним на сами сайты
+  // (владелица 15.09: «нам нужна не статья, а те ссылки, и уже оттуда брать»).
+  const подборки = await gatherEvidence(
+    [product + ' ' + market + ' топ сервисов подборка каталог',
+     (niche || product) + ' ' + market + ' лучшие сервисы список'],
+    2, 8, { depth:'advanced', raw:true, contentChars:6000, perDomain:2, maxItems:10,
+            include_domains: каталоги });
+  const своиДомены = new Set(каталоги.concat([
+    'youtube.com','vk.com','t.me','telegram.me','facebook.com','instagram.com',
+    'ok.ru','twitter.com','x.com','apple.com','google.com','yandex.ru','wikipedia.org',
+  ]));
+  const найденные = [];
+  for (const кусок of (подборки || [])) {
+    const текст = String(кусок.content || '');
+    const адреса = текст.match(/https?:\/\/[^\s"'<>)\]]+/g) || [];
+    for (const а of адреса) {
+      let домен = '';
+      try { домен = new URL(а).hostname.replace(/^www\./, ''); } catch (e) { continue; }
+      if (!домен || своиДомены.has(домен)) continue;
+      if (найденные.indexOf(домен) < 0) найденные.push(домен);
+    }
+  }
+  // По каждому найденному сайту — отдельный заход: что это за сервис, что
+  // обещает и почём. Десяти хватает: дальше идёт длинный хвост из мусора.
+  const поСайтам = найденные.slice(0, 10);
+  const изПодборок = поСайтам.length
+    ? await gatherEvidence(
+        поСайтам.map(д => д + ' тарифы цена что это за сервис'),
+        поСайтам.length, 3,
+        { depth:'advanced', raw:true, contentChars:1200, perDomain:3, maxItems:30 })
+    : [];
+
+  const вместе = (общее || []).concat(свои || []).concat(изПодборок || []);
   const виделиАдреса = new Set();
   return вместе.filter(x => x && x.url && !виделиАдреса.has(x.url) && виделиАдреса.add(x.url));
 }
