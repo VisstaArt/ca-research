@@ -8842,6 +8842,10 @@ function App() {
   // Re-run с замечанием: панель у ↺ вместо мгновенной слепой перегенерации
   const [regenKey, setRegenKey] = React.useState(null);
   const [regenNote, setRegenNote] = React.useState('');
+  // Перегенерация по умолчанию трогает ТОЛЬКО этот модуль. Раньше ↺ на M3
+  // запускал всю цепочку до M7, и проверка одной правки стоила как полный
+  // прогон (владелица 15.09: «мы потратили приличную сумму на тесты»).
+  const [regenChain, setRegenChain] = React.useState(false);
   // M10 — трекер публикаций (по проекту)
   const [publications, setPublications] = React.useState(null); // null = загрузка/БД недоступна, [] = пусто
   const [pubForm, setPubForm] = React.useState({date:new Date().toISOString().slice(0,10),platform:'',format:'',character:'none',topic:'',hypothesis_id:'',hook_type:'',url:'',utm:''});
@@ -10748,6 +10752,12 @@ function App() {
                   <textarea value={regenNote} onChange={e=>setRegenNote(e.target.value)} rows={3}
                     placeholder="Например: цены конкурентов выглядят неправдоподобно, перепроверь"
                     style={{width:'100%',fontSize:12,padding:6,fontFamily:'inherit',boxSizing:'border-box'}}/>
+                  <label style={{display:'flex',gap:7,alignItems:'flex-start',marginTop:10,fontSize:11.5,color:'var(--ink-2)',cursor:'pointer'}}>
+                    <input type="checkbox" checked={regenChain} onChange={e=>setRegenChain(e.target.checked)} style={{marginTop:2}}/>
+                    <span>Перегенерировать и всё, что ниже по цепочке. Без галочки
+                    пересчитается только этот модуль — остальные останутся как есть
+                    и денег не потратят.</span>
+                  </label>
                   <div style={{display:'flex',gap:8,marginTop:8}}>
                     <button onClick={()=>{
                         // Перегенерация: чистим этот модуль и все зависимые ниже по цепочке,
@@ -10762,7 +10772,9 @@ function App() {
                         // иначе кнопка на его карточке молча ничего бы не делала.
                         const order = MODULES.filter(x=>!x.disabled && (!x.offChain || x.id===r.id)).map(x=>x.id);
                         const idx = order.indexOf(r.id);
-                        const chain = isPerNiche(r.id) ? (idx>=0 ? order.slice(idx) : [r.id]) : [r.id];
+                        // Цепочку гоняем, только если человек попросил явно.
+                        const chain = (regenChain && isPerNiche(r.id))
+                          ? (idx>=0 ? order.slice(idx) : [r.id]) : [r.id];
                         const rn = r.niche||'';
                         // Явная перегенерация M7 = повод пересобрать и поисковые фразы:
                         // сбрасываем подтверждённые сиды, чтобы панель подтверждения
@@ -10790,7 +10802,13 @@ function App() {
                       <p style={{fontSize:11,color:'var(--ink-2)',marginBottom:6}}>Правка вручную — сохраняется сразу, без вызова модели. График/диаграмма (если есть) построены по исходной генерации и ручной правкой текста не пересчитываются.</p>
                       <textarea value={editDraft} onChange={e=>setEditDraft(e.target.value)} rows={20}
                         style={{width:'100%',fontFamily:'monospace',fontSize:12,padding:8,boxSizing:'border-box'}}/>
-                      <div style={{display:'flex',gap:8,marginTop:8}}>
+                      <label style={{display:'flex',gap:7,alignItems:'flex-start',marginTop:10,fontSize:11.5,color:'var(--ink-2)',cursor:'pointer'}}>
+                    <input type="checkbox" checked={regenChain} onChange={e=>setRegenChain(e.target.checked)} style={{marginTop:2}}/>
+                    <span>Перегенерировать и всё, что ниже по цепочке. Без галочки
+                    пересчитается только этот модуль — остальные останутся как есть
+                    и денег не потратят.</span>
+                  </label>
+                  <div style={{display:'flex',gap:8,marginTop:8}}>
                         <button onClick={()=>{
                             const upd={...proj, results: (proj.results||[]).map(x=>resKey(x)===editKey?{...x,content:editDraft,editedAt:new Date().toISOString()}:x), updatedAt:new Date().toISOString()};
                             setProj(upd); sv(upd); setEditKey(null);
