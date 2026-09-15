@@ -2698,7 +2698,7 @@ function разметкаM3(д, brief) {
   if (ист.length) {
     blockScriptsM3.push('renderSources(' + safeJson(ист.map(и =>
       [и.номер, и.площадка, и.что_взяли, '', и.url])) + ', 1);');
-    части.push('<div class="srcfold"><button type="button" class="srctoggle" aria-expanded="true">'
+    части.push('<div class="srcfold"><button type="button" class="srctoggle" aria-expanded="false">'
       + 'Источники: ' + ист.length + ' ' + plural(ист.length, 'ссылка', 'ссылки', 'ссылок')
       + ', по которым собран этот модуль</button>'
       + '<div class="srcbody"><div class="srcs" id="rpt-srcs-1"></div></div></div>');
@@ -5532,10 +5532,10 @@ function renderResearchHTML(content, opts) {
     // месте: сноски [n] по-прежнему ведут сюда, и по щелчку он раскрывается.
     // Заголовок печатаем сами — свой, короткий, и убираем тот, что напечатал
     // разбор, иначе над свёрнутой полосой висит второе имя того же самого.
-    return '<div class="srcfold"><button type="button" class="srctoggle" aria-expanded="true">'
+    return '<div class="srcfold"><button type="button" class="srctoggle" aria-expanded="false">'
       + 'Источники: ' + проверяемых + ' ' + plural(проверяемых, 'ссылка', 'ссылки', 'ссылок')
       + ', по которым собран этот модуль</button>'
-      + '<div class="srcbody"><div class="srcs" id="rpt-srcs-' + номерИст + '"></div></div></div>';
+      + '<div class="srcbody" hidden><div class="srcs" id="rpt-srcs-' + номерИст + '"></div></div></div>';
   }
 
   // ── BLOCK 03: размер рынка воронкой ─────────────────────────────────────────
