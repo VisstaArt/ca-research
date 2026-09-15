@@ -5119,9 +5119,10 @@ function renderResearchHTML(content, opts) {
     const проверяемых = d.filter(x => /^https?:\/\//i.test(String(x[4] || ''))).length;
     // Радар: список источников убран совсем (владелица 14.09, трижды).
     // Сноски [n] в тексте остаются — они ведут на сам адрес через подсказку.
-    if (/BLOCK\s*24_0\b|Источники\s+радара/i.test(String(ctx && ctx.заголовок || ''))) {
-      if (ctx && ctx.headStart != null) ctx.dropHead = true;
+    if (/BLOCK\s*24_0\b|Источники\s+радара/i.test(String(ctx && ctx.заголовок || ''))
+        || (ctx && ctx.метка === '24_0')) {
       ctx.источникиРадара = d;
+      ctx.срезатьБлок = true;      // снять заголовок и всё, что под ним
       return '';
     }
     // Свой заголовок печатаем сами — чужой снимаем всегда, а не только когда
@@ -6126,7 +6127,17 @@ function renderResearchHTML(content, opts) {
     return '<div class="bmk" id="rpt-bmk"></div>';
   }
 
+  // Источники радара в отчёт не идут (владелица просила трижды): блок
+  // снимается целиком вместе с заголовком и вводным абзацем. Стоит ПЕРВЫМ —
+  // иначе таблицу забирает разбор каналов, колонки у них почти совпадают.
+  function renderRadarSourcesDrop(headers, rows, ctx) {
+    if (!col(headers, 'канал', 'источник', 'площадк')) return null;
+    ctx.срезатьБлок = true;
+    return '';
+  }
+
   const BLOCK_VIEWS = [
+    { re: /BLOCK\s*24_0\b|Источники\s+радара/i, fn: renderRadarSourcesDrop },
     { re: /SEO-0?6\b|География\s+спроса/i, fn: renderGeo },
     { re: /BLOCK\s*04(?![_0-9])|Сегменты\s+(целевой\s+)?аудитории/i, fn: renderSegments },
     { re: /BLOCK\s*04_2\b|Приоритет\s+ниш|Prioritization/i, fn: renderNiches , поКолонкам: true },
@@ -6336,6 +6347,15 @@ function mdToHtml(text) {
       let special = поМетке ? renderKnownBlock(поМетке, hdrs, asObjs, ctx) : null;
       if (special == null) special = renderKnownBlock(lastHeading, hdrs, asObjs, ctx);
       if (special != null) {
+        // Блок убирается целиком — вместе с заголовком и вводным абзацем.
+        if (ctx.срезатьБлок && ctx.началоБлока != null) {
+          html = html.slice(0, ctx.началоБлока);
+          ctx.срезатьБлок = false; ctx.началоБлока = null;
+          ctx.headStart = null; ctx.headEnd = -1;
+          if (ctx.пустые) ctx.пустые = ctx.пустые.filter(x => x.начало < html.length);
+          tableRows=[]; inTable=false; return;
+        }
+        ctx.срезатьБлок = false;
         if (ctx.dropHead && ctx.headStart != null) {
           // Якорь снятого заголовка переезжает на блок: сноски [n] в тексте
           // ведут именно на него, и потерять его значит сделать их мёртвыми.
@@ -6456,6 +6476,7 @@ function mdToHtml(text) {
         ctx.headEnd = html.length;
         (ctx.пустые = ctx.пустые || []).push({ у: 2, начало: н2, конец: html.length });
         if (/BLOCK\s*09B\b|Демограф/i.test(line.slice(3))) { ctx.демографияС = н2; ctx.демографияЕсть = false; }
+        ctx.началоБлока = н2;
       }
       else if (line.startsWith('### ')) {
         // В блоке SWOT стороны нарисованы карточками, и заголовок над ними —
@@ -7048,8 +7069,8 @@ function generateHTMLReport(brief, results, lang, priceLayers, selectedLayers, s
     +'\n.srcfold>.srctoggle{display:block;width:100%;text-align:left;cursor:pointer;'
       +'font:inherit;font-size:12.5px;color:var(--ink-3);padding:9px 0;background:none;'
       +'border:0;border-top:1px solid var(--line-2);border-bottom:1px solid var(--line-2)}'
-    +'\n.srcfold>.srctoggle:before{content:\"\\25B8\";display:inline-block;width:14px}'
-    +'\n.srcfold>.srctoggle[aria-expanded=\"true\"]:before{content:\"\\25BE\"}'
+    +'\n.srcfold>.srctoggle:before{content:\"▸\";display:inline-block;width:14px}'
+    +'\n.srcfold>.srctoggle[aria-expanded=\"true\"]:before{content:\"▾\"}'
     +'\n.srcfold>.srctoggle:hover{color:var(--ink-2)}'
     +'\n.srcfold>.srcbody{padding-top:10px}'
     +'\n.topc{display:flex;flex-direction:column;gap:0}'
