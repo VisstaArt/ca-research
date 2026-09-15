@@ -1,6 +1,6 @@
 // СОБРАНО АВТОМАТИЧЕСКИ из app.jsx — не править руками.
 // Правки вносить в app.jsx, затем: osascript -l JavaScript tools/build.js
-// отпечаток-исходника: 13db5d54459bacc4
+// отпечаток-исходника: 6e86e9fd056f29af
 // Функции контракта живут в lib/contract.js. Разбираем их сюда, чтобы весь
 // остальной код обращался к ним по прежним именам и не менялся.
 const{GLOBAL_MODS,isPerNiche,dropOrphans,nichesOf,resKey,splitMdRow,isMdSeparator,parseMdTables,buildModuleEntry,pickTable,pickColumn,withStableIds}=CAContract;// Название модуля берётся из MODULES — это конфиг ИНТЕРФЕЙСА, и сборщик
@@ -173,7 +173,9 @@ const maxItems=o.maxItems||24;const searchOpts={max_results:maxResults||4};if(o.
 if(o.raw)searchOpts.include_raw_content=true;// полный текст страницы вместо сниппета
 if(o.days)searchOpts.days=o.days;// ограничить свежестью (M8: недельный скан трендов)
 if(o.include_domains&&o.include_domains.length)searchOpts.include_domains=o.include_domains;// реестр площадок (M3)
-const all=[];for(const q of queries.slice(0,maxQueries||9)){const r=await callSearch(q,searchOpts);for(const x of r){const body=o.raw&&x.raw_content?x.raw_content:x.content||'';all.push({q,title:x.title,url:x.url,content:body.slice(0,contentChars),date:x.published_date});}}// Дедуп по URL + разнообразие площадок: один отзовик не должен занять весь бюджет выдержек
+// Исключения — обратная сторона того же приёма: каталоги и медиа в поиске
+// конкурентов забивают выдачу и вытесняют сами продукты (владелица 15.09).
+if(o.exclude_domains&&o.exclude_domains.length)searchOpts.exclude_domains=o.exclude_domains;const all=[];for(const q of queries.slice(0,maxQueries||9)){const r=await callSearch(q,searchOpts);for(const x of r){const body=o.raw&&x.raw_content?x.raw_content:x.content||'';all.push({q,title:x.title,url:x.url,content:body.slice(0,contentChars),date:x.published_date});}}// Дедуп по URL + разнообразие площадок: один отзовик не должен занять весь бюджет выдержек
 const seenUrl=new Set();const perHost={};const out=[];for(const x of all){if(seenUrl.has(x.url))continue;seenUrl.add(x.url);let host='';try{host=new URL(x.url).hostname.replace(/^www\./,'');}catch{}if(perDomain&&host){perHost[host]=(perHost[host]||0)+1;if(perHost[host]>perDomain)continue;}out.push(x);if(out.length>=maxItems)break;}return out;}// ── ЯЗЫК ПОИСКОВЫХ ЗАПРОСОВ ─────────────────────────────────────────────────
 // До 31.08.2026 ВСЕ запросы во всех четырёх ищущих модулях были захардкожены
 // по-русски. Для Турции это означало поиск «попап Турция мало заявок с сайта» —
@@ -633,7 +635,16 @@ queries.push(c+' '+Q.officialPrices+' -топ -рейтинг -обзор -ср�
 // 24 выдержки — из них никак не выпишешь два десятка игроков, сколько бы
 // запросов мы ни слали. Владелица 15.09: «нашлось пять, это ничего».
 // Поднимаем все три: 20 запросов, по 6 ссылок, до 44 выдержек.
-return gatherEvidence(queries,20,6,{depth:'advanced',raw:true,contentChars:1200,perDomain:3,maxItems:44});}// M9 (контент-радар): конкуренты как МЕДИА, а не как бизнесы. M2 уже нашёл,
+// Каталоги, рейтинги и медиа отсекаем НА ПОИСКЕ, а не запретом в промпте:
+// если в материале одни подборки, модель выпишет подборки — ей неоткуда
+// взять другое (владелица 15.09: «vc.ru проходит, а конкурентов два»).
+const каталоги=['vc.ru','habr.com','dtf.ru','pikabu.ru','workspace.ru','rusbase.com','cossa.ru','sostav.ru','adindex.ru','rb.ru','tproger.ru','skillbox.ru','otzovik.com','irecommend.ru','startpack.ru','soware.ru','livebusiness.ru','clutch.co','g2.com','capterra.com','producthunt.com','zen.yandex.ru','dzen.ru'];// ГЛУБИНА, а не верхушка. Брали по 6 ссылок на запрос — это первая страница
+// выдачи, где стоят раскрученные. Нераскрученный конкурент живёт дальше, и
+// туда никто не заглядывал (владелица 15.09). Берём предел источника — 20
+// ссылок на запрос — и поднимаем потолок выдержек.
+const общее=await gatherEvidence(queries,22,20,{depth:'advanced',raw:true,contentChars:1200,perDomain:2,maxItems:90,exclude_domains:каталоги});// Отдельный заход ЗА САМИМИ ПРОДУКТАМИ: так ищут не статью о рынке, а
+// страницу сервиса — с ценой, тарифом и кнопкой «попробовать».
+const продуктовые=[(niche||product)+' '+market+' малоизвестный сервис небольшой стартап',(niche||product)+' '+market+' российский аналог импортозамещение',(niche||product)+' '+market+' самописное решение open source',(niche||product)+' '+market+' тарифы цена подключить',(niche||product)+' '+market+' попробовать бесплатно демо',(niche||product)+' '+market+' интеграция настроить за 5 минут',(niche||product)+' '+market+' официальный сайт сервиса'];const свои=await gatherEvidence(продуктовые,8,20,{depth:'advanced',raw:true,contentChars:1200,perDomain:1,maxItems:40,exclude_domains:каталоги});const вместе=(общее||[]).concat(свои||[]);const виделиАдреса=new Set();return вместе.filter(x=>x&&x.url&&!виделиАдреса.has(x.url)&&виделиАдреса.add(x.url));}// M9 (контент-радар): конкуренты как МЕДИА, а не как бизнесы. M2 уже нашёл,
 // кто они и почём продают; здесь ищем, что они публикуют и что у них залетает.
 // Берём только то, что видно на публичной странице без входа в чужой аккаунт
 // (ТЗ-M9-ОТКУДА-ДАННЫЕ, разд. 2): YouTube, Telegram через t.me/s/, VK, Дзен,

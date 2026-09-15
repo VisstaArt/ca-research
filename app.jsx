@@ -824,6 +824,9 @@ async function gatherEvidence(queries, maxQueries, maxResults, opts) {
   if (o.raw) searchOpts.include_raw_content = true;              // полный текст страницы вместо сниппета
   if (o.days) searchOpts.days = o.days;                          // ограничить свежестью (M8: недельный скан трендов)
   if (o.include_domains && o.include_domains.length) searchOpts.include_domains = o.include_domains; // реестр площадок (M3)
+  // Исключения — обратная сторона того же приёма: каталоги и медиа в поиске
+  // конкурентов забивают выдачу и вытесняют сами продукты (владелица 15.09).
+  if (o.exclude_domains && o.exclude_domains.length) searchOpts.exclude_domains = o.exclude_domains;
   const all = [];
   for (const q of queries.slice(0, maxQueries || 9)) {
     const r = await callSearch(q, searchOpts);
@@ -2222,8 +2225,39 @@ async function gatherCompetitorEvidence(brief) {
   // 24 выдержки — из них никак не выпишешь два десятка игроков, сколько бы
   // запросов мы ни слали. Владелица 15.09: «нашлось пять, это ничего».
   // Поднимаем все три: 20 запросов, по 6 ссылок, до 44 выдержек.
-  return gatherEvidence(queries, 20, 6,
-    { depth:'advanced', raw:true, contentChars:1200, perDomain:3, maxItems:44 });
+  // Каталоги, рейтинги и медиа отсекаем НА ПОИСКЕ, а не запретом в промпте:
+  // если в материале одни подборки, модель выпишет подборки — ей неоткуда
+  // взять другое (владелица 15.09: «vc.ru проходит, а конкурентов два»).
+  const каталоги = [
+    'vc.ru', 'habr.com', 'dtf.ru', 'pikabu.ru', 'workspace.ru', 'rusbase.com',
+    'cossa.ru', 'sostav.ru', 'adindex.ru', 'rb.ru', 'tproger.ru', 'skillbox.ru',
+    'otzovik.com', 'irecommend.ru', 'startpack.ru', 'soware.ru', 'livebusiness.ru',
+    'clutch.co', 'g2.com', 'capterra.com', 'producthunt.com', 'zen.yandex.ru', 'dzen.ru',
+  ];
+  // ГЛУБИНА, а не верхушка. Брали по 6 ссылок на запрос — это первая страница
+  // выдачи, где стоят раскрученные. Нераскрученный конкурент живёт дальше, и
+  // туда никто не заглядывал (владелица 15.09). Берём предел источника — 20
+  // ссылок на запрос — и поднимаем потолок выдержек.
+  const общее = await gatherEvidence(queries, 22, 20,
+    { depth:'advanced', raw:true, contentChars:1200, perDomain:2, maxItems:90,
+      exclude_domains: каталоги });
+  // Отдельный заход ЗА САМИМИ ПРОДУКТАМИ: так ищут не статью о рынке, а
+  // страницу сервиса — с ценой, тарифом и кнопкой «попробовать».
+  const продуктовые = [
+    (niche || product) + ' ' + market + ' малоизвестный сервис небольшой стартап',
+    (niche || product) + ' ' + market + ' российский аналог импортозамещение',
+    (niche || product) + ' ' + market + ' самописное решение open source',
+    (niche || product) + ' ' + market + ' тарифы цена подключить',
+    (niche || product) + ' ' + market + ' попробовать бесплатно демо',
+    (niche || product) + ' ' + market + ' интеграция настроить за 5 минут',
+    (niche || product) + ' ' + market + ' официальный сайт сервиса',
+  ];
+  const свои = await gatherEvidence(продуктовые, 8, 20,
+    { depth:'advanced', raw:true, contentChars:1200, perDomain:1, maxItems:40,
+      exclude_domains: каталоги });
+  const вместе = (общее || []).concat(свои || []);
+  const виделиАдреса = new Set();
+  return вместе.filter(x => x && x.url && !виделиАдреса.has(x.url) && виделиАдреса.add(x.url));
 }
 
 // M9 (контент-радар): конкуренты как МЕДИА, а не как бизнесы. M2 уже нашёл,
