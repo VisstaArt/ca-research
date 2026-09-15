@@ -578,6 +578,10 @@ td b{color:var(--ink);font-weight:600}
   transition:width .55s cubic-bezier(.2,.8,.2,1)}
 .rule-card:hover::before{width:100%}
 .rule-card span{position:relative;z-index:1;display:block;max-width:34ch}
+.rule-card span + span{margin-top:6px}
+.rule-card .eb + span{margin-top:2px}
+.rule-card .eb{margin-top:10px}
+.rule-card>span:first-of-type{margin-top:0}
 
 /* ── цитаты: компактные плашки в строку, а не одна на весь экран ─────────────
    Владелица 09.09.2026: цитата «размазана почти на экран», нужны плашки,
