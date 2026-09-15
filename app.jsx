@@ -357,6 +357,7 @@ const MODULES = [
     outputsEn: ['LPR personas (4–8)','JTBD map','Fears & decision criteria','Customer Journey Map','Cognitive tactics'],
     outputsRu: ['Персоны LPR (4–8)','Карта JTBD','Страхи и критерии выбора','Карта пути клиента CJM','Когнитивные тактики'],
     estimatedMin: 2,
+    наДанныхПредыдущих: true,
     model: 'gpt-5.6-sol',
     steps: ['Building LPR personas with real language (Block 09)…','Mapping Jobs-to-be-Done per segment (Block 10)…','Assessing awareness levels by Schwartz (Block 11)…','Cataloguing fears and doubts (Block 12)…','Mapping decision criteria and trust triggers (Block 13)…','Building customer journey map CJM (Block 14)…','Identifying cognitive tactics and influence patterns (Block 15)…'],
     stepsRu: ['Строю портреты тех, кто принимает решение…','Разбираю, ради каких задач нас нанимают…','Оцениваю уровни осведомлённости…','Собираю страхи и сомнения…','Выписываю критерии выбора и триггеры доверия…','Строю путь клиента…','Нахожу когнитивные приёмы и паттерны влияния…'],
@@ -380,6 +381,7 @@ const MODULES = [
     outputsEn: ['Marketing hypotheses (10–15)','Offer workshop (draft variants)','Final offers per segment'],
     outputsRu: ['Маркетинговые гипотезы (10–15)','Воркшоп офферов (черновики)','Финальные офферы по сегментам'],
     estimatedMin: 2,
+    наДанныхПредыдущих: true,
     model: 'gpt-5.6-sol',
     steps: ['Generating marketing hypotheses (Block 16)…','Collecting offer input data (Block 17A)…','Running offer workbench — draft options (Block 17B)…','Finalising offers per segment (Block 17 Final)…'],
     stepsRu: ['Формулирую маркетинговые гипотезы…','Собираю вводные для офферов…','Черновики офферов в мастерской…','Довожу финальные офферы по сегментам…'],
@@ -1343,11 +1345,13 @@ async function gatherVoCEvidence(brief, discoveredCompetitors, m2Result) {
   // сервисов». Общие запросы приводят на статьи, потому что статьи и
   // оптимизированы под них. Живая речь лежит на отзовиках, форумах и в
   // обсуждениях — ищем прицельно по площадкам.
-  const площадки = ['otzovik.com', 'irecommend.ru', 'pikabu.ru', 'vc.ru',
-    'searchengines.guru', 'forum.searchengines.ru', 'reddit.com', 'dtf.ru', 'habr.com'];
-  for (const n of topics.slice(0, 2)) {
-    for (const п of площадки.slice(0, 5)) queries.push('site:' + п + ' ' + n + ' ' + Q.discussion);
-  }
+  // ПЛОЩАДКИ ЖИВОЙ РЕЧИ — отдельным заходом. Писать «site:otzovik.com» в
+  // тексте запроса бесполезно: поиск принимает это за слова и портит запрос
+  // (прогон 15.09 дал одну ссылку на весь модуль). Сужение делается
+  // параметром include_domains, и делается ОТДЕЛЬНЫМ вызовом: если смешать
+  // с общими запросами, сузится всё, и рыночные данные пропадут.
+  const площадкиРечи = ['otzovik.com', 'irecommend.ru', 'pikabu.ru', 'vc.ru',
+    'searchengines.guru', 'reddit.com', 'dtf.ru', 'habr.com', 'ozon.ru', 'market.yandex.ru'];
   for (const c of competitors.slice(0, 3)) {
     queries.push(c + ' отзывы реальных пользователей форум');
     queries.push(c + ' «не советую» ИЛИ «разочаровался» отзыв');
@@ -1373,7 +1377,20 @@ async function gatherVoCEvidence(brief, discoveredCompetitors, m2Result) {
   // цитат стало не хватать: банк живого языка и банк хуков выходили пустыми,
   // в голосе клиента оставалась одна строка. На terra лимит 500 000, резать
   // больше нечего: возвращаем полный объём и добавляем сверху.
-  return gatherEvidence(queries, 30, 8, { depth:'advanced', raw:true, contentChars:1800, perDomain:4, maxItems:60 });
+  const общее = await gatherEvidence(queries, 30, 8,
+    { depth:'advanced', raw:true, contentChars:1800, perDomain:4, maxItems:60 });
+  // Второй заход — только по площадкам, где пишут сами люди. Запросов мало и
+  // они короткие: сужение по доменам делает за нас отбор, длинная фраза тут
+  // только мешает.
+  const речь = await gatherEvidence(
+    topics.slice(0, 2).map(n => n + ' ' + market + ' отзывы обсуждение проблема')
+      .concat(competitors.slice(0, 3).map(c => c + ' отзывы')),
+    5, 8,
+    { depth:'advanced', raw:true, contentChars:1800, perDomain:2, maxItems:24,
+      include_domains: площадкиРечи });
+  const вместе = (общее || []).concat(речь || []);
+  const виделиАдрес = new Set();
+  return вместе.filter(x => x && x.url && !виделиАдрес.has(x.url) && виделиАдрес.add(x.url));
 }
 
 // M3 VoC гигиена (ТЗ-M3-VOC.md, п.1-4) — вызывается ПОСЛЕ ответа модели, на готовом
@@ -10323,14 +10340,25 @@ function App() {
                       по памяти модели, без живых источников — а это и есть причина
                       пустых данных (владелица 15.09: «данных ценных нет»). Признак
                       должен быть на виду, а не выясняться разбором. */}
-                  <span style={{fontSize:10,marginRight:8,
-                      color: r.searchCalls ? 'var(--ink-3)' : 'var(--acc-quiet-ink)',
-                      fontWeight: r.searchCalls ? 400 : 700}}
-                    title={r.searchCalls
-                      ? 'Модуль сделал ' + r.searchCalls + ' поисковых запросов — данные заземлены на живые источники'
-                      : 'Поиск не отработал: модуль писал без живых источников. Проверьте ключ поисковой системы в настройке.'}>
-                    {r.searchCalls ? 'поиск: ' + r.searchCalls : 'без поиска'}
-                  </span>
+                  {(() => {
+                    const свой = !(m.наДанныхПредыдущих);
+                    if (!свой) return (
+                      <span style={{fontSize:10,marginRight:8,color:'var(--ink-3)'}}
+                        title="Этот модуль по устройству не ищет сам: он строится на голосе клиента и персонах, собранных раньше. Живые источники у него те же, что у модулей до него.">
+                        на прежних данных
+                      </span>
+                    );
+                    return (
+                      <span style={{fontSize:10,marginRight:8,
+                          color: r.searchCalls ? 'var(--ink-3)' : 'var(--acc-quiet-ink)',
+                          fontWeight: r.searchCalls ? 400 : 700}}
+                        title={r.searchCalls
+                          ? 'Модуль сделал ' + r.searchCalls + ' поисковых запросов — данные заземлены на живые источники'
+                          : 'Поиск не отработал: модуль писал без живых источников. Проверьте ключ поисковой системы в настройке.'}>
+                        {r.searchCalls ? 'поиск: ' + r.searchCalls : 'без поиска'}
+                      </span>
+                    );
+                  })()}
                   <span style={{fontSize:10,color:'var(--ink-3)',marginRight:4}}>{r.at?new Date(r.at).toLocaleDateString():''}</span>
                   <span style={{fontSize:12,color:m.color}}>{open?'▲':'▼'}</span>
                 </div>
