@@ -2622,7 +2622,13 @@ function разметкаM3(д, brief) {
   };
 
   // Карта рынка и карточки конкурентов — те же рисовалки, что и раньше.
-  const кон = (д.конкуренты || []).filter(к => к && непусто(к.название));
+  let кон = (д.конкуренты || []).filter(к => к && непусто(к.название));
+  if (кон.length && brief && brief.name && !кон.some(к => к.мы)) {
+    кон = кон.concat([{ id: 'C000', название: brief.name, сайт: brief.siteUrl || '',
+      ценовой_уровень: brief.priceLayer || 'не определён', известность: 'не замерено',
+      чем_известен: 'мы', оффер: '', сильные: [], слабые: [], мы: true,
+      откуда: 'из брифа', источники: [] }]);
+  }
   if (кон.length) {
     const цена = { 'масс-маркет': 0, 'средний': 1, 'дорогой': 2, 'VIP': 3 };
     const слава = { 'лидер': 0, 'заметный': 1, 'нишевый-малый': 2, 'не замерено': 2 };
@@ -2653,8 +2659,8 @@ function разметкаM3(д, brief) {
     blockScriptsM3.push('renderListCards(' + safeJson(д.куда_расти.map(р => [
       р.направление, [['что отличает', р.что_отличает], ['чем подтверждено', р.чем_подтверждено],
                       ['что нужно', р.что_нужно]].filter(x => непусто(x[1]))
-    ])) + ');');
-    блок('Куда расти', '<div class="rules" id="rpt-generic-1"></div>');
+    ])) + ', "rpt-grow");');
+    блок('Куда расти', '<div class="rules" id="rpt-grow"></div>');
   }
 
   const sw = д.swot || {};
@@ -2708,6 +2714,10 @@ function разметкаM3(д, brief) {
   return части.join('');
 }
 let blockScriptsM3 = [];
+
+// Схема проверена дешёвым запросом? Проверяем один раз за сеанс: незачем
+// платить за полный прогон, чтобы узнать, что провайдер схему не принимает.
+const схемаПроверена = {};
 
 // Какие модули уже переведены на строгий формат. Остальные работают
 // по-прежнему: перевод идёт по одному, с проверкой на живом прогоне.
@@ -3051,6 +3061,8 @@ Task: Показать, ИЗ ЧЕГО СОСТОИТ РЫНОК, а потом �
 Наш ценовой уровень берётся из брифа (поле «ценовой слой» или цена); не задан — определи по нашей цене и напиши, как определил.
 
 ПОЧЕМУ ГЛУБИНА ТОЛЬКО У СВОЕГО СЛОЯ: разобрать сорок игроков по шестнадцати колонкам невозможно честно — половина ячеек будет выдумана. Широкий список отвечает «из чего состоит рынок», глубокий — «с кем мы соревнуемся».
+
+ЦЕНОВОЙ УРОВЕНЬ СТАВЬ ПО ФАКТАМ, А НЕ ПО УМОЛЧАНИЮ. Владелица 16.09: «все семь в масс-маркете, недорогих и дорогих не нашёл». Уровень определяется опубликованной ценой: увидел тариф — ставь по нему; цен на сайте нет — ставь «не определён», это честный ответ. Ставить всем подряд «масс-маркет» нельзя: тогда карта рынка схлопывается в одну колонку и перестаёт что-либо показывать. Если у всех найденных цены не видно — так и напиши строкой под таблицей, а не маскируй это одинаковым уровнем.
 
 КАТАЛОГИ, РЕЙТИНГИ И МЕДИА — НЕ КОНКУРЕНТЫ. Workspace, vc.ru, «Топ-10 инструментов», подборки, агрегаторы, блоги агентств и площадки отзывов в эту таблицу НЕ ПОПАДАЮТ: они не продают тот же продукт, а пишут о нём. Их место — в источниках. Признак простой: если строка не может ответить «сколько стоит их продукт и что он делает» — это не конкурент. Заказчик 14.09 дважды спрашивал, почему в конкурентах стоит каталог.
 
@@ -5297,7 +5309,7 @@ function renderResearchHTML(content, opts) {
     "function renderTopContent(D){\n  var box=document.getElementById('rpt-topc'); if(!box) return;\n  /* Мера как везде: полоса 14px на дорожке, торцы прямые, число снаружи\n     полосы чернилами. Считаем от максимума — сравнивают единицы между собой,\n     а не с абсолютной шкалой, которой у просмотров не бывает. */\n  var max=Math.max.apply(null,D.map(function(x){return x.v;}).concat([1]));\n  /* Telegram и часть YouTube просмотры не показывают. Когда не замерено\n     НИЧЕГО, полосы сравнивать нечем: пустая дорожка у каждой строки\n     выглядит как поломка. Тогда дорожку убираем совсем и печатаем\n     список — то, что видно, всё равно полезно. */\n  var мерено=D.some(function(x){return x.v>0;});\n  box.className=мерено?'topc':'topc nomeasure';\n  box.innerHTML=D.map(function(d){\n    var w=d.v>0?Math.max(d.v/max*100,1.5):0;\n    var head=d.url?('<a href=\"'+d.url+'\" target=\"_blank\" rel=\"noopener\">'+escText(d.t)+'</a>'):escText(d.t);\n    /* Значок площадки — тот же набор, что в карточках каналов: где что\n       выходит, видно с одного взгляда, а не вычитывается из подписи. */\n    var зн=(typeof G!=='undefined'&&G[d.ic])?('<span class=\"tci\"><svg viewBox=\"0 0 24 24\">'+G[d.ic]+'</svg></span>'):'';\n    var sub=[d.p,d.meta].filter(Boolean).join(' · ');\n    return '<div class=\"tcrow\">'\n      +'<div class=\"tcn\">'+зн+head+(sub?'<span>'+escText(sub)+'</span>':'')+'</div>'\n      +(мерено?'<div class=\"rail\"><i style=\"width:'+w.toFixed(1)+'%\"></i></div>':'')\n      +'<div class=\"tcv\">'+escText(d.raw)+(d.resp?'<span>'+escText(d.resp)+'</span>':'')+'</div>'\n      +(d.hook?'<div class=\"tch\">Хук: '+escText(d.hook)+'</div>':'')\n      +'</div>';\n  }).join('');\n}",
     "function renderGapCards(D){\n  var box=document.getElementById('rpt-gapc'); if(!box) return;\n  var СЛ={win:'var(--mid)',parity:'var(--ink-3)',lose:'var(--ink-2)'};\n  box.innerHTML=D.map(function(r){\n    var имя=r[0],вид=r[1],слово=r[2],наше=r[3],их=r[4],об=r[5],url=r[6];\n    var поле=function(п,в){ return в?'<div class=\"gf\"><span>'+п+'</span><b>'+escText(в)+'</b></div>':''; };\n    return '<div class=\"gcard g-'+вид+'\">'\n      +'<div class=\"gh\"><b>'+escText(имя)+'</b>'\n      +'<span class=\"gv\" style=\"color:'+СЛ[вид]+'\">'+слово+'</span></div>'\n      +поле('у нас',наше)+поле('лучшее у конкурентов',их)+поле('почему так',об)\n      +(url?'<a class=\"gl\" href=\"'+url+'\" target=\"_blank\" rel=\"noopener\">пример</a>':'')\n      +'</div>';\n  }).join('');\n}",
     "function renderManifest(D){\n  var box=document.getElementById('rpt-manif'); if(!box) return;\n  box.innerHTML=D.map(function(r,i){\n    var э=r[0],п=r[1],пр=r[2],н=r[3];\n    return '<div class=\"rule-card\"><b>'+(i+1)+'</b>'\n      +'<span class=\"eb\">'+escText(э)+'</span>'\n      +(п?'<span class=\"nm\">'+escText(п)+'</span>':'')\n      +(пр?'<span class=\"q\">'+escText(пр)+'</span>':'')\n      +(н?'<span class=\"ft\">избегаем: '+escText(н)+'</span>':'')\n      +'</div>';\n  }).join('');\n}",
-    "function renderListCards(D){\n  var корни=document.querySelectorAll('[id^=\"rpt-generic-\"]');\n  var box=null;\n  for(var i=0;i<корни.length;i++){ if(!корни[i].innerHTML){ box=корни[i]; break; } }\n  if(!box) return;\n  box.innerHTML=D.map(function(r,i){\n    var имя=r[0], поля=r[1];\n    return '<div class=\"rule-card\"><b>'+(i+1)+'</b>'\n      +'<span class=\"nm\">'+escText(имя)+'</span>'\n      +поля.map(function(п,n){\n          var подпись='<span class=\"eb\">'+escText(п[0])+'</span>';\n          var значение='<span'+(n===0?'':' class=\"ft\"')+'>'+escText(п[1])+'</span>';\n          return подпись+значение;\n        }).join('')\n      +'</div>';\n  }).join('');\n}",
+    "function renderListCards(D, n){\n  var box=n?document.getElementById(n):null;\n  if(!box){\n    var корни=document.querySelectorAll('[id^=\"rpt-generic-\"]')||[];\n    for(var i=0;i<корни.length;i++){ if(!корни[i].innerHTML){ box=корни[i]; break; } }\n  }\n  if(!box) return;\n  box.innerHTML=D.map(function(r,i){\n    var имя=r[0], поля=r[1];\n    return '<div class=\"rule-card\"><b>'+(i+1)+'</b>'\n      +'<span class=\"nm\">'+escText(имя)+'</span>'\n      +поля.map(function(п,n){\n          var подпись='<span class=\"eb\">'+escText(п[0])+'</span>';\n          var значение='<span'+(n===0?'':' class=\"ft\"')+'>'+escText(п[1])+'</span>';\n          return подпись+значение;\n        }).join('')\n      +'</div>';\n  }).join('');\n}",
     "function renderPatterns(D){\n  var box=document.getElementById('rpt-patterns'); if(!box) return;\n  /* Паттерн — вывод, по которому принимают решение. Название крупно, под ним\n     почему срабатывает, внизу за линией — что делать и на чём основано. */\n  box.innerHTML=D.map(function(r,i){\n    var foot=[r[2]?'Делаем: '+r[2]:'', r[3]?'Основано на: '+r[3]:''].filter(Boolean).join(' · ');\n    return '<div class=\"rule-card\"><b>'+(i+1)+'</b>'\n      +'<span class=\"eb\">что работает</span>'\n      +'<span class=\"nm\">'+escText(r[0])+'</span>'\n      +(r[1]?'<span>'+escText(r[1])+'</span>':'')\n      +(foot?'<span class=\"ft\">'+escText(foot)+'</span>':'')\n      +'</div>';\n  }).join('');\n}",
     "function renderJtbd(D){\n  var box=document.getElementById('rpt-jtbd'); if(!box) return;\n  /* Фраза собрана целиком: связки «когда / я хочу / чтобы» приглушены, чтобы\n     читалось предложение, а не заполненная анкета. */\n  var lead=function(w){return '<i>'+w+'</i> ';};\n  box.innerHTML=D.map(function(r,i){\n    var seg=r[0], when=r[1], want=r[2], so=r[3], win=r[4], gap=r[5], fear=r[6];\n    var foot=[win?'Успех: '+win:'', gap?'Пробел: '+gap:'', fear?'Страх: '+fear:''].filter(Boolean).join(' · ');\n    return '<div class=\"rule-card\"><b>'+(i+1)+'</b>'\n      +(seg?'<span class=\"eb\">'+escText(seg)+'</span>':'')\n      +'<span class=\"q\">'+(when?lead('Когда')+escText(when)+', ':'')\n        +(want?lead('я хочу')+escText(want):'')\n        +(so?', '+lead('чтобы')+escText(so):'')+'</span>'\n      +(foot?'<span class=\"ft\">'+escText(foot)+'</span>':'')\n      +'</div>';\n  }).join('');\n}",
     "function renderTactics(D){\n  var box=document.getElementById('rpt-tactics'); if(!box) return;\n  /* Риск стоит прямо под примером формулировки, а не в дальней колонке:\n     его читают вместе с ней или не читают вовсе. */\n  box.innerHTML=D.map(function(r,i){\n    return '<div class=\"rule-card\"><b>'+(i+1)+'</b>'\n      +(r[1]?'<span class=\"eb\">'+escText(r[1])+'</span>':'')\n      +'<span class=\"nm\">'+escText(r[0])+'</span>'\n      +(r[2]?'<span class=\"q\">«'+escText(r[2])+'»</span>':'')\n      +(r[3]&&r[3]!=='—'?'<span class=\"warnline\">Риск: '+escText(r[3])+'</span>':'')\n      +(r[4]?'<span class=\"ft\">'+escText(r[4])+'</span>':'')\n      +'</div>';\n  }).join('');\n}",
@@ -8475,7 +8487,10 @@ function injectBlockStyles() {
 // (renderResearchHTML) — до 11.09.2026 сайт показывал голые markdown-таблицы,
 // потому что весь согласованный вид жил внутри функции отчёта. Владелица:
 // «я думала, это будет на сайте, а не только в выгрузке».
-function ResearchView({ content, строгое, ourName, ourPrice, выбранные, наВыбор }) {
+function ResearchView({ content, строгое, ourName, ourPrice, siteUrl, выбранные, наВыбор }) {
+  // Имя и ценовой слой заказчика нужны разметке строгого пути: модель себя в
+  // список конкурентов не вносит, а карта без «нас» бесполезна.
+  const брифДляВида = { name: ourName || '', priceLayer: ourPrice || '', siteUrl: siteUrl || '' };
   const ref = React.useRef(null);
   // Итог модуля вырезается и встаёт карточкой наверх — ровно как в выгрузке.
   // Без этого на сайте раздел «ИТОГ МОДУЛЯ» лежал сырым текстом в хвосте,
@@ -8484,7 +8499,7 @@ function ResearchView({ content, строгое, ourName, ourPrice, выбран
     // Строгие данные разбирать не нужно: форма задана схемой, вид — наш.
     if (строгое) {
       blockScriptsM3 = [];
-      const тело = разметкаM3(строгое, null) || '';
+      const тело = разметкаM3(строгое, брифДляВида) || '';
       const свод = строгое.итог ? {
         learned: строгое.итог.что_узнали || [],
         means: строгое.итог.что_это_значит || [],
@@ -8506,7 +8521,7 @@ function ResearchView({ content, строгое, ourName, ourPrice, выбран
     const r = renderResearchHTML(почиститьХвост(cut.body, !!свод), { ourName, ourPrice, словарь });
     const итог = оформитьТекст(renderModuleSummary(свод), r.источники, словарь);
     return { ...r, html: итог + r.html };
-  }, [content, строгое, ourName, ourPrice]);
+  }, [content, строгое, ourName, ourPrice, siteUrl]);
   React.useEffect(() => { injectBlockStyles(); }, []);
   React.useEffect(() => {
     if (!ref.current || !out.scripts.length) return;
@@ -9491,7 +9506,18 @@ function App() {
         // Строгий формат: у модуля есть схема — просим ответ по ней. Модель
         // физически не может отдать другое, разбор перестаёт гадать. Сбой —
         // откатываемся на прежний путь, чтобы прогон не пропал (15.09).
-        if (СХЕМЫ[mod.id]) {
+        if (СХЕМЫ[mod.id] && !схемаПроверена[mod.id]) {
+          try {
+            await callGPTСхема('Верни пример по схеме. Значения любые, коротко.',
+              'Пример на одну строку в каждом списке.', СХЕМЫ[mod.id], 'probe_' + mod.id);
+            схемаПроверена[mod.id] = true;
+          } catch (e) {
+            схемаПроверена[mod.id] = false;
+            сбойСхемы = 'схему не принял провайдер: ' + String((e && e.message) || e).slice(0, 160);
+            if (window.console) console.warn('Схема не принята, идём прежним путём:', e);
+          }
+        }
+        if (СХЕМЫ[mod.id] && схемаПроверена[mod.id]) {
           try {
             const сырое = await callGPTСхема(sys, userPrompt, СХЕМЫ[mod.id], 'module_' + mod.id);
             строгое = JSON.parse(сырое);
@@ -11154,6 +11180,7 @@ function App() {
                         визуализации рисуют блочные скрипты отчёта, и два вида
                         графиков об одном рядом — разнобой, не богатство. */}
                     <ResearchView content={r.content} строгое={r.строгое} ourName={(proj&&proj.brief&&proj.brief.name)||''}
+                      siteUrl={(proj&&proj.brief&&proj.brief.siteUrl)||''}
                       ourPrice={(proj&&proj.brief&&proj.brief.priceLayer)||''}/>
                   </>)}
                 </div>
