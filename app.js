@@ -1,6 +1,6 @@
 // СОБРАНО АВТОМАТИЧЕСКИ из app.jsx — не править руками.
 // Правки вносить в app.jsx, затем: osascript -l JavaScript tools/build.js
-// отпечаток-исходника: 53f7a591c965f98d
+// отпечаток-исходника: fc57a01d8f7b7ff1
 // Функции контракта живут в lib/contract.js. Разбираем их сюда, чтобы весь
 // остальной код обращался к ним по прежним именам и не менялся.
 const{GLOBAL_MODS,isPerNiche,dropOrphans,nichesOf,resKey,splitMdRow,isMdSeparator,parseMdTables,buildModuleEntry,pickTable,pickColumn,withStableIds}=CAContract;// Название модуля берётся из MODULES — это конфиг ИНТЕРФЕЙСА, и сборщик
@@ -2246,7 +2246,9 @@ if(headers.length<4)return null;// Заголовок не опознан — у
 // требует своё отличительное сочетание и на чужой таблице отдаёт null.
 // Без этой пометки подбор однажды уже промахнулся: разбор поисковой
 // выдачи забрал гэп-анализ, потому что в обоих есть колонка URL.
-for(const v of BLOCK_VIEWS){if(!v.поКолонкам)continue;const res=попробовать(v);if(res)return res;}return null;}function mdToHtml(text){if(!text)return'';const lines=text.split('\n');let html='',inTable=false,tableRows=[],lastHeading='';// Контекст модуля: сигналы из BLOCK 04_1 нужны карточкам ниш в 04_2.
+for(const v of BLOCK_VIEWS){if(!v.поКолонкам)continue;const res=попробовать(v);if(res)return res;}return null;}// Отступ между абзацами — не содержимое. Нужен при проверке «под заголовком
+// что-то есть»: без этого пустая строка делала пустой заголовок «полным».
+const безОтступов=h=>String(h).replace(/(<div style="height:8px"><\/div>)+$/,'');function mdToHtml(text){if(!text)return'';const lines=text.split('\n');let html='',inTable=false,tableRows=[],lastHeading='';// Контекст модуля: сигналы из BLOCK 04_1 нужны карточкам ниш в 04_2.
 // ПРОВЕРЕНО НА ЖИВОМ ОТВЕТЕ МОДЕЛИ 12.09. Заголовок приходит в виде
 // «BLOCK 16 — Hypotheses (16_Гипотезы)»: английское имя и русское в
 // скобках. Раньше я срезала скобки и оставляла АНГЛИЙСКОЕ — в русском
@@ -2320,12 +2322,18 @@ if(/BLOCK\s*04_1\b/i.test(t))ctx.mark041=html.length;ctx.headStart=html.length;h
 // человеческая часть заголовка. Английский хвост тоже убираем.
 // Первый заголовок первого уровня в модуле пропускаем: модуль уже назван
 // в шапке карточки, и второе имя подряд читается как пустой блок.
-if(line.startsWith('# ')){if(!ctx.h1seen){ctx.h1seen=true;}else html+='<h1>'+esc(human(line.slice(2)))+'</h1>';}else if(line.startsWith('## ')){if(/BLOCK\s*04_1\b/i.test(line.slice(3)))ctx.mark041=html.length;ctx.headStart=html.length;html+='<h2'+якорь(line.slice(3))+'>'+esc(human(line.slice(3)))+'</h2>';ctx.headEnd=html.length;}else if(line.startsWith('### ')){// В блоке SWOT стороны нарисованы карточками, и заголовок над ними —
+// Заголовок без содержимого. Владелица 15.09 показала «P2 — маркетолог»
+// и «P3 — руководитель» подряд: два имени персон и пустота под ними.
+// Снимаем ЛЮБОЙ заголовок, под которым до следующего заголовка того же
+// или более высокого уровня ничего не напечаталось.
+const уровень=(line.match(/^(#{1,4})\s/)||[])[1];if(уровень){const у=уровень.length;// Пустая строка печатает отступ — он не содержимое. Иначе любой
+// заголовок с пустой строкой под ним считался бы заполненным.
+while(ctx.пустые&&ctx.пустые.length&&ctx.пустые[ctx.пустые.length-1].у>=у&&безОтступов(html).length<=ctx.пустые[ctx.пустые.length-1].конец){html=html.slice(0,ctx.пустые.pop().начало);}if(ctx.пустые)ctx.пустые=ctx.пустые.filter(x=>x.у<у);}if(line.startsWith('# ')){if(!ctx.h1seen){ctx.h1seen=true;}else html+='<h1>'+esc(human(line.slice(2)))+'</h1>';}else if(line.startsWith('## ')){if(/BLOCK\s*04_1\b/i.test(line.slice(3)))ctx.mark041=html.length;ctx.headStart=html.length;const н2=html.length;html+='<h2'+якорь(line.slice(3))+'>'+esc(human(line.slice(3)))+'</h2>';ctx.headEnd=html.length;(ctx.пустые=ctx.пустые||[]).push({у:2,начало:н2,конец:html.length});}else if(line.startsWith('### ')){// В блоке SWOT стороны нарисованы карточками, и заголовок над ними —
 // второе имя того же самого. Владелица 15.09 показала «Strengths»
 // и «Weaknesses» подряд: по-английски и поверх готовых карточек.
 let имя3=human(line.slice(4)).trim();// «### Таблица 2. Главное обещание» шло мимо чистки: ловили только
 // жирную строку и обычный абзац (владелица 15.09).
-if(/^(таблица|табл\.)\s*\d+\s*[—.:-]/i.test(имя3)){имя3=сБольшой(имя3.replace(/^(таблица|табл\.)\s*\d*\s*[—.:-]?\s*/i,'').replace(/[:.]\s*$/,'').trim());}if(!(ctx.has062&&/^(сильные\s+стороны|слабые\s+стороны|возможности|угрозы)\s*:?$/i.test(имя3)))html+='<h3'+якорь(line.slice(4))+'>'+esc(имя3)+'</h3>';}else if(line.startsWith('#### '))html+='<h4'+якорь(line.slice(5))+'>'+esc(human(line.slice(5)))+'</h4>';// Модель часто ставит звёздочки вкривь: «*Таблица 1. Карта рынка:**».
+if(/^(таблица|табл\.)\s*\d+\s*[—.:-]/i.test(имя3)){имя3=сБольшой(имя3.replace(/^(таблица|табл\.)\s*\d*\s*[—.:-]?\s*/i,'').replace(/[:.]\s*$/,'').trim());}if(!(ctx.has062&&/^(сильные\s+стороны|слабые\s+стороны|возможности|угрозы)\s*:?$/i.test(имя3))){const н3=html.length;html+='<h3'+якорь(line.slice(4))+'>'+esc(имя3)+'</h3>';(ctx.пустые=ctx.пустые||[]).push({у:3,начало:н3,конец:html.length});}}else if(line.startsWith('#### ')){const н4=html.length;html+='<h4'+якорь(line.slice(5))+'>'+esc(human(line.slice(5)))+'</h4>';(ctx.пустые=ctx.пустые||[]).push({у:4,начало:н4,конец:html.length});}// Модель часто ставит звёздочки вкривь: «*Таблица 1. Карта рынка:**».
 // Такую строку прежняя проверка не узнавала, и звёздочки уезжали в отчёт
 // как есть (владелица 15.09 прислала текст модуля). Считаем жирным любую
 // строку, обрамлённую звёздочками с обеих сторон, сколько бы их ни было.
@@ -2355,7 +2363,8 @@ const хвост=t.replace(/^\*{1,2}\s*[^*:]{2,20}:?\s*\*{1,2}\s*/,'').trim();if
 // Нумерация таблиц — рабочая пометка из промпта, заказчику она не
 // говорит ничего (владелица просила убрать трижды).
 else if(/^(таблица|табл\.)\s*\d+\s*[—:.-]/i.test(t)){const хвост=t.replace(/^(таблица|табл\.)\s*\d*\s*[—.:-]?\s*/i,'').replace(/[:.]\s*$/,'').trim();if(хвост)html+='<h3>'+esc(сБольшой(хвост))+'</h3>';}else if(/^[-•·]\s/.test(t))html+='<p class="rli">'+mdInline(t.slice(2).replace(/^\s*\d+[.)]\s+/,''))+'</p>';else if(/^\d+\.\s/.test(t))html+='<p class="rli">'+mdInline(t.replace(/^\s*\d+[.)]\s+/,''))+'</p>';else if(/^[═─—_]{3,}$/.test(t))continue;// декоративная линия из промпта
-else if(!t)html+='<div style="height:8px"></div>';else html+='<p>'+mdInline(line)+'</p>';}if(inTable)flushTable();return html;}const сырой=mdToHtml(content);// Куда ведут сноски: у разведки это «Источники разведки» (04_0), у остальных
+else if(!t)html+='<div style="height:8px"></div>';else html+='<p>'+mdInline(line)+'</p>';}if(inTable)flushTable();// Последний заголовок тоже может остаться без содержимого.
+while(ctx.пустые&&ctx.пустые.length&&безОтступов(html).length<=ctx.пустые[ctx.пустые.length-1].конец){html=html.slice(0,ctx.пустые.pop().начало);}return безОтступов(html);}const сырой=mdToHtml(content);// Куда ведут сноски: у разведки это «Источники разведки» (04_0), у остальных
 // модулей — свой список источников (02 или 05). Берём тот, что есть в этом
 // же тексте: ссылка на чужой блок увела бы в пустоту.
 const блокИсточников=['04_0','02','05'].find(k=>сырой.indexOf('id="блок-'+k+'"')>=0);const html=оформитьТекст(сырой,блокИсточников,opts&&opts.словарь||null);// SWOT собирается из четырёх таблиц: к моменту первой мы знаем не всё,
