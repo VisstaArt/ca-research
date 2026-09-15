@@ -80,6 +80,9 @@ const T = {
     fPrice: 'Price range', fPricePh: '₽15 000–50 000, on request, ₺5000+…',
     fCompetitors: 'Known competitors', fCompetitorsPh: 'Competitor A, site.com…',
     fExtra: 'Additional context', fExtraPh: 'Market specifics, USP, constraints, existing data…',
+    fCases: 'Cases and proof', fCasesPh: 'Real results with numbers and where to see them…',
+    fGuarantees: 'Guarantees', fGuaranteesPh: 'Trial period, refund, SLA — only what you really promise…',
+    fLimits: 'Limits', fLimitsPh: 'Who you do not work with, what the product does not do…',
     fSocials: 'Social profiles', fSocialsPh: 'Links to Instagram, Telegram, VK, YouTube… one per line',
     fBrandColors: 'Brand colors', fBrandColorsPh: '#0ABAB5, #171512…',
     fBrandFonts: 'Brand fonts', fBrandFontsPh: 'Montserrat, Source Serif 4…',
@@ -181,7 +184,10 @@ const T = {
     fResult: 'Главный результат для клиента', fResultPh: 'Что получает клиент — конкретный результат…',
     fPrice: 'Ценовой диапазон', fPricePh: '₽15 000–50 000, по запросу, ₺5000+…',
     fCompetitors: 'Известные конкуренты', fCompetitorsPh: 'Конкурент А, site.com…',
-    fExtra: 'Дополнительный контекст', fExtraPh: 'Специфика рынка, УТП, ограничения, имеющиеся данные…',
+    fExtra: 'Дополнительный контекст', fExtraPh: 'Специфика рынка, УТП, имеющиеся данные…',
+    fCases: 'Кейсы и доказательства', fCasesPh: 'Настоящие результаты с числами и где их посмотреть…',
+    fGuarantees: 'Гарантии', fGuaranteesPh: 'Пробный период, возврат, обязательства — только то, что правда обещаете…',
+    fLimits: 'Ограничения', fLimitsPh: 'С кем не работаете, чего продукт не делает…',
     fSocials: 'Соцсети клиента', fSocialsPh: 'Ссылки на Instagram, Telegram, VK, YouTube… по одной на строку',
     fBrandColors: 'Фирменные цвета', fBrandColorsPh: '#0ABAB5, #171512…',
     fBrandFonts: 'Фирменные шрифты', fBrandFontsPh: 'Montserrat, Source Serif 4…',
@@ -2401,6 +2407,9 @@ function buildSystem(brief, lang) {
     if(k==='currentAvgCheck') return '- Company Avg Check: '+v;
     if(k==='targetSegment') return '- Target Segment (pre-defined, skip M1): '+v;
     if(k==='priceLayer') return '- Price Layer: '+v;
+    if(k==='cases') return '- Cases and proof (verbatim from owner — use as is, never invent): '+v;
+    if(k==='guarantees') return '- Guarantees the owner really gives (verbatim — never invent): '+v;
+    if(k==='limits') return '- Limits: who it is not for, what the product does not do (verbatim): '+v;
     if(k==='services') return Array.isArray(v)&&v.length ? '- Services offered (from site): '+v.join('; ') : '';
     if(k==='selectedServices') return Array.isArray(v)&&v.length ? '- Services SELECTED for research: '+v.join('; ') : '';
     if(k==='selectedNiche') return '- SELECTED NICHE (chosen at M1.2 stop-point): '+v;
@@ -3335,6 +3344,8 @@ BLOCK 17A — Offer Input (17A_Оффер_Input)
 ═══════════════════════════════════════════════
 Format:
 | Seller_ID | Бренд/название | Компетенции | Отличия/УТП | Доказательства | Кейсы | Форматы продукта | Гео/расписание | Ограничения | Гарантии | Прайс/пакеты | Способы оплаты | Тон коммуникации | Запрещённые формулировки |
+
+В БРИФЕ ЕСТЬ ОТДЕЛЬНЫЕ ПОЛЯ под кейсы, гарантии и ограничения — бери их оттуда дословно, не ищи по свободному тексту. Пусто в поле — пиши «не задано».
 
 ЭТА ТАБЛИЦА — НЕ ИССЛЕДОВАНИЕ, А ОТРАЖЕНИЕ ВВОДНЫХ. Всё в ней — данные о ЗАКАЗЧИКЕ, а не находки о рынке. Взяться им неоткуда, кроме брифа и сайта заказчика.
 ЖЁСТКОЕ ПРАВИЛО: каждая ячейка — либо дословно из брифа/с сайта, либо «не задано». Третьего варианта нет. Не «примерно так обычно бывает», не «логично предположить», не отраслевой стандарт.
@@ -5713,6 +5724,9 @@ function renderResearchHTML(content, opts) {
       const н = String(имя).toLowerCase();
       if (/прайс|цен|оплат/.test(н)) return 'Ценовой диапазон';
       if (/гео|расписан/.test(н)) return 'География работы';
+      if (/кейс|доказат/.test(н)) return 'Кейсы и доказательства';
+      if (/гарант/.test(н)) return 'Гарантии';
+      if (/ограничен|запрещ/.test(н)) return 'Ограничения';
       if (/формат|продукт/.test(н)) return 'Услуги или ниша';
       if (/бренд|назван/.test(н)) return 'Название компании';
       return 'Дополнительный контекст';
@@ -8822,7 +8836,7 @@ function App() {
       setPMsg('⟳ Read '+pages.length+' page(s) — extracting brief…');
       const result = await callGPT(
         'Extract a marketing brief from website content. Reply ONLY with valid JSON, no markdown.',
-        'Extract from:\n\n'+combined+'\n\nReturn ONLY:\n{"name":"","niche":"","geoCompany":"all markets company operates in","geoMarket":"primary research market","format":"","audience":"","result":"","price":"","competitors":"","extra":"","services":["list of distinct services/products/directions offered on the site, in the site\'s language, 3-15 items"],"lang":"detected language e.g. Turkish"}'
+        'Extract from:\n\n'+combined+'\n\nReturn ONLY:\n{"name":"","niche":"","geoCompany":"all markets company operates in","geoMarket":"primary research market","format":"","audience":"","result":"","price":"","competitors":"","extra":"","cases":"real cases with numbers, verbatim from the site; empty string if none","guarantees":"guarantees, trial period, refund, SLA — verbatim from the site; empty string if none","limits":"limits: who it is not for, what the product does not do — verbatim; empty string if none","services":["list of distinct services/products/directions offered on the site, in the site\'s language, 3-15 items"],"lang":"detected language e.g. Turkish"}'
       );
       const d = JSON.parse(result.replace(/```json|```/g,'').trim());
       setBrief(p => ({...p, ...Object.fromEntries(Object.entries(d).filter(([k,v])=>k!=='lang'&&v&&empty.hasOwnProperty(k)))}));
@@ -9852,6 +9866,12 @@ function App() {
           <Field label={t.fPrice}><input value={brief.price} onChange={e=>setBrief(p=>({...p,price:e.target.value}))} placeholder={t.fPricePh}/></Field>
           <Field label={t.fCompetitors}><input value={brief.competitors} onChange={e=>setBrief(p=>({...p,competitors:e.target.value}))} placeholder={t.fCompetitorsPh}/></Field>
           <Field label={t.fExtra}><textarea value={brief.extra} onChange={e=>setBrief(p=>({...p,extra:e.target.value}))} placeholder={t.fExtraPh} rows={2} style={{resize:'vertical'}}/></Field>
+          {/* Обязательства перед покупателем — своими полями, а не одной кучей
+              в контексте: из кучи модель их не достаёт уверенно, и в офферах
+              выходит «не задано» (владелица 15.09). */}
+          <Field label={t.fCases} optional><textarea value={brief.cases} onChange={e=>setBrief(p=>({...p,cases:e.target.value}))} placeholder={t.fCasesPh} rows={2} style={{resize:'vertical'}}/></Field>
+          <Field label={t.fGuarantees} optional><textarea value={brief.guarantees} onChange={e=>setBrief(p=>({...p,guarantees:e.target.value}))} placeholder={t.fGuaranteesPh} rows={2} style={{resize:'vertical'}}/></Field>
+          <Field label={t.fLimits} optional><textarea value={brief.limits} onChange={e=>setBrief(p=>({...p,limits:e.target.value}))} placeholder={t.fLimitsPh} rows={2} style={{resize:'vertical'}}/></Field>
           <Field label={t.fSocials}><textarea value={brief.socials} onChange={e=>setBrief(p=>({...p,socials:e.target.value}))} placeholder={t.fSocialsPh} rows={2} style={{resize:'vertical'}}/></Field>
           <Field label={t.fBrandColors}><input value={brief.brandColors} onChange={e=>setBrief(p=>({...p,brandColors:e.target.value}))} placeholder={t.fBrandColorsPh}/></Field>
           <Field label={t.fBrandFonts}><input value={brief.brandFonts} onChange={e=>setBrief(p=>({...p,brandFonts:e.target.value}))} placeholder={t.fBrandFontsPh}/></Field>
