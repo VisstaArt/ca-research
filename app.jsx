@@ -6113,15 +6113,19 @@ function renderResearchHTML(content, opts) {
   // Три варианта хука на оффер — это черновики, из которых выбирают. Показываем
   // их списком внутри карточки, а не строкой через точку с запятой.
   function renderWorkbenchBlock(headers, rows) {
-    const kH = col(headers,'hook','хук');
-    if (!kH) return null;
+    // Оффер без готового хука — всё равно оффер: у него есть боль, результат
+    // и механизм. Прежде строка без хука выбрасывалась целиком, и «Рабочие
+    // варианты офферов» выходили пустыми (владелица 15.09).
+    const kH = col(headers,'hook','хук','заголов');
+    const kБоль0 = col(headers,'боль'), kРез0 = col(headers,'результат');
+    if (!kH && !(kБоль0 && kРез0)) return null;
     const kId = col(headers,'offer_id','id'), kPain = col(headers,'боль'),
           kRes = col(headers,'результат'), kMech = col(headers,'механизм','почему работает'),
           kProof = col(headers,'доказат'), kAw = col(headers,'осведомл'), kPer = col(headers,'persona');
     const g = (r,k) => k ? String(r[k]||'').replace(/\*\*/g,'').trim() : '';
     const d = rows.map(r => {
-      const h = g(r,kH);
-      if (!h) return null;
+      const h = kH ? g(r,kH) : '';
+      if (!h && !g(r,kPain) && !g(r,kRes)) return null;
       // Модель отдаёт хуки по-разному: через точку с запятой, списком с
       // цифрами, а часто — скобкой с кавычками: («первый», «второй»).
       // Прежний разбор резал только по «;» и «•», и скобки с кавычками

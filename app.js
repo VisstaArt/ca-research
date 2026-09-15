@@ -1,6 +1,6 @@
 // СОБРАНО АВТОМАТИЧЕСКИ из app.jsx — не править руками.
 // Правки вносить в app.jsx, затем: osascript -l JavaScript tools/build.js
-// отпечаток-исходника: ed317a53c229952d
+// отпечаток-исходника: f425382d28b2b187
 // Функции контракта живут в lib/contract.js. Разбираем их сюда, чтобы весь
 // остальной код обращался к ним по прежним именам и не менялся.
 const{GLOBAL_MODS,isPerNiche,dropOrphans,nichesOf,resKey,splitMdRow,isMdSeparator,parseMdTables,buildModuleEntry,pickTable,pickColumn,withStableIds}=CAContract;// Название модуля берётся из MODULES — это конфиг ИНТЕРФЕЙСА, и сборщик
@@ -2255,7 +2255,10 @@ function renderIntentBlock(headers,rows){const kC=col(headers,'кластер');
 function renderCriteriaBlock(headers,rows){const kC=col(headers,'критерий');if(!kC)return null;const kPer=col(headers,'персона'),kPain=col(headers,'боль','задача'),kRes=col(headers,'результат'),kArt=col(headers,'артефакт','доказат'),kUse=col(headers,'где');const g=(r,k)=>k?String(r[k]||'').replace(/\*\*/g,'').trim():'';const d=rows.map(r=>{const c=g(r,kC);if(!c)return null;return[c,[g(r,kPer),g(r,kPain)].filter(x=>x&&x!=='—').join(' · '),g(r,kRes),g(r,kArt),g(r,kUse)];}).filter(Boolean);if(!d.length)return null;blockScripts.push('renderCriteria('+safeJson(d)+');');return'<div class="dtbl" style="--cols:minmax(0,1.2fr) minmax(0,1fr) minmax(0,1.1fr)" id="rpt-crit"></div>';}// ── BLOCK 17B: мастерская офферов ───────────────────────────────────────────
 // Три варианта хука на оффер — это черновики, из которых выбирают. Показываем
 // их списком внутри карточки, а не строкой через точку с запятой.
-function renderWorkbenchBlock(headers,rows){const kH=col(headers,'hook','хук');if(!kH)return null;const kId=col(headers,'offer_id','id'),kPain=col(headers,'боль'),kRes=col(headers,'результат'),kMech=col(headers,'механизм','почему работает'),kProof=col(headers,'доказат'),kAw=col(headers,'осведомл'),kPer=col(headers,'persona');const g=(r,k)=>k?String(r[k]||'').replace(/\*\*/g,'').trim():'';const d=rows.map(r=>{const h=g(r,kH);if(!h)return null;// Модель отдаёт хуки по-разному: через точку с запятой, списком с
+function renderWorkbenchBlock(headers,rows){// Оффер без готового хука — всё равно оффер: у него есть боль, результат
+// и механизм. Прежде строка без хука выбрасывалась целиком, и «Рабочие
+// варианты офферов» выходили пустыми (владелица 15.09).
+const kH=col(headers,'hook','хук','заголов');const kБоль0=col(headers,'боль'),kРез0=col(headers,'результат');if(!kH&&!(kБоль0&&kРез0))return null;const kId=col(headers,'offer_id','id'),kPain=col(headers,'боль'),kRes=col(headers,'результат'),kMech=col(headers,'механизм','почему работает'),kProof=col(headers,'доказат'),kAw=col(headers,'осведомл'),kPer=col(headers,'persona');const g=(r,k)=>k?String(r[k]||'').replace(/\*\*/g,'').trim():'';const d=rows.map(r=>{const h=kH?g(r,kH):'';if(!h&&!g(r,kPain)&&!g(r,kRes))return null;// Модель отдаёт хуки по-разному: через точку с запятой, списком с
 // цифрами, а часто — скобкой с кавычками: («первый», «второй»).
 // Прежний разбор резал только по «;» и «•», и скобки с кавычками
 // становились отдельными пунктами: в отчёте это выглядело как «(» и
