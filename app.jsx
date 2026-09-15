@@ -10749,6 +10749,18 @@ function App() {
                       onClick={()=>setОтчётРазвёрнут(v=>!v)}>
                       {отчётРазвёрнут ? '\u25B4 Свернуть отчёт разведки' : '\u25BE Смотреть полный отчёт разведки'}
                     </button>
+                    <button className="cm-btn" disabled={isRun}
+                      title="Перегенерировать разведку: новый поиск и новый список ниш"
+                      onClick={()=>{
+                        if (!window.confirm('Разведка соберёт список ниш заново. '
+                          + 'Он может отличаться от нынешнего, и выбор ниш придётся сделать ещё раз. '
+                          + 'Результаты модулей по старым нишам останутся на месте. Запускаем?')) return;
+                        const upd = { ...proj,
+                          results: (proj.results||[]).filter(x => x.id !== 'M2'),
+                          updatedAt: new Date().toISOString() };
+                        setProj(upd); sv(upd);
+                        run(['M2'], undefined, true);
+                      }}>↺ Перегенерировать разведку</button>
                     <span className="note" style={{margin:0,paddingLeft:0,maxWidth:'54ch'}}>
                       Источники разведки, сегменты аудитории и приоритет ниш целиком —
                       то, на чём построены оценки выше.
