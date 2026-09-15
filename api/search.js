@@ -23,6 +23,8 @@ export default async function handler(req, res) {
   // только владельцу клиента), нет ключа/функции/ответа — работаем на ключе
   // платформы: поиск важнее экономии, молча падать нельзя.
   const ключи = [];
+  let причина = '';          // почему ключ клиента не пошёл в дело
+  let своиКлючи = 0;         // сколько ключей клиента удалось прочитать
   // Тот же порядок, что у пишущей модели: поисковый ключ клиента идёт в дело
   // только на тарифе «Разработчик».
   if (client_id && await ownKeysMode(auth, client_id)) {
@@ -39,10 +41,13 @@ export default async function handler(req, res) {
         const список = Array.isArray(d) ? d : (d && d.provider_keys_for) || [];
         for (const к of список) {
           const з = typeof к === 'string' ? к : (к && (к.secret || к.key));
-          if (з && String(з).trim()) ключи.push(String(з).trim());
+          if (з && String(з).trim()) { ключи.push(String(з).trim()); своиКлючи++; }
         }
+      } else {
+        const т = await r.text().catch(() => '');
+        причина = 'база не отдала список ключей (' + r.status + ') ' + т.slice(0, 120);
       }
-    } catch { /* нет функции — ниже возьмём один ключ */ }
+    } catch (e) { причина = 'список ключей недоступен: ' + (e && e.message || e); }
     if (!ключи.length) {
       try {
         const r = await fetch(auth.pgBase + 'rpc/provider_key_for', {
@@ -52,13 +57,22 @@ export default async function handler(req, res) {
         if (r.ok) {
           const d = await r.json().catch(() => null);
           const свой = typeof d === 'string' ? d : (d && d.provider_key_for);
-          if (свой && String(свой).trim()) ключи.push(String(свой).trim());
+          if (свой && String(свой).trim()) { ключи.push(String(свой).trim()); своиКлючи++; }
+        } else {
+          const т = await r.text().catch(() => '');
+          причина = причина || ('база не отдала ключ клиента (' + r.status + ') ' + т.slice(0, 120));
         }
-      } catch { /* остаёмся на ключе платформы */ }
+      } catch (e) { причина = причина || ('ключ клиента недоступен: ' + (e && e.message || e)); }
     }
   }
-  // Ключ платформы — последним: он выручает, когда клиентские кончились.
-  if (process.env.TAVILY_API_KEY) ключи.push(process.env.TAVILY_API_KEY);
+  // Ключи платформы — последними: сперва клиентские, если они есть. Их тоже
+  // может быть несколько (TAVILY_API_KEY, TAVILY_API_KEY_2 … _5): бесплатная
+  // тысяча кончается за день отладки, и владелица заводит запасные аккаунты.
+  for (const имя of ['TAVILY_API_KEY', 'TAVILY_API_KEY_2', 'TAVILY_API_KEY_3',
+                     'TAVILY_API_KEY_4', 'TAVILY_API_KEY_5']) {
+    const з = process.env[имя];
+    if (з && String(з).trim()) ключи.push(String(з).trim());
+  }
   if (!ключи.length) {
     return res.status(503).json({ error: { message: 'Search is not configured (TAVILY_API_KEY missing)', code: 'search_unconfigured' } });
   }
@@ -115,7 +129,11 @@ export default async function handler(req, res) {
       score: x.score,
       published_date: x.published_date || null,
     }));
-    res.status(200).json({ query, results });
+    res.status(200).json({ query, results,
+      // Чей ключ реально сработал. Без этого экран может говорить «на ключе
+      // клиента», пока платит платформа.
+      чейКлюч: своиКлючи ? 'клиента' : 'платформы',
+      почему: своиКлючи ? '' : (причина || (client_id ? 'ключ клиента не заведён' : '')) });
   } catch (e) {
     res.status(500).json({ error: { message: e.message } });
   }
