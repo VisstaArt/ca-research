@@ -2711,7 +2711,7 @@ let blockScriptsM3 = [];
 // по-прежнему: перевод идёт по одному, с проверкой на живом прогоне.
 const СХЕМЫ = { M3: СХЕМА_M3 };
 
-function buildSystem(brief, lang) {
+function buildSystem(brief, lang, модуль) {
   const lines = Object.entries(brief).filter(([,v])=>v).map(([k,v])=>{
     if(k==='geoCompany') return '- Company Geography (all markets): '+v;
     if(k==='geoMarket') return '- Research Market (focus of this research): '+v;
@@ -2731,7 +2731,12 @@ function buildSystem(brief, lang) {
     if(k==='researchLang') return ''; // служебное: язык для сборщиков поисковых запросов, в брифе не нужен
     return '- '+k+': '+v;
   }).filter(Boolean).join('\n');
-  const nicheFilter = brief.selectedNiche
+  // Фильтр ниши ставится всем модулям, КРОМЕ разведки: она эти ниши и ищет.
+  // При перегенерации разведки фильтр оставался от прошлого выбора, и она
+  // искала внутри уже выбранной ниши — находила ровно её одну вместо семи
+  // (владелица 16.09: «всё сломалось, собрала какую-то хрень»).
+  const ищетНиши = модуль === 'M2' || модуль === 'M1';
+  const nicheFilter = (brief.selectedNiche && !ищетНиши)
     ? '\n\nNICHE FILTER — MANDATORY:\nWork ONLY within the selected niche: "'+brief.selectedNiche+'". Ignore all other niches/segments. If a source or insight belongs to another niche — skip it and mark "вне фильтра". This rule applies to ALL modules, tables and conclusions.\n'
     : '';
   // Re-run с замечанием (human-in-the-loop): владелица указала, что конкретно
@@ -9055,6 +9060,7 @@ function App() {
     return (tin * ц.in + tout * ц.out) / 1e6
       + (поиск + частот) * прайс.search_cents;
   };
+  const сметаCentsДляМодулей = (ids, ниш) => сметаЦентов(ids, ниш);
   const сметаЦентов = (ids, ниш) => {
     if (!прайс) return null;
     let всего = 0;
@@ -9392,7 +9398,7 @@ function App() {
       // зависимые ниже перегенерируются штатно и видят уже исправленный контент через
       // prevContent/findDep, повторно замечание им не нужно.
       if (regenNote && mod.id === allSelected[0]) Bn.regenNote = regenNote;
-      const sys = buildSystem(Bn, lang);
+      const sys = buildSystem(Bn, lang, mod.id);
       // Своя модель у модуля. На тарифе «Разработчик» ручной выбор главнее:
       // там человек сознательно ставит модель и платит своим ключом.
       модельМодуля = тарифРазработчика ? '' : (mod.model || '');
@@ -9598,8 +9604,23 @@ function App() {
     setShowNiches(false);
     const newBrief = {...brief, selectedNiche: names.join(', ')};
     setBrief(newBrief);
-    // Прогоняем все выбранные модули: run() сам пропустит уже готовые пары (модуль, ниша)
-    // и досчитает только недостающие — так «добавить нишу позже» не пересчитывает старое.
+    // Раньше выбор ниш молча запускал всю цепочку выбранных модулей: владелица
+    // перегенерировала разведку, отметила нишу — и получила прогон до M6, за
+    // который заплатила, ничего не запуская. Спрашиваем и называем цену.
+    const впереди = MODULES.filter(m => !m.disabled && !m.hidden && mods.includes(m.id)
+      && m.id !== 'M2'
+      && !(proj?.results || []).some(r => r.id === m.id
+           && (CAContract.isPerNiche(m.id) ? names.includes(r.niche || '') : true)));
+    if (впереди.length) {
+      const цена = сметаCentsДляМодулей(впереди.map(m => m.id), names.length);
+      const ок = window.confirm(
+        'Ниши выбраны. Запустить ' + впереди.length + ' '
+        + plural(впереди.length, 'модуль', 'модуля', 'модулей') + ' по ним?\n\n'
+        + впереди.map(m => '· ' + (m.titleRu || m.title)).join('\n')
+        + (цена != null ? '\n\nОриентировочно: ' + деньгами(цена) : '')
+        + '\n\nОтмена — ниши сохранятся, запустите позже вручную.');
+      if (!ок) return;
+    }
     run(mods, newBrief);
   }, [nicheOpts, selNiches, brief, mods, run]);
 
@@ -10490,7 +10511,7 @@ function App() {
                 const prevText = prev ? ('Дата: '+prev.snapshot_date+'\n'+JSON.stringify({trends:prev.trends, newsworthy:prev.newsworthy})) : '';
                 const m2 = (proj.results||[]).find(r=>r.id==='M3' && (r.niche||'')===trendNiche);
                 const userPrompt = buildTrendPrompt(Bn, lang, prevText, m2?m2.content:'', evidence);
-                const sys = buildSystem(Bn, lang);
+                const sys = buildSystem(Bn, lang, mod.id);
                 const full = await callGPT(sys, userPrompt);
                 const chartData = extractChartData(full) || {};
                 const cleaned = cleanContent(full);
