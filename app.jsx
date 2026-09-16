@@ -489,7 +489,27 @@ const { signIn, refreshTokens, authFetch, getRefreshToken, clearTokens } = windo
 // проекта, поэтому фоновая копия в БД at-least-once — сбой одного шага сам
 // «дошлёт» накопленное на следующем шаге, отдельная очередь ретраев не нужна.
 const dbHeaders = () => ({ 'Content-Type':'application/json' });
-const syncToDb = p => { authFetch('/api/projects', { method:'POST', headers: dbHeaders(), body: JSON.stringify(p) }).catch(()=>{}); };
+// Неудачные выгрузки помним: по ним видно, что облако отстало от браузера,
+// и слияние при следующем открытии обязано отдать предпочтение местной копии.
+const неВыгружены = new Set();
+const syncToDb = async (p, повтор) => {
+  try {
+    const r = await authFetch('/api/projects', { method:'POST', headers: dbHeaders(),
+      body: JSON.stringify(p) });
+    if (r && r.ok) { неВыгружены.delete(p.id); return true; }
+    // Тело запроса ограничено (4,5 МБ у площадки), а готовый отчёт — самая
+    // тяжёлая часть проекта и при этом пересобираемая. Второй заход без него.
+    if (!повтор) return syncToDb({ ...p, report: '' }, true);
+    неВыгружены.add(p.id);
+    if (window.console) console.warn('Проект не выгружен в облако:', p.id, r && r.status);
+    return false;
+  } catch (e) {
+    if (!повтор) return syncToDb({ ...p, report: '' }, true);
+    неВыгружены.add(p.id);
+    if (window.console) console.warn('Проект не выгружен в облако:', p.id, e);
+    return false;
+  }
+};
 const deleteFromDb = id => { authFetch('/api/projects?id='+encodeURIComponent(id), { method:'DELETE', headers: dbHeaders() }).catch(()=>{}); };
 const hydrateFromDb = async () => {
   try {
@@ -497,13 +517,31 @@ const hydrateFromDb = async () => {
     if (!r.ok) return null;
     const d = await r.json();
     if (!Array.isArray(d.projects)) return null;
-    const list = d.projects.map(row => ({
+    const изОблака = d.projects.map(row => ({
       id: row.id, createdAt: row.created_at, updatedAt: row.updated_at,
       brief: row.brief||{}, lang: row.lang||'Russian', mods: row.mods||[],
       results: row.results||[], report: row.report||'',
       priceLayers: row.price_layers||[], selectedLayers: row.selected_layers||[],
     }));
+    // СЛИЯНИЕ, а не замена. Раньше список из облака затирал локальный, и если
+    // выгрузка проекта не прошла (тело больше лимита, обрыв сети), прогон
+    // пропадал при первом же обновлении страницы: модуль снова просил
+    // «запустить исследование» (владелица 17.09, уже не первый раз).
+    const местные = loadAll();
+    const поId = new Map(изОблака.map(п => [п.id, п]));
+    const времени = п => Date.parse(п && п.updatedAt || '') || 0;
+    const догнать = [];
+    for (const м of местные) {
+      const о = поId.get(м.id);
+      const местнаяНовее = !о || времени(м) > времени(о)
+        || (м.results || []).length > (о.results || []).length
+        || неВыгружены.has(м.id);
+      if (местнаяНовее) { поId.set(м.id, м); if (о || неВыгружены.has(м.id)) догнать.push(м); }
+    }
+    const list = [...поId.values()].sort((а, б) => времени(б) - времени(а));
     saveAll(list);
+    // То, что осталось только в браузере, дошлём в облако — тихо, в фоне.
+    догнать.forEach(п => { syncToDb(п); });
     return list;
   } catch { return null; }
 };
@@ -11052,6 +11090,21 @@ function ХодПрогона({ модули, готов, текущий, ниш
   );
 }
 
+// Пока список проектов подтягивается из облака, на экране только то, что
+// уцелело в браузере. Без подписи это читается как «результаты пропали, надо
+// прогонять заново» (владелица 17.09).
+function ПлашкаПодгрузки() {
+  return (
+    <div className="card" style={{display:'flex',alignItems:'center',gap:10,padding:'10px 14px',marginBottom:10}}>
+      <span className="kchip kchip-mb"><span className="d"></span>загрузка</span>
+      <span style={{fontSize:12.5,color:'var(--ink-2)'}}>
+        Подтягиваю прогоны из облака. Если модуль сейчас показан пустым —
+        это ещё не значит, что его надо запускать заново: подождите пару секунд.
+      </span>
+    </div>
+  );
+}
+
 function StageHeader({ имя, подпись, раздел, факты, lang, работа }) {
   // Плашка-заголовок страницы — ДОСЛОВНО по согласованному макету оболочки
   // (артефакт 5a34980c): там КАЖДЫЙ экран открывается одним и тем же блоком
@@ -11755,8 +11808,18 @@ function App() {
   // Подтягиваем список проектов из БД при открытии (переживает чистку браузера,
   // доступно с другого устройства). Если Supabase недоступен — молча остаёмся
   // на том, что уже отрисовано из localStorage (см. useState выше).
+  // Пока ответ облака не пришёл, на экране только то, что уцелело в браузере.
+  // Владелица 17.09: «обновила — модуль пишет, будто исследовать заново; ещё
+  // раз обновила — появилось». Это и была подгрузка, о которой никто не
+  // сказал. Теперь о ней написано прямо, и пустой модуль не читается как
+  // «данные пропали».
+  const [подгрузка, setПодгрузка] = React.useState(false);
   React.useEffect(() => {
-    if (unlocked) hydrateFromDb().then(list => { if (list) setProjs(list); });
+    if (!unlocked) return;
+    setПодгрузка(true);
+    hydrateFromDb()
+      .then(list => { if (list) setProjs(list); })
+      .finally(() => setПодгрузка(false));
   }, [unlocked]);
   const [proj, setProj] = React.useState(null);
 
@@ -12823,6 +12886,7 @@ function App() {
       <div style={{display:'flex',justifyContent:'flex-end',marginBottom:'1rem'}}>
         <button className="btn-primary" onClick={goNew} style={{padding:'9px 18px'}}>{t.newProject}</button>
       </div>
+      {подгрузка && <ПлашкаПодгрузки/>}
       {projs.length === 0 && (
         <div className="card" style={{textAlign:'center',padding:'3rem'}}>
           <p style={{fontSize:15,color:'var(--ink-2)',marginBottom:8}}>{t.noProjects}</p>
@@ -13833,6 +13897,7 @@ function App() {
 
   return (
     <div>
+      {подгрузка && <ПлашкаПодгрузки/>}
       {/* В платформе заголовок экрана и имя проекта даёт сама платформа:
           экран «Прогон» в боковом меню + строка проекта в меню. Дублировать
           их здесь — навал (замечание владелицы 14.09). Внутри платформы
