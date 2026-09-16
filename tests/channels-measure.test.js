@@ -181,3 +181,43 @@ globalThis.fetch=function(u){
     console.log(f3?('ПРОВАЛЕНО(посты с каналов): '+f3):'  контент снят с каналов конкурентов');
   });
 })();
+
+// Статьи на vc.ru: числа снимаются через открытый API площадки, и видно,
+// какие материалы написаны самими конкурентами (владелица 17.09 — «будем
+// попадать на их SEO-статьи и видеть просмотры и лайки»).
+(function(){
+  var f4=0;
+  function ок(имя,усл,что){ if(усл) console.log('  ok   '+имя); else { f4++; console.log('  FAIL '+имя+(что?': '+что:'')); } }
+  eval(взять('метрикиVC')); eval(взять('статьиКонкурентовVC'));
+  var ответы={
+    'https://api.vc.ru/v2.5/content?id=3141688':{result:{id:3141688,title:'Как вернуть уходящего посетителя',
+      url:'https://vc.ru/marketing/3141688-popap',date:1789556558,
+      author:{name:'Envybox'},subsite:{name:'Маркетинг'},
+      counters:{views:11102,reactions:21,favorites:14,comments:36}}},
+    'https://api.vc.ru/v2.5/content?id=999111':{result:{id:999111,title:'Чужой обзор сервисов',
+      url:'https://vc.ru/services/999111-obzor',date:1789000000,
+      author:{name:'Иван Петров'},subsite:{name:'Сервисы'},
+      counters:{views:500,reactions:2,favorites:1,comments:0}}},
+  };
+  var прежний3=globalThis.fetch;
+  globalThis.fetch=function(u){
+    var адрес=decodeURIComponent(String(u).split('url=')[1]||'');
+    if (!(адрес in ответы)) return прежний3(u);
+    var д=ответы[адрес];
+    return Promise.resolve({ ok:true, json:function(){ return Promise.resolve(д); } });
+  };
+  статьиКонкурентовVC([
+    'https://vc.ru/marketing/3141688-popap',
+    'https://vc.ru/services/999111-obzor',
+    'https://t.me/other/1'], ['Envybox','Callibri']).then(function(а){
+    ок('статьи vc.ru разобраны', а.length===2, String(а.length));
+    ок('чужие площадки пропущены', а.every(function(x){return x.площадка==='vc.ru';}), JSON.stringify(а[0]));
+    ок('первой идёт статья конкурента', а[0].чей==='Envybox', JSON.stringify(а[0].чей));
+    ок('просмотры сняты', а[0].просмотры===11102, String(а[0].просмотры));
+    ок('реакции = лайки + избранное', а[0].реакции===35, String(а[0].реакции));
+    ок('комментарии сняты', а[0].комментарии===36, String(а[0].комментарии));
+    ок('дата человеческая', а[0].дата==='2026-09-17'||/^\d{4}-\d{2}-\d{2}$/.test(а[0].дата), а[0].дата);
+    ок('чужая статья не помечена как наша', а[1].чей==='', JSON.stringify(а[1].чей));
+    console.log(f4?('ПРОВАЛЕНО(vc.ru): '+f4):'  статьи vc.ru замерены');
+  });
+})();
