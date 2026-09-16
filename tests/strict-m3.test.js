@@ -47,15 +47,21 @@ ok('карта рынка собрана', /renderMarketMap\(/.test(blockScripts
 ok('карточки конкурентов собраны', /renderCompCards\(/.test(blockScriptsM3.join(' ')), true);
 ok('SWOT сеткой', /renderSwotGrid\(/.test(blockScriptsM3.join(' ')), true);
 ok('гэп карточками', /renderGapCards\(/.test(blockScriptsM3.join(' ')), true);
-ok('архетип предложен вариантами', /renderArchetype\(/.test(blockScriptsM3.join(' ')), true);
-// Проявления принадлежат выбранному характеру: пока выбора нет, «тон речи» и
-// «герой в кадре» не печатаются — иначе два варианта, а разбор под один.
-ok('без выбора проявлений нет', /renderManifest\(/.test(blockScriptsM3.join(' ')), false);
-ok('без выбора есть плашка с требованием выбрать', /Выберите один архетип/.test(h), true);
+ok('архетип предложен вариантами', /renderArchetypeChoice\(/.test(blockScriptsM3.join(' ')), true);
+// Проявления лежат ВНУТРИ своего варианта — под раскрывашкой, чтобы человек
+// прочитал, как зазвучит бренд, до выбора.
+var арх=JSON.parse(blockScriptsM3.filter(function(x){return x.indexOf('renderArchetypeChoice(')===0;})[0]
+  .slice('renderArchetypeChoice('.length,-2));
+ok('проявления идут вместе со своим вариантом', арх[0][6].length > 0, true);
+ok('и это разбор из четырёх граф', арх[0][6][0].length, 4);
+ok('плашка с требованием выбрать на месте', /Выберите один архетип/.test(h), true);
 blockScriptsM3=[];
 var hВыбран=разметкаM3(д,{name:'Ловец Лидов',archetype:'Заботливый'});
-ok('после выбора проявления появляются', /renderManifest\(/.test(blockScriptsM3.join(' ')), true);
-ok('и названы именем выбранного', /Как «Заботливый» проявляется/.test(hВыбран), true);
+var арх2=JSON.parse(blockScriptsM3.filter(function(x){return x.indexOf('renderArchetypeChoice(')===0;})[0]
+  .slice('renderArchetypeChoice('.length,-2));
+ok('выбранный помечен ролью', арх2[0][1], 'выбран');
+ok('и кнопки на нём нет', арх2[0][5], '');
+ok('после выбора плашка другая', /Архетип выбран/.test(hВыбран), true);
 // Источник без адреса проверить нельзя — в список он не идёт.
 var ист=blockScriptsM3.filter(function(x){return x.indexOf('renderSources(')===0;})[0];
 ok('источник без адреса отброшен', JSON.parse(ист.slice('renderSources('.length, ист.lastIndexOf(', 1)'))).length, 1);

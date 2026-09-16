@@ -152,14 +152,14 @@ ok('ссылки конкурента переставлены на новые �
 // пересматривается (владелица 16.09: «каждый раз разный, на что это опирается»).
 blockScriptsM3=[];
 разметкаM3(полные,{name:'Мы'});
-var сА=blockScriptsM3.filter(function(x){return x.indexOf('renderArchetype(')===0;})[0];
-var DА=JSON.parse(сА.slice('renderArchetype('.length,сА.length-2));
+var сА=blockScriptsM3.filter(function(x){return x.indexOf('renderArchetypeChoice(')===0;})[0];
+var DА=JSON.parse(сА.slice('renderArchetypeChoice('.length,сА.length-2));
 ok('без выбора предложены все варианты', DА.length, 2);
 ok('у каждого есть кнопка выбора', DА.filter(function(r){return r[5];}).length, 2);
 blockScriptsM3=[];
 разметкаM3(полные,{name:'Мы',archetype:'Мудрец'});
-var сБ=blockScriptsM3.filter(function(x){return x.indexOf('renderArchetype(')===0;})[0];
-var DБ=JSON.parse(сБ.slice('renderArchetype('.length,сБ.length-2));
+var сБ=blockScriptsM3.filter(function(x){return x.indexOf('renderArchetypeChoice(')===0;})[0];
+var DБ=JSON.parse(сБ.slice('renderArchetypeChoice('.length,сБ.length-2));
 var выбранный=DБ.filter(function(r){return r[0]==='Мудрец';})[0];
 ok('выбранный помечен', выбранный[1], 'выбран');
 ok('у выбранного кнопки нет', выбранный[5], '');
@@ -220,8 +220,9 @@ var жк=JSON.parse(blockScriptsM3.filter(function(x){return x.indexOf('renderCo
 ok('в карточках нет пустых полей',
    жк.filter(function(c){return !c.bar||!c.ans||!c.proof||!c.gap;}).length, 0);
 ok('заменители нарисованы', /renderAlt\(/.test(blockScriptsM3.join(' ')), true);
-ok('архетип без выбора не показывает проявления',
-   /renderManifest\(/.test(blockScriptsM3.join(' ')), false);
+ok('проявления лежат внутри своих вариантов',
+   JSON.parse(blockScriptsM3.filter(function(x){return x.indexOf('renderArchetypeChoice(')===0;})[0]
+     .slice('renderArchetypeChoice('.length,-2)).every(function(в){return в[6].length>0;}), true);
 ok('и просит выбрать', /Выберите один архетип/.test(ж.html), true);
 
 console.log(fails?('ПРОВАЛЕНО: '+fails):'  всё зелёное');
