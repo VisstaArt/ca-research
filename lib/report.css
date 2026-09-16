@@ -2906,4 +2906,15 @@ th{font-size:10px}
 .decomp .dk{display:block;font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--ink-3);margin-bottom:6px}
 .decomp .dv{display:block;font-size:17px;font-weight:700;color:var(--ink);line-height:1.25;overflow-wrap:anywhere}
 .decomp .dc{display:block;margin-top:8px;padding-top:8px;border-top:1px solid var(--line-2);font-size:11.5px;color:var(--ink-2)}
+/* «Где нам продвигаться» — решение модуля: карточка на площадку. */
+.plan{display:grid;grid-template-columns:repeat(auto-fit,minmax(360px,1fr));gap:12px}
+.plan .pcard{border:1px solid var(--line);border-radius:16px;padding:16px 18px;background:var(--card);position:relative;overflow:hidden;transition:box-shadow .4s ease, transform .4s cubic-bezier(.2,.8,.2,1)}
+.plan .pcard:hover{transform:translateY(-2px);box-shadow:0 18px 34px -20px rgba(45,36,22,.4)}
+.plan .ph{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:8px}
+.plan .ph .pn{font-size:22px;font-weight:700;color:var(--mid);letter-spacing:-.03em;line-height:1}
+.plan .ph b{font-size:15px;font-weight:700;color:var(--ink)}
+.plan .pcard>p{margin:0 0 10px;font-size:13px;line-height:1.55;color:var(--ink-2)}
+.plan .pf{display:block;margin-top:8px;padding-top:8px;border-top:1px solid var(--line-2);font-size:12.5px;line-height:1.5}
+.plan .pf span{display:block;font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--ink-3);margin-bottom:3px}
+.plan .pf b{font-weight:400;color:var(--ink-2)}
 
