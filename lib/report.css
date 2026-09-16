@@ -579,6 +579,8 @@ td b{color:var(--ink);font-weight:600}
 .rule-card:hover::before{width:100%}
 .rule-card span{position:relative;z-index:1;display:block;max-width:34ch}
 .rule-card span + span{margin-top:6px}
+.rule-card .ft{margin-top:7px;color:var(--ink-2);line-height:1.5}
+.rule-card .ft b{color:var(--ink);font-weight:700}
 .rule-card .eb + span{margin-top:2px}
 .rule-card .eb{margin-top:10px}
 .rule-card>span:first-of-type{margin-top:0}
