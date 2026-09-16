@@ -11451,15 +11451,14 @@ function App() {
               </div>
               {regenKey === resKey(r) && (
                 <div onClick={e=>e.stopPropagation()} style={{padding:'12px 16px',background:'var(--card-solid)',borderTop:'1px solid '+m.border}}>
-                  <p style={{fontSize:11,color:'var(--ink-2)',marginBottom:6}}>Что поправить? (необязательно — пусто = обычная перегенерация, как раньше)</p>
-                  <textarea value={regenNote} onChange={e=>setRegenNote(e.target.value)} rows={3}
-                    placeholder="Например: цены конкурентов выглядят неправдоподобно, перепроверь"
+                  <p style={{fontSize:11,color:'var(--ink-2)',marginBottom:6}}>Что поправить? Можно не заполнять.</p>
+                  <textarea value={regenNote} onChange={e=>setRegenNote(e.target.value)} rows={2}
+                    placeholder="Например: цены выглядят неправдоподобно"
                     style={{width:'100%',fontSize:12,padding:6,fontFamily:'inherit',boxSizing:'border-box'}}/>
-                  <label style={{display:'flex',gap:7,alignItems:'flex-start',marginTop:10,fontSize:11.5,color:'var(--ink-2)',cursor:'pointer'}}>
-                    <input type="checkbox" checked={regenChain} onChange={e=>setRegenChain(e.target.checked)} style={{marginTop:2}}/>
-                    <span>Перегенерировать и всё, что ниже по цепочке. Без галочки
-                    пересчитается только этот модуль — остальные останутся как есть
-                    и денег не потратят.</span>
+                  <label style={{display:'flex',gap:8,alignItems:'center',marginTop:10,fontSize:12,color:'var(--ink-2)',cursor:'pointer'}}>
+                    <input type="checkbox" checked={regenChain} onChange={e=>setRegenChain(e.target.checked)}
+                      style={{width:15,height:15,flex:'0 0 auto',margin:0}}/>
+                    <span>Пересчитать и следующие модули <span style={{color:'var(--ink-3)'}}>— без галочки только этот</span></span>
                   </label>
                   <div style={{display:'flex',gap:8,marginTop:8}}>
                     <button onClick={()=>{
@@ -11502,16 +11501,10 @@ function App() {
                 <div style={{padding:'20px 24px 24px',background:'var(--card-solid)',borderTop:'1px solid var(--line)'}}>
                   {editKey === resKey(r) ? (
                     <div>
-                      <p style={{fontSize:11,color:'var(--ink-2)',marginBottom:6}}>Правка вручную — сохраняется сразу, без вызова модели. График/диаграмма (если есть) построены по исходной генерации и ручной правкой текста не пересчитываются.</p>
+                      <p style={{fontSize:11,color:'var(--ink-2)',marginBottom:6}}>Правка сохраняется сразу, модель не вызывается. Графики остаются от исходной генерации.</p>
                       <textarea value={editDraft} onChange={e=>setEditDraft(e.target.value)} rows={20}
                         style={{width:'100%',fontFamily:'monospace',fontSize:12,padding:8,boxSizing:'border-box'}}/>
-                      <label style={{display:'flex',gap:7,alignItems:'flex-start',marginTop:10,fontSize:11.5,color:'var(--ink-2)',cursor:'pointer'}}>
-                    <input type="checkbox" checked={regenChain} onChange={e=>setRegenChain(e.target.checked)} style={{marginTop:2}}/>
-                    <span>Перегенерировать и всё, что ниже по цепочке. Без галочки
-                    пересчитается только этот модуль — остальные останутся как есть
-                    и денег не потратят.</span>
-                  </label>
-                  <div style={{display:'flex',gap:8,marginTop:8}}>
+                      <div style={{display:'flex',gap:8,marginTop:10}}>
                         <button onClick={()=>{
                             const upd={...proj, results: (proj.results||[]).map(x=>resKey(x)===editKey?{...x,content:editDraft,editedAt:new Date().toISOString()}:x), updatedAt:new Date().toISOString()};
                             setProj(upd); sv(upd); setEditKey(null);
