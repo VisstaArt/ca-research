@@ -17,7 +17,7 @@ function ok(n,g,w){var r=JSON.stringify(g)===JSON.stringify(w);
 globalThis.PROXY='https://proxy.test';
 var iМ=SRC.indexOf('const КАНАЛОВ_ЗАМЕР_МАКС');
 eval(SRC.slice(iМ, SRC.indexOf('\n', iМ)).replace('const ','globalThis.'));
-eval(взять('числоИзТекста')); eval(взять('замерКанала')); eval(взять('замерКаналовСтрогое'));
+eval(взять('числоИзТекста')); eval(взять('медиана')); eval(взять('замерКанала')); eval(взять('замерКаналовСтрогое'));
 
 // Разбор чисел: «12,3K», «1,2 тыс.», «12 345».
 ok('тысячи латиницей', числоИзТекста('12,3K'), 12300);
@@ -46,7 +46,7 @@ globalThis.fetch=function(u){
   ok('видно, по скольким постам', з.постов, 3);
   return замерКанала('https://youtube.com/@chan');
 }).then(function(з2){
-  ok('ютуб: просмотры сняты', з2.просмотры, 9000);
+  ok('ютуб: просмотры сняты (медиана двух)', з2.просмотры, 7000);
   return замерКанала('https://closed.example/x');
 }).then(function(з3){
   ok('закрытая страница — не выдумываем', з3, null);
@@ -59,5 +59,41 @@ globalThis.fetch=function(u){
   ok('охват записан', /1 200 просмотров/.test(р.каналы[0].охват), true);
   ok('где не открылось — прежнее значение', р.каналы[1].подписчики, '12 000 (со слов)');
   ok('счётчик замеров записан', р.замерКаналов.всего, 1);
-  console.log(fails?('ПРОВАЛЕНО: '+fails):'всё сошлось');
-}).catch(function(e){ console.log('  FAIL замер упал: '+e.message); });
+  // Свои каналы берутся ИЗ БРИФА: у заказчика был ВК, а в отчёт он не попал,
+  // потому что модель его в поиске не встретила (владелица 16.09).
+  globalThis.clientSocials=function(b){ return String(b.socials||'').split(/\s+/).filter(Boolean); };
+  eval(взять('замерСвоихКаналов'));
+  страницы['https://vk.com/we']='<div>0 подписчиков</div>';
+  замерСвоихКаналов({каналы_заказчика:[]},{socials:'https://vk.com/we https://t.me/good'})
+    .then(function(р2){
+      ok('оба канала из брифа на месте', р2.каналы_заказчика.length, 2);
+      ok('ноль подписчиков — это замер, а не пустота',
+         /0 \(замер\)/.test(р2.каналы_заказчика[0].подписчики), true);
+      ok('у второго снят охват',
+         /просмотров, медиана по 3 постам/.test(р2.каналы_заказчика[1].охват), true);
+      console.log(fails?('ПРОВАЛЕНО: '+fails):'всё сошлось');
+    });
+  }).catch(function(e){ console.log('  FAIL замер упал: '+e.message); });
+
+// Метрики из списка владелицы 16.09: вовлечённость (ER), частота и время
+// публикаций, форматы. Всё снимается с той же публичной витрины.
+(function(){
+  var полная='<div class="tgme_page_extra">10 000 subscribers</div>'
+    +'<time datetime="2026-09-01T10:00:00+00:00"></time>'
+    +'<span class="tgme_widget_message_views">1000</span>'
+    +'<div class="tgme_widget_message_reaction"><span>100</span></div>'
+    +'<div class="tgme_widget_message_photo"></div>'
+    +'<time datetime="2026-09-08T10:00:00+00:00"></time>'
+    +'<span class="tgme_widget_message_views">2000</span>'
+    +'<div class="tgme_widget_message_reaction"><span>300</span></div>'
+    +'<div class="tgme_widget_message_video"></div>';
+  страницы['https://t.me/s/full']=полная;
+  замерКанала('https://t.me/full').then(function(з){
+    ok('вовлечённость посчитана от подписчиков', з.er, 2);
+    ok('реакции — медиана', з.реакции, 200);
+    ok('частота публикаций в неделю', з.в_неделю, 2);
+    ok('время публикаций определено', /:00/.test(з.часы), true);
+    ok('форматы посчитаны долями', /%/.test(з.форматы), true);
+    console.log(fails?('ПРОВАЛЕНО(метрики): '+fails):'  метрики каналов сняты');
+  });
+})();
