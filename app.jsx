@@ -2435,11 +2435,15 @@ async function fetchSite(url) {
   const дизайн = { socials: [], logo: '', colors: [], fonts: [] };
   const собратьДизайн = (html, у) => {
     try {
-      const соц = html.match(/https?:\/\/(?:www\.)?(?:instagram\.com|facebook\.com|t\.me|telegram\.me|vk\.com|youtube\.com|youtu\.be|tiktok\.com|x\.com|twitter\.com|linkedin\.com|ok\.ru|dzen\.ru|zen\.yandex\.ru|wa\.me|pinterest\.com|rutube\.ru)\/[^\s"'<>\\)]+/gi) || [];
+      const соц = html.match(/https?:\/\/(?:www\.)?(?:instagram\.com|facebook\.com|t\.me|telegram\.me|vk\.com|vk\.ru|m\.vk\.com|youtube\.com|youtu\.be|tiktok\.com|x\.com|twitter\.com|linkedin\.com|ok\.ru|dzen\.ru|zen\.yandex\.ru|wa\.me|pinterest\.com|rutube\.ru|max\.ru)\/[^\s"'<>\\)]+/gi) || [];
       for (let ссылка of соц) {
-        ссылка = ссылка.replace(/[.,;]+$/, '');
+        // Хвост запроса режем, а не выбрасываем всю ссылку: раньше правило
+        // «есть ?» — значит не профиль» теряло vk.com/club123?from=… целиком.
+        ссылка = ссылка.split('?')[0].replace(/[.,;/]+$/, '');
         // кнопки «поделиться» — не профиль клиента
-        if (/shar|intent|\/embed|\/plugins|\?/i.test(ссылка)) continue;
+        if (/shar|intent|\/embed|\/plugins|\/widget/i.test(ссылка)) continue;
+        // голый домен без имени профиля — не канал
+        if (!/^https?:\/\/[^/]+\/.+/i.test(ссылка)) continue;
         if (!дизайн.socials.some(x => x.toLowerCase() === ссылка.toLowerCase())) дизайн.socials.push(ссылка);
       }
       if (!дизайн.logo) {
@@ -11948,11 +11952,20 @@ function App() {
       // Дизайн-система и соцсети — с сайта, без вопросов клиенту (владелица
       // 14.09: бриф собирает дизайн и соцсети; панель контент-машины потом
       // покажет то же самое на проверку, не спрашивая заново).
+      // Разбор сайта — ЯВНОЕ действие: человек нажал «разобрать» и ждёт свежих
+      // данных. Прежнее правило «не трогать, если поле уже заполнено» держало
+      // старое значение навсегда: логотип оставался прежним, а найденная на
+      // сайте страница ВК не добавлялась к уже записанному телеграму
+      // (владелица 17.09, об одном и том же во второй раз).
       if (дизайн) setBrief(p => ({...p,
-        ...(дизайн.socials.length && !p.socials ? { socials: дизайн.socials.join('\n') } : {}),
-        ...(дизайн.colors.length && !p.brandColors ? { brandColors: дизайн.colors.join(', ') } : {}),
-        ...(дизайн.fonts.length && !p.brandFonts ? { brandFonts: дизайн.fonts.join(', ') } : {}),
-        ...(дизайн.logo && !p.brandLogo ? { brandLogo: дизайн.logo } : {}),
+        // Соцсети ДОПОЛНЯЕМ: человек мог дописать каналы, которых нет на сайте.
+        ...(дизайн.socials.length ? { socials: [...new Set(
+            String(p.socials || '').split(/[\s,]+/).filter(Boolean).concat(дизайн.socials)
+          )].join('\n') } : {}),
+        // Остальное перезаписываем найденным на сайте.
+        ...(дизайн.colors.length ? { brandColors: дизайн.colors.join(', ') } : {}),
+        ...(дизайн.fonts.length ? { brandFonts: дизайн.fonts.join(', ') } : {}),
+        ...(дизайн.logo ? { brandLogo: дизайн.logo } : {}),
       }));
       if (!pages.length) throw new Error('No readable content found. Fill manually.');
       const combined = pages.map(p=>'['+p.url+']\n'+p.text).join('\n\n---\n\n');
