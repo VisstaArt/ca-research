@@ -11566,7 +11566,7 @@ function App() {
       // предложение после трёх неудачных заходов на автоматический подбор).
       // confirmedSeedsRef переживает паузу (useRef, не сбрасывается рендером).
       if (mod.id === 'M8' && !confirmedSeedsRef.current[wn]) {
-        setCurMod(null); setCurNiche(''); setCurStep(''); setCurStepIdx(0); записатьХод(null); записатьХод(null);
+        setCurMod(null); setCurNiche(''); setCurStep(''); setCurStepIdx(0); записатьХод(null);
         const candidates = await extractWordstatSeeds(Bn);
         setSeedError(lastSeedError);
         // Пустой список — не повод показать пустую панель без единого поля:
@@ -11792,7 +11792,7 @@ function App() {
 
       // After M1.2 — стоп: человек выбирает нишу (только при первичной разведке, не при перегенерации ниши)
       if (mod.id === 'M2' && !rerunNiche) {
-        setCurMod(null); setCurNiche(''); setCurStep(''); setCurStepIdx(0); записатьХод(null); записатьХод(null);
+        setCurMod(null); setCurNiche(''); setCurStep(''); setCurStepIdx(0); записатьХод(null);
         const nn = (nicheData && Array.isArray(nicheData.niches) ? nicheData.niches : []).slice().sort((a,b)=>(b.score||0)-(a.score||0));
         setNicheOpts(nn);
         const rec = nn.findIndex(x => x.recommended);
@@ -11803,7 +11803,7 @@ function App() {
 
       // After M1 — show price layer selection
       if (mod.id === 'M1') {
-        setCurMod(null); setCurNiche(''); setCurStep(''); setCurStepIdx(0); записатьХод(null); записатьХод(null);
+        setCurMod(null); setCurNiche(''); setCurStep(''); setCurStepIdx(0); записатьХод(null);
         setShowLayers(true);
         await generatePriceLayers(cleanedContent);
         return; // stop — wait for user layer selection

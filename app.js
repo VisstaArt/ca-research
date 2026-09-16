@@ -1,6 +1,6 @@
 // СОБРАНО АВТОМАТИЧЕСКИ из app.jsx — не править руками.
 // Правки вносить в app.jsx, затем: osascript -l JavaScript tools/build.js
-// отпечаток-исходника: 80b226481b668140
+// отпечаток-исходника: c8f21279371d7b01
 // Функции контракта живут в lib/contract.js. Разбираем их сюда, чтобы весь
 // остальной код обращался к ним по прежним именам и не менялся.
 const{GLOBAL_MODS,isPerNiche,dropOrphans,nichesOf,resKey,splitMdRow,isMdSeparator,parseMdTables,buildModuleEntry,pickTable,pickColumn,withStableIds}=CAContract;// Название модуля берётся из MODULES — это конфиг ИНТЕРФЕЙСА, и сборщик
@@ -3185,7 +3185,7 @@ const Bn={...B,...(wn?{selectedNiche:wn}:{}),researchLang:lang};// Пауза п
 // как тратится платный вызов Wordstat/Google Ads (26.08.2026, её же
 // предложение после трёх неудачных заходов на автоматический подбор).
 // confirmedSeedsRef переживает паузу (useRef, не сбрасывается рендером).
-if(mod.id==='M8'&&!confirmedSeedsRef.current[wn]){setCurMod(null);setCurNiche('');setCurStep('');setCurStepIdx(0);записатьХод(null);записатьХод(null);const candidates=await extractWordstatSeeds(Bn);setSeedError(lastSeedError);// Пустой список — не повод показать пустую панель без единого поля:
+if(mod.id==='M8'&&!confirmedSeedsRef.current[wn]){setCurMod(null);setCurNiche('');setCurStep('');setCurStepIdx(0);записатьХод(null);const candidates=await extractWordstatSeeds(Bn);setSeedError(lastSeedError);// Пустой список — не повод показать пустую панель без единого поля:
 // даём одну пустую строку, чтобы было куда печатать.
 setSeedCandidates(candidates.length?candidates:['']);setPendingM7Niche(wn);// Запоминаем, ЧЕМ был этот прогон, чтобы continueAfterSeeds продолжил его
 // теми же параметрами: иначе после паузы терялись rerunNiche (в пересчёт
@@ -3272,9 +3272,9 @@ sec:Math.round((Date.now()-началоМодуля)/1000),at:new Date().toISOSt
 // Так 26.08 M4 сделал три персоны, приняв за контекст падение M3. Другие
 // ниши не трогаем — у них свои данные, они не пострадали.
 if(failed){failedNiches.add(wn);setBlockMsg('Модуль '+(mod.label||mod.id)+(wn?' ['+wn+']':'')+' не выполнился: '+cleanedContent.trim()+'. Остальные модули этой ниши пропущены, чтобы не строить их на пустом результате — нажмите ↺ на этом модуле, когда будете готовы повторить.');continue;}// After M1.2 — стоп: человек выбирает нишу (только при первичной разведке, не при перегенерации ниши)
-if(mod.id==='M2'&&!rerunNiche){setCurMod(null);setCurNiche('');setCurStep('');setCurStepIdx(0);записатьХод(null);записатьХод(null);const nn=(nicheData&&Array.isArray(nicheData.niches)?nicheData.niches:[]).slice().sort((a,b)=>(b.score||0)-(a.score||0));setNicheOpts(nn);const rec=nn.findIndex(x=>x.recommended);setSelNiches(rec>=0?[rec]:[]);setShowNiches(true);return;// ждём выбора ниш(и)
+if(mod.id==='M2'&&!rerunNiche){setCurMod(null);setCurNiche('');setCurStep('');setCurStepIdx(0);записатьХод(null);const nn=(nicheData&&Array.isArray(nicheData.niches)?nicheData.niches:[]).slice().sort((a,b)=>(b.score||0)-(a.score||0));setNicheOpts(nn);const rec=nn.findIndex(x=>x.recommended);setSelNiches(rec>=0?[rec]:[]);setShowNiches(true);return;// ждём выбора ниш(и)
 }// After M1 — show price layer selection
-if(mod.id==='M1'){setCurMod(null);setCurNiche('');setCurStep('');setCurStepIdx(0);записатьХод(null);записатьХод(null);setShowLayers(true);await generatePriceLayers(cleanedContent);return;// stop — wait for user layer selection
+if(mod.id==='M1'){setCurMod(null);setCurNiche('');setCurStep('');setCurStepIdx(0);записатьХод(null);setShowLayers(true);await generatePriceLayers(cleanedContent);return;// stop — wait for user layer selection
 }}setCurMod(null);setCurNiche('');setCurStep('');setCurStepIdx(0);записатьХод(null);},[brief,lang,mods,proj,sv,priceLayers,selectedLayers,generatePriceLayers]);const continueAfterLayers=React.useCallback(()=>{setShowLayers(false);// Add selected layer info to brief context
 const layerNames=selectedLayers.map(i=>priceLayers[i]?.name).filter(Boolean);const newBrief=layerNames.length>0?{...brief,priceLayer:layerNames.join(', ')}:brief;if(layerNames.length>0)setBrief(newBrief);// Run remaining modules
 const doneIds=(proj?.results||[]).map(r=>r.id);const remaining=mods.filter(id=>!doneIds.includes(id));if(remaining.length>0)run(remaining,newBrief);},[selectedLayers,priceLayers,brief,proj,mods,run]);const continueAfterNiche=React.useCallback(()=>{const names=selNiches.map(i=>nicheOpts[i]?.name).filter(Boolean);if(!names.length)return;setShowNiches(false);const newBrief={...brief,selectedNiche:names.join(', ')};setBrief(newBrief);// Раньше выбор ниш молча запускал всю цепочку выбранных модулей: владелица
