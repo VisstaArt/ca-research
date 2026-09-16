@@ -26,4 +26,9 @@ var A=readFile(ROOT+'/app.jsx'), P=readFile(ROOT+'/platform.js');
 check('рамка просит прокрутить страницу вверх', /postMessage\(\{ ca: 'вверх' \}/.test(A));
 check('оболочка эту просьбу выполняет', /d\.ca !== 'вверх'/.test(P) && /scrollTo/.test(P));
 
+// Фон отражён по горизонтали: блики в правом верхнем углу (владелица 16.09).
+check('фон вынесен отдельным слоем', /body::before\{[^}]*var\(--bgimg\)/.test(H));
+check('и отражён по горизонтали', /body::before\{[^}]*scaleX\(-1\)/.test(H));
+check('в самом body картинки больше нет', H.indexOf('var(--bgimg) center/cover no-repeat fixed')<0);
+
 console.log(fails?('ПРОВАЛЕНО: '+fails):'всё сошлось');
