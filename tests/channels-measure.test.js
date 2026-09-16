@@ -99,3 +99,85 @@ globalThis.fetch=function(u){
     console.log(fails?('ПРОВАЛЕНО(метрики): '+fails):'  метрики каналов сняты');
   });
 })();
+
+// Каналы конкурентов берём С ИХ САЙТОВ, а не из веб-поиска: ссылки на
+// соцсети лежат в подвале их страниц (владелица 17.09).
+(function(){
+  var fails2=0;
+  function ок(имя,усл,что){ if(усл) console.log('  ok   '+имя); else { fails2++; console.log('  FAIL '+имя+(что?': '+что:'')); } }
+  var страницы2={
+    'https://envybox.io':'<footer><a href="https://t.me/envybox">tg</a>'
+      +'<a href="https://vk.com/envybox?from=footer">vk</a>'
+      +'<a href="https://vk.com/share.php?url=x">поделиться</a>'
+      +'<a href="https://youtube.com/@envybox">yt</a></footer>',
+    'https://tihiy.ru':'<footer>нет соцсетей</footer>',
+    'https://tihiy.ru/contacts':'<a href="https://t.me/tihiy_channel">канал</a>',
+  };
+  // Подменяем сеть СЛОЕМ: чужие адреса отдаём прежней заглушке, иначе рвём
+  // цепочку замеров, которая ещё идёт выше.
+  var прежний=globalThis.fetch;
+  globalThis.fetch=function(u){
+    var адрес=decodeURIComponent(String(u).split('url=')[1]||'');
+    if (!(адрес in страницы2)) return прежний(u);
+    var html=страницы2[адрес];
+    return Promise.resolve({ ok: true, text:function(){ return Promise.resolve(html); } });
+  };
+  eval(взять('соцсетиИзHTML')); eval(взять('площадкаПоАдресу'));
+  eval(взять('конкурентыССайтамиИзM3')); eval(взять('каналыКонкурентовССайтов'));
+  var список=конкурентыССайтамиИзM3({ строгое:{ конкуренты:[
+    {название:'Envybox',сайт:'envybox.io'},
+    {название:'Тихий',сайт:'tihiy.ru'},
+    {название:'Без сайта',сайт:''}]}});
+  ок('конкуренты с сайтами отобраны', список.length===2, JSON.stringify(список));
+  каналыКонкурентовССайтов(список).then(function(р){
+    var адреса=р.каналы.map(function(к){return к.url;});
+    ок('телеграм конкурента найден', адреса.indexOf('https://t.me/envybox')>=0, адреса.join(' '));
+    ок('вк с хвостом запроса найден', adresOk(адреса,'vk.com/envybox'), адреса.join(' '));
+    ок('кнопка «поделиться» отброшена', адреса.join(' ').indexOf('share.php')<0, адреса.join(' '));
+    ок('площадка распознана', р.каналы[0].площадка==='Telegram', р.каналы[0].площадка);
+    ок('у кого на главной пусто — смотрим контакты',
+       адреса.indexOf('https://t.me/tihiy_channel')>=0, адреса.join(' '));
+    ок('имя конкурента сохранено',
+       р.каналы.some(function(к){return к.конкурент==='Envybox';}), JSON.stringify(р.каналы[0]));
+    console.log(fails2?('ПРОВАЛЕНО(каналы с сайтов): '+fails2):'  каналы сняты с сайтов конкурентов');
+  });
+  function adresOk(a,ч){ return a.some(function(x){ return x.indexOf(ч)>=0; }); }
+})();
+
+// Контент собираем С САМИХ КАНАЛОВ конкурентов: витрина Telegram отдаёт текст
+// поста, просмотры, реакции и дату (владелица 17.09: «и контент тогда с них
+// собирай, а то получается какая-то фигня неподходящая»).
+(function(){
+  var f3=0;
+  function ок(имя,усл,что){ if(усл) console.log('  ok   '+имя); else { f3++; console.log('  FAIL '+имя+(что?': '+что:'')); } }
+  eval(взять('постыКанала')); eval(взять('материалыКаналовКонкурентов'));
+  var пост=function(н,текст,просм,реакц,дата){
+    return '<div class="tgme_widget_message" data-post="envybox/'+н+'">'
+      +'<time datetime="'+дата+'T10:00:00+00:00"></time>'
+      +'<div class="tgme_widget_message_text">'+текст+'</div>'
+      +'<div class="tgme_widget_message_reactions"><span class="tgme_reaction"><i class="emoji"><b>d</b></i>'+реакц+'</span></div>'
+      +'<span class="tgme_widget_message_views">'+просм+'</span></div>';
+  };
+  var витрина=пост(1,'Как вернуть уходящего посетителя <b>попапом</b>',1000,10,'2026-09-01')
+            +пост(2,'Дайджест новостей рынка',5000,5,'2026-09-05');
+  var прежний2=globalThis.fetch;
+  globalThis.fetch=function(u){
+    var адрес=decodeURIComponent(String(u).split('url=')[1]||'');
+    if (адрес!=='https://t.me/s/envybox') return прежний2(u);
+    return Promise.resolve({ok:true,text:function(){return Promise.resolve(витрина);}});
+  };
+  постыКанала('https://t.me/envybox','Envybox').then(function(п){
+    ок('посты сняты с витрины', п.length===2, JSON.stringify(п).slice(0,120));
+    ок('разметка вычищена из текста', п[0].текст.indexOf('<')<0, п[0].текст);
+    ок('первым идёт пост с большей долей отклика', п[0].доля===1, JSON.stringify(п[0]));
+    ок('просмотры сняты', п[0].просмотры===1000, String(п[0].просмотры));
+    ок('реакции сняты', п[0].реакции===10, String(п[0].реакции));
+    ок('адрес поста собран', п[0].url==='https://t.me/envybox/1', п[0].url);
+    ок('имя конкурента при посте', п[0].чей==='Envybox', п[0].чей);
+    ок('дата сохранена', п[0].дата==='2026-09-01', п[0].дата);
+    return материалыКаналовКонкурентов([{url:'https://t.me/envybox',конкурент:'Envybox'}]);
+  }).then(function(в){
+    ок('сборка по всем каналам работает', в.length===2, String(в.length));
+    console.log(f3?('ПРОВАЛЕНО(посты с каналов): '+f3):'  контент снят с каналов конкурентов');
+  });
+})();
