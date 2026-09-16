@@ -61,12 +61,14 @@ globalThis.fetch=function(u){
   ok('счётчик замеров записан', р.замерКаналов.всего, 1);
   // Свои каналы берутся ИЗ БРИФА: у заказчика был ВК, а в отчёт он не попал,
   // потому что модель его в поиске не встретила (владелица 16.09).
-  globalThis.clientSocials=function(b){ return String(b.socials||'').split(/\s+/).filter(Boolean); };
+    eval(взять('clientSocials'));
   eval(взять('замерСвоихКаналов'));
   страницы['https://vk.com/we']='<div>0 подписчиков</div>';
   замерСвоихКаналов({каналы_заказчика:[]},{socials:'https://vk.com/we https://t.me/good'})
     .then(function(р2){
       ok('оба канала из брифа на месте', р2.каналы_заказчика.length, 2);
+      // Подпись «Telegram» ничего не говорит, когда каналов несколько.
+      ok('видно, какой именно канал', /we/.test(р2.каналы_заказчика[0].площадка), true);
       ok('ноль подписчиков — это замер, а не пустота',
          /0 \(замер\)/.test(р2.каналы_заказчика[0].подписчики), true);
       ok('у второго снят охват',
@@ -81,11 +83,11 @@ globalThis.fetch=function(u){
   var полная='<div class="tgme_page_extra">10 000 subscribers</div>'
     +'<time datetime="2026-09-01T10:00:00+00:00"></time>'
     +'<span class="tgme_widget_message_views">1000</span>'
-    +'<div class="tgme_widget_message_reaction"><span>100</span></div>'
+    +'<div class="tgme_widget_message_reactions"><span class="tgme_reaction"><i class="emoji"><b>d</b></i>60</span><span class="tgme_reaction"><i class="emoji"><b>d</b></i>40</span></div>'
     +'<div class="tgme_widget_message_photo"></div>'
     +'<time datetime="2026-09-08T10:00:00+00:00"></time>'
     +'<span class="tgme_widget_message_views">2000</span>'
-    +'<div class="tgme_widget_message_reaction"><span>300</span></div>'
+    +'<div class="tgme_widget_message_reactions"><span class="tgme_reaction"><i class="emoji"><b>d</b></i>300</span></div>'
     +'<div class="tgme_widget_message_video"></div>';
   страницы['https://t.me/s/full']=полная;
   замерКанала('https://t.me/full').then(function(з){
