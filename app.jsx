@@ -2340,16 +2340,29 @@ async function gatherContentRadarEvidence(brief, competitors) {
   // надо поиск, а не требования к модели. Берём вдвое больше конкурентов и
   // добавляем площадки, которых в списке не было вовсе.
   const comps = (competitors || []).filter(Boolean).slice(0, 10);
+  // ГЛАВНОЕ: тема радара — НАШ ПРОДУКТ и ЛЮДИ, которые его покупают, а не
+  // товарная категория ниши. Поиск по «интернет-магазины youtube» приводил
+  // Top Shop, Дормео и обзоры товаров: контент ПРО магазины, а не для тех,
+  // кто ими владеет (владелица 16.09 — «при чём тут топ-шоп»).
+  const аудитория = topic && topic !== product
+    ? 'владельцы ' + topic
+    : (brief.audience || 'владельцы бизнеса');
+  const связка = topic && topic !== product ? product + ' для ' + topic : product;
   const queries = [
-    topic+' '+market+' youtube канал обзор',
-    topic+' '+market+' telegram канал',
-    topic+' '+market+' vc.ru habr статья разбор',
-    topic+' '+market+' дзен статья',
-    topic+' '+market+' vk сообщество',
-    topic+' '+market+' rutube видео',
-    topic+' '+market+' подкаст выпуск',
-    topic+' '+market+' кейс разбор блог',
-    topic+' '+market+' вебинар запись',
+    // Канал разговора о самом продукте: кто и где о нём пишет.
+    связка + ' ' + market + ' youtube канал обзор',
+    связка + ' ' + market + ' telegram канал',
+    связка + ' ' + market + ' vc.ru habr статья разбор',
+    связка + ' ' + market + ' кейс внедрения блог',
+    связка + ' ' + market + ' вебинар запись',
+    // Где сидит и что читает сама аудитория — те, кто покупает такой продукт.
+    аудитория + ' ' + market + ' telegram канал',
+    аудитория + ' ' + market + ' сообщество vk',
+    аудитория + ' ' + market + ' форум обсуждение',
+    аудитория + ' ' + market + ' youtube канал для предпринимателей',
+    аудитория + ' ' + market + ' дзен блог',
+    // Отраслевые медиа, которые эта аудитория читает.
+    (topic || product) + ' ' + market + ' отраслевое медиа издание подписка',
   ];
   for (const c of comps) {
     // Канал самого конкурента, а не статьи о нём: у площадок в адресе
@@ -2846,7 +2859,7 @@ async function замерИзвестностиСтрогое(д, brief) {
 // Та же причина, что у M3: вид таблиц задаём мы, а не модель. Здесь это важнее
 // вдвойне — по этим данным человек ВЫБИРАЕТ нишу, и дальше вся цепочка идёт
 // по его выбору.
-const REPORT_FIX_CSS = "\n/* ── Поздние правки: идут ПОСЛЕ всех остальных листов ────────────────────\n   Имена .nprof, .sigrow, .rkey-side объявлены в нескольких константах, и\n   правка в ранней из них молча проигрывает поздней. Всё новое — здесь. */\n.nprof{display:grid;grid-template-columns:repeat(auto-fit,minmax(360px,1fr));gap:12px}\n/* Шапка карточки: фигура слева, имя, балл и вердикт справа; разбор — ниже\n   во всю ширину (владелица 16.09). */\n.ncard2{display:block;padding:14px 16px}\n.ncard2 .nhd{display:grid;grid-template-columns:112px minmax(0,1fr);gap:14px;align-items:center}\n.ncard2 .nhd>div:first-child{display:flex;justify-content:center}\n.ncard2 .nh b{font-size:14px;line-height:1.25}\n.ncard2 .tot{margin:6px 0 7px}\n.ncard2 .sigrows{margin-top:10px;padding-top:10px;border-top:1px solid var(--line-2)}\n.ncard2 .ntake{margin-top:10px;padding:6px 12px;font-size:11.5px}\n.ncard2 .nh b{font-size:13.5px}\n.ncard2 .tot i{font-size:22px}\n.ncard2 .sigrow .v3{font-size:12px;line-height:1.45}\n.ncard2.on{box-shadow:0 0 0 2px var(--mid), 0 18px 34px -20px rgba(45,36,22,.4)}\n.ncard2 .sigrow{display:block;padding:8px 0;grid-template-columns:none}\n.ncard2 .sigrow .k2{display:block;margin-bottom:3px}\n.ncard2 .sigrow .v3{display:block;overflow-wrap:anywhere}\n/* Ключ «как читать»: фигура слева, пояснения справа. */\n.rkey-side{display:grid;grid-template-columns:256px minmax(0,1fr);gap:14px 20px;align-items:start;margin:0}\n.rkey-side>div:first-child{min-width:0;overflow:hidden}\n.rkey-side>div:first-child{grid-row:1 / span 3}\n.rkey-side .rtext{max-width:none;font-size:12.5px}\n@media (max-width:760px){.rkey-side{grid-template-columns:1fr}.rkey-side>div:first-child{grid-row:auto}}\n/* Сноска мельче основного текста и со звёздочкой: иначе пояснение сливается\n   с данными (владелица 16.09). */\n.note{font-size:11.5px}\n.note:not(.confleg):not(.nhint)::before{content:\"* \";color:var(--ink-3)}\n/* Полный список просмотренного — под своей кнопкой, а не простынёй. */\n.srcall{display:none}\n.srcall.on{display:flex}\n.srcall-btn{margin-top:10px;font-size:11.5px;color:var(--ink-2);background:none;border:0;padding:0;cursor:pointer;text-decoration:underline}\n/* География спроса в строгом пути: полоса объёма и плотность числом. */\\n.geo{overflow-x:auto}\\n.geo .th,.geo .tr{display:grid;grid-template-columns:minmax(140px,1.2fr) 170px 64px 78px minmax(0,1.4fr);gap:12px;align-items:center;min-width:660px}\\n.geo .th{padding:0 0 8px;border-bottom:1px solid var(--line);font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--ink-3)}\\n.geo .tr{padding:9px 0;border-top:1px solid var(--line-2);font-size:12.5px;color:var(--ink-2)}\\n.geo .nm{font-size:13px;font-weight:700;color:var(--ink)}\\n.geo .gvol{display:flex;align-items:center;gap:9px}\\n.geo .rail{flex:1;height:14px;background:var(--line-2);border-radius:0;overflow:hidden}\\n.geo .rail .b{display:block;height:14px;background:var(--mid)}\\n.geo .v{font-variant-numeric:tabular-nums;white-space:nowrap}\\n.geo .hi{color:var(--acc-strong-ink);font-weight:700}\\n.geo .lo{color:var(--ink-3)}\\n";
+const REPORT_FIX_CSS = "\n/* ── Поздние правки: идут ПОСЛЕ всех остальных листов ────────────────────\n   Имена .nprof, .sigrow, .rkey-side объявлены в нескольких константах, и\n   правка в ранней из них молча проигрывает поздней. Всё новое — здесь. */\n.nprof{display:grid;grid-template-columns:repeat(auto-fit,minmax(360px,1fr));gap:12px}\n/* Шапка карточки: фигура слева, имя, балл и вердикт справа; разбор — ниже\n   во всю ширину (владелица 16.09). */\n.ncard2{display:block;padding:14px 16px}\n.ncard2 .nhd{display:grid;grid-template-columns:112px minmax(0,1fr);gap:14px;align-items:center}\n.ncard2 .nhd>div:first-child{display:flex;justify-content:center}\n.ncard2 .nh b{font-size:14px;line-height:1.25}\n.ncard2 .tot{margin:6px 0 7px}\n.ncard2 .sigrows{margin-top:10px;padding-top:10px;border-top:1px solid var(--line-2)}\n.ncard2 .ntake{margin-top:10px;padding:6px 12px;font-size:11.5px}\n.ncard2 .nh b{font-size:13.5px}\n.ncard2 .tot i{font-size:22px}\n.ncard2 .sigrow .v3{font-size:12px;line-height:1.45}\n.ncard2.on{box-shadow:0 0 0 2px var(--mid), 0 18px 34px -20px rgba(45,36,22,.4)}\n.ncard2 .sigrow{display:block;padding:8px 0;grid-template-columns:none}\n.ncard2 .sigrow .k2{display:block;margin-bottom:3px}\n.ncard2 .sigrow .v3{display:block;overflow-wrap:anywhere}\n/* Ключ «как читать»: фигура слева, пояснения справа. */\n.rkey-side{display:grid;grid-template-columns:256px minmax(0,1fr);gap:14px 20px;align-items:start;margin:0}\n.rkey-side>div:first-child{min-width:0;overflow:hidden}\n.rkey-side>div:first-child{grid-row:1 / span 3}\n.rkey-side .rtext{max-width:none;font-size:12.5px}\n@media (max-width:760px){.rkey-side{grid-template-columns:1fr}.rkey-side>div:first-child{grid-row:auto}}\n/* Сноска мельче основного текста и со звёздочкой: иначе пояснение сливается\n   с данными (владелица 16.09). */\n.note{font-size:11.5px}\n.note:not(.confleg):not(.nhint)::before{content:\"* \";color:var(--ink-3)}\n/* Полный список просмотренного — под своей кнопкой, а не простынёй. */\n.srcall{display:none}\n.srcall.on{display:flex}\n.srcall-btn{margin-top:10px;font-size:11.5px;color:var(--ink-2);background:none;border:0;padding:0;cursor:pointer;text-decoration:underline}\n/* География спроса в строгом пути: полоса объёма и плотность числом. */\n.geo{overflow-x:auto}\n.geo .th,.geo .tr{display:grid;grid-template-columns:minmax(140px,1.2fr) 170px 64px 78px minmax(0,1.4fr);gap:12px;align-items:center;min-width:660px}\n.geo .th{padding:0 0 8px;border-bottom:1px solid var(--line);font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--ink-3)}\n.geo .tr{padding:9px 0;border-top:1px solid var(--line-2);font-size:12.5px;color:var(--ink-2)}\n.geo .nm{font-size:13px;font-weight:700;color:var(--ink)}\n.geo .gvol{display:flex;align-items:center;gap:9px}\n.geo .rail{flex:1;height:14px;background:var(--line-2);border-radius:0;overflow:hidden}\n.geo .rail .b{display:block;height:14px;background:var(--mid)}\n.geo .v{font-variant-numeric:tabular-nums;white-space:nowrap}\n.geo .hi{color:var(--acc-strong-ink);font-weight:700}\n.geo .lo{color:var(--ink-3)}\n/* Карточка канала: подписи и значения — своей колонкой слева направо,\n   без наложения на описание (владелица 16.09). */\n.chn .c .cf{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px 18px;align-items:start;margin-top:10px;padding-top:10px;border-top:1px solid var(--line-2)}\n.chn .c .cf div{text-align:left;min-width:0}\n.chn .c .cf div span{display:block;margin-bottom:3px}\n.chn .c .cf div b{display:block;font-weight:600;color:var(--ink-2);overflow-wrap:anywhere}\n.chn .c .cf .r{text-align:left}\n";
 
 const СХЕМА_M2 = {
   type: 'object', additionalProperties: false,
@@ -5295,6 +5308,19 @@ Fill the following research blocks for module «Контент-радар». ALL
 позиционирование. Здесь те же компании рассматриваются как МЕДИА: что они
 публикуют, где, как часто и что у них залетает. Вывод модуля — не «они молодцы»,
 а конкретные форматы, хуки и длительности, которые в этой нише работают.
+
+ЧЕЙ КОНТЕНТ НАС ИНТЕРЕСУЕТ — ТРИ ГРУППЫ, И БОЛЬШЕ НИКАКИХ:
+1. Каналы конкурентов — тех, кто продаёт ПОХОЖИЙ ПРОДУКТ.
+2. Площадки, где сидит наша аудитория: сообщества, форумы и каналы ДЛЯ ТЕХ,
+   КТО ПОКУПАЕТ такой продукт (в нише «интернет-магазины» это владельцы
+   магазинов, а не покупатели товаров).
+3. Отраслевые медиа, которые эта аудитория читает.
+КАНАЛЫ САМОЙ НИШИ КАК ТОВАРНОЙ КАТЕГОРИИ — НЕ СЮДА. Если ниша «интернет-
+магазины», то каналы магазинов с обзорами товаров (Top Shop, Delimano и
+подобные) к нашему продукту отношения не имеют: их смотрят покупатели
+товаров, а наш клиент — владелец магазина. Такие каналы в таблицу не
+включай, даже если они попались в выдержках. Лучше меньше строк, чем строки
+про чужую аудиторию: по ним потом строят контент-план, и он уйдёт мимо.
 
 ГРАНИЦА ДАННЫХ — ЖЁСТКАЯ. Берём только числа, ВИДНЫЕ НА ПУБЛИЧНОЙ СТРАНИЦЕ без
 авторизации: просмотры ролика, число комментариев, просмотры поста в веб-версии
