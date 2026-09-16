@@ -2846,7 +2846,7 @@ async function замерИзвестностиСтрогое(д, brief) {
 // Та же причина, что у M3: вид таблиц задаём мы, а не модель. Здесь это важнее
 // вдвойне — по этим данным человек ВЫБИРАЕТ нишу, и дальше вся цепочка идёт
 // по его выбору.
-const REPORT_FIX_CSS = "\n/* ── Поздние правки: идут ПОСЛЕ всех остальных листов ────────────────────\n   Имена .nprof, .sigrow, .rkey-side объявлены в нескольких константах, и\n   правка в ранней из них молча проигрывает поздней. Всё новое — здесь. */\n.nprof{display:grid;grid-template-columns:repeat(auto-fit,minmax(360px,1fr));gap:12px}\n/* Шапка карточки: фигура слева, имя, балл и вердикт справа; разбор — ниже\n   во всю ширину (владелица 16.09). */\n.ncard2{display:block;padding:14px 16px}\n.ncard2 .nhd{display:grid;grid-template-columns:112px minmax(0,1fr);gap:14px;align-items:center}\n.ncard2 .nhd>div:first-child{display:flex;justify-content:center}\n.ncard2 .nh b{font-size:14px;line-height:1.25}\n.ncard2 .tot{margin:6px 0 7px}\n.ncard2 .sigrows{margin-top:10px;padding-top:10px;border-top:1px solid var(--line-2)}\n.ncard2 .ntake{margin-top:10px;padding:6px 12px;font-size:11.5px}\n.ncard2 .nh b{font-size:13.5px}\n.ncard2 .tot i{font-size:22px}\n.ncard2 .sigrow .v3{font-size:12px;line-height:1.45}\n.ncard2.on{box-shadow:0 0 0 2px var(--mid), 0 18px 34px -20px rgba(45,36,22,.4)}\n.ncard2 .sigrow{display:block;padding:8px 0;grid-template-columns:none}\n.ncard2 .sigrow .k2{display:block;margin-bottom:3px}\n.ncard2 .sigrow .v3{display:block;overflow-wrap:anywhere}\n/* Ключ «как читать»: фигура слева, пояснения справа. */\n.rkey-side{display:grid;grid-template-columns:256px minmax(0,1fr);gap:14px 20px;align-items:start;margin:0}\n.rkey-side>div:first-child{min-width:0;overflow:hidden}\n.rkey-side>div:first-child{grid-row:1 / span 3}\n.rkey-side .rtext{max-width:none;font-size:12.5px}\n@media (max-width:760px){.rkey-side{grid-template-columns:1fr}.rkey-side>div:first-child{grid-row:auto}}\n/* Сноска мельче основного текста и со звёздочкой: иначе пояснение сливается\n   с данными (владелица 16.09). */\n.note{font-size:11.5px}\n.note:not(.confleg):not(.nhint)::before{content:\"* \";color:var(--ink-3)}\n/* Полный список просмотренного — под своей кнопкой, а не простынёй. */\n.srcall{display:none}\n.srcall.on{display:flex}\n.srcall-btn{margin-top:10px;font-size:11.5px;color:var(--ink-2);background:none;border:0;padding:0;cursor:pointer;text-decoration:underline}\n";
+const REPORT_FIX_CSS = "\n/* ── Поздние правки: идут ПОСЛЕ всех остальных листов ────────────────────\n   Имена .nprof, .sigrow, .rkey-side объявлены в нескольких константах, и\n   правка в ранней из них молча проигрывает поздней. Всё новое — здесь. */\n.nprof{display:grid;grid-template-columns:repeat(auto-fit,minmax(360px,1fr));gap:12px}\n/* Шапка карточки: фигура слева, имя, балл и вердикт справа; разбор — ниже\n   во всю ширину (владелица 16.09). */\n.ncard2{display:block;padding:14px 16px}\n.ncard2 .nhd{display:grid;grid-template-columns:112px minmax(0,1fr);gap:14px;align-items:center}\n.ncard2 .nhd>div:first-child{display:flex;justify-content:center}\n.ncard2 .nh b{font-size:14px;line-height:1.25}\n.ncard2 .tot{margin:6px 0 7px}\n.ncard2 .sigrows{margin-top:10px;padding-top:10px;border-top:1px solid var(--line-2)}\n.ncard2 .ntake{margin-top:10px;padding:6px 12px;font-size:11.5px}\n.ncard2 .nh b{font-size:13.5px}\n.ncard2 .tot i{font-size:22px}\n.ncard2 .sigrow .v3{font-size:12px;line-height:1.45}\n.ncard2.on{box-shadow:0 0 0 2px var(--mid), 0 18px 34px -20px rgba(45,36,22,.4)}\n.ncard2 .sigrow{display:block;padding:8px 0;grid-template-columns:none}\n.ncard2 .sigrow .k2{display:block;margin-bottom:3px}\n.ncard2 .sigrow .v3{display:block;overflow-wrap:anywhere}\n/* Ключ «как читать»: фигура слева, пояснения справа. */\n.rkey-side{display:grid;grid-template-columns:256px minmax(0,1fr);gap:14px 20px;align-items:start;margin:0}\n.rkey-side>div:first-child{min-width:0;overflow:hidden}\n.rkey-side>div:first-child{grid-row:1 / span 3}\n.rkey-side .rtext{max-width:none;font-size:12.5px}\n@media (max-width:760px){.rkey-side{grid-template-columns:1fr}.rkey-side>div:first-child{grid-row:auto}}\n/* Сноска мельче основного текста и со звёздочкой: иначе пояснение сливается\n   с данными (владелица 16.09). */\n.note{font-size:11.5px}\n.note:not(.confleg):not(.nhint)::before{content:\"* \";color:var(--ink-3)}\n/* Полный список просмотренного — под своей кнопкой, а не простынёй. */\n.srcall{display:none}\n.srcall.on{display:flex}\n.srcall-btn{margin-top:10px;font-size:11.5px;color:var(--ink-2);background:none;border:0;padding:0;cursor:pointer;text-decoration:underline}\n/* География спроса в строгом пути: полоса объёма и плотность числом. */\\n.geo{overflow-x:auto}\\n.geo .th,.geo .tr{display:grid;grid-template-columns:minmax(140px,1.2fr) 170px 64px 78px minmax(0,1.4fr);gap:12px;align-items:center;min-width:660px}\\n.geo .th{padding:0 0 8px;border-bottom:1px solid var(--line);font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--ink-3)}\\n.geo .tr{padding:9px 0;border-top:1px solid var(--line-2);font-size:12.5px;color:var(--ink-2)}\\n.geo .nm{font-size:13px;font-weight:700;color:var(--ink)}\\n.geo .gvol{display:flex;align-items:center;gap:9px}\\n.geo .rail{flex:1;height:14px;background:var(--line-2);border-radius:0;overflow:hidden}\\n.geo .rail .b{display:block;height:14px;background:var(--mid)}\\n.geo .v{font-variant-numeric:tabular-nums;white-space:nowrap}\\n.geo .hi{color:var(--acc-strong-ink);font-weight:700}\\n.geo .lo{color:var(--ink-3)}\\n";
 
 const СХЕМА_M2 = {
   type: 'object', additionalProperties: false,
@@ -3359,6 +3359,102 @@ const СХЕМА_M7 = {
           сейчас: строка('Текущее значение или «не замерено»'),
           цель_значение: строка('Куда идём'),
           какие_гипотезы: строка('Какие гипотезы ведут к цели'),
+        } } },
+    итог: {
+      type: 'object', additionalProperties: false,
+      required: ['что_узнали', 'что_это_значит', 'что_делаем'],
+      properties: {
+        что_узнали: { type: 'array', items: { type: 'string' } },
+        что_это_значит: { type: 'array', items: { type: 'string' } },
+        что_делаем: { type: 'array', items: { type: 'string' } },
+      } },
+  },
+};
+
+// ── Строгая схема SEO-стратегии (M8) ──────────────────────────────────────
+// Правило модуля: строка семантики без ЧИСЛА частотности не существует. По
+// этой таблице распределяют статьи и бюджет — строка без числа не даёт ни
+// приоритета, ни оценки трафика, а место занимает.
+const СХЕМА_M8 = {
+  type: 'object', additionalProperties: false,
+  required: ['источники', 'конкуренты_в_выдаче', 'семантика', 'аудит_контента',
+             'география', 'замерить_вручную', 'итог'],
+  properties: {
+    источники: {
+      type: 'array',
+      items: { type: 'object', additionalProperties: false,
+        required: ['номер', 'площадка', 'url', 'что_взяли'],
+        properties: {
+          номер: { type: 'integer' },
+          площадка: строка('Имя площадки'),
+          url: строка('Полный адрес'),
+          что_взяли: строка('Что из него взято'),
+        } } },
+    конкуренты_в_выдаче: {
+      type: 'array', description: 'Страницы, которые реально находятся по целевым запросам',
+      items: { type: 'object', additionalProperties: false,
+        required: ['url', 'заголовок', 'найдено_по_запросу', 'тип_страницы', 'о_чём', 'чем_сильна'],
+        properties: {
+          url: строка('Адрес страницы'),
+          заголовок: строка('Заголовок страницы'),
+          найдено_по_запросу: строка('По какому запросу нашлась'),
+          тип_страницы: строка('Статья, категория, карточка, лендинг…'),
+          о_чём: строка('О чём страница'),
+          чем_сильна: строка('Почему она в выдаче'),
+        } } },
+    семантика: {
+      type: 'array',
+      description: 'Кластеры С ЧИСЛОМ частотности. Кластер без числа сюда не попадает вовсе',
+      items: { type: 'object', additionalProperties: false,
+        required: ['кластер', 'тип', 'примеры_запросов', 'частотность', 'группа',
+                   'сезонность', 'конкуренция', 'приоритет', 'тип_страницы', 'откуда_число'],
+        properties: {
+          кластер: строка('Имя кластера'),
+          тип: { type: 'string', enum: ['информационный', 'коммерческий', 'навигационный'] },
+          примеры_запросов: строка('Через запятую'),
+          частотность: { type: 'number', description: 'ЧИСЛО запросов в месяц. Без него кластер не включай' },
+          группа: { type: 'string', enum: ['ВЧ', 'СЧ', 'НЧ'] },
+          сезонность: строка('Словами; не видно — «ровно круглый год»'),
+          конкуренция: строка('Оценка и на чём основана'),
+          приоритет: { type: 'integer', description: '1 — первым, дальше по убыванию' },
+          тип_страницы: строка('Какую страницу под него делать'),
+          откуда_число: строка('«Wordstat», «Google Ads» или номер источника'),
+        } } },
+    аудит_контента: {
+      type: 'array', description: 'Что уже публикуют конкуренты',
+      items: { type: 'object', additionalProperties: false,
+        required: ['конкурент', 'тип_контента', 'темы', 'публикаций_в_месяц', 'частота_словами',
+                   'что_работает', 'как_сделать_лучше'],
+        properties: {
+          конкурент: строка('Чей контент'),
+          тип_контента: строка('Статьи, видео, рассылки…'),
+          темы: строка('О чём пишут'),
+          публикаций_в_месяц: { type: ['number', 'null'], description: 'Число в месяц; не видно — null' },
+          частота_словами: строка('«2-3 в неделю» или «не проверено»'),
+          что_работает: строка('Что у них получается'),
+          как_сделать_лучше: строка('Что делаем иначе'),
+        } } },
+    география: {
+      type: 'array',
+      description: 'ТОЛЬКО из замера кодом. Замера нет — пустой список, придумывать нельзя',
+      items: { type: 'object', additionalProperties: false,
+        required: ['регион', 'запросов_в_месяц', 'доля_процентов', 'плотность', 'что_следует'],
+        properties: {
+          регион: строка('Название региона'),
+          запросов_в_месяц: { type: 'number' },
+          доля_процентов: { type: 'number' },
+          плотность: { type: 'number', description: 'Во сколько раз выше среднего на человека' },
+          что_следует: строка('Что это значит для работы'),
+        } } },
+    замерить_вручную: {
+      type: 'array',
+      description: 'Кластеры, которые кажутся важными, но числа нет: сюда, а не в семантику',
+      items: { type: 'object', additionalProperties: false,
+        required: ['кластер', 'почему_важен', 'где_замерить'],
+        properties: {
+          кластер: строка('Имя кластера'),
+          почему_важен: строка('Почему на него стоит смотреть'),
+          где_замерить: строка('Wordstat, Google Ads, подсказки'),
         } } },
     итог: {
       type: 'object', additionalProperties: false,
@@ -4292,6 +4388,123 @@ function текстИзСтрогогоM7(д) {
   return ч.join('\n');
 }
 
+// Разметка SEO-стратегии из СТРОГИХ данных.
+function разметкаM8(д, brief) {
+  if (!д || typeof д !== 'object') return null;
+  const esc = escHtml;
+  const части = [];
+  const блок = (имя, тело) => { if (тело) части.push('<h2>' + esc(имя) + '</h2>' + тело); };
+  const непусто = в => {
+    const т = String(в == null ? '' : в).trim();
+    return т && !/^(нет данных|не замерено|не проверено|не определ|—|-)/i.test(т) ? т : '';
+  };
+
+  const сем = (д.семантика || []).filter(к => к && непусто(к.кластер) && к.частотность > 0);
+  if (сем.length) {
+    const порядок = сем.slice().sort((а, б) => (а.приоритет || 99) - (б.приоритет || 99)
+      || (б.частотность - а.частотность));
+    blockScriptsM3.push('renderSemantics(' + safeJson(порядок.map(к => ({
+      n: к.кластер, v: к.частотность, s: new Array(12).fill(0.5),
+      note: [непусто(к.группа), непусто(к.сезонность), непусто(к.тип_страницы)]
+        .filter(Boolean).join(' · '),
+    }))) + ');');
+    блок('Семантическое ядро',
+      '<div class="sem"><div id="rpt-sembars"></div>'
+      + '<div class="sempanel"><div class="cap">Сезонность по месяцам</div>'
+      + '<div class="who" id="rpt-semwho"></div><div id="rpt-semchart"></div>'
+      + '<div class="note" id="rpt-semnote"></div></div></div>'
+      + '<p class="note">Каждый кластер здесь — с ЗАМЕРЕННЫМ числом запросов '
+      + '(источник указан в строке). Кластеры без числа в эту таблицу не попадают: '
+      + 'по ней распределяют статьи и бюджет, а строка без числа не даёт ни приоритета, '
+      + 'ни оценки трафика.</p>');
+  }
+
+  const вруч = (д.замерить_вручную || []).filter(к => к && непусто(к.кластер));
+  if (вруч.length) {
+    blockScriptsM3.push('renderListCards(' + safeJson(вруч.map(к => [
+      к.кластер, [['почему важен', к.почему_важен], ['где замерить', к.где_замерить]]
+        .filter(п => непусто(п[1])),
+    ])) + ', "rpt-tocheck");');
+    блок('Замерить вручную',
+      '<div class="rules" id="rpt-tocheck"></div>'
+      + '<p class="note">Эти кластеры выглядят важными, но частотности по ним нет ни в '
+      + 'Wordstat, ни в собранном материале. Их место здесь, а не в ядре: иначе таблица '
+      + 'выглядит проработанной там, где замера не было.</p>');
+  }
+
+  const выд = (д.конкуренты_в_выдаче || []).filter(с => с && /^https?:/.test(String(с.url || '')));
+  if (выд.length) {
+    blockScriptsM3.push('renderSerp(' + safeJson(выд.map(с => [
+      непусто(с.заголовок) || с.url, String(с.url).replace(/^https?:\/\//, ''),
+      с.найдено_по_запросу || '', с.тип_страницы || '', с.чем_сильна || '',
+    ])) + ');');
+    блок('Кто в выдаче по нашим запросам',
+      '<div class="serp" id="rpt-serp"></div>'
+      + '<p class="note">Позиций здесь нет намеренно: поиск их не отдаёт. Вместо позиции '
+      + 'указан запрос, по которому страница нашлась.</p>');
+  }
+
+  const ауд = (д.аудит_контента || []).filter(а => а && непусто(а.конкурент));
+  if (ауд.length) {
+    blockScriptsM3.push('renderAudit(' + safeJson(ауд.map(а => [
+      а.конкурент, а.тип_контента || '', а.публикаций_в_месяц || 0,
+      непусто(а.частота_словами) || 'не проверено', непусто(а.темы) || '—',
+      непусто(а.что_работает) || '—', непусто(а.как_сделать_лучше) || '—',
+    ])) + ');');
+    блок('Что уже публикуют конкуренты', '<div class="aud" id="rpt-aud"></div>');
+  }
+
+  const гео = (д.география || []).filter(г => г && непусто(г.регион) && г.запросов_в_месяц > 0);
+  if (гео.length) {
+    blockScriptsM3.push('renderGeoRows(' + safeJson(гео.map(г => [
+      г.регион, г.запросов_в_месяц, г.доля_процентов, г.плотность, г.что_следует || '',
+    ])) + ');');
+    блок('География спроса',
+      '<div class="geo" id="rpt-geo"></div>'
+      + '<p class="note">Объём и плотность — разные вещи: где людей больше и где ищут чаще '
+      + 'в пересчёте на человека. Плотность выше единицы — регион «горячее» среднего.</p>');
+  } else {
+    блок('География спроса',
+      '<p class="note">География спроса в этом прогоне не замерена. Придумывать '
+      + 'распределение по регионам нельзя: оно выглядит правдоподобно при любых числах, '
+      + 'и проверить его нечем.</p>');
+  }
+
+  const ист = (д.источники || []).filter(и => и && /^https?:/.test(String(и.url || '')));
+  if (ист.length) {
+    const перенос = {};
+    ист.forEach((и, i) => { if (перенос[и.номер] == null) перенос[и.номер] = i + 1; });
+    blockScriptsM3.push('renderSources(' + safeJson(ист.map((и, i) =>
+      [i + 1, и.площадка, и.что_взяли, '', и.url])) + ', 1);');
+    части.push('<div class="srcfold"><button type="button" class="srctoggle" aria-expanded="false">'
+      + 'Источники: ' + ист.length + ' ' + plural(ист.length, 'ссылка', 'ссылки', 'ссылок')
+      + ', по которым собран этот модуль</button>'
+      + '<div class="srcbody"><div class="srcs" id="rpt-srcs-1"></div></div></div>');
+  }
+  return части.join('');
+}
+
+// Выжимка M8.
+function текстИзСтрогогоM8(д) {
+  if (!д) return '';
+  const ч = [];
+  const стр = в => String(в == null ? '' : в).replace(/\s+/g, ' ').trim();
+  const сем = (д.семантика || []).filter(к => к && стр(к.кластер));
+  if (сем.length) {
+    ч.push('## Семантическое ядро\n');
+    ч.push(сем.map(к => '- ' + стр(к.кластер) + ': ' + к.частотность + '/мес ('
+      + стр(к.группа) + ', ' + стр(к.тип) + ') → ' + стр(к.тип_страницы)).join('\n'));
+  }
+  const и = д.итог || {};
+  if ((и.что_узнали || []).length || (и.что_делаем || []).length) {
+    ч.push('\n## ИТОГ МОДУЛЯ\n');
+    (и.что_узнали || []).forEach(x => ч.push('- Узнали: ' + стр(x)));
+    (и.что_это_значит || []).forEach(x => ч.push('- Значит: ' + стр(x)));
+    (и.что_делаем || []).forEach(x => ч.push('- Делаем: ' + стр(x)));
+  }
+  return ч.join('\n');
+}
+
 // Разметка модуля из СТРОГИХ данных. Разбирать нечего: поля названы схемой,
 // форма таблиц наша, пустое остаётся пустым и не печатается.
 function разметкаM3(д, brief) {
@@ -4536,10 +4749,10 @@ const схемаПроверена = {};
 
 // Какие модули уже переведены на строгий формат. Остальные работают
 // по-прежнему: перевод идёт по одному, с проверкой на живом прогоне.
-const СХЕМЫ = { M3: СХЕМА_M3, M2: СХЕМА_M2, M4: СХЕМА_M4, M5: СХЕМА_M5, M6: СХЕМА_M6, M7: СХЕМА_M7 };
+const СХЕМЫ = { M3: СХЕМА_M3, M2: СХЕМА_M2, M4: СХЕМА_M4, M5: СХЕМА_M5, M6: СХЕМА_M6, M7: СХЕМА_M7, M8: СХЕМА_M8 };
 // Разметка своя у каждого модуля: вид задаём мы, а не модель.
-const РАЗМЕТКИ = { M3: разметкаM3, M2: разметкаM2, M4: разметкаM4, M5: разметкаM5, M6: разметкаM6, M7: разметкаM7 };
-const ВЫЖИМКИ = { M3: текстИзСтрогогоM3, M2: текстИзСтрогогоM2, M4: текстИзСтрогогоM4, M5: текстИзСтрогогоM5, M6: текстИзСтрогогоM6, M7: текстИзСтрогогоM7 };
+const РАЗМЕТКИ = { M3: разметкаM3, M2: разметкаM2, M4: разметкаM4, M5: разметкаM5, M6: разметкаM6, M7: разметкаM7, M8: разметкаM8 };
+const ВЫЖИМКИ = { M3: текстИзСтрогогоM3, M2: текстИзСтрогогоM2, M4: текстИзСтрогогоM4, M5: текстИзСтрогогоM5, M6: текстИзСтрогогоM6, M7: текстИзСтрогогоM7, M8: текстИзСтрогогоM8 };
 
 function buildSystem(brief, lang, модуль) {
   const lines = Object.entries(brief).filter(([,v])=>v).map(([k,v])=>{
@@ -5707,7 +5920,9 @@ Output JSON between <<<CHART_DATA_START>>> and <<<CHART_DATA_END>>>:
     { "cluster": "cluster name", "volume": number, "group": "ВЧ/СЧ/НЧ", "type": "info/commercial/nav", "priority": 1-3 }
   ]
 }
-Включи ВСЕ кластеры из таблицы SEO-02 — у каждого из них по правилу выше есть число, поэтому "volume" всегда число, никогда null и никогда 0. Кластеры без замера в таблицу не попали, значит и сюда не попадают. Не подменяй отсутствующий замер нулём или приблизительной оценкой. "group" — та же группа ВЧ/СЧ/НЧ, что в таблице.`;
+Включи ВСЕ кластеры из таблицы SEO-02 — у каждого из них по правилу выше есть число, поэтому "volume" всегда число, никогда null и никогда 0. Кластеры без замера в таблицу не попали, значит и сюда не попадают. Не подменяй отсутствующий замер нулём или приблизительной оценкой. "group" — та же группа ВЧ/СЧ/НЧ, что в таблице.
+
+ЕСЛИ ОТВЕТ ИДЁТ ПО СХЕМЕ (json_schema) — таблиц не рисуй, заполняй поля схемы. Главное правило остаётся: в «семантику» попадают ТОЛЬКО кластеры с числом частотности, у каждого указано, откуда число. Кластер без замера идёт в «замерить вручную». География заполняется ТОЛЬКО из замера кодом; замера нет — пустой список, придумывать распределение по регионам нельзя.`;
 }
 
 function buildReportPrompt(brief, results, lang) {
@@ -7115,6 +7330,7 @@ function renderResearchHTML(content, opts) {
     "function renderNicheBoard(D){",
     "\n  const VD={go:['Идём','kchip-go','var(--acc-strong)'],\n            mb:['Под вопросом','kchip-mb','var(--acc-mid)'],\n            no:['Не идём','kchip-no','var(--acc-quiet)']};\n  ",
     ";\n\n  /* ── полосы: мера из «Приоритета ниш», цвет — по вердикту ── */\n  const W=520,padL=196,padR=54,rowH=27,top=4,H=top+D.length*rowH+4,max=20;\n  const x=v=>padL+(W-padL-padR)*(v/max);\n  const svg=el('svg',{viewBox:`0 0 ${W} ${H}`,width:'100%',height:H});\n  const bars=[];\n  D.forEach((d,i)=>{\n    const y=top+i*rowH;\n    const t=el('text',{x:padL-10,y:y+14,class:'lbl','text-anchor':'end'});\n    t.textContent=d.n; svg.appendChild(t);\n    svg.appendChild(el('rect',{x:padL,y:y+3,width:W-padL-padR,height:14,fill:'var(--line-2)'}));\n    const bw=Math.max(x(d.t)-padL,3);\n    const r=el('rect',{x:padL,y:y+3,width:bw,height:14,fill:VD[d.vd][2]});\n    svg.appendChild(r); bars.push(r);\n    const val=el('text',{x:padL+bw+8,y:y+14,class:'val'}); val.textContent=d.t; svg.appendChild(val);\n    /* прозрачная полоса на всю ширину строки — попасть по ней легче, чем по\n       короткому столбику: цель для нажатия должна быть больше самой метки */\n    const hit=el('rect',{x:0,y,width:W,height:rowH,fill:'transparent',class:'nbar'});\n    hit.addEventListener('click',()=>pick(i));\n    svg.appendChild(hit);\n  });\n  var ящикПолос=document.getElementById('rpt-niches'); ящикПолос.innerHTML='';\n  ящикПолос.appendChild(svg);\n\n  /* ── профили: только те, куда можем пойти ── */\n  const AX=['Спрос','Конкуренция','Экономика','Соответствие'];\n  const S=132, R=46;\n  const Wr=l=>l?252:S, C=l=>[Wr(l)/2,S/2];\n  const pt=(i,v,l)=>{const [cx,cy]=C(l),a=(-90+i*90)*Math.PI/180,r=R*(v/5);\n    return [cx+r*Math.cos(a),cy+r*Math.sin(a)];};\n  const radar=(vals,col,labels)=>{\n    /* Круговая на четыре сектора вместо паутинки: решение владелицы 15.09 —\n       «круговая красивее и нагляднее». Радиус сектора = оценка 1–5, то есть\n       площадь и есть мера. Заливка — оттенки ОДНОГО цвета (цвет вердикта):\n       величину несёт светлота, различимость не зависит от цветовосприятия,\n       а какая ось где — говорят подписи, а не оттенок. */\n    const [CX,CY]=C(labels);\n    const R2=R;\n    const g=el('svg',{viewBox:`0 0 ${Wr(labels)} ${S}`,width:Wr(labels),height:S});\n    [1,2,3,4,5].forEach(k=>{\n      g.appendChild(el('circle',{cx:CX,cy:CY,r:(R2*k/5).toFixed(1),fill:'none',\n        stroke:k===5?'var(--line)':'var(--line-2)','stroke-width':1}));\n    });\n    if(vals){\n      const ТОН=[100,76,56,38];\n      vals.forEach((v,i)=>{\n        const r=R2*Math.max(0,Math.min(5,v))/5; if(!(r>0)) return;\n        const a0=(-90+i*90)*Math.PI/180, a1=(-90+(i+1)*90)*Math.PI/180;\n        const x0=CX+r*Math.cos(a0), y0=CY+r*Math.sin(a0);\n        const x1=CX+r*Math.cos(a1), y1=CY+r*Math.sin(a1);\n        g.appendChild(el('path',{d:`M ${CX} ${CY} L ${x0.toFixed(1)} ${y0.toFixed(1)} `\n          +`A ${r.toFixed(1)} ${r.toFixed(1)} 0 0 1 ${x1.toFixed(1)} ${y1.toFixed(1)} Z`,\n          fill:`color-mix(in srgb, ${col} ${ТОН[i]}%, transparent)`,\n          stroke:'var(--card-solid)','stroke-width':2}));\n      });\n    }\n    [0,1,2,3].forEach(i=>{const p=pt(i,5,labels);\n      g.appendChild(el('line',{x1:CX,y1:CY,x2:p[0],y2:p[1],stroke:'var(--line-2)','stroke-width':1}));});\n    if(labels){\n      const off=[[0,-10],[13,4],[0,17],[-13,4]];\n      AX.forEach((n,i)=>{const p=pt(i,5,labels);\n        const t=el('text',{x:p[0]+off[i][0],y:p[1]+off[i][1],class:'axis',\n          'text-anchor':i===1?'start':(i===3?'end':'middle')});\n        t.textContent=n; g.appendChild(t);});\n    }\n    return g;\n  };\n  var ящикКлюча=document.getElementById('rpt-rkey'); ящикКлюча.innerHTML='';\n  ящикКлюча.appendChild(radar(null,null,true));\n\n  const box=document.getElementById('rpt-nprof'), cards=[];\n  box.innerHTML='';\n  const cls=(d,on)=>'ncard2'+(d.vd==='no'?' slim':'')+(on?' on':'');\n  D.forEach((d,i)=>{\n\n    const card=document.createElement('div');\n    card.className=cls(d,false);\n    if(d.vd==='no'){\n      /* Разбор тот же и в том же объёме — меняется только вес: нет фигуры,\n         подложка тише. Прятать данные по отброшенной нише нельзя: решение\n         «не идём» проверяется по тем же сигналам, что и «идём». */\n      card.innerHTML=`<div><div class=\"nh\"><b>${d.n}</b></div>\n        <div class=\"tot\"><i>${d.t}</i><em>из 20 баллов</em></div>\n        <span class=\"kchip ${VD[d.vd][1]}\"><span class=\"d\"></span>${VD[d.vd][0]}</span>\n        ${d.why?`<div class=\"why2\"><b>Почему не идём.</b> ${d.why}</div>`:''}\n        <div class=\"sigrows\">${d.sig.map(([k,v])=>\n          `<div class=\"sigrow\"><span class=\"k2\">${k}</span><span class=\"v3\">${typeof v==='string'?v:v.h}</span></div>`).join('')}</div></div>`;\n    }else{\n      const шапка=document.createElement('div');\n      шапка.className='nhd';\n      left=document.createElement('div');\n      left.appendChild(radar(d.v,VD[d.vd][2],false));\n      const правая=document.createElement('div');\n      правая.innerHTML=`<div class=\"nh\"><b>${d.n}</b></div>\n        <div class=\"tot\"><i>${d.t}</i><em>из 20 баллов</em></div>\n        <span class=\"kchip ${VD[d.vd][1]}\"><span class=\"d\"></span>${VD[d.vd][0]}</span>`;\n      шапка.appendChild(left); шапка.appendChild(правая);\n      const тело=document.createElement('div');\n      тело.innerHTML=`<div class=\"sigrows\">${d.sig.map(([k,v])=>\n          `<div class=\"sigrow\"><span class=\"k2\">${k}</span><span class=\"v3\">${v}</span></div>`).join('')}</div>`;\n      card.appendChild(шапка); card.appendChild(тело);\n    }\n    card.addEventListener('click',()=>pick(i));\n    /* Кнопка «взять в работу» прямо в карточке: веером показываем только семь главных ниш, а решение может касаться любой (владелица 15.09). Своё состояние кнопка не хранит — она сообщает наружу имя ниши, а вид ей выставляет тот, кто знает, что уже в работе. */var left=null;var взять=document.createElement('button');взять.className='ntake';взять.type='button';взять.setAttribute('data-niche',d.n);взять.textContent='+ Взять в работу';взять.addEventListener('click',function(ev){ev.stopPropagation();document.dispatchEvent(new CustomEvent('ca-nishe',{detail:d.n}));});card.appendChild(взять);box.appendChild(card); cards.push(card);\n  });\n\n  const hint=document.getElementById('rpt-nhint');\n  let cur=-1;\n  function pick(i){\n    cur = (cur===i ? -1 : i);\n    bars.forEach((r,k)=>r.setAttribute('opacity', cur<0||cur===k ? '1' : '.32'));\n    cards.forEach((c,k)=>{ if(c) c.className=cls(D[k],cur===k); });\n    hint.textContent = cur<0 ? ''\n      : `Выбрана ниша «${D[cur].n}» — подсвечена ниже.`;\n    if(cur>=0 && cards[cur] && cards[cur].scrollIntoView){\n      try { cards[cur].scrollIntoView({behavior:'smooth',block:'center'}); } catch(e){}\n    }\n  }\n}",
+    "function renderGeoRows(D){\n  var box=document.getElementById('rpt-geo'); if(!box) return;\n  /* Объём и плотность — разные вопросы: где людей больше и где ищут чаще\n     в пересчёте на человека. Полоса показывает объём, число рядом —\n     плотность относительно среднего. */\n  var max=Math.max.apply(null,D.map(function(r){return r[1];}).concat([1]));\n  var чис=function(n){ return String(Math.round(n)).replace(/\\B(?=(\\d{3})+(?!\\d))/g,'\\u00A0'); };\n  box.innerHTML='<div class=\"th\"><span>Регион</span><span>Запросов в месяц</span>'\n    +'<span>Доля</span><span>Плотность</span><span>Что из этого следует</span></div>'\n    +D.map(function(r){\n      var доля=(r[1]/max*100).toFixed(1);\n      var густо=r[3]>=1.05, редко=r[3]<=0.95;\n      return '<div class=\"tr\"><span class=\"nm\">'+escText(r[0])+'</span>'\n        +'<span class=\"gvol\"><span class=\"rail\"><span class=\"b\" style=\"width:'+доля+'%\"></span></span>'\n        +'<span class=\"v\">'+чис(r[1])+'</span></span>'\n        +'<span>'+(r[2]!=null?r[2]+'%':'—')+'</span>'\n        +'<span class=\"'+(густо?'hi':(редко?'lo':''))+'\">'+(r[3]!=null?('×'+r[3].toFixed(2)):'—')+'</span>'\n        +'<span>'+escText(r[4]||'')+'</span></div>';\n    }).join('');\n}",
     "function renderSerp(D){\n  const box=document.getElementById('rpt-serp'); if(!box) return;\n  \n  box.innerHTML=D.map(([t,u,q,k,str])=>`<div class=\"s\">\n    <div class=\"t\">${L(esc(t),'https://'+u)}</div>\n    <div class=\"u\">${esc(u)}</div>\n    <div class=\"meta\"><span>найдено по: <b>${esc(q)}</b></span><span>·</span><span>${esc(k)}</span></div>\n    <div class=\"str\">${esc(str)}</div></div>`).join('');\n}",
     "function renderAudit(D){\n  const box=document.getElementById('rpt-aud'); if(!box) return;\n  /* Приводим к «публикаций в месяц», иначе «2–3 в неделю» и «1 в неделю»\n     несравнимы на глаз. Шкала общая на всех — в этом весь смысл. */\n  \n  const max=Math.max(...D.map(d=>d[2]));\n  box.innerHTML=D.map(([n,ch,per,lab,th,ok,better])=>`<div class=\"a\">\n    <div><div class=\"who\">${esc(n)}<span>${esc(ch)}</span></div>\n      <div class=\"freq\"><div class=\"rail\"><i style=\"width:${per/max*100}%\"></i></div>\n        <div class=\"lab\">${esc(lab)} · ${per}/мес</div></div></div>\n    <div><div class=\"cols\">\n      <div><h5>Что работает</h5><p>${esc(ok)}</p></div>\n      <div><h5>Как сделать лучше</h5><p>${esc(better)}</p></div>\n    </div><div class=\"themes\">Темы: ${esc(th)}</div></div></div>`).join('');\n}",
     "function renderGlue(D){\n  const box=document.getElementById('rpt-glue'); if(!box) return;\n  \n  box.innerHTML=D.map(([p,n,c])=>`<div class=\"gl${c?' cfm':''}\">\n    <span><b>${esc(p)}</b></span>\n    <span class=\"n\">${String(n).replace(/\\B(?=(\\d{3})+(?!\\d))/g,'\\u00A0')}</span>\n    <span class=\"t\">${c?'вы подтвердили':'из выдачи'}</span></div>`).join('');\n}",
