@@ -2822,7 +2822,10 @@ th{font-size:10px}
    Имена .nprof, .sigrow, .rkey-side объявлены в нескольких константах, и
    правка в ранней из них молча проигрывает поздней. Всё новое — здесь. */
 .nprof{display:grid;grid-template-columns:repeat(auto-fit,minmax(360px,1fr));gap:12px}
-.ncard2{grid-template-columns:120px minmax(0,1fr);gap:14px;padding:14px 16px}
+/* Фигура наверху карточки, текст под ней во всю ширину: сбоку она съедала
+   половину строки, и текст ломался в узкий столбец (владелица 16.09). */
+.ncard2{grid-template-columns:1fr;gap:10px;padding:14px 16px}
+.ncard2>div:first-child{display:flex;justify-content:center}
 .ncard2 .nh b{font-size:13.5px}
 .ncard2 .tot i{font-size:22px}
 .ncard2 .sigrow .v3{font-size:12px;line-height:1.45}
@@ -2836,12 +2839,6 @@ th{font-size:10px}
 .rkey-side>div:first-child{grid-row:1 / span 3}
 .rkey-side .rtext{max-width:none;font-size:12.5px}
 @media (max-width:760px){.rkey-side{grid-template-columns:1fr}.rkey-side>div:first-child{grid-row:auto}}
-/* Матрица приоритизации: колонки держатся, узкое окно прокручивает вбок. */
-.nmx{overflow-x:auto;border:1px solid var(--line);border-radius:16px;padding:4px 16px 8px}
-.nmx .th,.nmx .tr{display:grid;grid-template-columns:minmax(160px,1.6fr) repeat(4,64px) 66px 128px;gap:12px;align-items:center;min-width:700px}
-.nmx .th>span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.nmx .mxv,.nmx .mxt{text-align:center}
-.nmx .th>span:first-child{text-align:left}
 /* Сноска мельче основного текста и со звёздочкой: иначе пояснение сливается
    с данными (владелица 16.09). */
 .note{font-size:11.5px}
