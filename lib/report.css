@@ -2817,3 +2817,28 @@ th{font-size:10px}
 .tabs a.on .n,.cm-tabs a.on .n{color:var(--acc-ink)}
 @media (prefers-reduced-motion:reduce){.cm-btn,.cm-btn-pri,.tabs a,.cm-tabs a{transition:none}}
 @media print{.side,.no-print{display:none!important}.app{grid-template-columns:1fr}.card{break-inside:avoid}}
+
+/* ── Поздние правки: идут ПОСЛЕ всех остальных листов ────────────────────
+   Имена .nprof, .sigrow, .rkey-side объявлены в нескольких константах, и
+   правка в ранней из них молча проигрывает поздней. Всё новое — здесь. */
+.nprof{display:grid;grid-template-columns:repeat(auto-fit,minmax(460px,1fr));gap:12px}
+.ncard2 .sigrow{display:block;padding:8px 0;grid-template-columns:none}
+.ncard2 .sigrow .k2{display:block;margin-bottom:3px}
+.ncard2 .sigrow .v3{display:block;overflow-wrap:anywhere}
+/* Ключ «как читать»: фигура слева, пояснения справа. */
+.rkey-side{display:grid;grid-template-columns:150px minmax(0,1fr);gap:16px 20px;align-items:start;margin:0}
+.rkey-side>div:first-child{grid-row:1 / span 3}
+.rkey-side .rtext{max-width:none;font-size:12.5px}
+@media (max-width:760px){.rkey-side{grid-template-columns:1fr}.rkey-side>div:first-child{grid-row:auto}}
+/* Матрица приоритизации: колонки держатся, узкое окно прокручивает вбок. */
+.nmx{overflow-x:auto}
+.nmx .th,.nmx .tr{display:grid;grid-template-columns:minmax(150px,1.6fr) repeat(4,54px) 58px 124px;gap:10px;align-items:center;min-width:660px}
+/* Сноска мельче основного текста и со звёздочкой: иначе пояснение сливается
+   с данными (владелица 16.09). */
+.note{font-size:11.5px}
+.note:not(.confleg):not(.nhint)::before{content:"* ";color:var(--ink-3)}
+/* Полный список просмотренного — под своей кнопкой, а не простынёй. */
+.srcall{display:none}
+.srcall.on{display:flex}
+.srcall-btn{margin-top:10px;font-size:11.5px;color:var(--ink-2);background:none;border:0;padding:0;cursor:pointer;text-decoration:underline}
+

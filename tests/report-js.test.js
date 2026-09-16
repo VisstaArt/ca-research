@@ -129,4 +129,17 @@ check('сетка SWOT на две колонки',
       /\.swot\{display:grid;grid-template-columns:1fr 1fr/.test(CSS)
       && CSS.indexOf('grid-template-columns:74px 1fr 1fr')<0);
 
+
+// 8. Поздние правки должны стоять в листе ПОСЛЕДНИМИ: одноимённые правила
+// живут в нескольких константах, и правка в любой другой молча проигрывает
+// (владелица 16.09: «стили написаны, а на экране всё по-старому»).
+var меткаFIX = CSS.indexOf('Поздние правки');
+var последнийNprof = CSS.lastIndexOf('.nprof{');
+var последнийRkey = CSS.lastIndexOf('.rkey-side{');
+check('поздние правки идут после всех прочих листов',
+      меткаFIX > 0 && последнийNprof > меткаFIX && последнийRkey > меткаFIX);
+// Сноска должна отличаться от данных: мельче и со звёздочкой.
+check('сноска мельче основного текста и со звёздочкой',
+      /\.note\{font-size:11\.5px\}/.test(CSS) && /\.note[^{]*::before\{content:"\* "/.test(CSS));
+
 console.log(failed===0?'\nвсё сошлось':'\nпровалов: '+failed);
