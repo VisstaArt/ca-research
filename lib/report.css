@@ -2938,4 +2938,13 @@ th{font-size:10px}
 .poscard .posfin span{display:block;font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--ink-3);margin-bottom:6px}
 .poscard .posfin b{font-family:var(--serif);font-size:15px;font-weight:600;color:var(--ink);line-height:1.5}
 .poscard .posproof{margin-top:10px;font-size:11.5px;color:var(--ink-3);line-height:1.5}
+/* Панель разбора мягко проявляется при смене площадки. */
+.pinfo.pfade{animation:pfadein .28s ease}
+@keyframes pfadein{from{opacity:.35;transform:translateY(3px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.plist .pbar i{transition:none}.pinfo.pfade{animation:none}}
+/* Части строки в комплекте площадок. */
+.plist .pnum{font-size:13px;font-weight:700;color:var(--mid);font-variant-numeric:tabular-nums}
+.plist .pname{font-size:13px;font-weight:700;color:var(--ink);line-height:1.25;overflow-wrap:anywhere;min-width:0}
+.plist .ppct{font-size:12.5px;color:var(--ink-2);font-variant-numeric:tabular-nums;text-align:right;white-space:nowrap}
+.pinfo .pih{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:8px}
 
