@@ -9986,6 +9986,15 @@ function App() {
   // Прогон могла запустить соседняя вкладка платформы — это отдельная рамка со
   // своим состоянием. Тогда ход берём из общего хранилища.
   const чужойХод = useВнешнийХод(!!curMod);
+  // Прогон живёт в этой вкладке: обновление или закрытие обрывает его, а
+  // потраченные деньги не возвращаются. Предупреждаем, пока идёт работа
+  // (16.09: разведка оборвалась на середине, результат исчез).
+  React.useEffect(() => {
+    if (!curMod) return;
+    const стоп = (e) => { e.preventDefault(); e.returnValue = ''; return ''; };
+    window.addEventListener('beforeunload', стоп);
+    return () => window.removeEventListener('beforeunload', стоп);
+  }, [curMod]);
   const [exp, setExp] = React.useState({});
   // Human-in-the-loop: ручное редактирование результата модуля (бесплатно, без вызова модели)
   const [editKey, setEditKey] = React.useState(null);

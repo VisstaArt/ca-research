@@ -1,6 +1,6 @@
 // СОБРАНО АВТОМАТИЧЕСКИ из app.jsx — не править руками.
 // Правки вносить в app.jsx, затем: osascript -l JavaScript tools/build.js
-// отпечаток-исходника: 1a1db194070cf4dc
+// отпечаток-исходника: 0a9f0a61a09752a3
 // Функции контракта живут в lib/contract.js. Разбираем их сюда, чтобы весь
 // остальной код обращался к ним по прежним именам и не менялся.
 const{GLOBAL_MODS,isPerNiche,dropOrphans,nichesOf,resKey,splitMdRow,isMdSeparator,parseMdTables,buildModuleEntry,pickTable,pickColumn,withStableIds}=CAContract;// Название модуля берётся из MODULES — это конфиг ИНТЕРФЕЙСА, и сборщик
@@ -3054,7 +3054,10 @@ const[curMod,setCurMod]=React.useState(null);const шёлПрогон=React.useR
 // тот объявлен ниже, а хук обязан стоять выше всех ранних возвратов.
 try{if(window.parent&&window.parent!==window){window.parent.postMessage({ca:'прогон-готов'},'*');}}catch(e){}},[curMod]);const[curNiche,setCurNiche]=React.useState('');const[curStep,setCurStep]=React.useState('');const[curStepIdx,setCurStepIdx]=React.useState(0);// Прогон могла запустить соседняя вкладка платформы — это отдельная рамка со
 // своим состоянием. Тогда ход берём из общего хранилища.
-const чужойХод=useВнешнийХод(!!curMod);const[exp,setExp]=React.useState({});// Human-in-the-loop: ручное редактирование результата модуля (бесплатно, без вызова модели)
+const чужойХод=useВнешнийХод(!!curMod);// Прогон живёт в этой вкладке: обновление или закрытие обрывает его, а
+// потраченные деньги не возвращаются. Предупреждаем, пока идёт работа
+// (16.09: разведка оборвалась на середине, результат исчез).
+React.useEffect(()=>{if(!curMod)return;const стоп=e=>{e.preventDefault();e.returnValue='';return'';};window.addEventListener('beforeunload',стоп);return()=>window.removeEventListener('beforeunload',стоп);},[curMod]);const[exp,setExp]=React.useState({});// Human-in-the-loop: ручное редактирование результата модуля (бесплатно, без вызова модели)
 const[editKey,setEditKey]=React.useState(null);const[editDraft,setEditDraft]=React.useState('');// Re-run с замечанием: панель у ↺ вместо мгновенной слепой перегенерации
 const[regenKey,setRegenKey]=React.useState(null);const[regenNote,setRegenNote]=React.useState('');// Перегенерация по умолчанию трогает ТОЛЬКО этот модуль. Раньше ↺ на M3
 // запускал всю цепочку до M7, и проверка одной правки стоила как полный
