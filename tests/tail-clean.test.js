@@ -5,7 +5,9 @@ ObjC.import('Foundation');
 function readFile(p){return $.NSString.stringWithContentsOfFileEncodingError($(p),$.NSUTF8StringEncoding,null).js;}
 var ROOT=$.NSFileManager.defaultManager.currentDirectoryPath.js;
 var SRC=readFile(ROOT+'/app.jsx');
-['почиститьХвост','убратьПустыеПодписи','собратьВыводы','собратьШаги','собратьСловарь','строкаРасшифровки','всеРасшифровки','найтиБлокАббревиатур','поТексту','внеСсылок','escHtml','подсказкиТерминов','подсказкиВКуске'].forEach(function(имя){
+(function(){ var i=SRC.indexOf('const СЛУЖЕБНАЯ_МЕТКА');
+  globalThis.eval(SRC.slice(i, SRC.indexOf('\n', i)).replace('const ','var ')); })();
+['безСлужебныхМеток','почиститьХвост','убратьПустыеПодписи','собратьВыводы','собратьШаги','собратьСловарь','строкаРасшифровки','всеРасшифровки','найтиБлокАббревиатур','поТексту','внеСсылок','escHtml','подсказкиТерминов','подсказкиВКуске'].forEach(function(имя){
   var i=SRC.indexOf('\nfunction '+имя+'('), j=SRC.indexOf('\n}\n', i);
   globalThis.eval(SRC.slice(i+1, j+3));
 });

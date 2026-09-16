@@ -38,6 +38,9 @@ globalThis.MODULES=MODULES; globalThis.REPORT_CSS=REPORT_CSS;
 globalThis.dropOrphans=C.dropOrphans;  // живёт в контракте, не в app.jsx
 eval(grab('escHtml')); globalThis.escHtml=escHtml;
 eval(grab('safeJson')); globalThis.safeJson=safeJson;
+var iМ=SRC.indexOf('const СЛУЖЕБНАЯ_МЕТКА');
+eval(SRC.slice(iМ, SRC.indexOf('\n', iМ)).replace('const ','globalThis.'));
+eval(grab('безСлужебныхМеток')); globalThis.безСлужебныхМеток=безСлужебныхМеток;
 // Текстовые проходы над готовой разметкой (человеческие имена блоков, русские
 // метки, живые ссылки, сноски к источникам) живут ВЫШЕ renderResearchHTML и в
 // его кусок не попадают — подтягиваем отдельно, иначе разбор падает на них.
