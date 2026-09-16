@@ -2950,15 +2950,51 @@ th{font-size:10px}
 .pinfo .pih{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:8px}
 
 /* Значки площадок — один язык на весь отчёт: контур цветом чернил, без
-   заливки и без цвета бренда (владелица 17.09). */
-.pico{width:15px;height:15px;fill:none;stroke:var(--ink-2);stroke-width:1.6;
-  stroke-linecap:round;stroke-linejoin:round;flex:0 0 auto;vertical-align:-2px;margin-right:7px}
-.ci .pico{width:19px;height:19px;margin:0}
-.plist .pname{display:flex;align-items:center;min-width:0}
-.pinfo .pih b{display:flex;align-items:center;gap:0;min-width:0}
+   заливки и без цвета бренда (владелица 17.09). В листе отчёта есть общее
+   svg{display:block} — из-за него значок вставал НАД именем канала, поэтому
+   здесь он явно строчный. */
+.pico{display:inline-block;width:15px;height:15px;fill:none;stroke:var(--ink-2);
+  stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;flex:0 0 auto;
+  vertical-align:-3px;margin-right:7px}
+.ci .pico{display:block;width:19px;height:19px;margin:0}
+.chncmp .nm .pico,.aud .a .who .pico{vertical-align:-3px}
+/* ── «Где нам продвигаться»: слева доли усилий, справа разбор ──────────
+   Свой префикс chp-: имена .prow/.pname уже заняты другой таблицей отчёта,
+   и её сетка ломала этот блок (владелица 17.09). */
+.chpviz{display:grid;grid-template-columns:minmax(260px,1fr) minmax(0,1.25fr);
+  gap:18px;align-items:start}
+.chplist{display:flex;flex-direction:column;gap:2px;min-width:0}
+.chprow{display:grid;grid-template-columns:22px minmax(110px,auto) minmax(60px,1fr) 46px;
+  gap:12px;align-items:center;width:100%;padding:9px 10px;border:0;border-radius:10px;
+  background:none;text-align:left;cursor:pointer;font:inherit;color:inherit;
+  transition:background .18s ease}
+.chprow:hover,.chprow.on{background:color-mix(in srgb, var(--ink) 4%, transparent)}
+.chprow.on{box-shadow:inset 2px 0 0 var(--mid)}
+.chpnum{font-size:12.5px;font-weight:700;color:var(--mid);font-variant-numeric:tabular-nums}
+.chpname{display:flex;align-items:center;font-size:13px;font-weight:700;color:var(--ink);
+  line-height:1.25;min-width:0;overflow-wrap:anywhere}
+.chpbar{display:block;height:14px;background:var(--line-2);overflow:hidden}
+.chpbar i{display:block;height:14px;background:var(--mid);transition:width .7s cubic-bezier(.2,.8,.2,1)}
+.chppct{font-size:12.5px;color:var(--ink-2);font-variant-numeric:tabular-nums;
+  text-align:right;white-space:nowrap}
+.chpinfo{border:1px solid var(--line);border-radius:16px;padding:16px 18px;
+  background:var(--card);min-width:0}
+.chpih{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px}
+.chpih b{display:inline-flex;align-items:center;font-size:15px;color:var(--ink);min-width:0}
+.chpwhy{margin:0 0 10px;font-size:13px;line-height:1.55;color:var(--ink-2)}
+.chpf{display:grid;grid-template-columns:132px minmax(0,1fr);gap:4px 14px;
+  padding:8px 0;border-top:1px solid var(--line-2);font-size:12.5px;line-height:1.5}
+.chpf span{font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;
+  color:var(--ink-3);padding-top:2px}
+.chpf b{font-weight:400;color:var(--ink-2);overflow-wrap:anywhere}
+.chpinfo.chpfade{animation:chpfadein .28s ease}
+@keyframes chpfadein{from{opacity:.35;transform:translateY(3px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.chpbar i{transition:none}.chpinfo.chpfade{animation:none}}
+@media (max-width:820px){.chpviz{grid-template-columns:1fr}
+  .chpf{grid-template-columns:1fr}}
 /* Куда не идём: та же решётка, что у прочих таблиц блока. */
 .skipl{display:block}
-.skipl .th,.skipl .tr{display:grid;grid-template-columns:minmax(140px,1fr) 110px minmax(0,1.6fr) minmax(0,1.3fr);
+.skipl .th,.skipl .tr{display:grid;grid-template-columns:minmax(130px,1fr) 96px minmax(0,1.5fr) minmax(0,1.2fr) 128px;
   gap:10px 14px;align-items:start;padding:9px 2px}
 .skipl .th{font-size:10.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
   color:var(--ink-3);border-bottom:1px solid var(--line)}
@@ -2967,4 +3003,10 @@ th{font-size:10px}
 .skipl .nm{display:flex;align-items:center;font-weight:600}
 @media (max-width:760px){.skipl .th{display:none}
   .skipl .tr{grid-template-columns:1fr;gap:4px}}
+/* Решение владельца по площадке: модуль советует, но берёт в работу человек. */
+.pltake{font:inherit;font-size:11.5px;font-weight:600;color:var(--ink-2);background:none;
+  border:1px solid var(--line);border-radius:999px;padding:5px 11px;cursor:pointer;
+  white-space:nowrap;transition:background .18s ease,color .18s ease,border-color .18s ease}
+.pltake:hover{border-color:var(--mid);color:var(--ink)}
+.pltake.on{background:color-mix(in srgb, var(--mid) 16%, transparent);border-color:var(--mid);color:var(--ink)}
 

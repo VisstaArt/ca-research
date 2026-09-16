@@ -130,6 +130,18 @@ ok('причина отказа передана', /крупнейший — 400
 ok('«позже» отмечено отдельно от «не идём»',
    отказы.map(function(r){return r[1];}).sort().join(','), 'не идём,позже');
 ok('видно, что пошло бы туда', /короткие разборы ошибок/.test(JSON.stringify(отказы)), true);
+// Решение по площадке принимает человек: модуль советует, кнопка «беру в
+// работу» есть у каждой строки отказов (владелица 17.09).
+var рисСкип=blockScriptsM3.filter(function(x){return x.indexOf('renderChannelSkip(')===0;})[0];
+ok('блок отказов рисуется скриптом, без сырой таблицы', !!рисСкип, true);
+var исхПлан=SRC.slice(SRC.indexOf('function renderChannelSkip'), SRC.indexOf('function renderChannelSkip')+1400);
+ok('у строки есть кнопка решения', /class=\\"pltake\\"/.test(исхПлан), true);
+ok('кнопка знает свою площадку', /data-platform/.test(исхПлан), true);
+// Классы блока «Где нам продвигаться» — со своим префиксом: имена .prow и
+// .pname заняты другой таблицей, её сетка ломала вид (владелица 17.09).
+var исхПлан2=SRC.slice(SRC.indexOf('function renderChannelPlan'), SRC.indexOf('function renderChannelPlan')+2000);
+ok('план площадок не берёт чужой класс .prow', /chprow/.test(исхПлан2), true);
+ok('и чужой .pname тоже', /class=.{0,3}pname/.test(исхПлан2), false);
 
 // Каналы заказчика не попадают в «каналы конкурентов»: у них свой блок ниже
 // (владелица 16.09).
