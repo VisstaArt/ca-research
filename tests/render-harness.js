@@ -41,6 +41,7 @@ eval(grab('safeJson')); globalThis.safeJson=safeJson;
 var iМ=SRC.indexOf('const СЛУЖЕБНАЯ_МЕТКА');
 eval(SRC.slice(iМ, SRC.indexOf('\n', iМ)).replace('const ','globalThis.'));
 eval(grab('безСлужебныхМеток')); globalThis.безСлужебныхМеток=безСлужебныхМеток;
+eval(grab('опознатьПлощадку')); globalThis.опознатьПлощадку=опознатьПлощадку;
 // Текстовые проходы над готовой разметкой (человеческие имена блоков, русские
 // метки, живые ссылки, сноски к источникам) живут ВЫШЕ renderResearchHTML и в
 // его кусок не попадают — подтягиваем отдельно, иначе разбор падает на них.
