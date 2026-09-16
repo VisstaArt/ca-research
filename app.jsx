@@ -2586,15 +2586,28 @@ const СХЕМА_M3 = {
         } } },
     архетип: {
       type: 'object', additionalProperties: false,
-      required: ['основной', 'почему', 'занят_соперниками', 'риск', 'проявления'],
+      required: ['варианты'],
       properties: {
-        основной: строка(''), почему: строка(''),
-        занят_соперниками: строка('Имена конкурентов и их архетипы'),
-        риск: строка(''),
-        проявления: { type: 'array', items: { type: 'object', additionalProperties: false,
-          required: ['элемент', 'как_проявляется', 'пример', 'чего_избегаем'],
-          properties: { элемент: строка(''), как_проявляется: строка(''),
-                        пример: строка('Живая фраза в кавычках'), чего_избегаем: строка('') } } },
+        // Не решение, а предложение: архетип задаёт тон ВСЕХ будущих текстов,
+        // и менять его при каждом прогоне нельзя. Модель предлагает два-три
+        // варианта с обоснованием, выбирает человек, выбор живёт в брифе
+        // (решение владелицы 16.09).
+        варианты: {
+          type: 'array',
+          description: '2-3 варианта. Если в брифе архетип уже выбран — ровно один, тот самый',
+          items: { type: 'object', additionalProperties: false,
+            required: ['имя', 'почему', 'занят_соперниками', 'риск', 'проявления'],
+            properties: {
+              имя: строка('Название архетипа: Заботливый, Мудрец, Творец…'),
+              почему: строка('Почему он подходит именно нам — от свободной зоны и от продукта'),
+              занят_соперниками: строка('Кто из конкурентов занял этот характер и чем это видно'),
+              риск: строка('Чем опасен именно этот выбор'),
+              проявления: { type: 'array', items: { type: 'object', additionalProperties: false,
+                required: ['элемент', 'как_проявляется', 'пример', 'чего_избегаем'],
+                properties: { элемент: строка(''), как_проявляется: строка(''),
+                              пример: строка('Живая фраза в кавычках'), чего_избегаем: строка('') } } },
+            } },
+        },
       },
     },
     итог: {
@@ -2689,16 +2702,32 @@ function разметкаM3(д, brief) {
     блок('Позиционирование по сегментам', '<div class="rules" id="rpt-pos3"></div>');
   }
 
-  const а = д.архетип || {};
-  if (непусто(а.основной)) {
-    blockScriptsM3.push('renderArchetype(' + safeJson([[
-      а.основной, 'основной', а.почему || '', а.занят_соперниками || '', а.риск || '' ]]) + ');');
+  const вариантыА = ((д.архетип || {}).варианты || []).filter(в => в && непусто(в.имя));
+  if (вариантыА.length) {
+    const выбран = brief && String(brief.archetype || '').trim();
+    const этотВыбран = в => выбран && в.имя.toLowerCase() === выбран.toLowerCase();
+    blockScriptsM3.push('renderArchetype(' + safeJson(вариантыА.map(в => [
+      в.имя, этотВыбран(в) ? 'выбран' : (выбран ? 'вариант' : 'предложение'),
+      в.почему || '', в.занят_соперниками || '', в.риск || '',
+      // Кнопку рисуем только когда выбор ещё не сделан или это другой вариант.
+      этотВыбран(в) ? '' : в.имя,
+    ])) + ');');
     let тело = '<div class="rules bet" id="rpt-arch"></div>';
-    if ((а.проявления || []).length) {
-      blockScriptsM3.push('renderManifest(' + safeJson(а.проявления.map(п => [
+    // Проявления показываем у выбранного, а если выбора нет — у первого:
+    // иначе три набора подряд читаются как три разных бренда.
+    const показать = вариантыА.find(этотВыбран) || вариантыА[0];
+    if ((показать.проявления || []).length) {
+      blockScriptsM3.push('renderManifest(' + safeJson(показать.проявления.map(п => [
         п.элемент, п.как_проявляется, п.пример, п.чего_избегаем])) + ');');
       тело += '<div class="rules" id="rpt-manif"></div>';
     }
+    тело += выбран
+      ? '<p class="note">Архетип выбран и записан в бриф: <b>' + esc(выбран) + '</b>. '
+        + 'Все модули и контент берут характер речи отсюда — при следующем прогоне он '
+        + 'не поменяется. Чтобы сменить, нажмите «Выбрать» у другого варианта.</p>'
+      : '<p class="note">Архетип задаёт тон всех будущих текстов, поэтому выбирает его '
+        + 'человек, а не модель: выберите вариант, и он закрепится в брифе. Пока выбора '
+        + 'нет, каждый новый прогон будет предлагать свой — и бренд поплывёт.</p>';
     блок('Архетип бренда', тело);
   }
 
@@ -2742,6 +2771,7 @@ function buildSystem(brief, lang, модуль) {
     if(k==='cases') return '- Cases and proof (verbatim from owner — use as is, never invent): '+v;
     if(k==='guarantees') return '- Guarantees the owner really gives (verbatim — never invent): '+v;
     if(k==='limits') return '- Limits: who it is not for, what the product does not do (verbatim): '+v;
+    if(k==='archetype') return '- Brand archetype ALREADY CHOSEN by the owner — use it, do not propose alternatives: '+v;
     if(k==='services') return Array.isArray(v)&&v.length ? '- Services offered (from site): '+v.join('; ') : '';
     if(k==='selectedServices') return Array.isArray(v)&&v.length ? '- Services SELECTED for research: '+v.join('; ') : '';
     if(k==='selectedNiche') return '- SELECTED NICHE (chosen at M1.2 stop-point): '+v;
@@ -3148,6 +3178,9 @@ Format (таблица 2 — главное обещание):
 BLOCK 18B — Архетип бренда (18B_Brand_Archetype)
 ═══════════════════════════════════════════════
 Task: Определить характер речи бренда — кто говорит с аудиторией. Это НЕ архетипы персон: там кто покупает, здесь кто продаёт. Блок задаёт тон всем будущим текстам.
+
+АРХЕТИП ВЫБИРАЕТ ЧЕЛОВЕК, А НЕ ТЫ. Предложи 2–3 варианта с обоснованием: какая зона свободна, кто её занял у конкурентов и чем это видно, чем рискуем именно с этим выбором. Не объявляй один «основным» — решение принимает владелец, и оно закрепляется в брифе.
+ЕСЛИ В БРИФЕ АРХЕТИП УЖЕ ЗАДАН (поле archetype) — верни РОВНО ОДИН вариант, тот самый, и опиши его проявления. Не предлагай замену и не пересматривай выбор: на архетипе стоит тон всех текстов, и смена при каждом прогоне уводит бренд.
 
 Format (таблица 1 — выбор):
 | Роль | Архетип | Почему подходит нам | Какой архетип занят соперниками | Чем рискуем | Источники [n] |
@@ -5321,7 +5354,7 @@ function renderResearchHTML(content, opts) {
     "function renderJtbd(D){\n  var box=document.getElementById('rpt-jtbd'); if(!box) return;\n  /* Фраза собрана целиком: связки «когда / я хочу / чтобы» приглушены, чтобы\n     читалось предложение, а не заполненная анкета. */\n  var lead=function(w){return '<i>'+w+'</i> ';};\n  box.innerHTML=D.map(function(r,i){\n    var seg=r[0], when=r[1], want=r[2], so=r[3], win=r[4], gap=r[5], fear=r[6];\n    var foot=[win?'Успех: '+win:'', gap?'Пробел: '+gap:'', fear?'Страх: '+fear:''].filter(Boolean).join(' · ');\n    return '<div class=\"rule-card\"><b>'+(i+1)+'</b>'\n      +(seg?'<span class=\"eb\">'+escText(seg)+'</span>':'')\n      +'<span class=\"q\">'+(when?lead('Когда')+escText(when)+', ':'')\n        +(want?lead('я хочу')+escText(want):'')\n        +(so?', '+lead('чтобы')+escText(so):'')+'</span>'\n      +(foot?'<span class=\"ft\">'+escText(foot)+'</span>':'')\n      +'</div>';\n  }).join('');\n}",
     "function renderTactics(D){\n  var box=document.getElementById('rpt-tactics'); if(!box) return;\n  /* Риск стоит прямо под примером формулировки, а не в дальней колонке:\n     его читают вместе с ней или не читают вовсе. */\n  box.innerHTML=D.map(function(r,i){\n    return '<div class=\"rule-card\"><b>'+(i+1)+'</b>'\n      +(r[1]?'<span class=\"eb\">'+escText(r[1])+'</span>':'')\n      +'<span class=\"nm\">'+escText(r[0])+'</span>'\n      +(r[2]?'<span class=\"q\">«'+escText(r[2])+'»</span>':'')\n      +(r[3]&&r[3]!=='—'?'<span class=\"warnline\">Риск: '+escText(r[3])+'</span>':'')\n      +(r[4]?'<span class=\"ft\">'+escText(r[4])+'</span>':'')\n      +'</div>';\n  }).join('');\n}",
     "function renderPositioning(D){\n  var box=document.getElementById('rpt-pos3'); if(!box) return;\n  box.innerHTML=D.map(function(r,i){\n    return '<div class=\"rule-card\"><b>'+(i+1)+'</b>'\n      +'<span class=\"eb\">'+escText(r[0])+'</span>'\n      +'<span class=\"nm\">'+escText(r[1])+'</span>'\n      +(r[2]?'<span>'+escText(r[2])+'</span>':'')\n      +(r[3]?'<span class=\"q\">'+escText(r[3])+'</span>':'')\n      +(r[4]?'<span class=\"ft\">'+escText(r[4])+'</span>':'')\n      +'</div>';\n  }).join('');\n}",
-    "function renderArchetype(D){\n  var box=document.getElementById('rpt-arch'); if(!box) return;\n  /* Карточки равной ширины. Широкая первая и узкая вторая читались как\n     сбой вёрстки: владелица 15.09 — «один такой большой на всю ширину,\n     снизу другой маленький, непонятно». Роль и так подписана сверху\n     («основной» / «поддерживающий»), размером её дублировать незачем. */\n  box.innerHTML=D.map(function(r,i){\n    var подпись=function(п,в){ return в?'<span class=\"ft\"><b>'+п+':</b> '+escText(в)+'</span>':''; };\n    var foot=подпись('У соперников занято',r[3])+подпись('Рискуем',r[4]);\n    return '<div class=\"rule-card\"><b>'+(i+1)+'</b>'\n      +(r[1]?'<span class=\"eb\">'+escText(r[1])+'</span>':'')\n      +'<span class=\"nm\">'+escText(r[0])+'</span>'\n      +(r[2]?'<span>'+escText(r[2])+'</span>':'')\n      +foot\n      +'</div>';\n  }).join('');\n}",
+    "function renderArchetype(D){\n  var box=document.getElementById('rpt-arch'); if(!box) return;\n  /* Карточки равной ширины. Широкая первая и узкая вторая читались как\n     сбой вёрстки: владелица 15.09 — «один такой большой на всю ширину,\n     снизу другой маленький, непонятно». Роль и так подписана сверху\n     («основной» / «поддерживающий»), размером её дублировать незачем. */\n  box.innerHTML=D.map(function(r,i){\n    var подпись=function(п,в){ return в?'<span class=\"ft\"><b>'+п+':</b> '+escText(в)+'</span>':''; };\n    var foot=подпись('У соперников занято',r[3])+подпись('Рискуем',r[4]);\n    return '<div class=\"rule-card\"><b>'+(i+1)+'</b>'\n      +(r[1]?'<span class=\"eb\">'+escText(r[1])+'</span>':'')\n      +'<span class=\"nm\">'+escText(r[0])+'</span>'\n      +(r[2]?'<span>'+escText(r[2])+'</span>':'')\n      +foot\n      +(r[5]?'<button type=\"button\" class=\"kbtn archpick\" data-arch=\"'+escText(r[5])+'\">'\n        +'Выбрать этот архетип</button>':'')\n      +'</div>';\n  }).join('');\n}",
     "function renderIntent(D){\n  var box=document.getElementById('rpt-intent'); if(!box) return;\n  box.innerHTML='<div class=\"th\"><span>Кластер и запросы</span><span>Что писать</span>'\n    +'<span>Чем подкрепить</span></div>'\n    +D.map(function(r){\n      return '<div class=\"tr\">'\n        +'<div><span class=\"nm\">'+escText(r[0])+'</span>'\n          +(r[1]?'<span class=\"q\">'+escText(r[1])+'</span>':'')\n          +(r[2]?'<span class=\"tag\">'+escText(r[2])+'</span>':'')+'</div>'\n        +'<div>'+escText(r[3]||'')+'</div>'\n        +'<div>'+escText(r[4]||'')+'</div>'\n      +'</div>';\n    }).join('');\n}",
     "function renderCriteria(D){\n  var box=document.getElementById('rpt-crit'); if(!box) return;\n  box.innerHTML='<div class=\"th\"><span>Критерий</span><span>Чем подтверждаем</span>'\n    +'<span>Где показываем</span></div>'\n    +D.map(function(r){\n      return '<div class=\"tr\">'\n        +'<div><span class=\"nm\">'+escText(r[0])+'</span>'\n          +(r[1]?'<span class=\"tag\">'+escText(r[1])+'</span>':'')\n          +(r[2]?'<span class=\"q\">'+escText(r[2])+'</span>':'')+'</div>'\n        +'<div>'+escText(r[3]||'')+'</div>'\n        +'<div>'+escText(r[4]||'')+'</div>'\n      +'</div>';\n    }).join('');\n}",
     "function renderWorkbench(D){\n  var box=document.getElementById('rpt-wb'); if(!box) return;\n  box.innerHTML=D.map(function(r,i){\n    var hooks=(r[1]||[]).map(function(h){return '<li>«'+escText(h)+'»</li>';}).join('');\n    var line=[r[2]?'Боль: '+r[2]:'', r[3]?'Результат: '+r[3]:''].filter(Boolean).join(' · ');\n    var foot=[r[5]?'Доказательства: '+r[5]:'', r[6]].filter(Boolean).join(' · ');\n    return '<div class=\"rule-card\"><b>'+(i+1)+'</b>'\n      +'<span class=\"eb\">'+escText(r[0]||('оффер '+(i+1)))+'</span>'\n      +(hooks?'<ul class=\"hooklist\">'+hooks+'</ul>':'')\n      +(line?'<span>'+escText(line)+'</span>':'')\n      +(r[4]?'<span>'+escText(r[4])+'</span>':'')\n      +(foot?'<span class=\"ft\">'+escText(foot)+'</span>':'')\n      +'</div>';\n  }).join('');\n}",
@@ -8494,10 +8527,11 @@ function injectBlockStyles() {
 // (renderResearchHTML) — до 11.09.2026 сайт показывал голые markdown-таблицы,
 // потому что весь согласованный вид жил внутри функции отчёта. Владелица:
 // «я думала, это будет на сайте, а не только в выгрузке».
-function ResearchView({ content, строгое, ourName, ourPrice, siteUrl, выбранные, наВыбор }) {
+function ResearchView({ content, строгое, ourName, ourPrice, siteUrl, архетип, наАрхетип, выбранные, наВыбор }) {
   // Имя и ценовой слой заказчика нужны разметке строгого пути: модель себя в
   // список конкурентов не вносит, а карта без «нас» бесполезна.
-  const брифДляВида = { name: ourName || '', priceLayer: ourPrice || '', siteUrl: siteUrl || '' };
+  const брифДляВида = { name: ourName || '', priceLayer: ourPrice || '',
+                        siteUrl: siteUrl || '', archetype: архетип || '' };
   const ref = React.useRef(null);
   // Итог модуля вырезается и встаёт карточкой наверх — ровно как в выгрузке.
   // Без этого на сайте раздел «ИТОГ МОДУЛЯ» лежал сырым текстом в хвосте,
@@ -8528,7 +8562,7 @@ function ResearchView({ content, строгое, ourName, ourPrice, siteUrl, в�
     const r = renderResearchHTML(почиститьХвост(cut.body, !!свод), { ourName, ourPrice, словарь });
     const итог = оформитьТекст(renderModuleSummary(свод), r.источники, словарь);
     return { ...r, html: итог + r.html };
-  }, [content, строгое, ourName, ourPrice, siteUrl]);
+  }, [content, строгое, ourName, ourPrice, siteUrl, архетип]);
   React.useEffect(() => { injectBlockStyles(); }, []);
   React.useEffect(() => {
     if (!ref.current || !out.scripts.length) return;
@@ -8568,6 +8602,19 @@ function ResearchView({ content, строгое, ourName, ourPrice, siteUrl, в�
   // состояния не знает — она лишь сообщает имя ниши. Слушаем это сообщение и
   // выставляем вид кнопок по тому, что реально в работе. Владелица 15.09:
   // «веером показываем семь, а человек может захотеть больше».
+  // Выбор архетипа: кнопку рисует скрипт, о выборе он сообщает наверх.
+  React.useEffect(() => {
+    if (!ref.current || !наАрхетип) return;
+    const узел = ref.current;
+    const клик = соб => {
+      const к = соб.target.closest && соб.target.closest('.archpick');
+      if (!к) return;
+      соб.preventDefault();
+      наАрхетип(к.getAttribute('data-arch') || '');
+    };
+    узел.addEventListener('click', клик);
+    return () => узел.removeEventListener('click', клик);
+  }, [out, наАрхетип]);
   React.useEffect(() => {
     if (!наВыбор) return;
     const слушатель = e => наВыбор(e.detail);
@@ -8947,7 +8994,14 @@ function App() {
   }, [unlocked]);
   const [proj, setProj] = React.useState(null);
 
-  const empty = { siteUrl:'', name:'', niche:'', geoCompany:'', geoMarket:'', format:'', audience:'', result:'', price:'', competitors:'', extra:'', currentRevenue:'', currentClients:'', currentAvgCheck:'', targetSegment:'', priceLayer:'', services:[], selectedServices:[], selectedNiche:'', nicheCandidates:'', socials:'', brandColors:'', brandFonts:'', brandLogo:'' };
+  const empty = { siteUrl:'', name:'', niche:'', geoCompany:'', geoMarket:'', format:'', audience:'', result:'', price:'', competitors:'', extra:'', currentRevenue:'', currentClients:'', currentAvgCheck:'', targetSegment:'', priceLayer:'', services:[], selectedServices:[], selectedNiche:'', nicheCandidates:'', socials:'', brandColors:'', brandFonts:'', brandLogo:'',
+    // Обязательства перед покупателем: поля в форме появились 15.09, а сюда я
+    // их добавить забыл — они не сохранялись и терялись при открытии проекта.
+    cases:'', guarantees:'', limits:'',
+    // Характер речи бренда. Выбирается человеком ОДИН раз по предложению из
+    // модуля «Конкуренты»: на нём стоит тон всех будущих текстов, и менять его
+    // при каждом прогоне значит уводить бренд (владелица 16.09).
+    archetype:'' };
   const [brief, setBrief] = React.useState(empty);
   const [lang, setLang] = React.useState('Russian');
   // Модель и ключ клиента — состояние настройки прогона. Ключ сюда НЕ
@@ -11188,6 +11242,14 @@ function App() {
                         графиков об одном рядом — разнобой, не богатство. */}
                     <ResearchView content={r.content} строгое={r.строгое} ourName={(proj&&proj.brief&&proj.brief.name)||''}
                       siteUrl={(proj&&proj.brief&&proj.brief.siteUrl)||''}
+                      архетип={brief.archetype||''}
+                      наАрхетип={имя=>{
+                        if (!имя) return;
+                        const b = { ...brief, archetype: имя };
+                        setBrief(b);
+                        const upd = { ...proj, brief: b, updatedAt: new Date().toISOString() };
+                        setProj(upd); sv(upd);
+                      }}
                       ourPrice={(proj&&proj.brief&&proj.brief.priceLayer)||''}/>
                   </>)}
                 </div>
