@@ -12392,6 +12392,7 @@ function App() {
             ['Ниши', brief.selectedNiche],
             ['Модулей готово', doneCount ? String(doneCount) : ''],
             ['Потрачено', (() => { const c = потраченоЦентов(); return c ? деньгами(c) : ''; })()],
+            ['Строгий формат', Object.keys(СХЕМЫ).sort().join(', ')],
           ]}
           lang={lang}/>
       ) : (
@@ -12557,6 +12558,12 @@ function App() {
                     <span style={{fontSize:10,marginRight:8,color:'var(--acc-quiet-ink)',fontWeight:700}}
                       title="Модуль собран по строгой схеме: форма блоков задана нами, модель на неё не влияет">
                       по схеме
+                    </span>
+                  )}
+                  {!r.строгое && !r.сбойСхемы && СХЕМЫ[r.id] && (
+                    <span style={{fontSize:10,marginRight:8,color:'var(--ink-3)'}}
+                      title="Этот модуль умеет строгую схему, но нынешний результат собран по-старому. Перезапустите его, чтобы получить новый вид">
+                      собран по-старому
                     </span>
                   )}
                   {r.сбойСхемы && (
