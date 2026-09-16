@@ -177,8 +177,29 @@ globalThis.fetch=function(u){
     ок('дата сохранена', п[0].дата==='2026-09-01', п[0].дата);
     return материалыКаналовКонкурентов([{url:'https://t.me/envybox',конкурент:'Envybox'}]);
   }).then(function(в){
-    ок('сборка по всем каналам работает', в.length===2, String(в.length));
-    console.log(f3?('ПРОВАЛЕНО(посты с каналов): '+f3):'  контент снят с каналов конкурентов');
+    ок('сборка по всем каналам работает', в.посты.length===2, String(в.посты.length));
+    // Дзен: страница канала закрыта входом, но служебная выгрузка ленты
+    // открыта — оттуда темы и даты, просмотров там нет (проверено 17.09).
+    eval(взять('постыДзен'));
+    var дзенОтвет={items:[
+      {title:'Пять ошибок в попапах',text:'Разбираем на примерах',link:'https://dzen.ru/a/abc?from=channel',
+       publication_date:'1789601708',timeToReadSeconds:'180',socialInfo:{commentCount:4}},
+      {title:'',text:'пусто'}]};
+    var прежний4=globalThis.fetch;
+    globalThis.fetch=function(u){
+      var адрес=decodeURIComponent(String(u).split('url=')[1]||'');
+      if (адрес.indexOf('dzen.ru/api/v3/launcher/export')<0) return прежний4(u);
+      return Promise.resolve({ok:true,json:function(){return Promise.resolve(дзенОтвет);}});
+    };
+    постыДзен('https://dzen.ru/envybox','Envybox').then(function(д){
+      ок('публикации Дзена сняты', д.length===1, String(д.length));
+      ок('пустые заголовки отброшены', д[0].заголовок==='Пять ошибок в попапах', д[0].заголовок);
+      ок('просмотров у Дзена нет — и мы их не выдумываем', д[0].просмотры===null, String(д[0].просмотры));
+      ок('комментарии сняты', д[0].комментарии===4, String(д[0].комментарии));
+      ок('время чтения в минутах', д[0].минут_чтения===3, String(д[0].минут_чтения));
+      ок('хвост ссылки отрезан', д[0].url==='https://dzen.ru/a/abc', д[0].url);
+      console.log(f3?('ПРОВАЛЕНО(посты с каналов): '+f3):'  контент снят с каналов конкурентов');
+    });
   });
 })();
 
