@@ -830,12 +830,12 @@ td b{color:var(--ink);font-weight:600}
   transition:width .55s cubic-bezier(.2,.8,.2,1)}
 .gcard:hover::before{width:100%}
 .gcard:hover{transform:translateY(-2px)}
-.gcard.g-win{box-shadow:inset 3px 0 0 var(--mid)}
-.gcard.g-lose{box-shadow:inset 3px 0 0 var(--acc-quiet)}
-.gcard.g-parity{box-shadow:inset 3px 0 0 var(--ink-3)}
-.gcard.g-win:hover{box-shadow:inset 3px 0 0 var(--mid), 0 18px 34px -20px rgba(45,36,22,.4)}
-.gcard.g-lose:hover{box-shadow:inset 3px 0 0 var(--acc-quiet), 0 18px 34px -20px rgba(45,36,22,.4)}
-.gcard.g-parity:hover{box-shadow:inset 3px 0 0 var(--ink-3), 0 18px 34px -20px rgba(45,36,22,.4)}
+.gcard.g-win{box-shadow:inset 3px 0 0 var(--acc-strong)}
+.gcard.g-lose{box-shadow:inset 3px 0 0 var(--acc-mid)}
+.gcard.g-parity{box-shadow:inset 3px 0 0 var(--acc-quiet)}
+.gcard.g-win:hover{box-shadow:inset 3px 0 0 var(--acc-strong), 0 18px 34px -20px rgba(45,36,22,.4)}
+.gcard.g-lose:hover{box-shadow:inset 3px 0 0 var(--acc-mid), 0 18px 34px -20px rgba(45,36,22,.4)}
+.gcard.g-parity:hover{box-shadow:inset 3px 0 0 var(--acc-quiet), 0 18px 34px -20px rgba(45,36,22,.4)}
 .gcard .gh{display:flex;align-items:baseline;justify-content:space-between;gap:12px;
   margin-bottom:4px}
 .gcard .gh b{font-size:13.5px;font-weight:700;color:var(--ink);line-height:1.35}
