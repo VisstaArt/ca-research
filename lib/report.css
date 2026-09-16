@@ -2924,4 +2924,18 @@ th{font-size:10px}
 .plantbl .tr{padding:11px 0;border-top:1px solid var(--line-2);font-size:12.5px;color:var(--ink-2);line-height:1.5}
 .plantbl .pn{font-weight:700;color:var(--mid);font-size:15px;line-height:1.2}
 .plantbl .nm{font-size:13px;font-weight:700;color:var(--ink);line-height:1.3}
+/* Позиционирование по шагам: цепочка, итоговая фраза крупно внизу. */
+.poswrap{display:flex;flex-direction:column;gap:12px}
+.poscard{border:1px solid var(--line);border-radius:18px;padding:18px 22px;background:var(--card)}
+.poscard .posh{display:flex;align-items:baseline;gap:10px;margin-bottom:12px}
+.poscard .posh .eb{font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--ink-3)}
+.poscard .posh b{font-size:15px;font-weight:700;color:var(--ink)}
+.poscard .posline{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px}
+.poscard .posstep{padding:11px 13px;border-radius:12px;background:color-mix(in srgb, var(--ink) 3%, transparent)}
+.poscard .posstep span{display:block;font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3);margin-bottom:5px}
+.poscard .posstep b{display:block;font-size:12.5px;font-weight:400;color:var(--ink-2);line-height:1.5}
+.poscard .posfin{margin-top:14px;padding:14px 16px;border-radius:14px;box-shadow:inset 3px 0 0 var(--mid);background:color-mix(in srgb, var(--mid) 6%, transparent)}
+.poscard .posfin span{display:block;font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--ink-3);margin-bottom:6px}
+.poscard .posfin b{font-family:var(--serif);font-size:15px;font-weight:600;color:var(--ink);line-height:1.5}
+.poscard .posproof{margin-top:10px;font-size:11.5px;color:var(--ink-3);line-height:1.5}
 
