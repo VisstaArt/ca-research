@@ -2859,7 +2859,7 @@ async function замерИзвестностиСтрогое(д, brief) {
 // Та же причина, что у M3: вид таблиц задаём мы, а не модель. Здесь это важнее
 // вдвойне — по этим данным человек ВЫБИРАЕТ нишу, и дальше вся цепочка идёт
 // по его выбору.
-const REPORT_FIX_CSS = "\n/* ── Поздние правки: идут ПОСЛЕ всех остальных листов ────────────────────\n   Имена .nprof, .sigrow, .rkey-side объявлены в нескольких константах, и\n   правка в ранней из них молча проигрывает поздней. Всё новое — здесь. */\n.nprof{display:grid;grid-template-columns:repeat(auto-fit,minmax(360px,1fr));gap:12px}\n/* Шапка карточки: фигура слева, имя, балл и вердикт справа; разбор — ниже\n   во всю ширину (владелица 16.09). */\n.ncard2{display:block;padding:14px 16px}\n.ncard2 .nhd{display:grid;grid-template-columns:112px minmax(0,1fr);gap:14px;align-items:center}\n.ncard2 .nhd>div:first-child{display:flex;justify-content:center}\n.ncard2 .nh b{font-size:14px;line-height:1.25}\n.ncard2 .tot{margin:6px 0 7px}\n.ncard2 .sigrows{margin-top:10px;padding-top:10px;border-top:1px solid var(--line-2)}\n.ncard2 .ntake{margin-top:10px;padding:6px 12px;font-size:11.5px}\n.ncard2 .nh b{font-size:13.5px}\n.ncard2 .tot i{font-size:22px}\n.ncard2 .sigrow .v3{font-size:12px;line-height:1.45}\n.ncard2.on{box-shadow:0 0 0 2px var(--mid), 0 18px 34px -20px rgba(45,36,22,.4)}\n.ncard2 .sigrow{display:block;padding:8px 0;grid-template-columns:none}\n.ncard2 .sigrow .k2{display:block;margin-bottom:3px}\n.ncard2 .sigrow .v3{display:block;overflow-wrap:anywhere}\n/* Ключ «как читать»: фигура слева, пояснения справа. */\n.rkey-side{display:grid;grid-template-columns:256px minmax(0,1fr);gap:14px 20px;align-items:start;margin:0}\n.rkey-side>div:first-child{min-width:0;overflow:hidden}\n.rkey-side>div:first-child{grid-row:1 / span 3}\n.rkey-side .rtext{max-width:none;font-size:12.5px}\n@media (max-width:760px){.rkey-side{grid-template-columns:1fr}.rkey-side>div:first-child{grid-row:auto}}\n/* Сноска мельче основного текста и со звёздочкой: иначе пояснение сливается\n   с данными (владелица 16.09). */\n.note{font-size:11.5px}\n.note:not(.confleg):not(.nhint)::before{content:\"* \";color:var(--ink-3)}\n/* Полный список просмотренного — под своей кнопкой, а не простынёй. */\n.srcall{display:none}\n.srcall.on{display:flex}\n.srcall-btn{margin-top:10px;font-size:11.5px;color:var(--ink-2);background:none;border:0;padding:0;cursor:pointer;text-decoration:underline}\n/* География спроса в строгом пути: полоса объёма и плотность числом. */\n.geo{overflow-x:auto}\n.geo .th,.geo .tr{display:grid;grid-template-columns:minmax(140px,1.2fr) 170px 64px 78px minmax(0,1.4fr);gap:12px;align-items:center;min-width:660px}\n.geo .th{padding:0 0 8px;border-bottom:1px solid var(--line);font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--ink-3)}\n.geo .tr{padding:9px 0;border-top:1px solid var(--line-2);font-size:12.5px;color:var(--ink-2)}\n.geo .nm{font-size:13px;font-weight:700;color:var(--ink)}\n.geo .gvol{display:flex;align-items:center;gap:9px}\n.geo .rail{flex:1;height:14px;background:var(--line-2);border-radius:0;overflow:hidden}\n.geo .rail .b{display:block;height:14px;background:var(--mid)}\n.geo .v{font-variant-numeric:tabular-nums;white-space:nowrap}\n.geo .hi{color:var(--acc-strong-ink);font-weight:700}\n.geo .lo{color:var(--ink-3)}\n/* Карточка канала: подписи и значения — своей колонкой слева направо,\n   без наложения на описание (владелица 16.09). */\n.chn .c .cf{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px 18px;align-items:start;margin-top:10px;padding-top:10px;border-top:1px solid var(--line-2)}\n.chn .c .cf div{text-align:left;min-width:0}\n.chn .c .cf div span{display:block;margin-bottom:3px}\n.chn .c .cf div b{display:block;font-weight:600;color:var(--ink-2);overflow-wrap:anywhere}\n.chn .c .cf .r{text-align:left}\n/* Адрес канала в разборе своих площадок: отдельной строкой под именем и\n   кликабельный — раньше он налезал на соседнее поле (владелица 16.09). */\n.aud .a .who{display:flex;flex-direction:column;gap:3px;align-items:flex-start;min-width:0}\n.aud .a .who .chlink{font-size:11.5px;color:var(--ink-2);overflow-wrap:anywhere;text-decoration:underline}\n.aud .a .who span{font-size:11.5px;color:var(--ink-3);overflow-wrap:anywhere}\n";
+const REPORT_FIX_CSS = "\n/* ── Поздние правки: идут ПОСЛЕ всех остальных листов ────────────────────\n   Имена .nprof, .sigrow, .rkey-side объявлены в нескольких константах, и\n   правка в ранней из них молча проигрывает поздней. Всё новое — здесь. */\n.nprof{display:grid;grid-template-columns:repeat(auto-fit,minmax(360px,1fr));gap:12px}\n/* Шапка карточки: фигура слева, имя, балл и вердикт справа; разбор — ниже\n   во всю ширину (владелица 16.09). */\n.ncard2{display:block;padding:14px 16px}\n.ncard2 .nhd{display:grid;grid-template-columns:112px minmax(0,1fr);gap:14px;align-items:center}\n.ncard2 .nhd>div:first-child{display:flex;justify-content:center}\n.ncard2 .nh b{font-size:14px;line-height:1.25}\n.ncard2 .tot{margin:6px 0 7px}\n.ncard2 .sigrows{margin-top:10px;padding-top:10px;border-top:1px solid var(--line-2)}\n.ncard2 .ntake{margin-top:10px;padding:6px 12px;font-size:11.5px}\n.ncard2 .nh b{font-size:13.5px}\n.ncard2 .tot i{font-size:22px}\n.ncard2 .sigrow .v3{font-size:12px;line-height:1.45}\n.ncard2.on{box-shadow:0 0 0 2px var(--mid), 0 18px 34px -20px rgba(45,36,22,.4)}\n.ncard2 .sigrow{display:block;padding:8px 0;grid-template-columns:none}\n.ncard2 .sigrow .k2{display:block;margin-bottom:3px}\n.ncard2 .sigrow .v3{display:block;overflow-wrap:anywhere}\n/* Ключ «как читать»: фигура слева, пояснения справа. */\n.rkey-side{display:grid;grid-template-columns:256px minmax(0,1fr);gap:14px 20px;align-items:start;margin:0}\n.rkey-side>div:first-child{min-width:0;overflow:hidden}\n.rkey-side>div:first-child{grid-row:1 / span 3}\n.rkey-side .rtext{max-width:none;font-size:12.5px}\n@media (max-width:760px){.rkey-side{grid-template-columns:1fr}.rkey-side>div:first-child{grid-row:auto}}\n/* Сноска мельче основного текста и со звёздочкой: иначе пояснение сливается\n   с данными (владелица 16.09). */\n.note{font-size:11.5px}\n.note:not(.confleg):not(.nhint)::before{content:\"* \";color:var(--ink-3)}\n/* Полный список просмотренного — под своей кнопкой, а не простынёй. */\n.srcall{display:none}\n.srcall.on{display:flex}\n.srcall-btn{margin-top:10px;font-size:11.5px;color:var(--ink-2);background:none;border:0;padding:0;cursor:pointer;text-decoration:underline}\n/* География спроса в строгом пути: полоса объёма и плотность числом. */\n.geo{overflow-x:auto}\n.geo .th,.geo .tr{display:grid;grid-template-columns:minmax(140px,1.2fr) 170px 64px 78px minmax(0,1.4fr);gap:12px;align-items:center;min-width:660px}\n.geo .th{padding:0 0 8px;border-bottom:1px solid var(--line);font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--ink-3)}\n.geo .tr{padding:9px 0;border-top:1px solid var(--line-2);font-size:12.5px;color:var(--ink-2)}\n.geo .nm{font-size:13px;font-weight:700;color:var(--ink)}\n.geo .gvol{display:flex;align-items:center;gap:9px}\n.geo .rail{flex:1;height:14px;background:var(--line-2);border-radius:0;overflow:hidden}\n.geo .rail .b{display:block;height:14px;background:var(--mid)}\n.geo .v{font-variant-numeric:tabular-nums;white-space:nowrap}\n.geo .hi{color:var(--acc-strong-ink);font-weight:700}\n.geo .lo{color:var(--ink-3)}\n/* Карточка канала: подписи и значения — своей колонкой слева направо,\n   без наложения на описание (владелица 16.09). */\n.chn .c .cf{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px 18px;align-items:start;margin-top:10px;padding-top:10px;border-top:1px solid var(--line-2)}\n.chn .c .cf div{text-align:left;min-width:0}\n.chn .c .cf div span{display:block;margin-bottom:3px}\n.chn .c .cf div b{display:block;font-weight:600;color:var(--ink-2);overflow-wrap:anywhere}\n.chn .c .cf .r{text-align:left}\n/* Адрес канала в разборе своих площадок: отдельной строкой под именем и\n   кликабельный — раньше он налезал на соседнее поле (владелица 16.09). */\n.aud .a .who{display:flex;flex-direction:column;gap:3px;align-items:flex-start;min-width:0}\n.aud .a .who .chlink{font-size:11.5px;color:var(--ink-2);overflow-wrap:anywhere;text-decoration:underline}\n.aud .a .who span{font-size:11.5px;color:var(--ink-3);overflow-wrap:anywhere}\n/* Сравнение каналов: решётка с полосами-долями от лучшего в столбце. */\n.chncmp{overflow-x:auto}\n.chncmp .th,.chncmp .tr{display:grid;grid-template-columns:minmax(150px,1.3fr) repeat(4,minmax(120px,1fr));gap:14px;align-items:center;min-width:700px}\n.chncmp .th{padding:0 0 8px;border-bottom:1px solid var(--line);font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--ink-3)}\n.chncmp .tr{padding:10px 0;border-top:1px solid var(--line-2);font-size:12.5px;color:var(--ink-2)}\n.chncmp .tr.mine{background:color-mix(in srgb, var(--mid) 7%, transparent)}\n.chncmp .nm{font-size:13px;font-weight:700;color:var(--ink);line-height:1.25}\n.chncmp .nm i{display:block;font-style:normal;font-size:11px;font-weight:400;color:var(--ink-3)}\n.chncmp .cmpv{display:flex;align-items:center;gap:8px;min-width:0}\n.chncmp .cmpv .rail{flex:1;height:14px;background:var(--line-2);overflow:hidden}\n.chncmp .cmpv .rail .b{display:block;height:14px;background:var(--mid)}\n.chncmp .cmpv .v{font-variant-numeric:tabular-nums;white-space:nowrap}\n.chncmp .cmpv.no{color:var(--ink-3);font-size:11.5px}\n";
 
 const СХЕМА_M2 = {
   type: 'object', additionalProperties: false,
@@ -3823,7 +3823,8 @@ async function замерКанала(url) {
   } catch (e) { return null; }
   if (!html) return null;
   const итог = { подписчики: null, просмотры: null, постов: 0, откуда: цель,
-                 реакции: null, er: null, в_неделю: null, часы: '', форматы: '' };
+                 реакции: null, er: null, er_день: null, в_неделю: null, часы: '',
+                 дни: '', форматы: '', длина: null };
   const подп = html.match(/([\d\s.,]+[KMКМ]?(?:\s*(?:тыс|млн)\.?)?)\s*(?:subscribers|members|подписчик|участник)/i);
   if (подп) итог.подписчики = числоИзТекста(подп[1]);
   // Просмотры постов: берём медиану, а не среднее — один вирусный пост
@@ -3850,7 +3851,7 @@ async function замерКанала(url) {
     итог.реакции = медиана(реакции);
     if (итог.подписчики) итог.er = +(итог.реакции / итог.подписчики * 100).toFixed(2);
   }
-  // Частота и время: даты постов стоят у каждого сообщения на витрине.
+  // Частота, время и дни: даты постов стоят у каждого сообщения на витрине.
   const даты = [];
   const reD = /datetime="([0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9:+-]+)"/g;
   let мд;
@@ -3863,7 +3864,30 @@ async function замерКанала(url) {
     даты.forEach(d => { const ч = d.getHours(); часы[ч] = (часы[ч] || 0) + 1; });
     const топ = Object.keys(часы).sort((а, б) => часы[б] - часы[а]).slice(0, 2);
     итог.часы = топ.map(ч => ч + ':00').join(' и ');
+    // Дни недели: по ним видно ритм — будни или выходные (разрез из разбора
+    // Popsters, прислан владелицей 16.09).
+    const ИМЕНА = ['вс', 'пн', 'вт', 'ср', 'чт', 'пт', 'сб'];
+    const дни = {};
+    даты.forEach(d => { const н = d.getDay(); дни[н] = (дни[н] || 0) + 1; });
+    итог.дни = Object.keys(дни).sort((а, б) => дни[б] - дни[а]).slice(0, 3)
+      .map(н => ИМЕНА[н]).join(', ');
+    // ERday — вовлечённость в пересчёте на день, а не на пост: канал с одним
+    // постом в неделю и канал с пятью сравнимы только так.
+    if (реакции.length && итог.подписчики) {
+      const сумма = реакции.reduce((а, б) => а + б, 0);
+      итог.er_день = +(сумма / дней / итог.подписчики * 100).toFixed(3);
+    }
   }
+  // Длина поста: короткие заметки и лонгриды — разный контент, и по медиане
+  // видно, какой в этой нише работает.
+  const тексты = [];
+  const reT = /tgme_widget_message_text[^>]*>([\s\S]{0,4000}?)<\/div>/gi;
+  let мт;
+  while ((мт = reT.exec(html))) {
+    const чистый = мт[1].replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+    if (чистый) тексты.push(чистый.length);
+  }
+  if (тексты.length) итог.длина = медиана(тексты);
   // Форматы: чем наполнены посты — видео, фото, опросы или текст.
   const счёт = {
     видео: (html.match(/tgme_widget_message_video|message_roundvideo/g) || []).length,
@@ -3897,9 +3921,12 @@ async function замерКаналовСтрогое(д, brief) {
     return { ...к,
       подписчики: з.подписчики != null ? чис(з.подписчики) + ' (замер)' : к.подписчики,
       охват: з.просмотры != null ? чис(з.просмотры) + ' просмотров, медиана по ' + з.постов + ' постам' : '',
-      вовлечённость: з.er != null ? з.er + '% (медиана ' + чис(з.реакции) + ' реакций)' : '',
+      вовлечённость: з.er != null ? з.er + '% на пост (медиана ' + чис(з.реакции) + ' реакций)'
+        + (з.er_день != null ? ', ' + з.er_день + '% в день' : '') : '',
+      длина_поста: з.длина != null ? з.длина + ' знаков (медиана)' : '',
       ритм_замер: з.в_неделю != null
-        ? з.в_неделю + ' публикаций в неделю' + (з.часы ? ', обычно в ' + з.часы : '') : '',
+        ? з.в_неделю + ' публикаций в неделю'
+          + (з.дни ? ', чаще ' + з.дни : '') + (з.часы ? ', около ' + з.часы : '') : '',
       форматы_замер: з.форматы || '' };
   });
   return { ...д, каналы: обновлённые,
@@ -3961,6 +3988,35 @@ function разметкаM4(д, brief) {
 
   const каналы = (д.каналы || []).filter(к => к && непусто(к.канал)
     && !/заказчик/i.test(String(к.чей || '')));
+  // Сравнение каналов одной решёткой — главный вопрос модуля: у кого что
+  // работает и за счёт чего (владелица 16.09). Считаем только по замеренным
+  // числам: строка «со слов» рядом с замером вводит в заблуждение.
+  const число = т => {
+    const м = String(т == null ? '' : т).replace(/\u00A0/g, ' ').match(/([\d\s]+)/);
+    if (!м) return null;
+    const n = parseInt(м[1].replace(/\s/g, ''), 10);
+    return Number.isFinite(n) ? n : null;
+  };
+  const мерено = т => /замер/i.test(String(т || ''));
+  const дляСравнения = (д.каналы || []).concat((д.каналы_заказчика || []).map(к => ({
+    канал: к.площадка, площадка: к.площадка, чей: 'заказчик', подписчики: к.подписчики,
+    охват: к.охват, вовлечённость: к.вовлечённость, ритм_замер: к.ритм_замер,
+  }))).filter(к => мерено(к.подписчики) || непусто(к.охват));
+  if (дляСравнения.length >= 2) {
+    blockScriptsM3.push('renderChannelCompare(' + safeJson(дляСравнения.map(к => [
+      к.канал, к.площадка || '',
+      мерено(к.подписчики) ? число(к.подписчики) : null,
+      непусто(к.охват) ? число(к.охват) : null,
+      (() => { const м = String(к.вовлечённость || '').match(/([\d.,]+)%/); return м ? parseFloat(м[1].replace(',', '.')) : null; })(),
+      (() => { const м = String(к.ритм_замер || '').match(/([\d.,]+)\s*публикац/); return м ? parseFloat(м[1].replace(',', '.')) : null; })(),
+      /заказчик/i.test(String(к.чей || '')),
+    ])) + ');');
+    блок('Сравнение каналов',
+      '<div class="chncmp" id="rpt-chncmp"></div>'
+      + '<p class="note">Полоса — доля от лучшего в столбце: разные величины видно одним '
+      + 'взглядом. ER на пост — медиана реакций к числу подписчиков. Наш канал помечен, '
+      + 'чтобы сравнение было честным, а не только по чужим.</p>');
+  }
   if (каналы.length) {
     // Формат рисовалки: [имя, тип, значок, о чём, живость, как использовать,
     // номер источника, адрес] — подгоняем данные под неё, а не наоборот.
@@ -3997,20 +4053,38 @@ function разметкаM4(д, brief) {
 
   const залёт = (д.залетает || []).filter(е => е && непусто(е.заголовок));
   if (залёт.length) {
-    const D = залёт.map(е => ({
-      t: е.заголовок, v: е.просмотры == null ? 0 : е.просмотры,
-      raw: непусто(е.просмотры_текст) || 'не замерено',
-      p: е.площадка || '', ic: опознатьПлощадку((е.площадка || '') + ' ' + е.заголовок),
-      resp: непусто(е.отклик),
-      meta: [непусто(е.формат), непусто(е.длительность), непусто(е.призыв)].filter(Boolean).join(' · '),
-      hook: непусто(е.хук), url: /^https?:/.test(е.url || '') ? е.url : '',
-    })).sort((а, б) => б.v - а.v);
+    const числоИз = т => {
+      const м = String(т == null ? '' : т).replace(/\u00A0/g, ' ').match(/([\d\s]+)/);
+      if (!м) return null;
+      const n = parseInt(м[1].replace(/\s/g, ''), 10);
+      return Number.isFinite(n) ? n : null;
+    };
+    const D = залёт.map(е => {
+      const откликов = числоИз(е.отклик);
+      // Отклик к просмотрам — вот что отличает «залетело» от «много показов»:
+      // ролик на 50 тысяч у канала-миллионника хуже поста на 3 тысячи с
+      // сотней комментариев.
+      const доля = (откликов != null && е.просмотры) ? (откликов / е.просмотры * 100) : null;
+      return {
+        t: е.заголовок, v: е.просмотры == null ? 0 : е.просмотры,
+        raw: непусто(е.просмотры_текст) || 'не замерено',
+        p: е.площадка || '', ic: опознатьПлощадку((е.площадка || '') + ' ' + е.заголовок),
+        resp: [непусто(е.отклик), доля != null && доля.toFixed(1) + '% отклика'].filter(Boolean).join(' · '),
+        meta: [непусто(е.формат), непусто(е.длительность), непусто(е.призыв)].filter(Boolean).join(' · '),
+        hook: непусто(е.хук), url: /^https?:/.test(е.url || '') ? е.url : '',
+        _доля: доля,
+      };
+    }).sort((а, б) => (б._доля != null && а._доля != null)
+      ? б._доля - а._доля
+      : (б.v - а.v));
     blockScriptsM3.push('renderTopContent(' + safeJson(D) + ');');
     блок('Что залетает у конкурентов',
       '<div class="topc" id="rpt-topc"></div>'
-      + '<p class="note">Отклик считается ОТНОСИТЕЛЬНО своего канала: ролик на пятьдесят '
-      + 'тысяч у канала-миллионника — провал, а у канала на три тысячи — событие. '
-      + 'Instagram и TikTok в замер не входят: они не отдают страницу без входа.</p>');
+      + '<p class="note">Порядок — по ДОЛЕ ОТКЛИКА (реакции к просмотрам), а не по '
+      + 'просмотрам: ролик на пятьдесят тысяч у канала-миллионника — провал, а пост на '
+      + 'три тысячи с сотней комментариев — событие. Где отклик не виден, единица идёт '
+      + 'ниже и помечена: «много показов» и «залетело» — разные вещи. Instagram и TikTok '
+      + 'в замер не входят: они не отдают страницу без входа.</p>');
   }
 
   const пат = (д.паттерны || []).filter(п => п && непусто(п.паттерн));
@@ -7549,6 +7623,7 @@ function renderResearchHTML(content, opts) {
     "function renderNicheBoard(D){",
     "\n  const VD={go:['Идём','kchip-go','var(--acc-strong)'],\n            mb:['Под вопросом','kchip-mb','var(--acc-mid)'],\n            no:['Не идём','kchip-no','var(--acc-quiet)']};\n  ",
     ";\n\n  /* ── полосы: мера из «Приоритета ниш», цвет — по вердикту ── */\n  const W=520,padL=196,padR=54,rowH=27,top=4,H=top+D.length*rowH+4,max=20;\n  const x=v=>padL+(W-padL-padR)*(v/max);\n  const svg=el('svg',{viewBox:`0 0 ${W} ${H}`,width:'100%',height:H});\n  const bars=[];\n  D.forEach((d,i)=>{\n    const y=top+i*rowH;\n    const t=el('text',{x:padL-10,y:y+14,class:'lbl','text-anchor':'end'});\n    t.textContent=d.n; svg.appendChild(t);\n    svg.appendChild(el('rect',{x:padL,y:y+3,width:W-padL-padR,height:14,fill:'var(--line-2)'}));\n    const bw=Math.max(x(d.t)-padL,3);\n    const r=el('rect',{x:padL,y:y+3,width:bw,height:14,fill:VD[d.vd][2]});\n    svg.appendChild(r); bars.push(r);\n    const val=el('text',{x:padL+bw+8,y:y+14,class:'val'}); val.textContent=d.t; svg.appendChild(val);\n    /* прозрачная полоса на всю ширину строки — попасть по ней легче, чем по\n       короткому столбику: цель для нажатия должна быть больше самой метки */\n    const hit=el('rect',{x:0,y,width:W,height:rowH,fill:'transparent',class:'nbar'});\n    hit.addEventListener('click',()=>pick(i));\n    svg.appendChild(hit);\n  });\n  var ящикПолос=document.getElementById('rpt-niches'); ящикПолос.innerHTML='';\n  ящикПолос.appendChild(svg);\n\n  /* ── профили: только те, куда можем пойти ── */\n  const AX=['Спрос','Конкуренция','Экономика','Соответствие'];\n  const S=132, R=46;\n  const Wr=l=>l?252:S, C=l=>[Wr(l)/2,S/2];\n  const pt=(i,v,l)=>{const [cx,cy]=C(l),a=(-90+i*90)*Math.PI/180,r=R*(v/5);\n    return [cx+r*Math.cos(a),cy+r*Math.sin(a)];};\n  const radar=(vals,col,labels)=>{\n    /* Круговая на четыре сектора вместо паутинки: решение владелицы 15.09 —\n       «круговая красивее и нагляднее». Радиус сектора = оценка 1–5, то есть\n       площадь и есть мера. Заливка — оттенки ОДНОГО цвета (цвет вердикта):\n       величину несёт светлота, различимость не зависит от цветовосприятия,\n       а какая ось где — говорят подписи, а не оттенок. */\n    const [CX,CY]=C(labels);\n    const R2=R;\n    const g=el('svg',{viewBox:`0 0 ${Wr(labels)} ${S}`,width:Wr(labels),height:S});\n    [1,2,3,4,5].forEach(k=>{\n      g.appendChild(el('circle',{cx:CX,cy:CY,r:(R2*k/5).toFixed(1),fill:'none',\n        stroke:k===5?'var(--line)':'var(--line-2)','stroke-width':1}));\n    });\n    if(vals){\n      const ТОН=[100,76,56,38];\n      vals.forEach((v,i)=>{\n        const r=R2*Math.max(0,Math.min(5,v))/5; if(!(r>0)) return;\n        const a0=(-90+i*90)*Math.PI/180, a1=(-90+(i+1)*90)*Math.PI/180;\n        const x0=CX+r*Math.cos(a0), y0=CY+r*Math.sin(a0);\n        const x1=CX+r*Math.cos(a1), y1=CY+r*Math.sin(a1);\n        g.appendChild(el('path',{d:`M ${CX} ${CY} L ${x0.toFixed(1)} ${y0.toFixed(1)} `\n          +`A ${r.toFixed(1)} ${r.toFixed(1)} 0 0 1 ${x1.toFixed(1)} ${y1.toFixed(1)} Z`,\n          fill:`color-mix(in srgb, ${col} ${ТОН[i]}%, transparent)`,\n          stroke:'var(--card-solid)','stroke-width':2}));\n      });\n    }\n    [0,1,2,3].forEach(i=>{const p=pt(i,5,labels);\n      g.appendChild(el('line',{x1:CX,y1:CY,x2:p[0],y2:p[1],stroke:'var(--line-2)','stroke-width':1}));});\n    if(labels){\n      const off=[[0,-10],[13,4],[0,17],[-13,4]];\n      AX.forEach((n,i)=>{const p=pt(i,5,labels);\n        const t=el('text',{x:p[0]+off[i][0],y:p[1]+off[i][1],class:'axis',\n          'text-anchor':i===1?'start':(i===3?'end':'middle')});\n        t.textContent=n; g.appendChild(t);});\n    }\n    return g;\n  };\n  var ящикКлюча=document.getElementById('rpt-rkey'); ящикКлюча.innerHTML='';\n  ящикКлюча.appendChild(radar(null,null,true));\n\n  const box=document.getElementById('rpt-nprof'), cards=[];\n  box.innerHTML='';\n  const cls=(d,on)=>'ncard2'+(d.vd==='no'?' slim':'')+(on?' on':'');\n  D.forEach((d,i)=>{\n\n    const card=document.createElement('div');\n    card.className=cls(d,false);\n    if(d.vd==='no'){\n      /* Разбор тот же и в том же объёме — меняется только вес: нет фигуры,\n         подложка тише. Прятать данные по отброшенной нише нельзя: решение\n         «не идём» проверяется по тем же сигналам, что и «идём». */\n      card.innerHTML=`<div><div class=\"nh\"><b>${d.n}</b></div>\n        <div class=\"tot\"><i>${d.t}</i><em>из 20 баллов</em></div>\n        <span class=\"kchip ${VD[d.vd][1]}\"><span class=\"d\"></span>${VD[d.vd][0]}</span>\n        ${d.why?`<div class=\"why2\"><b>Почему не идём.</b> ${d.why}</div>`:''}\n        <div class=\"sigrows\">${d.sig.map(([k,v])=>\n          `<div class=\"sigrow\"><span class=\"k2\">${k}</span><span class=\"v3\">${typeof v==='string'?v:v.h}</span></div>`).join('')}</div></div>`;\n    }else{\n      const шапка=document.createElement('div');\n      шапка.className='nhd';\n      left=document.createElement('div');\n      left.appendChild(radar(d.v,VD[d.vd][2],false));\n      const правая=document.createElement('div');\n      правая.innerHTML=`<div class=\"nh\"><b>${d.n}</b></div>\n        <div class=\"tot\"><i>${d.t}</i><em>из 20 баллов</em></div>\n        <span class=\"kchip ${VD[d.vd][1]}\"><span class=\"d\"></span>${VD[d.vd][0]}</span>`;\n      шапка.appendChild(left); шапка.appendChild(правая);\n      const тело=document.createElement('div');\n      тело.innerHTML=`<div class=\"sigrows\">${d.sig.map(([k,v])=>\n          `<div class=\"sigrow\"><span class=\"k2\">${k}</span><span class=\"v3\">${v}</span></div>`).join('')}</div>`;\n      card.appendChild(шапка); card.appendChild(тело);\n    }\n    card.addEventListener('click',()=>pick(i));\n    /* Кнопка «взять в работу» прямо в карточке: веером показываем только семь главных ниш, а решение может касаться любой (владелица 15.09). Своё состояние кнопка не хранит — она сообщает наружу имя ниши, а вид ей выставляет тот, кто знает, что уже в работе. */var left=null;var взять=document.createElement('button');взять.className='ntake';взять.type='button';взять.setAttribute('data-niche',d.n);взять.textContent='+ Взять в работу';взять.addEventListener('click',function(ev){ev.stopPropagation();document.dispatchEvent(new CustomEvent('ca-nishe',{detail:d.n}));});card.appendChild(взять);box.appendChild(card); cards.push(card);\n  });\n\n  const hint=document.getElementById('rpt-nhint');\n  let cur=-1;\n  function pick(i){\n    cur = (cur===i ? -1 : i);\n    bars.forEach((r,k)=>r.setAttribute('opacity', cur<0||cur===k ? '1' : '.32'));\n    cards.forEach((c,k)=>{ if(c) c.className=cls(D[k],cur===k); });\n    hint.textContent = cur<0 ? ''\n      : `Выбрана ниша «${D[cur].n}» — подсвечена ниже.`;\n    if(cur>=0 && cards[cur] && cards[cur].scrollIntoView){\n      try { cards[cur].scrollIntoView({behavior:'smooth',block:'center'}); } catch(e){}\n    }\n  }\n}",
+    "function renderChannelCompare(D){\n  var box=document.getElementById('rpt-chncmp'); if(!box) return;\n  /* Сравнение каналов одной решёткой: так делают сервисы аналитики соцсетей\n     (разбор Popsters/Lucmus, прислан владелицей 16.09). Полоса показывает\n     долю от лучшего в столбце — разные величины в одном взгляде. */\n  var мкс=function(i){ return Math.max.apply(null, D.map(function(r){ return r[i]||0; }).concat([1])); };\n  var мП=мкс(2), мО=мкс(3), мE=мкс(4), мЧ=мкс(5);\n  var чис=function(n){ return n==null?'—':String(Math.round(n)).replace(/\\B(?=(\\d{3})+(?!\\d))/g,'\\u00A0'); };\n  var кл=function(v,max,текст){\n    if(v==null) return '<span class=\"cmpv no\">не замерено</span>';\n    var ш=Math.max(3,Math.round(v/max*100));\n    return '<span class=\"cmpv\"><span class=\"rail\"><span class=\"b\" style=\"width:'+ш+'%\"></span></span>'\n      +'<span class=\"v\">'+текст+'</span></span>'; };\n  box.innerHTML='<div class=\"th\"><span>Канал</span><span>Подписчики</span>'\n    +'<span>Охват поста</span><span>ER на пост</span><span>Публикаций в неделю</span></div>'\n    +D.map(function(r){\n      return '<div class=\"tr'+(r[6]?' mine':'')+'\"><span class=\"nm\">'+escText(r[0])\n        +(r[6]?' — мы':'')+'<i>'+escText(r[1]||'')+'</i></span>'\n        +кл(r[2],мП,чис(r[2]))+кл(r[3],мО,чис(r[3]))\n        +кл(r[4],мE,r[4]!=null?(r[4]+'%'):'—')\n        +кл(r[5],мЧ,r[5]!=null?r[5]:'—')+'</div>';\n    }).join('');\n}",
     "function renderGeoRows(D){\n  var box=document.getElementById('rpt-geo'); if(!box) return;\n  /* Объём и плотность — разные вопросы: где людей больше и где ищут чаще\n     в пересчёте на человека. Полоса показывает объём, число рядом —\n     плотность относительно среднего. */\n  var max=Math.max.apply(null,D.map(function(r){return r[1];}).concat([1]));\n  var чис=function(n){ return String(Math.round(n)).replace(/\\B(?=(\\d{3})+(?!\\d))/g,'\\u00A0'); };\n  box.innerHTML='<div class=\"th\"><span>Регион</span><span>Запросов в месяц</span>'\n    +'<span>Доля</span><span>Плотность</span><span>Что из этого следует</span></div>'\n    +D.map(function(r){\n      var доля=(r[1]/max*100).toFixed(1);\n      var густо=r[3]>=1.05, редко=r[3]<=0.95;\n      return '<div class=\"tr\"><span class=\"nm\">'+escText(r[0])+'</span>'\n        +'<span class=\"gvol\"><span class=\"rail\"><span class=\"b\" style=\"width:'+доля+'%\"></span></span>'\n        +'<span class=\"v\">'+чис(r[1])+'</span></span>'\n        +'<span>'+(r[2]!=null?r[2]+'%':'—')+'</span>'\n        +'<span class=\"'+(густо?'hi':(редко?'lo':''))+'\">'+(r[3]!=null?('×'+r[3].toFixed(2)):'—')+'</span>'\n        +'<span>'+escText(r[4]||'')+'</span></div>';\n    }).join('');\n}",
     "function renderSerp(D){\n  const box=document.getElementById('rpt-serp'); if(!box) return;\n  \n  box.innerHTML=D.map(([t,u,q,k,str])=>`<div class=\"s\">\n    <div class=\"t\">${L(esc(t),'https://'+u)}</div>\n    <div class=\"u\">${esc(u)}</div>\n    <div class=\"meta\"><span>найдено по: <b>${esc(q)}</b></span><span>·</span><span>${esc(k)}</span></div>\n    <div class=\"str\">${esc(str)}</div></div>`).join('');\n}",
     "function renderAudit(D){\n  const box=document.getElementById('rpt-aud'); if(!box) return;\n  /* Приводим к «публикаций в месяц», иначе «2–3 в неделю» и «1 в неделю»\n     несравнимы на глаз. Шкала общая на всех — в этом весь смысл. */\n  \n  const max=Math.max(...D.map(d=>d[2]));\n  box.innerHTML=D.map(([n,ch,per,lab,th,ok,better])=>`<div class=\"a\">\n    <div><div class=\"who\">${esc(n)}${ch&&/^https?:/.test(ch)?`<a class=\"chlink\" href=\"${esc(ch)}\" target=\"_blank\" rel=\"noopener\">${esc(ch.replace(/^https?:\\/\\//,''))}</a>`:(ch?`<span>${esc(ch)}</span>`:'')}</div>\n      <div class=\"freq\"><div class=\"rail\"><i style=\"width:${per/max*100}%\"></i></div>\n        <div class=\"lab\">${esc(lab)} · ${per}/мес</div></div></div>\n    <div><div class=\"cols\">\n      <div><h5>Что работает</h5><p>${esc(ok)}</p></div>\n      <div><h5>Как сделать лучше</h5><p>${esc(better)}</p></div>\n    </div><div class=\"themes\">Темы: ${esc(th)}</div></div></div>`).join('');\n}",

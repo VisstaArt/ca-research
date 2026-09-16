@@ -83,7 +83,9 @@ ok('свои каналы собраны', /renderAudit\(/.test(blockScriptsM3.j
 var топ=JSON.parse(blockScriptsM3.filter(function(x){return x.indexOf('renderTopContent(')===0;})[0]
   .slice('renderTopContent('.length,-2));
 ok('единицы без просмотров остались', топ.filter(function(е){return е.raw==='не замерено';}).length > 0, true);
-ok('самая заметная — первой', топ[0].v >= топ[топ.length-1].v, true);
+// Порядок — по доле отклика: «много показов» и «залетело» — разные вещи.
+ok('первой идёт единица с наибольшей долей отклика',
+   топ[0].resp.indexOf('% отклика') > 0, true);
 ok('«не видно из источника» не печатается как хук',
    топ.filter(function(е){return /не видно/.test(е.hook);}).length, 0);
 
