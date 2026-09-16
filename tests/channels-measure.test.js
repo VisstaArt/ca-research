@@ -249,3 +249,38 @@ globalThis.fetch=function(u){
     console.log(f4?('ПРОВАЛЕНО(vc.ru): '+f4):'  статьи vc.ru замерены');
   });
 })();
+
+// Дзен как канал: замер идёт через выгрузку ленты, потому что обычная
+// страница закрыта входом (проверено 17.09 на dzen.ru/aikrolik).
+(function(){
+  var f5=0;
+  function ок(имя,усл,что){ if(усл) console.log('  ok   '+имя); else { f5++; console.log('  FAIL '+имя+(что?': '+что:'')); } }
+  var лента={channel:{source:{title:'Ai Кролик',subscribers:120}},items:[
+    {title:'Попапы бесят',text:'разбор',link:'https://dzen.ru/a/a1?from=channel',
+     publication_date:'1787000000',timeToReadSeconds:'60',views:300,socialInfo:{likesCount:10,commentCount:1}},
+    {title:'Воронка готова',text:'разбор',link:'https://dzen.ru/a/a2',
+     publication_date:'1787600000',timeToReadSeconds:'120',socialInfo:{likesCount:20,commentCount:0}},
+  ]};
+  // Функции берём заново: замерКанала зовёт постыДзен, а она объявлена в
+  // другом блоке теста и глобально не видна.
+  eval(взять('постыДзен')); globalThis.постыДзен=постыДзен;
+  eval(взять('замерКанала')); globalThis.замерКанала=замерКанала;
+  var прежний5=globalThis.fetch;
+  globalThis.fetch=function(u){
+    var адрес=decodeURIComponent(String(u).split('url=')[1]||'');
+    if (адрес.indexOf('dzen.ru/api/v3/launcher/export')<0) return прежний5(u);
+    return Promise.resolve({ok:true,json:function(){return Promise.resolve(лента);}});
+  };
+  замерКанала('https://dzen.ru/aikrolik').then(function(з){
+    ок('канал Дзена замерен', !!з, 'null');
+    if (з) {
+      ок('подписчики сняты', з.подписчики===120, String(з.подписчики));
+      ок('просмотры — только те, что площадка отдала', з.просмотры===300, String(з.просмотры));
+      ок('лайки как реакции', з.реакции===15, String(з.реакции));
+      ок('публикаций посчитано', з.постов===2, String(з.постов));
+      ок('частота посчитана по датам', з.в_неделю>0, String(з.в_неделю));
+      ок('видно, откуда данные', з.откуда==='лента Дзена', з.откуда);
+    }
+    console.log(f5?('ПРОВАЛЕНО(Дзен): '+f5):'  канал Дзена замерен лентой');
+  });
+})();
