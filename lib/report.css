@@ -2821,18 +2821,27 @@ th{font-size:10px}
 /* ── Поздние правки: идут ПОСЛЕ всех остальных листов ────────────────────
    Имена .nprof, .sigrow, .rkey-side объявлены в нескольких константах, и
    правка в ранней из них молча проигрывает поздней. Всё новое — здесь. */
-.nprof{display:grid;grid-template-columns:repeat(auto-fit,minmax(460px,1fr));gap:12px}
+.nprof{display:grid;grid-template-columns:repeat(auto-fit,minmax(360px,1fr));gap:12px}
+.ncard2{grid-template-columns:120px minmax(0,1fr);gap:14px;padding:14px 16px}
+.ncard2 .nh b{font-size:13.5px}
+.ncard2 .tot i{font-size:22px}
+.ncard2 .sigrow .v3{font-size:12px;line-height:1.45}
+.ncard2.on{box-shadow:0 0 0 2px var(--mid), 0 18px 34px -20px rgba(45,36,22,.4)}
 .ncard2 .sigrow{display:block;padding:8px 0;grid-template-columns:none}
 .ncard2 .sigrow .k2{display:block;margin-bottom:3px}
 .ncard2 .sigrow .v3{display:block;overflow-wrap:anywhere}
 /* Ключ «как читать»: фигура слева, пояснения справа. */
-.rkey-side{display:grid;grid-template-columns:150px minmax(0,1fr);gap:16px 20px;align-items:start;margin:0}
+.rkey-side{display:grid;grid-template-columns:256px minmax(0,1fr);gap:14px 20px;align-items:start;margin:0}
+.rkey-side>div:first-child{min-width:0;overflow:hidden}
 .rkey-side>div:first-child{grid-row:1 / span 3}
 .rkey-side .rtext{max-width:none;font-size:12.5px}
 @media (max-width:760px){.rkey-side{grid-template-columns:1fr}.rkey-side>div:first-child{grid-row:auto}}
 /* Матрица приоритизации: колонки держатся, узкое окно прокручивает вбок. */
-.nmx{overflow-x:auto}
-.nmx .th,.nmx .tr{display:grid;grid-template-columns:minmax(150px,1.6fr) repeat(4,54px) 58px 124px;gap:10px;align-items:center;min-width:660px}
+.nmx{overflow-x:auto;border:1px solid var(--line);border-radius:16px;padding:4px 16px 8px}
+.nmx .th,.nmx .tr{display:grid;grid-template-columns:minmax(160px,1.6fr) repeat(4,64px) 66px 128px;gap:12px;align-items:center;min-width:700px}
+.nmx .th>span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.nmx .mxv,.nmx .mxt{text-align:center}
+.nmx .th>span:first-child{text-align:left}
 /* Сноска мельче основного текста и со звёздочкой: иначе пояснение сливается
    с данными (владелица 16.09). */
 .note{font-size:11.5px}
