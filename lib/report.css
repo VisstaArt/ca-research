@@ -788,8 +788,17 @@ td b{color:var(--ink);font-weight:600}
 .gapc{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:12px}
 
 /* Матрица приоритизации и решётка сигналов по нишам. */
-.nmx .th,.nmx .tr{display:grid;grid-template-columns:minmax(0,1.6fr) repeat(4,58px) 62px 132px;gap:10px;align-items:center}
-.nsig .th,.nsig .tr{display:grid;grid-template-columns:minmax(0,1fr) repeat(4,minmax(0,1.3fr));gap:14px;align-items:start}
+.nmx{overflow-x:auto}
+.srcall{display:flex;flex-direction:column;gap:5px;margin-top:10px;padding-top:10px;border-top:1px solid var(--line-2)}
+.srcall a{font-size:12px;color:var(--ink-2);overflow-wrap:anywhere}
+.nprof{grid-template-columns:repeat(auto-fit,minmax(460px,1fr))}
+.ncard2 .sigrow{display:block;padding:8px 0}
+.ncard2 .sigrow .k2{display:block;margin-bottom:3px}
+.ncard2 .sigrow .v3{display:block;overflow-wrap:anywhere}
+.rkey-side{display:grid;grid-template-columns:150px minmax(0,1fr);gap:18px;align-items:start}
+.rkey-side>div:first-child{grid-row:1 / span 3}
+@media (max-width:760px){.rkey-side{grid-template-columns:1fr}.rkey-side>div:first-child{grid-row:auto}}
+.nmx .th,.nmx .tr{display:grid;grid-template-columns:minmax(150px,1.6fr) repeat(4,54px) 58px 124px;gap:10px;align-items:center;min-width:660px}
 .nmx .tr,.nsig .tr{padding:10px 0;border-top:1px solid var(--line-2);font-size:12.5px;color:var(--ink-2);line-height:1.5}
 .nmx .th,.nsig .th{padding:0 0 8px;border-bottom:1px solid var(--line);font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--ink-3)}
 .nmx .nm,.nsig .nm{font-size:13px;font-weight:700;color:var(--ink);line-height:1.3}
@@ -797,7 +806,6 @@ td b{color:var(--ink);font-weight:600}
 .nmx .mxv.hi{color:var(--acc-strong-ink);font-weight:700}
 .nmx .mxv.lo{color:var(--ink-3)}
 .nmx .mxt{font-size:15px;font-weight:700;color:var(--ink);font-variant-numeric:tabular-nums}
-@media (max-width:900px){.nmx .th,.nsig .th{display:none}.nmx .tr,.nsig .tr{grid-template-columns:1fr;gap:4px}}
 
 /* Подпись квадранта SWOT («наше · помогает») — рядом с именем, обычным
    начертанием: она поясняет, а не называет. Боковая колонка с этими
