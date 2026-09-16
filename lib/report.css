@@ -773,6 +773,7 @@ td b{color:var(--ink);font-weight:600}
 .sw h3{font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;
   color:var(--ink-3);margin-bottom:10px;display:flex;align-items:center;gap:8px}
 .sw h3 i{width:16px;height:3px;border-radius:2px;display:block}
+.sw h3 i:not([style]){width:auto;height:auto;border-radius:0}
 .sw ul{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:7px}
 .sw li{font-size:13px;color:var(--ink-2);padding-left:14px;position:relative;line-height:1.5}
 .sw li::before{content:"";position:absolute;left:0;top:8px;width:5px;height:5px;
@@ -785,6 +786,12 @@ td b{color:var(--ink);font-weight:600}
    сломанной таблицей. Язык тот же, что у SWOT: рамка, мелкая прописная
    подпись, цветная полоса слева вместо заливки. */
 .gapc{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:12px}
+
+/* Подпись квадранта SWOT («наше · помогает») — рядом с именем, обычным
+   начертанием: она поясняет, а не называет. Боковая колонка с этими
+   словами убрана — на текст не хватало ширины (владелица 16.09). */
+.sw h3{justify-content:space-between;gap:12px}
+.sw h3 .swtag{font-size:10px;font-weight:600;letter-spacing:.04em;text-transform:none;color:var(--ink-3);white-space:nowrap;flex:0 0 auto}
 
 /* ── Выбор архетипа ───────────────────────────────────────────────────────
    Варианты стоят ВДОЛЬ, во всю ширину: их читают по очереди, а не сравнивают
@@ -1930,7 +1937,7 @@ table.raw td.num{font-variant-numeric:tabular-nums;text-align:center;white-space
    разных цветов. Плашки равной высоты, рейл слева у всех четырёх, цветом
    различается сторона: бирюза «работает на нас», фиолетовый «против».
    Квадранты различают ПОДПИСИ ОСЕЙ, а не заливки. */
-.swot{display:grid;grid-template-columns:74px 1fr 1fr;gap:10px;align-items:stretch}
+.swot{display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:stretch}
 .swot .cor{font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;
   color:var(--ink-3);display:flex;align-items:flex-end;justify-content:center;
   padding-bottom:8px;line-height:1.3}
@@ -2216,7 +2223,7 @@ table.raw td.num{font-variant-numeric:tabular-nums;text-align:center;white-space
   border-top:1px solid var(--line);font-size:11.5px;color:var(--ink-3)}
 .mktleg span{display:flex;align-items:center;gap:8px}
 .mktleg i{width:9px;height:9px;border-radius:50%;display:block}
-.swot{display:grid;grid-template-columns:74px 1fr 1fr;gap:10px;align-items:stretch}
+.swot{display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:stretch}
 .swot .cor{font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;
   color:var(--ink-3);display:flex;align-items:flex-end;justify-content:center;
   padding-bottom:8px;line-height:1.3}

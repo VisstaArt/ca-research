@@ -111,4 +111,15 @@ var сходится=['win','parity','lose'].every(function(в){
   return словоЦвет[в] && полосы[в] && словоЦвет[в]===полосы[в]; });
 check('слово-вердикт и полоса одного цвета', сходится);
 
+
+// 7. SWOT: боковая колонка с подписями убрана, подпись живёт в заголовке
+// квадранта. Сетка на две колонки — текста в квадрантах много, и 74 пикселя
+// под слово «наше» отъедали ширину у него (владелица 16.09).
+var swotJS=(SRC.match(/"function renderSwotGrid[\s\S]*?\}",/)||[''])[0];
+check('боковых подписей в SWOT нет', swotJS.indexOf('class=\\"cor\\"')<0);
+check('подпись квадранта в его заголовке', /swtag/.test(swotJS));
+check('сетка SWOT на две колонки',
+      /\.swot\{display:grid;grid-template-columns:1fr 1fr/.test(CSS)
+      && CSS.indexOf('grid-template-columns:74px 1fr 1fr')<0);
+
 console.log(failed===0?'\nвсё сошлось':'\nпровалов: '+failed);
