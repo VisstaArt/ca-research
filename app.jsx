@@ -8893,7 +8893,15 @@ function injectBlockStyles() {
     + '\n.rview{color:var(--ink,#171512);font-family:Montserrat,-apple-system,sans-serif}'
     + '\n.rview table{min-width:0}';
   document.head.appendChild(el);
-  fetch('lib/report.css').then(r => r.ok ? r.text() : '').then(css => {
+  // Со ШТАМПОМ версии. Без него браузер держит старый лист сколько захочет:
+  // 16.09 правки цветов доезжали до владелицы только жёстким обновлением, а
+  // выглядело это как «ты не починил» — разметка новая, оформление старое.
+  // Версию берём у самого app.js: он пересобирается от любой правки стилей.
+  const тегПриложения = document.querySelector('script[src*="app.js"]');
+  const версия = ((тегПриложения && тегПриложения.getAttribute('src') || '')
+    .match(/\?v=([0-9a-z]+)/) || [])[1] || '';
+  fetch('lib/report.css' + (версия ? '?v=' + версия : ''))
+    .then(r => r.ok ? r.text() : '').then(css => {
     if (css) el.textContent = prefix(css)
       + '\n.rview{color:var(--ink,#171512);font-family:Montserrat,-apple-system,sans-serif}'
       + '\n.rview table{min-width:0}';

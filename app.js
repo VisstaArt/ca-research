@@ -1,6 +1,6 @@
 // СОБРАНО АВТОМАТИЧЕСКИ из app.jsx — не править руками.
 // Правки вносить в app.jsx, затем: osascript -l JavaScript tools/build.js
-// отпечаток-исходника: 7069e051d8843d61
+// отпечаток-исходника: 7c55c9d7b4e1bc47
 // Функции контракта живут в lib/contract.js. Разбираем их сюда, чтобы весь
 // остальной код обращался к ним по прежним именам и не менялся.
 const{GLOBAL_MODS,isPerNiche,dropOrphans,nichesOf,resKey,splitMdRow,isMdSeparator,parseMdTables,buildModuleEntry,pickTable,pickColumn,withStableIds}=CAContract;// Название модуля берётся из MODULES — это конфиг ИНТЕРФЕЙСА, и сборщик
@@ -2904,7 +2904,11 @@ return css.replace(/\/\*[\s\S]*?\*\//g,'').replace(/(^|[{}])\s*([^{}@]+)\{/g,(m,
 // полосы, единая шапка таблиц) живёт добавками сборки, констант мало —
 // из-за этого сайт показывал «половину не так». Страничные правила отчёта
 // область .rview обезвреживает: «.rview body» не совпадает ни с чем.
-el.textContent=prefix(REPORT_BLOCK_CSS)+'\n'+prefix(REPORT_RULES_CSS)+'\n.rview{color:var(--ink,#171512);font-family:Montserrat,-apple-system,sans-serif}'+'\n.rview table{min-width:0}';document.head.appendChild(el);fetch('lib/report.css').then(r=>r.ok?r.text():'').then(css=>{if(css)el.textContent=prefix(css)+'\n.rview{color:var(--ink,#171512);font-family:Montserrat,-apple-system,sans-serif}'+'\n.rview table{min-width:0}';}).catch(()=>{});}// Показ результата модуля НА САЙТЕ. Рисует ровно тем же кодом, что и выгрузка
+el.textContent=prefix(REPORT_BLOCK_CSS)+'\n'+prefix(REPORT_RULES_CSS)+'\n.rview{color:var(--ink,#171512);font-family:Montserrat,-apple-system,sans-serif}'+'\n.rview table{min-width:0}';document.head.appendChild(el);// Со ШТАМПОМ версии. Без него браузер держит старый лист сколько захочет:
+// 16.09 правки цветов доезжали до владелицы только жёстким обновлением, а
+// выглядело это как «ты не починил» — разметка новая, оформление старое.
+// Версию берём у самого app.js: он пересобирается от любой правки стилей.
+const тегПриложения=document.querySelector('script[src*="app.js"]');const версия=((тегПриложения&&тегПриложения.getAttribute('src')||'').match(/\?v=([0-9a-z]+)/)||[])[1]||'';fetch('lib/report.css'+(версия?'?v='+версия:'')).then(r=>r.ok?r.text():'').then(css=>{if(css)el.textContent=prefix(css)+'\n.rview{color:var(--ink,#171512);font-family:Montserrat,-apple-system,sans-serif}'+'\n.rview table{min-width:0}';}).catch(()=>{});}// Показ результата модуля НА САЙТЕ. Рисует ровно тем же кодом, что и выгрузка
 // (renderResearchHTML) — до 11.09.2026 сайт показывал голые markdown-таблицы,
 // потому что весь согласованный вид жил внутри функции отчёта. Владелица:
 // «я думала, это будет на сайте, а не только в выгрузке».
