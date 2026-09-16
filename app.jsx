@@ -2704,8 +2704,15 @@ function разметкаM3(д, brief) {
 
   const ист = (д.источники || []).filter(и => и && /^https?:/.test(String(и.url || '')));
   if (ист.length) {
-    blockScriptsM3.push('renderSources(' + safeJson(ист.map(и =>
-      [и.номер, и.площадка, и.что_взяли, '', и.url])) + ', 1);');
+    const перенос = {};
+    ист.forEach((и, i) => { перенос[и.номер] = i + 1; });
+    (д.конкуренты || []).forEach(к => {
+      if (Array.isArray(к.источники)) {
+        к.источники = к.источники.map(н => перенос[н]).filter(Boolean);
+      }
+    });
+    blockScriptsM3.push('renderSources(' + safeJson(ист.map((и, i) =>
+      [i + 1, и.площадка, и.что_взяли, '', и.url])) + ', 1);');
     части.push('<div class="srcfold"><button type="button" class="srctoggle" aria-expanded="false">'
       + 'Источники: ' + ист.length + ' ' + plural(ист.length, 'ссылка', 'ссылки', 'ссылок')
       + ', по которым собран этот модуль</button>'
