@@ -2889,4 +2889,14 @@ th{font-size:10px}
 .chncmp .cmpv .rail .b{display:block;height:14px;background:var(--mid)}
 .chncmp .cmpv .v{font-variant-numeric:tabular-nums;white-space:nowrap}
 .chncmp .cmpv.no{color:var(--ink-3);font-size:11.5px}
+/* Разбор ценности под карточкой оффера: четыре части и слабое место. */
+.offval{margin:10px 0 0;padding:14px 18px;border:1px solid var(--line);border-radius:14px;background:color-mix(in srgb, var(--ink) 2%, transparent)}
+.offval .ovh{font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--ink-3);margin-bottom:10px}
+.offval .ovr,.offval .ovweak{display:grid;grid-template-columns:150px minmax(0,1fr);gap:6px 16px;padding:7px 0;border-top:1px solid var(--line-2);font-size:12.5px;line-height:1.5}
+.offval .ovr:first-of-type{border-top:0}
+.offval .ovr span,.offval .ovweak span{font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--ink-3)}
+.offval .ovr b{font-weight:400;color:var(--ink-2)}
+.offval .ovweak{box-shadow:inset 3px 0 0 var(--acc-quiet);padding-left:12px;margin-top:8px}
+.offval .ovweak b{font-weight:600;color:var(--ink)}
+@media (max-width:640px){.offval .ovr,.offval .ovweak{grid-template-columns:1fr}}
 
