@@ -162,4 +162,17 @@ check('разбор идёт отдельным куском под шапкой
       /card\.appendChild\(шапка\); card\.appendChild\(тело\)/.test(seg));
 check('шапка карточки описана в стилях', /\.ncard2 \.nhd\{display:grid/.test(CSS));
 
+// Значки площадок — один набор на весь отчёт (владелица 17.09: «иконки
+// каждого канала, однотонные»). Раньше набор жил внутри renderChannels и
+// другим рисовалкам был недоступен.
+check('набор значков объявлен на верхнем уровне', /var ЗНАКИ=\{/.test(seg));
+check('подбор значка по имени площадки есть', /function значок\(имя\)/.test(seg));
+check('свой набор внутри renderChannels убран', seg.indexOf('const G={')<0);
+['renderChannelPlan','renderChannelSkip','renderChannels'].forEach(function(имя){
+  var i=seg.indexOf('function '+имя+'('), j=seg.indexOf('\nfunction ', i+10);
+  var тело=seg.slice(i, j<0?seg.length:j);
+  check(имя+' ставит значок площадки', тело.indexOf('значок(')>0);
+});
+check('значки без заливки и одним цветом', /\.pico\{[^}]*fill:none[^}]*stroke:var\(--ink-2\)/.test(CSS));
+
 console.log(failed===0?'\nвсё сошлось':'\nпровалов: '+failed);
