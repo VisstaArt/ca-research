@@ -11430,7 +11430,6 @@ function App() {
       setBrief(новыйБриф);
       if (proj) { const u = { ...proj, brief: новыйБриф, updatedAt: new Date().toISOString() }; setProj(u); sv(u); }
     };
-    const дата = new Date().toLocaleDateString('ru-RU', { day:'numeric', month:'long', year:'numeric' });
     // Веер сам и есть верхняя жемчужная плашка — решение владелицы 15.09:
     // «переключение веером ниш вверху, тогда без верхней большой общей плашки».
     // Заголовок экрана едет внутрь веера компактной строкой.
@@ -11444,8 +11443,6 @@ function App() {
         <div className="coveract">
           <span className="note">Найдено: {всеНиши.length}</span>
           <span className="note">В работе: {вРаботе.length}</span>
-          <span className="note">Листайте карты стрелками или точками</span>
-          <span className="note">{дата}</span>
         </div>
       </div>
     );
@@ -11580,14 +11577,36 @@ function App() {
               подпись="Здесь появятся карты ниш со спросом, конкуренцией и экономикой."
               факты={[['Проект', brief.name]]} lang={lang}/>
             <div className="worksurface rview">
-              <div className="card">
-                <h2>Разведка ниш ещё не отработала</h2>
-                <p style={{fontSize:13.5,color:'var(--ink-2)',lineHeight:1.6,maxWidth:'70ch',margin:0}}>
-                  Ниши находит модуль разведки. Запустите его на вкладке «Ход исследования» —
-                  сюда лягут карты ниш и всё, что разведка собрала по пути:
-                  источники, сегменты аудитории и матрица приоритета.
-                </p>
-              </div>
+              {isRun ? (
+                <React.Fragment>
+                  <ХодПрогона
+                    модули={allMods.map(м => ({ id: м.id, title: м.titleRu || м.title,
+                      сделан: modDone(м.id), идёт: curMod === м.id }))}
+                    готов={doneCount}
+                    текущий={curModData ? { title: curModData.titleRu || curModData.title } : null}
+                    ниша={curNiche}
+                    шаг={curStep}
+                    шагИдx={curStepIdx}
+                    всегоШагов={curModData ? curModData.steps.length : 0}/>
+                  <div className="card">
+                    <h2>Идёт разведка ниш</h2>
+                    <p style={{fontSize:13.5,color:'var(--ink-2)',lineHeight:1.6,maxWidth:'70ch',margin:0}}>
+                      Разведка ищет по рынку, читает найденное и сводит ниши в таблицу —
+                      это занимает несколько минут. Карты ниш появятся здесь сами,
+                      страницу обновлять не нужно.
+                    </p>
+                  </div>
+                </React.Fragment>
+              ) : (
+                <div className="card">
+                  <h2>Разведка ниш ещё не отработала</h2>
+                  <p style={{fontSize:13.5,color:'var(--ink-2)',lineHeight:1.6,maxWidth:'70ch',margin:0}}>
+                    Ниши находит модуль разведки. Запустите его на вкладке «Ход исследования» —
+                    сюда лягут карты ниш и всё, что разведка собрала по пути:
+                    источники, сегменты аудитории и матрица приоритета.
+                  </p>
+                </div>
+              )}
             </div>
           </React.Fragment>
         )}
