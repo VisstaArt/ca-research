@@ -3275,6 +3275,9 @@ pre.mermaid{background:var(--card-solid);border:1px solid var(--line);
     document.querySelectorAll('.screen').forEach(function (s) {
       s.classList.toggle('on', s.id === 's-' + ключ);
     });
+    // Куда человек смотрел — помним: обновление страницы выбрасывало его в
+    // бриф, и найденное приходилось открывать заново (владелица 16.09).
+    try { localStorage.setItem('cm-экран', ключ); } catch (e) {}
     строки.forEach(function (b) {
       if (b.dataset.screen === ключ) b.setAttribute('aria-current', 'page');
       else b.removeAttribute('aria-current');
@@ -3323,9 +3326,20 @@ pre.mermaid{background:var(--card-solid);border:1px solid var(--line);
   document.addEventListener('click', function () { закрыть(null); });
 
   // У нас первый раздел — исследование: контент-плана ещё нет, а начинается
-  // работа всегда с него.
-  раздел('research', false);
-  экран('rbrief');
+  // работа всегда с него. Но если человек уже где-то был — возвращаем туда.
+  var прошлый = '';
+  try { прошлый = localStorage.getItem('cm-экран') || ''; } catch (e) {}
+  var кнопкаПрошлого = прошлый
+    ? document.querySelector('[data-screen="' + прошлый + '"]') : null;
+  var естьЭкран = прошлый ? document.getElementById('s-' + прошлый) : null;
+  if (кнопкаПрошлого && естьЭкран) {
+    var список = кнопкаПрошлого.closest('[data-list]');
+    раздел(список ? список.dataset.list : 'research', false);
+    экран(прошлый);
+  } else {
+    раздел('research', false);
+    экран('rbrief');
+  }
 })();
 
 </script>
