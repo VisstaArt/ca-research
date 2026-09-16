@@ -582,7 +582,8 @@ td b{color:var(--ink);font-weight:600}
 .rule-card .ft{margin-top:7px;color:var(--ink-2);line-height:1.5}
 .rule-card .ft b{position:static;font-size:inherit;line-height:inherit;right:auto;bottom:auto;pointer-events:auto;user-select:auto;color:var(--ink);font-weight:700}
 /* Кнопка выбора архетипа — внутри карточки, поверх подложки. */
-.rule-card .archpick{position:relative;z-index:1;margin-top:12px;padding:7px 14px;font-size:12px}
+.rule-card .archpick{position:relative;z-index:1;display:inline-block;margin-top:16px;padding:8px 16px;font-size:12px;line-height:1.2}
+.rules.bet{align-items:start;margin-bottom:26px}
 .rule-card .eb + span{margin-top:2px}
 .rule-card .eb{margin-top:10px}
 .rule-card>span:first-of-type{margin-top:0}
