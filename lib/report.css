@@ -2822,10 +2822,15 @@ th{font-size:10px}
    Имена .nprof, .sigrow, .rkey-side объявлены в нескольких константах, и
    правка в ранней из них молча проигрывает поздней. Всё новое — здесь. */
 .nprof{display:grid;grid-template-columns:repeat(auto-fit,minmax(360px,1fr));gap:12px}
-/* Фигура наверху карточки, текст под ней во всю ширину: сбоку она съедала
-   половину строки, и текст ломался в узкий столбец (владелица 16.09). */
-.ncard2{grid-template-columns:1fr;gap:10px;padding:14px 16px}
-.ncard2>div:first-child{display:flex;justify-content:center}
+/* Шапка карточки: фигура слева, имя, балл и вердикт справа; разбор — ниже
+   во всю ширину (владелица 16.09). */
+.ncard2{display:block;padding:14px 16px}
+.ncard2 .nhd{display:grid;grid-template-columns:112px minmax(0,1fr);gap:14px;align-items:center}
+.ncard2 .nhd>div:first-child{display:flex;justify-content:center}
+.ncard2 .nh b{font-size:14px;line-height:1.25}
+.ncard2 .tot{margin:6px 0 7px}
+.ncard2 .sigrows{margin-top:10px;padding-top:10px;border-top:1px solid var(--line-2)}
+.ncard2 .ntake{margin-top:10px;padding:6px 12px;font-size:11.5px}
 .ncard2 .nh b{font-size:13.5px}
 .ncard2 .tot i{font-size:22px}
 .ncard2 .sigrow .v3{font-size:12px;line-height:1.45}
