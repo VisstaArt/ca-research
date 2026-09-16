@@ -5300,6 +5300,11 @@ function buildSystem(brief, lang, модуль) {
     if(k==='cases') return '- Cases and proof (verbatim from owner — use as is, never invent): '+v;
     if(k==='guarantees') return '- Guarantees the owner really gives (verbatim — never invent): '+v;
     if(k==='limits') return '- Limits: who it is not for, what the product does not do (verbatim): '+v;
+    // Возможности продукта — то, с чем сравнивают конкурентов и из чего
+    // берут темы для контента. Пишем целиком, не сокращая.
+    if(k==='features') return '- PRODUCT CAPABILITIES (from the owner site, verbatim). This is the '
+      + 'authoritative source about OUR product: treat each line as a fact about us, exactly as a '
+      + 'competitor page is a fact about them:\n' + String(v).split(/\n+/).map(x => '  • ' + x.trim()).filter(x => x.length > 4).join('\n');
     if(k==='archetype') return '- Brand archetype ALREADY CHOSEN by the owner — use it, do not propose alternatives: '+v;
     if(k==='services') return Array.isArray(v)&&v.length ? '- Services offered (from site): '+v.join('; ') : '';
     if(k==='selectedServices') return Array.isArray(v)&&v.length ? '- Services SELECTED for research: '+v.join('; ') : '';
@@ -5760,6 +5765,7 @@ Format (15–25 rows):
 Ты НЕ знаешь, что реально есть в нашем продукте: у тебя есть только бриф. Поэтому:
 - «Наше текущее состояние» берётся ТОЛЬКО из брифа. В скобках указывай источник: «из брифа» или «не указано в брифе».
 - Если возможности нет в брифе — писать «не указано в брифе», а НЕ додумывать, что она есть.
+- СНАЧАЛА ПРОЙДИСЬ ПО СПИСКУ «PRODUCT CAPABILITIES» из брифа: там перечислено, что продукт умеет, — строками с сайта заказчика. Каждая строка оттуда заслуживает сравнения: есть ли это у сопоставимых конкурентов. Критерии сравнения бери в первую очередь ОТТУДА, а не выдумывай общие («удобство интерфейса», «качество поддержки») — по общим ничего не докажешь, а по конкретной возможности видно сразу.
 - БРИФ — ЭТО ИСТОЧНИК О НАС, а не догадка. Сайт конкурента говорит о конкуренте, бриф говорит о заказчике: и то, и другое — свидетельство, просто о разных сторонах. Не требуй от нашего свойства «независимого подтверждения»: у продавца нет обязанности доказывать интернету, что у него есть функция, которую он сам описал.
 - «Выигрываем» ставится, когда: (1) свойство есть в брифе, (2) у сопоставимых конкурентов оно в собранном материале НЕ ВИДНО. В основании так и пиши: «у нас по брифу, у них в открытых материалах не нашли».
 - Отсутствие доказательства у конкурента — это не «ничья». Если мы умеем то, чего у них не видно, статус «выигрываем», а степень уверенности передаётся словами: «не видно» слабее, чем «прямо сказано, что не умеют».
@@ -11658,6 +11664,9 @@ function App() {
     // Обязательства перед покупателем: поля в форме появились 15.09, а сюда я
     // их добавить забыл — они не сохранялись и терялись при открытии проекта.
     cases:'', guarantees:'', limits:'',
+    // Полный список возможностей продукта — с сайта. На нём стоит сравнение
+    // с конкурентами и выбор тем для контента.
+    features:'',
     // Характер речи бренда. Выбирается человеком ОДИН раз по предложению из
     // модуля «Конкуренты»: на нём стоит тон всех будущих текстов, и менять его
     // при каждом прогоне значит уводить бренд (владелица 16.09).
@@ -11929,11 +11938,18 @@ function App() {
       setPMsg('⟳ Read '+pages.length+' page(s) — extracting brief…');
       const result = await callGPT(
         'Extract a marketing brief from website content. Reply ONLY with valid JSON, no markdown.',
-        'Extract from:\n\n'+combined+'\n\nReturn ONLY:\n{"name":"","niche":"","geoCompany":"all markets company operates in","geoMarket":"primary research market","format":"","audience":"","result":"","price":"","competitors":"","extra":"","cases":"real cases with numbers, verbatim from the site; empty string if none","guarantees":"guarantees, trial period, refund, SLA — verbatim from the site; empty string if none","limits":"limits: who it is not for, what the product does not do — verbatim; empty string if none","services":["list of distinct services/products/directions offered on the site, in the site\'s language, 3-15 items"],"lang":"detected language e.g. Turkish"}'
+        'Extract from:\n\n'+combined+'\n\nReturn ONLY:\n{"name":"","niche":"","geoCompany":"all markets company operates in","geoMarket":"primary research market","format":"","audience":"","result":"","price":"","competitors":"","extra":"","cases":"real cases with numbers, verbatim from the site; empty string if none","guarantees":"guarantees, trial period, refund, SLA — verbatim from the site; empty string if none","limits":"limits: who it is not for, what the product does not do — verbatim; empty string if none","services":["list of distinct services/products/directions offered on the site, in the site\'s language, 3-15 items"],"features":["ALL product capabilities and features stated on the site, verbatim wording, 10-40 items. This is the fullest possible list: every function, integration, setting, scenario, format, automation mentioned anywhere on the pages. Do NOT summarise into categories and do NOT drop \'small\' ones — a small feature competitors lack is exactly what sells. If a number is stated (\'26 signals\', \'ready in a day\'), keep the number"],"lang":"detected language e.g. Turkish"}'
       );
       const d = JSON.parse(result.replace(/```json|```/g,'').trim());
       setBrief(p => ({...p, ...Object.fromEntries(Object.entries(d).filter(([k,v])=>k!=='lang'&&v&&empty.hasOwnProperty(k)))}));
       if (Array.isArray(d.services) && d.services.length) setBrief(p => ({...p, services: d.services.map(String), selectedServices: []}));
+      // Возможности продукта — отдельным полем и как можно подробнее: по ним
+      // считается «где выигрываем», и из них же контент-машина берёт, о чём
+      // писать. Раньше на сайте они были, а в бриф не переносились — и
+      // сравнение показывало, что мы ничем не отличаемся (владелица 17.09).
+      if (Array.isArray(d.features) && d.features.length) {
+        setBrief(p => ({ ...p, features: d.features.map(String).filter(Boolean).join('\n') }));
+      }
       if (d.lang) { const m=LANGS.find(l=>l.toLowerCase()===d.lang.toLowerCase()); if(m) setLang(m); }
       setPMsg('✓ Brief filled from '+pages.length+' page(s) — review below');
     } catch(e) { setPMsg('✗ ' + e.message); }
@@ -13043,6 +13059,16 @@ function App() {
           <Field label={t.fCases} optional><textarea value={brief.cases} onChange={e=>setBrief(p=>({...p,cases:e.target.value}))} placeholder={t.fCasesPh} rows={2} style={{resize:'vertical'}}/></Field>
           <Field label={t.fGuarantees} optional><textarea value={brief.guarantees} onChange={e=>setBrief(p=>({...p,guarantees:e.target.value}))} placeholder={t.fGuaranteesPh} rows={2} style={{resize:'vertical'}}/></Field>
           <Field label={t.fLimits} optional><textarea value={brief.limits} onChange={e=>setBrief(p=>({...p,limits:e.target.value}))} placeholder={t.fLimitsPh} rows={2} style={{resize:'vertical'}}/></Field>
+          {/* Возможности продукта — самое важное поле для сравнения с
+              конкурентами: на нём стоит «где выигрываем». Заполняется с сайта
+              автоматически, человек дополняет тем, чего на сайте нет. */}
+          <Field label="Что умеет продукт — полный список"
+            info="С сайта переносится автоматически. Допишите то, чего на сайте нет: на этом списке строится сравнение с конкурентами и выбор тем для контента. По строке на возможность.">
+            <textarea value={brief.features}
+              onChange={e=>setBrief(p=>({...p,features:e.target.value}))}
+              placeholder={'ловит уход по 26 сигналам\nподбирает оффер под страницу\nставится без программиста за день'}
+              rows={6} style={{resize:'vertical'}}/>
+          </Field>
           <Field label={t.fSocials}><textarea value={brief.socials} onChange={e=>setBrief(p=>({...p,socials:e.target.value}))} placeholder={t.fSocialsPh} rows={2} style={{resize:'vertical'}}/></Field>
           <Field label={t.fBrandColors}><input value={brief.brandColors} onChange={e=>setBrief(p=>({...p,brandColors:e.target.value}))} placeholder={t.fBrandColorsPh}/></Field>
           <Field label={t.fBrandFonts}><input value={brief.brandFonts} onChange={e=>setBrief(p=>({...p,brandFonts:e.target.value}))} placeholder={t.fBrandFontsPh}/></Field>
