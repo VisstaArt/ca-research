@@ -6787,17 +6787,35 @@ function CountdownTimer({ totalSeconds, label }) {
     ref.current = setInterval(() => setElapsed(e => e + 1), 1000);
     return () => clearInterval(ref.current);
   }, []);
-  const remaining = Math.max(0, totalSeconds - elapsed);
-  const mm = String(Math.floor(remaining / 60)).padStart(2, '0');
-  const ss = String(remaining % 60).padStart(2, '0');
-  const pct = Math.min(100, (elapsed / totalSeconds) * 100);
+  // Оценка кончилась, а работа идёт: замеры страниц и сборка отчёта по времени
+  // не предсказуемы. Раньше счётчик замирал на 00:00 и полоса стояла полной —
+  // «вот-вот», а ждать ещё пять минут (владелица 17.09). Теперь честно:
+  // считаем ВВЕРХ от оценки и говорим, что идёт дольше обычного.
+  const перебор = elapsed > totalSeconds;
+  const показать = перебор ? elapsed - totalSeconds : totalSeconds - elapsed;
+  const mm = String(Math.floor(показать / 60)).padStart(2, '0');
+  const ss = String(Math.round(показать) % 60).padStart(2, '0');
+  // Полоса никогда не доходит до края, пока работа не кончилась: полная полоса
+  // читается как «готово».
+  const pct = Math.min(94, (elapsed / Math.max(1, totalSeconds)) * 94);
   return (
     <div>
-      <div style={{fontSize:11,color:'var(--ink-3)',marginBottom:4}}>{label}</div>
-      <div className="timer">{mm}:{ss}</div>
-      <div style={{marginTop:8,height:3,background:'var(--ink)',borderRadius:2}}>
-        <div style={{height:'100%',width:`${pct}%`,background:'var(--mid)',borderRadius:2,transition:'width 1s linear'}}/>
+      <div style={{fontSize:11,color:'var(--ink-3)',marginBottom:4}}>
+        {перебор ? 'Идёт дольше обычного · сверх оценки' : label}
       </div>
+      <div className="timer">{перебор ? '+' : ''}{mm}:{ss}</div>
+      <div style={{marginTop:8,height:3,background:'var(--ink)',borderRadius:2}}>
+        <div className={перебор ? 'tmbar over' : 'tmbar'}
+          style={{height:'100%',width:перебор?'94%':`${pct}%`,background:'var(--mid)',
+                  borderRadius:2,transition:'width 1s linear'}}/>
+      </div>
+      {перебор && (
+        <div style={{fontSize:10.5,color:'var(--ink-3)',marginTop:6,lineHeight:1.45}}>
+          Оценка построена по прошлым прогонам. Дольше бывает, когда страниц
+          для замера много или источник отвечает медленно — шаг под счётчиком
+          показывает, что делается сейчас.
+        </div>
+      )}
     </div>
   );
 }
@@ -12350,11 +12368,23 @@ function App() {
         имя: mod.titleRu || mod.title, ниша: wn,
         шаг: (mod.stepsRu || mod.steps)[и], шагИдx: и, всего: mod.steps.length });
       ход(0);
+      // Таймер ведёт шаги только до ПРЕДПОСЛЕДНЕГО. Последний участок —
+      // замеры и сборка отчёта — двигается реальными событиями ниже
+      // (владелица 17.09: «палочки все закрашены, время 0:00, а оно ещё
+      // пять минут что-то считает»).
       const stepTimer = setInterval(() => {
-        stepI = Math.min(stepI+1, mod.steps.length-1);
+        stepI = Math.min(stepI+1, Math.max(0, mod.steps.length-2));
         setCurStep((mod.stepsRu || mod.steps)[stepI]); setCurStepIdx(stepI);
         ход(stepI);
       }, Math.max(4000, Math.floor((оценкаСекунд(mod.id, loadAll())*1000)/mod.steps.length)));
+      // Реальный шаг: подпись своя, а полоска шагов остаётся на последнем
+      // делении — работа идёт, и видно, какая именно.
+      const реальныйШаг = текст => {
+        const и = Math.max(0, mod.steps.length-1);
+        stepI = и; setCurStep(текст); setCurStepIdx(и);
+        записатьХод({ мод: mod.id, имя: mod.titleRu || mod.title, ниша: wn,
+          шаг: текст, шагИдx: и, всего: mod.steps.length });
+      };
 
       // Контекст берём из результатов ТОЙ ЖЕ ниши (для по-нишевых зависимостей).
       const findDep = depId => col.find(r => r.id === depId && (isPerNiche(depId) ? (r.niche||'') === wn : true));
@@ -12451,6 +12481,7 @@ function App() {
         }
         if (СХЕМЫ[mod.id] && схемаПроверена[mod.id]) {
           try {
+            реальныйШаг('Жду ответ модели по строгой форме');
             const сырое = await callGPTСхема(sys, userPrompt, СХЕМЫ[mod.id], 'module_' + mod.id);
             строгое = JSON.parse(сырое);
           } catch (e) {
@@ -12459,6 +12490,7 @@ function App() {
             if (window.console) console.warn('Строгий формат не вышел, работаем как раньше:', e);
           }
         }
+        if (!строгое) реальныйШаг('Жду ответ модели');
         full = строгое ? '' : await callGPT(sys, userPrompt, temp, maxTok);
         // Приклеен кодом ПОСЛЕ ответа модели — не проходит через LLM, значит не может
         // быть урезан/отфильтрован по вкусу модели (владелица просила ровно полный
@@ -12470,21 +12502,21 @@ function App() {
         // клиента» — просто текст, который никто не проверял.
         // Каналы замеряем сами: подписчики и охват постов видны на публичных
         // страницах, и без них радар — пересказ чужих слов.
-        if (mod.id === 'M4' && строгое) строгое = await замерКаналовСтрогое(строгое, Bn);
-        if (mod.id === 'M4' && строгое) строгое = await замерСвоихКаналов(строгое, Bn);
-        if (mod.id === 'M5' && строгое) строгое = await сверкаЦитатСтрогое(строгое);
+        if (mod.id === 'M4' && строгое) { реальныйШаг('Замеряю каналы конкурентов: подписчики, охват, ритм'); строгое = await замерКаналовСтрогое(строгое, Bn); }
+        if (mod.id === 'M4' && строгое) { реальныйШаг('Замеряю ваши площадки'); строгое = await замерСвоихКаналов(строгое, Bn); }
+        if (mod.id === 'M5' && строгое) { реальныйШаг('Сверяю цитаты с живыми страницами'); строгое = await сверкаЦитатСтрогое(строгое); }
         else if (mod.id === 'M5') full = await processM5Voc(full, wn);
         // M2: известность конкурентов замеряется брендовым спросом, а не оценивается
         // моделью (решение владелицы 10.09.2026) — см. processM3Fame.
         // Известность — замером, а не оценкой: в строгом пути своя дорога,
         // потому что markdown-таблицы, которую правит processM3Fame, там нет.
-        if (mod.id === 'M3' && строгое) строгое = await замерЦенСтрогое(строгое, Bn);
-        if (mod.id === 'M3' && строгое) строгое = await замерИзвестностиСтрогое(строгое, Bn);
+        if (mod.id === 'M3' && строгое) { реальныйШаг('Открываю страницы тарифов конкурентов'); строгое = await замерЦенСтрогое(строгое, Bn); }
+        if (mod.id === 'M3' && строгое) { реальныйШаг('Замеряю брендовый спрос конкурентов'); строгое = await замерИзвестностиСтрогое(строгое, Bn); }
         else if (mod.id === 'M3') full = await processM3Fame(full, Bn);
         // Выжимка для соседних модулей: на экран идёт разметка из данных, а в
         // контекст M4+ — этот текст. Без него цепочка строилась бы на пустоте.
         // Спрос по нишам — замером, рядом с оценкой модели.
-        if (mod.id === 'M2' && строгое) строгое = await замерСпросаНишСтрогое(строгое, Bn);
+        if (mod.id === 'M2' && строгое) { реальныйШаг('Замеряю спрос по нишам'); строгое = await замерСпросаНишСтрогое(строгое, Bn); }
         // Выжимка для соседних модулей: на экран идёт разметка из данных, а в
         // контекст следующего модуля — этот текст.
         if (строгое && просмотрено.length) строгое = { ...строгое, просмотрено };
@@ -12492,6 +12524,7 @@ function App() {
         // M1.2: спрос по нишам замеряется рядом с баллом модели (решение
         // владелицы 11.09.2026) — см. processM2Demand.
         if (mod.id === 'M2') full = await processM2Demand(full, Bn);
+        реальныйШаг('Собираю отчёт');
       } catch(e) { full = 'Error: '+e.message; }
       clearInterval(stepTimer);
 

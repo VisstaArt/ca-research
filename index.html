@@ -90,6 +90,11 @@ tr:nth-child(even) td { background: none; }
   background: color-mix(in srgb, var(--mid) 8%, var(--card-solid));
   border: 1px solid var(--line); font-size: var(--fs-small); }
 .timer { font-variant-numeric: tabular-nums; color: var(--ink-3); }
+/* Счётчик перешёл за оценку: полоса не полная и тихо дышит — видно, что
+   работа идёт, а не замерла (владелица 17.09). */
+.tmbar.over { animation: tmpulse 1.6s ease-in-out infinite; }
+@keyframes tmpulse { 0%,100% { opacity: 1 } 50% { opacity: .45 } }
+@media (prefers-reduced-motion: reduce) { .tmbar.over { animation: none } }
 .tooltip-box { position: absolute; z-index: 30; max-width: 320px;
   padding: 12px 14px; border-radius: 14px; background: var(--card-solid);
   border: 1px solid var(--line); font-size: var(--fs-caption);
@@ -230,6 +235,6 @@ html[data-embed] #root { max-width: none; padding: 0; }
      без сборки — как и весь остальной проект. -->
 <script src="lib/contract.js?v=c5d82d20"></script>
 <script src="lib/auth.js?v=c0e4610f"></script>
-<script src="app.js?v=a21dc4dc"></script>
+<script src="app.js?v=a94a4d76"></script>
 </body>
 </html>
