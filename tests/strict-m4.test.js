@@ -87,6 +87,14 @@ ok('самая заметная — первой', топ[0].v >= топ[топ.
 ok('«не видно из источника» не печатается как хук',
    топ.filter(function(е){return /не видно/.test(е.hook);}).length, 0);
 
+// Каналы заказчика не попадают в «каналы конкурентов»: у них свой блок ниже
+// (владелица 16.09).
+var чужие=JSON.parse(blockScriptsM3.filter(function(x){return x.indexOf('renderChannels(')===0;})[0]
+  .slice('renderChannels('.length,-2));
+ok('своих каналов нет среди конкурентов',
+   чужие.filter(function(к){return /заказчик/i.test(к[5]||'');}).length, 0);
+ok('чужие каналы при этом на месте', чужие.length > 0, true);
+
 // Источники: сквозная нумерация и переставленные ссылки каналов.
 var ис=JSON.parse(blockScriptsM3.filter(function(x){return x.indexOf('renderSources(')===0;})[0]
   .slice('renderSources('.length,-5));
