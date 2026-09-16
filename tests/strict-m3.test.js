@@ -17,7 +17,7 @@ eval(grab('escHtml')); eval(grab('plural'));
 eval(grab('safeJson'));
 var iК=SRC.indexOf('const КУРС =');
 eval(SRC.slice(iК, SRC.indexOf('}', iК)+2).replace('const КУРС =','globalThis.КУРС ='));
-eval(grab('вМесяц')); eval(grab('ценовыеУровни'));
+eval(grab('вМесяц')); eval(grab('ценаИзБрифа')); eval(grab('ценовыеУровни'));
 globalThis.blockScriptsM3=[];
 eval(grab('разметкаM3'));
 
@@ -47,7 +47,15 @@ ok('карта рынка собрана', /renderMarketMap\(/.test(blockScripts
 ok('карточки конкурентов собраны', /renderCompCards\(/.test(blockScriptsM3.join(' ')), true);
 ok('SWOT сеткой', /renderSwotGrid\(/.test(blockScriptsM3.join(' ')), true);
 ok('гэп карточками', /renderGapCards\(/.test(blockScriptsM3.join(' ')), true);
-ok('архетип и его проявления', /renderArchetype\(/.test(blockScriptsM3.join(' ')) && /renderManifest\(/.test(blockScriptsM3.join(' ')), true);
+ok('архетип предложен вариантами', /renderArchetype\(/.test(blockScriptsM3.join(' ')), true);
+// Проявления принадлежат выбранному характеру: пока выбора нет, «тон речи» и
+// «герой в кадре» не печатаются — иначе два варианта, а разбор под один.
+ok('без выбора проявлений нет', /renderManifest\(/.test(blockScriptsM3.join(' ')), false);
+ok('без выбора есть плашка с требованием выбрать', /Выберите один архетип/.test(h), true);
+blockScriptsM3=[];
+var hВыбран=разметкаM3(д,{name:'Ловец Лидов',archetype:'Заботливый'});
+ok('после выбора проявления появляются', /renderManifest\(/.test(blockScriptsM3.join(' ')), true);
+ok('и названы именем выбранного', /Как «Заботливый» проявляется/.test(hВыбран), true);
 // Источник без адреса проверить нельзя — в список он не идёт.
 var ист=blockScriptsM3.filter(function(x){return x.indexOf('renderSources(')===0;})[0];
 ok('источник без адреса отброшен', JSON.parse(ист.slice('renderSources('.length, ист.lastIndexOf(', 1)'))).length, 1);

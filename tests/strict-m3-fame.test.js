@@ -28,7 +28,7 @@ eval(grab('замерИзвестностиСтрогое'));
 eval(grab('safeJson')); eval(grab('escHtml')); eval(grab('plural'));
 var iК=SRC.indexOf('const КУРС =');
 eval(SRC.slice(iК, SRC.indexOf('}', iК)+2).replace('const КУРС =','globalThis.КУРС ='));
-eval(grab('вМесяц')); eval(grab('ценовыеУровни'));
+eval(grab('вМесяц')); eval(grab('ценаИзБрифа')); eval(grab('ценовыеУровни'));
 globalThis.blockScriptsM3=[];
 eval(grab('разметкаM3'));
 eval(grab('текстИзСтрогогоM3'));
