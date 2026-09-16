@@ -17,7 +17,7 @@ function ok(n,g,w){var r=JSON.stringify(g)===JSON.stringify(w);
  else console.log('  ok   '+n);}
 
 globalThis.blockScriptsM3=[];
-globalThis.safeJson=function(o){return JSON.stringify(o);};
+eval(grab('safeJson'));
 eval(grab('plural'));
 eval(grab('разметкаM3'));
 var КОД=renderResearchHTML('', {}).js;

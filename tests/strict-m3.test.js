@@ -14,7 +14,7 @@ function ok(n,g,w){var r=JSON.stringify(g)===JSON.stringify(w);
  else console.log('  ok   '+n);}
 
 eval(grab('escHtml')); eval(grab('plural'));
-globalThis.safeJson=function(o){return JSON.stringify(o);};
+eval(grab('safeJson'));
 globalThis.blockScriptsM3=[];
 eval(grab('разметкаM3'));
 
@@ -64,4 +64,41 @@ ok('имя схемы чистится от лишнего', /replace\(\/\[\^A-Z
 // Откат больше не молчит: два молчаливых отката подряд стоили нам дня.
 ok('сбой схемы сохраняется в результате', /сбойСхемы/.test(SRC), true);
 ok('признак пути виден на карточке', /по схеме/.test(SRC) && /схема не сработала/.test(SRC), true);
+
+// Разметка живёт ВНЕ renderResearchHTML, а рисовалки и помощники исторически
+// объявлены внутри неё. `safeJson` так и попалась: локальная копия, тест
+// подставлял свою, и модуль целиком упал на живом прогоне 16.09. Проверяем
+// статически: каждое имя, которое разметкаM3 зовёт, объявлено на верхнем
+// уровне app.jsx.
+var тело = grab('разметкаM3');
+var встроенные = {String:1,Number:1,Boolean:1,Array:1,Object:1,JSON:1,Math:1,RegExp:1,
+  parseInt:1,parseFloat:1,isNaN:1,Set:1,Map:1,Date:1,Error:1,encodeURIComponent:1,
+  'if':1,'for':1,'while':1,'switch':1,'catch':1,'return':1,'typeof':1,'function':1,'case':1};
+// Имена, объявленные ВНУТРИ самой разметки, — не наша забота.
+var свои = {};
+(тело.match(/(?:const|let|var|function)\s+([A-Za-zА-Яа-яЁё_$][\wА-Яа-яЁё$]*)/g)||[])
+  .forEach(function(м){ свои[м.replace(/^\S+\s+/,'')] = 1; });
+// Параметры тоже свои.
+(тело.slice(тело.indexOf('(')+1, тело.indexOf(')')).split(',')||[])
+  .forEach(function(п){ свои[п.trim()] = 1; });
+var чужие = {};
+var re = /([A-Za-zА-Яа-яЁё_$][\wА-Яа-яЁё$]*)\s*\(/g, м2;
+while ((м2 = re.exec(тело))) {
+  var имя = м2[1];
+  // Вызов через точку — метод, а не наша функция.
+  if (тело[м2.index-1] === '.') continue;
+  if (встроенные[имя] || свои[имя]) continue;
+  // render* — не вызов, а имя внутри строки скрипта: эти функции живут в
+  // BLOCK_JS и исполняются на странице отчёта. Что они там есть и работают,
+  // проверяет strict-m3-render (выполняет их в заглушке DOM).
+  if (/^render/.test(имя)) continue;
+  чужие[имя] = 1;
+}
+var потеряны = Object.keys(чужие).filter(function(имя){
+  var верх = new RegExp('^(?:function|const|let|var)\\s+' + имя + '\\b', 'm');
+  return !верх.test(SRC);
+});
+if (!потеряны.length) console.log('  ok   разметка зовёт только то, что объявлено на верхнем уровне');
+else {fails++; console.log('  FAIL не на верхнем уровне: '+потеряны.join(', '));}
+
 console.log(fails?('ПРОВАЛЕНО: '+fails):'  всё зелёное');

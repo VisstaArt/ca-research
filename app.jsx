@@ -2622,6 +2622,12 @@ const СХЕМА_M3 = {
   },
 };
 
+// Данные для рисовалок кладутся в строку скрипта: закрывающий тег внутри неё
+// оборвал бы <script> посреди JSON. Общая для всех путей — строгого, текстового
+// и выгрузки: локальная копия внутри renderResearchHTML стоила живого прогона
+// M3 16.09 («safeJson is not defined» — разметкаM3 живёт вне этой функции).
+function safeJson(o) { return JSON.stringify(o).replace(/<\/script>/gi, '<\\/script>'); }
+
 // Разметка модуля из СТРОГИХ данных. Разбирать нечего: поля названы схемой,
 // форма таблиц наша, пустое остаётся пустым и не печатается.
 function разметкаM3(д, brief) {
@@ -5103,7 +5109,6 @@ function renderResearchHTML(content, opts) {
     // висеть над пустотой (владелица 15.09: «эти лишние заголовки ни в чём
     // не убрались»). Зная это заранее, подписи просто не печатаем.
     has062: /BLOCK\s*06_2\b|SWOT/i.test(String(content || '')) };
-  const safeJson = o => JSON.stringify(o).replace(/<\/script>/gi,'<\\/script>');
   const esc = escHtml;
 
   // Ссылки в отчёте живые, а не текстом — владелица просила это ещё для блока
@@ -7259,7 +7264,6 @@ function generateHTMLReport(brief, results, lang, priceLayers, selectedLayers, s
       + (subtitle?'<p style="font-size:11px;color:#888;margin-bottom:8px">'+esc(subtitle)+'</p>':'')
       + '<canvas id="'+canvasId+'" height="'+(height||220)+'"></canvas></div>';
   }
-  const safeJson = o => JSON.stringify(o).replace(/<\/script>/gi,'<\\/script>');
 
   const m12rep = targetResults.find(r=>r.id==='M2');
   const niches12 = m12rep && m12rep.nicheData && Array.isArray(m12rep.nicheData.niches) ? m12rep.nicheData.niches : null;
