@@ -95,4 +95,33 @@ if (!провалов) {
 if (/fetch\('lib\/report\.css'\s*\+\s*\(верси/.test(readFile(ROOT + '/app.jsx'))) console.log('  ok   лист отчёта грузится со штампом версии');
 else { fails++; console.log('  FAIL lib/report.css грузится без штампа версии'); }
 
+
+// Ход прогона должен быть виден в СОСЕДНЕЙ вкладке платформы: это отдельная
+// рамка со своим состоянием, и она показывала пустой экран, пока шла работа
+// (владелица 16.09). Общее хранилище — единственный мост между рамками.
+(function(){
+  var исх = readFile(ROOT + '/app.jsx');
+  var память = {};
+  var прежний = globalThis.localStorage;
+  globalThis.localStorage = { getItem:function(k){ return память[k]===undefined?null:память[k]; },
+    setItem:function(k,v){ память[k]=String(v); }, removeItem:function(k){ delete память[k]; } };
+  function взять(имя){ var i=исх.indexOf('function '+имя+'('), d=0;
+    for(var k=исх.indexOf('{',i);k<исх.length;k++){ if(исх[k]==='{')d++;
+      else if(исх[k]==='}'){ d--; if(!d) return исх.slice(i,k+1); } } }
+  var i=исх.indexOf('const КЛЮЧ_ПРОГОНА');
+  globalThis.eval(исх.slice(i, исх.indexOf('\n', i)).replace('const ','var '));
+  globalThis.eval(взять('записатьХод')); globalThis.eval(взять('прочитатьХод'));
+  записатьХод({ мод:'M2', имя:'Разведка ниш', шаг:'Ищу сигналы…', шагИдx:0, всего:5 });
+  var ч = прочитатьХод();
+  if (ч && ч.мод === 'M2' && ч.шаг === 'Ищу сигналы…') console.log('  ok   соседняя вкладка видит ход прогона');
+  else { fails++; console.log('  FAIL ход прогона не доезжает до соседней вкладки'); }
+  память[КЛЮЧ_ПРОГОНА] = JSON.stringify({ мод:'M2', at: Date.now() - 120000 });
+  if (прочитатьХод() === null) console.log('  ok   протухшая запись не показывается');
+  else { fails++; console.log('  FAIL старая запись выдаётся за идущий прогон'); }
+  записатьХод(null);
+  if (прочитатьХод() === null) console.log('  ok   после прогона запись снимается');
+  else { fails++; console.log('  FAIL запись о прогоне осталась висеть'); }
+  globalThis.localStorage = прежний;
+})();
+
 console.log(провалов===0 ? '\nвсё сошлось' : '\nПРОВАЛОВ: '+провалов);

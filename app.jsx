@@ -8994,6 +8994,40 @@ function NicheHero({ list, canPick, selected, onToggle, onContinue, statusOf, ш
 // вкладки платформы — это отдельные рамки со своими копиями приложения, и
 // вкладка «Прогон» про работу, запущенную с «Ниш», ничего не знает. Владелица
 // 15.09: «запустила — и непонятно, работает оно или нет».
+// Ход прогона видят ВСЕ рамки платформы. Вкладки «Ход исследования» и «Ниши»
+// — разные iframe, состояние React у каждой своё, и вторая показывала пустой
+// экран, пока первая работала. Общее хранилище — единственное, что у них
+// общее (владелица 16.09).
+const КЛЮЧ_ПРОГОНА = 'ca-прогон-идёт';
+function записатьХод(состояние) {
+  try {
+    if (!состояние) localStorage.removeItem(КЛЮЧ_ПРОГОНА);
+    else localStorage.setItem(КЛЮЧ_ПРОГОНА, JSON.stringify({ ...состояние, at: Date.now() }));
+  } catch (e) {}
+}
+function прочитатьХод() {
+  try {
+    const с = JSON.parse(localStorage.getItem(КЛЮЧ_ПРОГОНА) || 'null');
+    // Прогон мог оборваться вместе с вкладкой — старую запись не показываем.
+    if (!с || !с.at || Date.now() - с.at > 90000) return null;
+    return с;
+  } catch (e) { return null; }
+}
+// Опрос раз в две секунды: события storage приходят только в ДРУГИЕ рамки и
+// только на запись, а нам нужно ещё и протухание записи.
+function useВнешнийХод(свой) {
+  const [ход, setХод] = React.useState(null);
+  React.useEffect(() => {
+    if (свой) { setХод(null); return; }
+    const тик = () => setХод(прочитатьХод());
+    тик();
+    const т = setInterval(тик, 2000);
+    window.addEventListener('storage', тик);
+    return () => { clearInterval(т); window.removeEventListener('storage', тик); };
+  }, [свой]);
+  return свой ? null : ход;
+}
+
 function ХодПрогона({ модули, готов, текущий, ниша, шаг, шагИдx, всегоШагов }) {
   return (
     <div className="card" style={{marginBottom:16}}>
@@ -9917,6 +9951,9 @@ function App() {
   const [curNiche, setCurNiche] = React.useState('');
   const [curStep, setCurStep] = React.useState('');
   const [curStepIdx, setCurStepIdx] = React.useState(0);
+  // Прогон могла запустить соседняя вкладка платформы — это отдельная рамка со
+  // своим состоянием. Тогда ход берём из общего хранилища.
+  const чужойХод = useВнешнийХод(!!curMod);
   const [exp, setExp] = React.useState({});
   // Human-in-the-loop: ручное редактирование результата модуля (бесплатно, без вызова модели)
   const [editKey, setEditKey] = React.useState(null);
@@ -10197,7 +10234,7 @@ function App() {
       // предложение после трёх неудачных заходов на автоматический подбор).
       // confirmedSeedsRef переживает паузу (useRef, не сбрасывается рендером).
       if (mod.id === 'M8' && !confirmedSeedsRef.current[wn]) {
-        setCurMod(null); setCurNiche(''); setCurStep(''); setCurStepIdx(0);
+        setCurMod(null); setCurNiche(''); setCurStep(''); setCurStepIdx(0); записатьХод(null); записатьХод(null);
         const candidates = await extractWordstatSeeds(Bn);
         setSeedError(lastSeedError);
         // Пустой список — не повод показать пустую панель без единого поля:
@@ -10224,9 +10261,14 @@ function App() {
       const началоМодуля = Date.now();
       setCurMod(mod.id); setCurNiche(wn); setCurStep((mod.stepsRu || mod.steps)[0]); setCurStepIdx(0);
       let stepI = 0;
+      const ход = (и) => записатьХод({ мод: mod.id,
+        имя: mod.titleRu || mod.title, ниша: wn,
+        шаг: (mod.stepsRu || mod.steps)[и], шагИдx: и, всего: mod.steps.length });
+      ход(0);
       const stepTimer = setInterval(() => {
         stepI = Math.min(stepI+1, mod.steps.length-1);
         setCurStep((mod.stepsRu || mod.steps)[stepI]); setCurStepIdx(stepI);
+        ход(stepI);
       }, Math.max(4000, Math.floor((оценкаСекунд(mod.id, loadAll())*1000)/mod.steps.length)));
 
       // Контекст берём из результатов ТОЙ ЖЕ ниши (для по-нишевых зависимостей).
@@ -10411,7 +10453,7 @@ function App() {
 
       // After M1.2 — стоп: человек выбирает нишу (только при первичной разведке, не при перегенерации ниши)
       if (mod.id === 'M2' && !rerunNiche) {
-        setCurMod(null); setCurNiche(''); setCurStep(''); setCurStepIdx(0);
+        setCurMod(null); setCurNiche(''); setCurStep(''); setCurStepIdx(0); записатьХод(null); записатьХод(null);
         const nn = (nicheData && Array.isArray(nicheData.niches) ? nicheData.niches : []).slice().sort((a,b)=>(b.score||0)-(a.score||0));
         setNicheOpts(nn);
         const rec = nn.findIndex(x => x.recommended);
@@ -10422,13 +10464,13 @@ function App() {
 
       // After M1 — show price layer selection
       if (mod.id === 'M1') {
-        setCurMod(null); setCurNiche(''); setCurStep(''); setCurStepIdx(0);
+        setCurMod(null); setCurNiche(''); setCurStep(''); setCurStepIdx(0); записатьХод(null); записатьХод(null);
         setShowLayers(true);
         await generatePriceLayers(cleanedContent);
         return; // stop — wait for user layer selection
       }
     }
-    setCurMod(null); setCurNiche(''); setCurStep(''); setCurStepIdx(0);
+    setCurMod(null); setCurNiche(''); setCurStep(''); setCurStepIdx(0); записатьХод(null);
   }, [brief, lang, mods, proj, sv, priceLayers, selectedLayers, generatePriceLayers]);
 
   const continueAfterLayers = React.useCallback(() => {
@@ -11550,16 +11592,17 @@ function App() {
                   рамки, и соседняя вкладка «Прогон» о нём не знает — рамки
                   у вкладок разные. Владелица 15.09: «непонятно, работает или
                   нет». */}
-              {isRun && (
+              {(isRun || чужойХод) && (
                 <ХодПрогона
                   модули={allMods.map(м => ({ id: м.id, title: м.titleRu || м.title,
-                    сделан: modDone(м.id), идёт: curMod === м.id }))}
+                    сделан: modDone(м.id), идёт: (curMod || (чужойХод||{}).мод) === м.id }))}
                   готов={doneCount}
-                  текущий={curModData ? { title: curModData.titleRu || curModData.title } : null}
-                  ниша={curNiche}
-                  шаг={curStep}
-                  шагИдx={curStepIdx}
-                  всегоШагов={curModData ? curModData.steps.length : 0}/>
+                  текущий={curModData ? { title: curModData.titleRu || curModData.title }
+                           : (чужойХод ? { title: чужойХод.имя } : null)}
+                  ниша={curNiche || (чужойХод||{}).ниша || ''}
+                  шаг={curStep || (чужойХод||{}).шаг || ''}
+                  шагИдx={curMod ? curStepIdx : ((чужойХод||{}).шагИдx || 0)}
+                  всегоШагов={curModData ? curModData.steps.length : ((чужойХод||{}).всего || 0)}/>
               )}
               {/* Остальные блоки разведки: источники, сегменты, эффективность
                   услуг, матрица приоритета. Владелица 15.09 спросила, куда они
@@ -11661,17 +11704,18 @@ function App() {
               подпись="Здесь появятся карты ниш со спросом, конкуренцией и экономикой."
               факты={[['Проект', brief.name]]} lang={lang}/>
             <div className="worksurface rview">
-              {isRun ? (
+              {(isRun || чужойХод) ? (
                 <React.Fragment>
                   <ХодПрогона
                     модули={allMods.map(м => ({ id: м.id, title: м.titleRu || м.title,
-                      сделан: modDone(м.id), идёт: curMod === м.id }))}
+                      сделан: modDone(м.id), идёт: (curMod || (чужойХод||{}).мод) === м.id }))}
                     готов={doneCount}
-                    текущий={curModData ? { title: curModData.titleRu || curModData.title } : null}
-                    ниша={curNiche}
-                    шаг={curStep}
-                    шагИдx={curStepIdx}
-                    всегоШагов={curModData ? curModData.steps.length : 0}/>
+                    текущий={curModData ? { title: curModData.titleRu || curModData.title }
+                             : (чужойХод ? { title: чужойХод.имя } : null)}
+                    ниша={curNiche || (чужойХод||{}).ниша || ''}
+                    шаг={curStep || (чужойХод||{}).шаг || ''}
+                    шагИдx={curMod ? curStepIdx : ((чужойХод||{}).шагИдx || 0)}
+                    всегоШагов={curModData ? curModData.steps.length : ((чужойХод||{}).всего || 0)}/>
                   <div className="card">
                     <h2>Идёт разведка ниш</h2>
                     <p style={{fontSize:13.5,color:'var(--ink-2)',lineHeight:1.6,maxWidth:'70ch',margin:0}}>
