@@ -9069,7 +9069,7 @@ function ХодПрогона({ модули, готов, текущий, ниш
   );
 }
 
-function StageHeader({ имя, подпись, раздел, факты, lang }) {
+function StageHeader({ имя, подпись, раздел, факты, lang, работа }) {
   // Плашка-заголовок страницы — ДОСЛОВНО по согласованному макету оболочки
   // (артефакт 5a34980c): там КАЖДЫЙ экран открывается одним и тем же блоком
   //   <div class="card nacre cover"><div class="chead"><div>
@@ -9104,6 +9104,13 @@ function StageHeader({ имя, подпись, раздел, факты, lang })
           <span className="kchip kchip-go rpt-mark"><span className="d"></span>{раздел || 'Исследование'}</span>
           <h1 className="covername">{имя}</h1>
           {подпись && <p className="coversub">{подпись}</p>}
+          {/* Идущая работа — в шапке: её видно всегда, не проскроллишь мимо
+              (владелица 16.09: «запустила и смотрю на пустой экран»). */}
+          {работа && (
+            <p className="coversub" style={{marginTop:6,fontWeight:600,color:'var(--acc-strong-ink)'}}>
+              ● Идёт: {работа}
+            </p>
+          )}
         </div></div>
         <dl className="coverdl">
           {строки.map(([к, в]) => <div key={к}><dt>{к}</dt><dd>{String(в)}</dd></div>)}
@@ -11671,6 +11678,8 @@ function App() {
                           results: (proj.results||[]).filter(x => x.id !== 'M2'),
                           updatedAt: new Date().toISOString() };
                         setProj(upd); sv(upd);
+                        записатьХод({ мод: 'M2', имя: 'Разведка ниш', ниша: '',
+                          шаг: 'Готовлю запуск…', шагИдx: 0, всего: 5 });
                         run(['M2'], undefined, true);
                       }}>↺ Перегенерировать разведку</button>
                     <span className="note" style={{margin:0,paddingLeft:0,maxWidth:'54ch'}}>
@@ -11702,6 +11711,10 @@ function App() {
           <React.Fragment>
             <StageHeader имя="Ниши"
               подпись="Здесь появятся карты ниш со спросом, конкуренцией и экономикой."
+              работа={(isRun || чужойХод)
+                ? ((curModData ? (curModData.titleRu || curModData.title) : (чужойХод||{}).имя || 'Разведка ниш')
+                   + ' · ' + (curStep || (чужойХод||{}).шаг || 'идёт работа'))
+                : ''}
               факты={[['Проект', brief.name]]} lang={lang}/>
             <div className="worksurface rview">
               {(isRun || чужойХод) ? (
@@ -11751,6 +11764,10 @@ function App() {
       {embedded ? (
         <StageHeader
           имя={шагИзАдреса === 'niches' ? 'Ниши' : 'Ход исследования'}
+          работа={(isRun || чужойХод)
+            ? ((curModData ? (curModData.titleRu || curModData.title) : (чужойХод||{}).имя || 'Исследование')
+               + ' · ' + (curStep || (чужойХод||{}).шаг || 'идёт работа'))
+            : ''}
           подпись={шагИзАдреса === 'niches'
             ? 'Какие ниши нашла разведка и с какими работаем дальше.'
             : 'Модули идут один за другим; каждый оставляет свой блок отчёта.'}
