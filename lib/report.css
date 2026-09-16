@@ -1946,7 +1946,8 @@ table.raw td.num{font-variant-numeric:tabular-nums;text-align:center;white-space
   background:var(--card-solid);display:flex;flex-direction:column;
   box-shadow:inset 3px 0 0 var(--acc-mid)}
 .swot .sw h3{font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;
-  color:var(--ink-3);margin:0 0 10px;display:block}
+  color:var(--ink-3);margin:0 0 10px;display:flex;align-items:baseline;
+  justify-content:space-between;gap:12px}
 .swot .sw ul{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:7px}
 .swot .sw li{font-size:13px;color:var(--ink-2);padding-left:14px;position:relative;line-height:1.5}
 .swot .sw li::before{content:"";position:absolute;left:0;top:8px;width:5px;height:5px;
@@ -2232,7 +2233,8 @@ table.raw td.num{font-variant-numeric:tabular-nums;text-align:center;white-space
   background:var(--card-solid);display:flex;flex-direction:column;
   box-shadow:inset 3px 0 0 var(--acc-mid)}
 .swot .sw h3{font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;
-  color:var(--ink-3);margin:0 0 10px;display:block}
+  color:var(--ink-3);margin:0 0 10px;display:flex;align-items:baseline;
+  justify-content:space-between;gap:12px}
 .swot .sw ul{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:7px}
 .swot .sw li{font-size:13px;color:var(--ink-2);padding-left:14px;position:relative;line-height:1.5}
 .swot .sw li::before{content:"";position:absolute;left:0;top:8px;width:5px;height:5px;

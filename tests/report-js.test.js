@@ -118,6 +118,13 @@ check('слово-вердикт и полоса одного цвета', сх�
 var swotJS=(SRC.match(/"function renderSwotGrid[\s\S]*?\}",/)||[''])[0];
 check('боковых подписей в SWOT нет', swotJS.indexOf('class=\\"cor\\"')<0);
 check('подпись квадранта в его заголовке', /swtag/.test(swotJS));
+// Подпись прижимается к правому краю — а это работает только если САМОЕ
+// специфичное правило заголовка держит flex. `.swot .sw h3{display:block}`
+// перебивало мой `.sw h3` и склеивало подпись с названием.
+var правилаH3=CSS.match(/\.swot \.sw h3\{[^}]*\}/g)||[];
+check('заголовок квадранта разводит название и подпись',
+      правилаH3.length>0 && правилаH3.every(function(п){
+        return /display:flex/.test(п) && /justify-content:space-between/.test(п); }));
 check('сетка SWOT на две колонки',
       /\.swot\{display:grid;grid-template-columns:1fr 1fr/.test(CSS)
       && CSS.indexOf('grid-template-columns:74px 1fr 1fr')<0);
