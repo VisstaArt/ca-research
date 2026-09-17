@@ -15976,6 +15976,12 @@ function App() {
     return rs.some(r=>r.id===id);
   };
   const doneCount = allMods.filter(m => modDone(m.id)).length;
+  // Модули, которые ЕСТЬ, но в набор проекта не входят. Раньше добавить их
+  // предлагали только когда всё выбранное отработало — а если из набора
+  // выпали последние звенья цепочки (так делал прогон, перезаписывая набор
+  // запущенным списком), человек просто не находил их нигде (владелица 17.09:
+  // «а почему в списке нет седьмого и восьмого?»).
+  const неВыбраны = MODULES.filter(m => !m.disabled && !m.hidden && !модулиПроекта.includes(m.id));
   const pending = allMods.filter(m => !modDone(m.id) && m.id !== curMod);
   const isRun = !!curMod;
   // Прогон закончился — зовём платформу открыть «Прогон» и обновить ту рамку:
@@ -16357,8 +16363,13 @@ function App() {
             {!isRun && pending.length > 0 && (
               <button className="btn-primary" onClick={()=>run()}>▶ Прогнать: {pending.map(m=>m.id).join(', ')}</button>
             )}
-            {!isRun && pending.length === 0 && doneCount > 0 && (
-              <button className="btn-primary" onClick={()=>setSc('form')}>＋ Добавить модули</button>
+            {!isRun && (неВыбраны.length > 0 || (pending.length === 0 && doneCount > 0)) && (
+              <button className={pending.length ? undefined : 'btn-primary'}
+                onClick={()=>setSc('form')}
+                style={pending.length ? {fontSize:12,padding:'7px 12px'} : undefined}
+                title={неВыбраны.length ? 'Не выбраны: ' + неВыбраны.map(m=>m.id).join(', ') : ''}>
+                ＋ Добавить модули{неВыбраны.length ? ' (' + неВыбраны.length + ')' : ''}
+              </button>
             )}
             {!isRun && modDone('M2') && (
               <button onClick={openNichePicker} style={{fontSize:12,padding:'7px 12px'}}>＋ Добавить ниши</button>
@@ -16417,8 +16428,12 @@ function App() {
                 })()}
               </button>
             )}
-            {pending.length === 0 && doneCount > 0 && (
-              <button className="cm-btn cm-btn-pri" onClick={()=>setSc('form')}>Добавить модули</button>
+            {(неВыбраны.length > 0 || (pending.length === 0 && doneCount > 0)) && (
+              <button className={pending.length ? 'cm-btn' : 'cm-btn cm-btn-pri'}
+                onClick={()=>setSc('form')}
+                title={неВыбраны.length ? 'Не выбраны: ' + неВыбраны.map(m=>m.id).join(', ') : ''}>
+                Добавить модули{неВыбраны.length ? ' (' + неВыбраны.length + ')' : ''}
+              </button>
             )}
             {modDone('M2') && (
               <button className="cm-btn" onClick={openNichePicker}>Добавить ниши</button>
