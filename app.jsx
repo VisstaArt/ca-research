@@ -333,8 +333,22 @@ const MODULES = [
     outputsRu: ['Источники радара','Каналы конкурентов','Разбор того, что залетает','Работающие паттерны','Бенчмарки ниши'],
     estimatedMin: 25,
     model: 'gpt-5.6-terra',
-    steps: ['Collecting competitor channels (Block 24_0)…','Measuring channel size and cadence (Block 24)…','Breaking down top content (Block 24A)…','Deriving what works (Block 24B)…','Computing niche benchmarks (Block 24C)…'],
-    stepsRu: ['Собираю каналы конкурентов…','Замеряю размер каналов и частоту публикаций…','Разбираю, что у них залетает…','Вывожу работающие приёмы…','Считаю опорные числа ниши…'],
+    // Шаги = РЕАЛЬНЫЕ этапы прогона, а не выдуманные подписи: владелица
+    // 17.09 увидела «шаг 5 из 5» на первой минуте, потому что подписи ставились
+    // по таймеру, а настоящая работа шла своим чередом. Порядок здесь совпадает
+    // с порядком в run(), и реальныйШаг() находит себя по этому списку.
+    steps: ['Audience portrait…','Measuring interest demand…','Opening competitor sites…',
+      'Reading channel posts…','Searching the web…','Measuring vc.ru articles…',
+      'Waiting for the model…','Measuring channels…','Building the report…'],
+    stepsRu: ['Собираю портрет аудитории: чем живёт и что читает',
+      'Меряю, насколько эти интересы живые',
+      'Открываю сайты конкурентов — ищу их каналы',
+      'Читаю посты на каналах конкурентов',
+      'Ищу площадки и материалы в поиске',
+      'Снимаю просмотры и лайки у статей на vc.ru',
+      'Жду ответ модели по строгой форме',
+      'Замеряю каналы конкурентов: подписчики, охват, ритм',
+      'Собираю отчёт'],
   },
   {
     id: 'M5', color: 'var(--ink)', bg: 'var(--card-solid)', border: 'var(--line)', dark: 'var(--ink)',
@@ -2828,14 +2842,39 @@ function площадкаПоАдресу(url) {
 // молчащий сайт останавливал весь модуль: всё идёт по очереди, и прогон висел
 // десятки минут (владелица 17.09). Двадцать секунд — щедро для страницы;
 // дольше значит «не отдалась», и это не ошибка, а обычное дело в вебе.
+// Общий выключатель прогона. Владелица 17.09 нажала «Остановить» и увидела,
+// что работа идёт дальше: флаг проверялся только между шагами, а внутри шага
+// висели сетевые запросы. Теперь остановка рвёт их сразу — тем же способом,
+// каким срабатывает потолок ожидания.
+let выключательПрогона = null;
+function начатьПрогон() {
+  выключательПрогона = (typeof AbortController === 'undefined') ? null : new AbortController();
+  return выключательПрогона;
+}
+function остановитьПрогон() {
+  try { if (выключательПрогона) выключательПрогона.abort(); } catch (e) {}
+}
+function прогонОстановлен() {
+  return !!(выключательПрогона && выключательПрогона.signal && выключательПрогона.signal.aborted);
+}
+
 async function загрузитьСтраницу(адрес, мс) {
   const цель = PROXY + '?url=' + encodeURIComponent(адрес);
   if (typeof AbortController === 'undefined') return fetch(цель);
+  // Прогон уже остановлен — не начинаем новых запросов вовсе.
+  if (прогонОстановлен()) throw new Error('Остановлено вами');
   const ctrl = new AbortController();
   const таймер = setTimeout(() => ctrl.abort(), мс || 20000);
+  // Рвём и по своему потолку, и по общей остановке прогона.
+  const наОстановку = () => { try { ctrl.abort(); } catch (e) {} };
+  const сигнал = выключательПрогона && выключательПрогона.signal;
+  if (сигнал) сигнал.addEventListener('abort', наОстановку);
   try {
     return await fetch(цель, { signal: ctrl.signal });
-  } finally { clearTimeout(таймер); }
+  } finally {
+    clearTimeout(таймер);
+    if (сигнал) сигнал.removeEventListener('abort', наОстановку);
+  }
 }
 
 async function fetchSite(url) {
@@ -13724,6 +13763,7 @@ function App() {
     }
     setBlockMsg('');
     остановитьRef.current = false;   // новый прогон — прежняя остановка забыта
+    начатьПрогон();                  // и новый выключатель: старый уже сорван
 
     const p = { id, createdAt: proj?.createdAt||new Date().toISOString(), updatedAt: new Date().toISOString(), brief: B, lang, mods:allSelected, results:existing, report:proj?.report||'', priceLayers, selectedLayers };
     setProj(p); setRep(p.report); sv(p); setSc('work');
@@ -13795,7 +13835,11 @@ function App() {
       // замеры и сборка отчёта — двигается реальными событиями ниже
       // (владелица 17.09: «палочки все закрашены, время 0:00, а оно ещё
       // пять минут что-то считает»).
-      const stepTimer = setInterval(() => {
+      // У M4 этапы РЕАЛЬНЫЕ — их двигает сам прогон, и таймер тут только
+      // мешал бы, обгоняя работу. У остальных модулей подписи пока по
+      // таймеру: у них нет длинного сбора, где это было бы заметно.
+      const этапыРеальные = mod.id === 'M4';
+      const stepTimer = этапыРеальные ? null : setInterval(() => {
         stepI = Math.min(stepI+1, Math.max(0, mod.steps.length-2));
         setCurStep((mod.stepsRu || mod.steps)[stepI]); setCurStepIdx(stepI);
         ход(stepI);
@@ -13803,10 +13847,15 @@ function App() {
       // Реальный шаг: подпись своя, а полоска шагов остаётся на последнем
       // делении — работа идёт, и видно, какая именно.
       const реальныйШаг = текст => {
-        const и = Math.max(0, mod.steps.length-1);
+        // Ищем этап в списке модуля: тогда «шаг 3 из 9» — правда, а не
+        // «5 из 5» на первой минуте (владелица 17.09). Не нашли — значит
+        // этап не описан в MODULES, и мы просто не двигаем счётчик назад.
+        const список = mod.stepsRu || mod.steps || [];
+        const найден = список.indexOf(текст);
+        const и = найден >= 0 ? найден : stepI;
         stepI = и; setCurStep(текст); setCurStepIdx(и);
         записатьХод({ мод: mod.id, имя: mod.titleRu || mod.title, ниша: wn,
-          шаг: текст, шагИдx: и, всего: mod.steps.length });
+          шаг: текст, шагИдx: и, всего: список.length });
       };
 
       // Контекст берём из результатов ТОЙ ЖЕ ниши (для по-нишевых зависимостей).
@@ -14145,8 +14194,22 @@ function App() {
         // владелицы 11.09.2026) — см. processM2Demand.
         if (mod.id === 'M2') full = await processM2Demand(full, Bn);
         реальныйШаг('Собираю отчёт');
-      } catch(e) { full = 'Error: '+e.message; }
-      clearInterval(stepTimer);
+      } catch(e) {
+        // Остановка человеком — не ошибка модуля: не пишем её в результат как
+        // «Error», иначе модуль сохранится сломанным и цепочка встанет.
+        const этоОстановка = остановитьRef.current || прогонОстановлен()
+          || /Остановлено вами|aborted|abort/i.test(String(e && e.message));
+        if (этоОстановка) {
+          if (stepTimer) clearInterval(stepTimer);
+          setCurMod(null); setCurNiche(''); setCurStep(''); setCurStepIdx(0);
+          записатьХод(null);
+          setBlockMsg('Прогон остановлен. Готовые модули сохранены — при следующем '
+            + 'запуске они не пересчитываются.');
+          return;
+        }
+        full = 'Error: '+e.message;
+      }
+      if (stepTimer) clearInterval(stepTimer);
 
       const usage = lastGptUsage;
       const searchCalls = searchCallCount;
@@ -15790,7 +15853,11 @@ function App() {
                   остановке остаются — пересчитывать их заново не придётся. */}
               <button onClick={()=>{
                   остановитьRef.current = true;
-                  setCurStep('Останавливаю — доделываю текущий шаг…');
+                  // Рвём текущие запросы, а не ждём, пока доделается шаг:
+                  // владелица 17.09 нажала «Остановить» и увидела, что работа
+                  // идёт дальше.
+                  остановитьПрогон();
+                  setCurStep('Останавливаю…');
                 }}
                 title="Остановить прогон. Всё, что уже посчитано, сохранится: при следующем запуске эти модули не пересчитываются."
                 style={{fontSize:11,padding:'3px 10px',color:'var(--ink-2)',
@@ -15806,8 +15873,14 @@ function App() {
                          overflowWrap:'anywhere'}}>{curStep}</p>
               <div style={{display:'flex',gap:5}}>
                 {curModData.steps.map((_,i)=>(
-                  <div key={i} style={{flex:1,height:3,borderRadius:2,
-                    background:i<=curStepIdx?curModData.color:'var(--line-2)'}}/>
+                  // Цвет модуля у контент-радара — чернила, и пройденные шаги
+                  // выглядели как сплошная чёрная полоса, неотличимая от
+                  // непройденных (владелица 17.09). Пройденное красим
+                  // фирменным, текущий шаг выделяем.
+                  <div key={i} style={{flex:1,height:i===curStepIdx?4:3,borderRadius:2,
+                    background:i<curStepIdx ? 'var(--mid)'
+                      : i===curStepIdx ? 'var(--acc-ink)'
+                      : 'var(--line-2)'}}/>
                 ))}
               </div>
             </div>

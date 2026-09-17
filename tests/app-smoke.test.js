@@ -182,10 +182,10 @@ var тм=исх.slice(исх.indexOf('function CountdownTimer'), исх.indexOf(
  });
 // Панель хода: имя модуля и ниша идут строкой во всю ширину, а не в колонке
 // рядом с таймером — там они переносились по слогам (владелица 17.09).
-var пан=исх.slice(исх.indexOf('<div className="status-bar">'), исх.indexOf('<div className="status-bar">')+2600);
+var пан=исх.slice(исх.indexOf('<div className="status-bar">'), исх.indexOf('<div className="status-bar">')+4200);
 [['шапка панели отдельной строкой', /alignItems:'baseline',justifyContent:'space-between'/],
  ['текст шага не в узкой колонке', /gridTemplateColumns:'minmax\(0,1fr\) 168px'/],
- ['будущие шаги светлые, а не чернильные', /background:i<=curStepIdx\?curModData\.color:'var\(--line-2\)'/]]
+ ['будущие шаги светлые, а не чернильные', { test: function(т){ return т.indexOf("i===curStepIdx ? 'var(--acc-ink)'") > 0; } }]]
  .forEach(function(п){
    if (п[1].test(пан)) console.log('  ok   '+п[0]);
    else { провалов++; console.log('  FAIL '+п[0]); }
@@ -284,3 +284,14 @@ console.log(провалов===0 ? '\nвсё сошлось (оценки вре
    else { провалов++; console.log('  FAIL '+п[0]); }
  });
 console.log(провалов===0 ? '\nвсё сошлось (остановка)' : '\nПРОВАЛОВ: '+провалов);
+
+// Шаги прогона должны быть настоящими: владелица 17.09 увидела «шаг 5 из 5»
+// на первой минуте и одинаковые чёрные полоски.
+[['у контент-радара девять реальных этапов', /'Собираю портрет аудитории: чем живёт и что читает',/],
+ ['этап ищется в списке модуля', /const найден = список\.indexOf\(текст\)/],
+ ['таймер не обгоняет реальные этапы', /const этапыРеальные = mod\.id === 'M4'/],
+ ['пройденное и текущее видно разным цветом', /i<curStepIdx \? 'var\(--mid\)'/]].forEach(function(п){
+  if (п[1].test(исх)) console.log('  ok   '+п[0]);
+  else { провалов++; console.log('  FAIL '+п[0]); }
+});
+console.log(провалов===0 ? '\nвсё сошлось (шаги)' : '\nПРОВАЛОВ: '+провалов);
