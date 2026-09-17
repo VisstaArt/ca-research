@@ -14369,7 +14369,9 @@ function App() {
           try {
             const черновик = { id: mod.id, niche: wn, content: '', черновик: true,
               строгое, кодСборки: отпечатокСборки(), at: new Date().toISOString(),
-              ...(usageПромежуточный() ? { usage: usageПромежуточный() } : {}) };
+              ...(usageПромежуточный() ? { usage: usageПромежуточный() } : {}),
+              ...(searchCallCount ? { searchCalls: searchCallCount } : {}),
+              ...(keywordCallCount ? { keywordCalls: keywordCallCount } : {}) };
             const без = (proj?.results || []).filter(r => !(r.id === mod.id && (r.niche || '') === wn));
             const обновлён = { ...proj, results: [...без, черновик], updatedAt: new Date().toISOString() };
             setProj(обновлён); sv(обновлён);
@@ -16291,6 +16293,14 @@ function App() {
                       <span style={{fontSize:10,marginRight:8,color:'var(--ink-3)'}}
                         title="Этот модуль по устройству не ищет сам: он строится на голосе клиента и персонах, собранных раньше. Живые источники у него те же, что у модулей до него.">
                         на прежних данных
+                      </span>
+                    );
+                    // У незаконченного модуля счётчики ещё копятся — метка
+                    // «без поиска» пугала бы зря (владелица 17.09).
+                    if (r.черновик) return (
+                      <span style={{fontSize:10,marginRight:8,color:'var(--acc-ink)',fontWeight:700}}
+                        title="Ответ модели уже получен и сохранён, идут замеры и сборка отчёта. Дождитесь конца прогона — этот блок обновится сам.">
+                        идёт сборка
                       </span>
                     );
                     return (
