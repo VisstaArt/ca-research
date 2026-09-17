@@ -1,0 +1,30 @@
+ObjC.import('Foundation');
+// ПОТОЛОК ОЖИДАНИЯ у каждого сетевого вызова. Без него один молчащий сервер
+// останавливает весь модуль: у нас всё идёт по очереди, и прогон висит
+// десятками минут (владелица 17.09: «идёт тридцать пять минут и не
+// заканчивается»). Параллелить она запретила — значит тем более нельзя
+// позволять одному запросу держать очередь.
+function readFile(p){return $.NSString.stringWithContentsOfFileEncodingError($(p),$.NSUTF8StringEncoding,null).js;}
+var ROOT=$.NSFileManager.defaultManager.currentDirectoryPath.js;
+var SRC=readFile(ROOT+'/app.jsx');
+var AUTH=readFile(ROOT+'/lib/auth.js');
+console.log('tests/timeouts.test.js');
+var провалов=0;
+function ок(имя,усл,что){ if(усл) console.log('  ok   '+имя); else { провалов++; console.log('  FAIL '+имя+(что?': '+что:'')); } }
+
+ок('у запросов к нашим функциям есть потолок', /const ПОТОЛОК_МС = \d+;/.test(AUTH), 'нет');
+ок('потолок ставится через AbortController', /new AbortController\(\)/.test(AUTH), 'нет');
+ок('таймер снимается после ответа', /clearTimeout\(таймер\)/.test(AUTH), 'нет');
+ок('authFetch ходит через обёртку', /await сПотолком\(url/.test(AUTH), 'нет');
+
+ок('страницы грузятся через обёртку с потолком', /async function загрузитьСтраницу/.test(SRC), 'нет');
+ок('прямых fetch к прокси не осталось', SRC.indexOf('fetch(PROXY') < 0,
+   'остался прямой вызов');
+ок('у загрузки страницы свой таймер', /setTimeout\(\(\) => ctrl\.abort\(\), мс \|\| 20000\)/.test(SRC), 'нет');
+
+// Потолок должен быть щедрым к модели и строгим к страницам.
+var м=AUTH.match(/const ПОТОЛОК_МС = (\d+);/);
+ок('модели даём не меньше двух минут', м && +м[1] >= 120000, м ? м[1] : '—');
+ок('но не бесконечность', м && +м[1] <= 300000, м ? м[1] : '—');
+
+console.log(провалов ? ('ПРОВАЛОВ: '+провалов) : 'зависший запрос больше не держит прогон');

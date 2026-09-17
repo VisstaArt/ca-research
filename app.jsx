@@ -2786,7 +2786,7 @@ async function каналыКонкурентовССайтов(конкурен
     for (const адрес of [база, база + '/contacts', база + '/kontakty']) {
       пробовали.push(адрес);
       try {
-        const r = await fetch(PROXY + '?url=' + encodeURIComponent(адрес));
+        const r = await загрузитьСтраницу(адрес);
         if (!r.ok) continue;
         const html = await r.text();
         for (const ссылка of соцсетиИзHTML(html)) {
@@ -2822,6 +2822,20 @@ function площадкаПоАдресу(url) {
     [/wa\.me/, 'WhatsApp']];
   const п = пары.find(([р]) => р.test(т));
   return п ? п[1] : 'сайт';
+}
+
+// Загрузка публичной страницы через прокси с ПОТОЛКОМ ОЖИДАНИЯ. Без него один
+// молчащий сайт останавливал весь модуль: всё идёт по очереди, и прогон висел
+// десятки минут (владелица 17.09). Двадцать секунд — щедро для страницы;
+// дольше значит «не отдалась», и это не ошибка, а обычное дело в вебе.
+async function загрузитьСтраницу(адрес, мс) {
+  const цель = PROXY + '?url=' + encodeURIComponent(адрес);
+  if (typeof AbortController === 'undefined') return fetch(цель);
+  const ctrl = new AbortController();
+  const таймер = setTimeout(() => ctrl.abort(), мс || 20000);
+  try {
+    return await fetch(цель, { signal: ctrl.signal });
+  } finally { clearTimeout(таймер); }
 }
 
 async function fetchSite(url) {
@@ -2895,7 +2909,7 @@ async function fetchSite(url) {
     base+'/services', base+'/o-nas', base+'/uslugi', base+'/products', base+'/o-kompanii'];
   for (const u of candidates) {
     try {
-      const r = await fetch(PROXY+'?url='+encodeURIComponent(u));
+      const r = await загрузитьСтраницу(u);
       if (!r.ok) continue;
       const t = await r.text();
       собратьДизайн(t, u);
@@ -4429,8 +4443,8 @@ async function постыДзен(url, чей) {
             || String(url || '').match(/zen\.yandex\.ru\/(?:id\/)?([A-Za-z0-9_.-]+)/i) || [])[1];
   if (!имя) return [];
   try {
-    const r = await fetch(PROXY + '?url=' + encodeURIComponent(
-      'https://dzen.ru/api/v3/launcher/export?channel_name=' + encodeURIComponent(имя) + '&clid=300'));
+    const r = await загрузитьСтраницу(
+      'https://dzen.ru/api/v3/launcher/export?channel_name=' + encodeURIComponent(имя) + '&clid=300');
     if (!r.ok) return [];
     const д = await r.json();
     const канал = (д.channel && д.channel.source) || {};
@@ -4469,7 +4483,7 @@ async function метрикиVC(url) {
   const ид = (String(url || '').match(/vc\.ru\/[^?#]*?(\d{5,9})(?:-|\/|$)/) || [])[1];
   if (!ид) return null;
   try {
-    const r = await fetch(PROXY + '?url=' + encodeURIComponent('https://api.vc.ru/v2.5/content?id=' + ид));
+    const r = await загрузитьСтраницу('https://api.vc.ru/v2.5/content?id=' + ид);
     if (!r.ok) return null;
     const д = (await r.json()).result;
     if (!д || !д.title) return null;
@@ -4536,8 +4550,8 @@ async function моиСтатьиVC(ссылки, brief) {
       try {
         const хвост = последний
           ? '&lastId=' + последний + '&lastSortingValue=' + последнееЗначение : '';
-        const r = await fetch(PROXY + '?url=' + encodeURIComponent(
-          'https://api.vc.ru/v2.5/timeline?subsitesIds=' + ид + '&sorting=new' + хвост));
+        const r = await загрузитьСтраницу(
+          'https://api.vc.ru/v2.5/timeline?subsitesIds=' + ид + '&sorting=new' + хвост);
         if (!r.ok) break;
         const рез = (await r.json()).result || {};
         const items = рез.items || [];
@@ -4620,7 +4634,7 @@ async function постыКанала(url, чей) {
     let html = '';
     try {
       const цель = 'https://t.me/s/' + имяКанала + (до ? '?before=' + до : '');
-      const r = await fetch(PROXY + '?url=' + encodeURIComponent(цель));
+      const r = await загрузитьСтраницу(цель);
       if (!r.ok) break;
       html = await r.text();
     } catch (e) { break; }
@@ -4680,7 +4694,7 @@ async function материалыКаналовКонкурентов(канал
 // голый адрес.
 async function имяКаналаПоМетатегам(url) {
   try {
-    const r = await fetch(PROXY + '?url=' + encodeURIComponent(String(url || '')));
+    const r = await загрузитьСтраницу(String(url || ''));
     if (!r.ok) return null;
     const html = await r.text();
     const имя = (html.match(/property=["']og:title["'][^>]*content=["']([^"']+)["']/i) || [])[1] || '';
@@ -4722,7 +4736,7 @@ async function замерКанала(url) {
   const цель = тг ? 'https://t.me/s/' + тг[1] : адрес;
   let html = '';
   try {
-    const r = await fetch(PROXY + '?url=' + encodeURIComponent(цель));
+    const r = await загрузитьСтраницу(цель);
     if (!r.ok) return null;
     html = await r.text();
   } catch (e) { return null; }
