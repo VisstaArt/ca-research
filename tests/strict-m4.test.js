@@ -19,7 +19,7 @@ function ok(n,g,w){var r=JSON.stringify(g)===JSON.stringify(w);
 eval(взять('safeJson'));
 globalThis.blockScriptsM3=[];
 eval(взять('опознатьПлощадку')); eval(взять('отпечатокСборки')); eval(взять('медиана')); eval(взять('сводкаФорматов'));
-eval(взять('счётЗамеров')); eval(взять('разметкаM4')); eval(взять('текстИзСтрогогоM4'));
+eval(взять('плашкаСбояПоиска')); eval(взять('счётЗамеров')); eval(взять('разметкаM4')); eval(взять('текстИзСтрогогоM4'));
 var КОД=renderResearchHTML('', {}).js;
 
 function собрать(д){

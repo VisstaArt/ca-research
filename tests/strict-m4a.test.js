@@ -20,7 +20,7 @@ function ok(n,g,w){var r=JSON.stringify(g)===JSON.stringify(w);
 eval(взять('safeJson'));
 globalThis.blockScriptsM3=[];
 eval(взять('опознатьПлощадку')); eval(взять('отпечатокСборки')); eval(взять('медиана'));
-eval(взять('разметкаM4A')); eval(взять('текстИзСтрогогоM4A'));
+eval(взять('плашкаСбояПоиска')); eval(взять('разметкаM4A')); eval(взять('текстИзСтрогогоM4A'));
 var КОД=renderResearchHTML('', {}).js;
 
 function собрать(д){
