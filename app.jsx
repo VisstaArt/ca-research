@@ -533,13 +533,19 @@ const saveAll = l => {
 // этом УЗНАТЬ, а не обнаружить после обновления страницы, что оплаченного
 // прогона нет (владелица 17.09: «обновила — данные не сохранились»).
 let наПотерю = null;   // сюда интерфейс кладёт обработчик предупреждения
-const upsert = p => {
+const upsert = (p, толькоМестно) => {
   const a = loadAll();
   const i = a.findIndex(x => x.id === p.id);
   if (i >= 0) a[i] = p; else a.unshift(p);
   const легло = saveAll(a);
   if (!легло && наПотерю) наПотерю();
-  syncToDb(p);
+  // Черновик в облако НЕ уходит. Он живёт секунды — ровно до конца замеров —
+  // и нужен только как страховка от потери в браузере. А выгрузка идёт с
+  // повторами: черновик, отправленный первым, мог долететь ПОЗЖЕ готового
+  // результата и затереть его в облаке. После перезагрузки страницы человек
+  // получал обратно черновик и надпись «идёт сборка» у законченного модуля
+  // (владелица 17.09).
+  if (!толькоМестно) syncToDb(p);
 };
 const loadUiLang = () => {
   // Внутри платформы язык интерфейса — русский: платформа сейчас русская, и
@@ -13834,6 +13840,17 @@ function App() {
   // надвое и не увидела нового модуля в старом проекте — он честно не был
   // выбран. Дополняем набор новинками, ставя каждую на её место в цепочке.
   const НОВЫЕ_МОДУЛИ = [{ id: 'M4A', после: 'M4' }];
+  // Новинку предлагаем ОДИН раз на проект: дальше человек хозяин — снял
+  // галочку, значит снял. Без этой отметки любая попытка «поставить галочку
+  // самим» означала бы, что снять модуль вообще нельзя.
+  const ключНовинок = id => 'ca_новинки_' + (id || 'нет');
+  const ужеПредложены = id => {
+    try { return JSON.parse(localStorage.getItem(ключНовинок(id)) || '[]'); } catch { return []; }
+  };
+  const отметитьПредложенным = (id, ids) => {
+    try { localStorage.setItem(ключНовинок(id),
+      JSON.stringify([...new Set([...ужеПредложены(id), ...ids])])); } catch {}
+  };
   const дополнитьНовыми = список => {
     let из = (список || []).slice();
     for (const н of НОВЫЕ_МОДУЛИ) {
@@ -13861,7 +13878,7 @@ function App() {
       .sort((а, б) => порядок.indexOf(а) - порядок.indexOf(б));
   };
 
-  const sv = React.useCallback(p => { upsert(p); ref(); return p; }, []);
+  const sv = React.useCallback((p, толькоМестно) => { upsert(p, толькоМестно); ref(); return p; }, []);
   // Память браузера переполнена — говорим прямо и подсказываем, что делать.
   React.useEffect(() => {
     наПотерю = () => setBlockMsg('Память браузера переполнена, и результат туда не '
@@ -13946,10 +13963,19 @@ function App() {
     const b={...(p.brief||{})};
     if(b.geo&&!b.geoMarket){b.geoMarket=b.geo;delete b.geo;}
     setProj(p); setBrief({...empty,...b}); setLang(p.lang||'Russian');
-    setMods(дополнитьНовыми((p.mods||['M2','M3']).filter(id => {
+    const свои = (p.mods||['M2','M3']).filter(id => {
       const м = MODULES.find(m=>m.id===id);
       return м && !м.disabled && !м.hidden;
-    }))); setRep(p.report||'');
+    });
+    // Новый модуль ВЫБИРАЕМ, а не просто показываем: раньше он появлялся в
+    // списке серым, запустить его было нельзя, и это читалось как поломка
+    // (владелица 17.09: «не выделен, сразу идёт пятый»).
+    const предложены = ужеПредложены(p.id);
+    const сНовыми = дополнитьНовыми(свои);
+    const добавились = сНовыми.filter(x => !свои.includes(x) && !предложены.includes(x));
+    setMods(предложены.length ? [...свои, ...добавились] : сНовыми);
+    if (добавились.length) отметитьПредложенным(p.id, добавились);
+    setRep(p.report||'');
     setExp({}); setRepOpen(false); setXled('');
     setShowLayers(false); setPriceLayers(p.priceLayers||[]); setSelectedLayers(p.selectedLayers||[]);
     // Если разведка сделана, а ниша ещё не выбрана — восстановить стоп-точку выбора
@@ -14476,7 +14502,7 @@ function App() {
               ...(keywordCallCount ? { keywordCalls: keywordCallCount } : {}) };
             const без = (proj?.results || []).filter(r => !(r.id === mod.id && (r.niche || '') === wn));
             const обновлён = { ...proj, results: [...без, черновик], updatedAt: new Date().toISOString() };
-            setProj(обновлён); sv(обновлён);
+            setProj(обновлён); sv(обновлён, true);   // только в браузер, см. upsert
           } catch (e) { if (window.console) console.warn('Черновик не сохранился:', e); }
         }
         if (mod.id === 'M4' && строгое) { реальныйШаг('Замеряю каналы конкурентов: подписчики, охват, ритм'); строгое = await замерКаналовСтрогое(строгое, Bn); }
@@ -14727,6 +14753,36 @@ function App() {
         + '. Посчитанные модули сохранены — нажмите ↺ на том, который не доделался.');
     }
   }, [прогонВнутри]);
+
+  // Досчитать оплаченный черновик. Ответ модели уже получен и сохранён —
+  // не хватает только замеров и сборки отчёта, а это наша работа, без денег.
+  // Раньше единственным выходом был повтор всего модуля за полную цену
+  // (владелица 17.09: «прогон закончился, а он всё пишет „идёт сборка“»).
+  const [досчитываю, setДосчитываю] = React.useState('');
+  const досчитать = React.useCallback(async r => {
+    if (!r || !r.строгое) return;
+    setДосчитываю(resKey(r)); setBlockMsg('');
+    try {
+      const Bn = { ...brief, ...(r.niche ? { selectedNiche: r.niche } : {}), researchLang: lang };
+      let строгое = r.строгое;
+      if (r.id === 'M4') {
+        строгое = await замерКаналовСтрогое(строгое, Bn);
+        строгое = await замерСвоихКаналов(строгое, Bn);
+      }
+      const content = ВЫЖИМКИ[r.id] ? ВЫЖИМКИ[r.id](строгое) : (r.content || '');
+      const готов = { ...r, строгое, content: cleanContent(content),
+        chartData: extractChartData(content), досчитан: true,
+        at: new Date().toISOString() };
+      delete готов.черновик;
+      const без = (proj?.results || []).filter(x => !(x.id === r.id && (x.niche || '') === (r.niche || '')));
+      const upd = { ...proj, results: [...без, готов], updatedAt: new Date().toISOString() };
+      setProj(upd); sv(upd);
+    } catch (e) {
+      setBlockMsg('Досчитать не вышло: ' + ((e && e.message) || e)
+        + '. Ответ модели сохранён — попробуйте ещё раз.');
+    }
+    setДосчитываю('');
+  }, [brief, lang, proj, sv]);
 
   const continueAfterLayers = React.useCallback(() => {
     setShowLayers(false);
@@ -16451,6 +16507,14 @@ function App() {
                       title="Перегенерировать: новый поиск для этого модуля и зависимых ниже">
                       ↺
                     </button>
+                    {r.черновик && r.строгое && (
+                      <button onClick={e=>{ e.stopPropagation(); досчитать(r); }}
+                        disabled={досчитываю === resKey(r)}
+                        style={{padding:'3px 8px',fontSize:10,color:m.dark,borderColor:m.border,background:'rgba(255,255,255,0.7)'}}
+                        title="Ответ модели уже оплачен и сохранён — доделаем замеры и отчёт из него, без нового обращения к модели">
+                        {досчитываю === resKey(r) ? 'досчитываю…' : '⟳ досчитать отчёт'}
+                      </button>
+                    )}
                     <button onClick={e=>{
                         e.stopPropagation();
                         // Ручное редактирование результата: бесплатно, без вызова модели.
