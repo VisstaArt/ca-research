@@ -16776,6 +16776,37 @@ function App() {
         );
       })}
 
+      {/* Модули, до которых очередь ещё не дошла. Раскрывающийся блок есть
+          только у отработавшего модуля, и цепочка обрывалась на последнем
+          готовом: нового модуля просто не было видно, а запустить его можно
+          было лишь общей кнопкой сверху (владелица 17.09, трижды). Теперь
+          вся цепочка на виду, и у каждого своя кнопка. */}
+      {!isRun && pending.length > 0 && (
+        <div style={{marginTop:4}}>
+          <p className="note" style={{margin:'0 0 8px'}}>Ещё не исследованы</p>
+          {pending.map(m => (
+            <div key={m.id} style={{display:'flex',alignItems:'center',gap:12,flexWrap:'wrap',
+                border:'1px solid var(--line)',borderRadius:12,padding:'10px 14px',marginBottom:8,
+                background:'var(--card-solid)'}}>
+              <span style={{fontSize:11,color:'var(--ink-3)',fontVariantNumeric:'tabular-nums',
+                minWidth:34}}>{m.id}</span>
+              <span style={{flex:'1 1 16ch',minWidth:0,fontSize:13}}>{m.titleRu || m.title}</span>
+              <span style={{fontSize:11,color:'var(--ink-3)',whiteSpace:'nowrap'}}>
+                ≈ {m.estimatedMin} мин{(() => {
+                  const c = сметаЦентов([m.id], nichesOf(brief).length || 1);
+                  return c != null ? ' · ' + деньгами(c) : '';
+                })()}
+              </span>
+              <button className="cm-btn" onClick={()=>run([m.id])}
+                style={{whiteSpace:'nowrap'}}
+                title={'Запустить только этот модуль: ' + (m.titleRu || m.title)}>
+                Исследовать
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+
       {/* В платформе этого блока нет: проверка языка — техническая часть
           (владелица: «сюда её выносить не нужно»), а выгрузка живёт на этапе
           «Отчёт», когда отчёт уже сформирован. В самостоятельном инструменте
