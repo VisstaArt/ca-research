@@ -398,8 +398,12 @@ const MODULES = [
   },
   {
     id: 'M6', color: 'var(--ink)', bg: 'var(--card-solid)', border: 'var(--line)', dark: 'var(--ink)',
-    // Персоны строятся на дословных цитатах из M3 — без VoC это выдумка
-    requires: ['M5'],
+    // Персоны строятся на дословных цитатах из M5 — без голоса клиента это
+    // выдумка. И на портрете аудитории из M4A: решение владелицы 18.09 —
+    // «психологию надо завязать и на аудиторию». Там живой человек (чем занят,
+    // что читает, где сидит, через кого узнаёт), а без него персона получается
+    // из одних жалоб.
+    requires: ['M5', 'M4A'],
     title: 'Customer Psychology',
     titleRu: 'Психология покупки и путь клиента',
     taglineEn: 'How customers think, decide, and what stops them from buying',
@@ -7926,7 +7930,7 @@ Only quotes ALSO present verbatim in BLOCK 07/07A above — this is curation of 
 ЕСЛИ ОТВЕТ ИДЁТ ПО СХЕМЕ (json_schema) — таблиц и блока CHART_DATA не рисуй, заполняй поля схемы. Требования те же: цитаты ДОСЛОВНЫЕ, каждая со своим адресом страницы; хуки только ОТОБРАННЫЕ из уже выписанных цитат, сочинять нельзя; сколько нашлось — столько и выписывай. Пустой список честнее выдуманных фраз: по выдуманным напишут тексты, которых аудитория не узнает.`;
 }
 
-function buildM6Prompt(brief, lang, prev, coverage) {
+function buildM6Prompt(brief, lang, prev, coverage, аудитория) {
   // Полный M3: персоны обязаны брать ДОСЛОВНЫЕ цитаты и URL из VoC.
   // При обрезке до 1500 символов модуль видел только легенду Confidence и выдумывал цитаты.
   const ctx = prev ? `\nCONTEXT — РЕЗУЛЬТАТ M3 (VoC), ИСТОЧНИК ЦИТАТ ДЛЯ ПЕРСОН:\n${prev.slice(0,16000)}\n` : '';
@@ -7934,7 +7938,21 @@ function buildM6Prompt(brief, lang, prev, coverage) {
   // ctx (не внутри slice(0,16000)!), потому что блок приклеен в САМЫЙ КОНЕЦ M3 и при
   // длинном VoC не попадёт в первые 16000 символов среза выше — гейт молча пропадёт.
   const coverageBlock = coverage ? `\n${coverage}\n` : '';
-  return `${ctx}${coverageBlock}
+  // Портрет аудитории из M4A — отдельным блоком, не внутри среза выше: персона
+  // должна знать не только жалобы, но и живого человека за ними (владелица
+  // 18.09). Правило ниже прямое: сила перехода без опоры на эти данные —
+  // догадка, и её положено помечать.
+  const аудиторияБлок = аудитория ? `
+CONTEXT — РЕЗУЛЬТАТ M4A (АУДИТОРИЯ: ГДЕ СИДИТ, ЧЕМ ЖИВЁТ, КОГО ЧИТАЕТ):
+${String(аудитория).slice(0, 9000)}
+
+КАК ЭТИМ ПОЛЬЗОВАТЬСЯ: интересы и места из M4A — это КОНТЕКСТ ЖИЗНИ персоны.
+Путь клиента начинается не на нашем сайте, а там, где человек уже сидит: в
+чате, у блогера, в подборке. Первый шаг пути и точку первого касания бери
+ОТТУДА, а не выдумывай «увидел рекламу». Голоса из «через кого узнают» —
+это и есть канал, через который персона впервые слышит о таких продуктах.
+` : '';
+  return `${ctx}${coverageBlock}${аудиторияБлок}
 Fill module M4 blocks. ALL output in ${lang}. Only open sources.
 
 ═══════════════════════════════════════════════
@@ -14105,11 +14123,21 @@ function App() {
   // Save brief to project when returning from edit form
   const saveBriefToProject = React.useCallback(() => {
     if (proj) {
-      const upd = {...proj, brief, lang, updatedAt: new Date().toISOString()};
+      // НАБОР МОДУЛЕЙ ТОЖЕ СОХРАНЯЕМ. Раньше здесь были только бриф и язык:
+      // человек отмечал модуль на экране выбора, возвращался — и модуль
+      // пропадал. В платформе это видно сразу: переход между этапами
+      // перезагружает рамку, и набор читается из проекта заново (владелица
+      // 18.09: «добавила седьмой и восьмой — не появились»).
+      // Берём РОВНО то, что человек отметил: дополнять новинками здесь нельзя —
+      // он мог только что снять галочку осознанно.
+      const порядок = MODULES.map(x => x.id);
+      const upd = {...proj, brief, lang,
+        mods: mods.slice().sort((а, б) => порядок.indexOf(а) - порядок.indexOf(б)),
+        updatedAt: new Date().toISOString()};
       setProj(upd);
       sv(upd);
     }
-  }, [proj, brief, lang, sv]);
+  }, [proj, brief, lang, mods, sv]);
 
   const goNew = () => {
     setProj(null); setBrief(empty); setLang('Russian'); setMods(['M2','M3']);
@@ -14154,7 +14182,7 @@ function App() {
       case 'M3': return buildM3Prompt(brief, lang, p);
       case 'M4': return buildM4Prompt(brief, lang, p);
       case 'M5': return buildM5Prompt(brief, lang, p);
-      case 'M6': return buildM6Prompt(brief, lang, p, extractSection(p, /^#### VoC Coverage/i));
+      case 'M6': return buildM6Prompt(brief, lang, p, extractSection(p, /^#### VoC Coverage/i));   // аудиторию подкладывает run()
       case 'M7': return buildM7Prompt(brief, lang, p);
       case 'CONTENT': return buildContentPrompt(brief, lang, p);
       case 'M8': return buildM8Prompt(brief, lang, p);
@@ -14475,6 +14503,15 @@ function App() {
             фраз: интересыЗамер.reduce((н, г) => н + (г.фразы || []).length, 0) };
           userPrompt = buildM4APrompt(Bn, lang, prevContent || '', evidenceA, compsA,
                                       сегменты, портреты, интересыЗамер);
+        } else if (mod.id === 'M6') {
+          // Психология строится на ДВУХ опорах: голос клиента (M5) даёт слова и
+          // боли, аудитория (M4A) — живого человека за ними. Раньше модуль
+          // получал только предыдущий модуль цепочки, и портрет аудитории до
+          // него не доходил вовсе (владелица 18.09).
+          const м4a = findDep('M4A');
+          userPrompt = buildM6Prompt(Bn, lang, prevContent || '',
+            extractSection(prevContent || '', /^#### VoC Coverage/i),
+            м4a ? м4a.content : '');
         } else if (mod.id === 'M5') {
           // VoC: живые цитаты только из реального поиска.
           // Конкурентов берём из уже готового M2 ТОЙ ЖЕ ниши — по ним ищем жалобы;
