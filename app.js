@@ -1,6 +1,6 @@
 // СОБРАНО АВТОМАТИЧЕСКИ из app.jsx — не править руками.
 // Правки вносить в app.jsx, затем: osascript -l JavaScript tools/build.js
-// отпечаток-исходника: 262a31a214609f72
+// отпечаток-исходника: dc75f1fcd313bbe8
 // Функции контракта живут в lib/contract.js. Разбираем их сюда, чтобы весь
 // остальной код обращался к ним по прежним именам и не менялся.
 const{GLOBAL_MODS,isPerNiche,dropOrphans,nichesOf,resKey,splitMdRow,isMdSeparator,parseMdTables,buildModuleEntry,pickTable,pickColumn,withStableIds}=CAContract;// Название модуля берётся из MODULES — это конфиг ИНТЕРФЕЙСА, и сборщик
@@ -3522,11 +3522,12 @@ const[chTitle,setChTitle]=React.useState('');const[chToken,setChToken]=React.use
 const saveApprovalChannel=async()=>{setChBusy(true);setChMsg('');try{const A=window.CAAuth;const r=await fetch(A.SUPABASE_URL+'/rest/v1/rpc/set_approval_channel',{method:'POST',headers:{apikey:A.SUPABASE_ANON_KEY,Authorization:'Bearer '+A.getAccessToken(),'Content-Type':'application/json'},body:JSON.stringify({p_client:clientIdFromUrl,p_kind:'telegram',// purpose обязателен: у клиента ДВА телеграма — группа согласования и
 // канал публикации. Без него второй вытесняет первый, и материал
 // уходит подписчикам вместо проверки (контент-машина, миграция 007).
-p_purpose:'approval',// На подписке в группу добавляют НАШЕГО бота: заводить своего у
-// @BotFather ради утверждения постов — ровно та возня, за отсутствие
-// которой платят подписку (контент-машина, миграция 008). На своих
-// ключах человек ставит своего бота и даёт его токен.
-p_bot:'own',p_token:chToken.trim(),p_address:chAddr.trim(),p_title:chTitle.trim()||'Группа согласования',p_default:true})});const d=await r.json().catch(()=>null);if(!r.ok){const m=d&&(d.message||d.hint)||'';throw new Error(/does not exist|schema cache/i.test(m)?'Хранилище каналов в базе ещё не заведено — нужна миграция, её применяет владелица.':m||'Не получилось сохранить');}setChSaved(typeof d==='string'?d:chAddr.trim());setChToken('');setChMsg('Группа сохранена. Она пока помечена непроверенной: база в интернет не ходит. '+'Нажмите «Проверить связь» — бот поздоровается в группе, и это единственное '+'доказательство, что всё работает.'+' Не забудьте добавить бота в группу и дать ему право писать.');}catch(e){setChMsg(e.message);}setChBusy(false);};// Живая проверка: задание воркеру. Галочку рисует не он, а доставленное
+p_purpose:'approval',// p_bot НЕ ШЛЁМ. PostgREST ищет функцию по именам аргументов, и
+// лишний аргумент даёт не «параметр проигнорирован», а «функции не
+// существует»: у владелицы применена версия из миграции 007, где
+// такого аргумента нет вовсе. Умолчание 'own' одинаково в 007 и 008,
+// поэтому вызов без него работает при любой из них (17.09).
+p_token:chToken.trim(),p_address:chAddr.trim(),p_title:chTitle.trim()||'Группа согласования',p_default:true})});const d=await r.json().catch(()=>null);if(!r.ok){const m=d&&(d.message||d.hint)||'';throw new Error(/does not exist|schema cache/i.test(m)?'Хранилище каналов в базе ещё не заведено — нужна миграция, её применяет владелица.':m||'Не получилось сохранить');}setChSaved(typeof d==='string'?d:chAddr.trim());setChToken('');setChMsg('Группа сохранена. Она пока помечена непроверенной: база в интернет не ходит. '+'Нажмите «Проверить связь» — бот поздоровается в группе, и это единственное '+'доказательство, что всё работает.'+' Не забудьте добавить бота в группу и дать ему право писать.');}catch(e){setChMsg(e.message);}setChBusy(false);};// Живая проверка: задание воркеру. Галочку рисует не он, а доставленное
 // сообщение — зелёный значок можно нарисовать и при чужой ошибке.
 const checkApprovalChannel=async()=>{setChBusy(true);setChMsg('');try{const A=window.CAAuth;const заголовки={apikey:A.SUPABASE_ANON_KEY,Authorization:'Bearer '+A.getAccessToken(),'Content-Type':'application/json'};// Через функцию базы, а не прямой записью в очередь: она проверяет доступ,
 // отказывает, если канал не подключён, и склеивает повторные нажатия в
