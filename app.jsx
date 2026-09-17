@@ -6176,6 +6176,26 @@ const ВЫЖИМКИ = { M3: текстИзСтрогогоM3, M2: текстИ�
 // промпте это персональные данные, отправленные наружу без причины
 // (17.09, до того как поля появились).
 const БРИФ_НЕ_В_ПРОМПТ = /^(legal|funnel|contact|requisites|inn|ogrn|address|passport)/i;
+// Правило «нет правовой формы — нет форм сбора контактов». Вторая часть брифа
+// заполняется ПОСЛЕ исследования (контент-машина, 17.09), поэтому включается
+// только когда она реально заполнена: пустой бриф не должен менять советы там,
+// где у клиента давно есть ИП. Иначе исследование советовало бы лид-магниты с
+// почтой, а модуль лендинга их запрещал — и виноваты были бы оба.
+function правилоБезРеквизитов(brief) {
+  const втораяЧасть = Object.keys(brief || {})
+    .some(k => /^(funnel|legal|contact)_/i.test(k) && String(brief[k] || '').trim());
+  if (!втораяЧасть) return '';
+  const форма = String((brief && brief.legal_form) || '').trim().toLowerCase();
+  if (форма && !/физлиц|физическое/.test(форма)) return '';
+  return '\n\nПРАВОВАЯ ФОРМА НЕ ОФОРМЛЕНА (самозанятости, ИП или ООО у клиента нет). '
+    + 'Значит у него нет политики обработки данных, согласия и оферты, и собирать '
+    + 'персональные данные на форме он права не имеет. НЕ СОВЕТУЙ ничего, что требует '
+    + 'оставить почту, телефон или заполнить форму: ни лид-магнитов с подпиской, ни '
+    + 'заявок на сайте, ни квизов с контактами. Вместо этого — переход в мессенджер или '
+    + 'комментарии, звонок, подписка на канал, личное сообщение. Это относится к офферам, '
+    + 'призывам, SEO-структуре страниц и любым шагам воронки.';
+}
+
 function buildSystem(brief, lang, модуль) {
   const lines = Object.entries(brief)
     .filter(([k]) => !БРИФ_НЕ_В_ПРОМПТ.test(k))
@@ -6283,7 +6303,7 @@ function buildSystem(brief, lang, модуль) {
     '8. Never mix scripts: no Latin or Greek words inside '+lang+' sentences (brand names and accepted abbreviations like TAM, CJM are fine). If a paragraph comes out garbled or mixed-script — rewrite it before finishing.\n'+
     glossaryRule(lang)+
     '9. ANY specific metric not measured from evidence — «+18 клиентов», «на 120%», «в 2-3 раза», «CR 4%→12%», forecasts — must EITHER be omitted OR labeled «(гипотеза, не обещание)» right next to it. This applies EVERYWHERE: offer formulas, forecasts, SEO H1/titles, ad hooks, creative copy, case-study headlines. NEVER present a fabricated number as an achieved result or real client case (no «кейс: конверсия выросла на 120%» unless that number is in evidence with a [n]).'+
-    nicheFilter+editorNote+схемныйЗапрет(модуль);
+    nicheFilter+editorNote+правилоБезРеквизитов(brief)+схемныйЗапрет(модуль);
 }
 
 // Правила 4 и 4a (markdown-таблицы и метки «@@BLOCK») написаны для свободного
