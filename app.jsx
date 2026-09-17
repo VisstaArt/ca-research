@@ -15880,7 +15880,19 @@ function App() {
 
   const curModData = MODULES.find(m=>m.id===curMod);
   // Порядок вывода: глобальные модули сверху, затем ниша за нишей (внутри — по порядку модулей).
-  const orderedResults = dropOrphans(proj?.results||[]).sort((a,b)=>{
+  // Модули, до которых очередь не дошла, стоят В ЦЕПОЧКЕ на своём месте, а не
+  // отдельным списком внизу: иначе новый модуль между четвёртым и пятым просто
+  // не виден там, где его ищут (владелица 17.09). Карточка у них та же, что у
+  // готовых, только вместо содержимого — кнопка запуска.
+  const ждут = [];
+  for (const м of allMods) {
+    const ниши = isPerNiche(м.id) ? (workNiches.length ? workNiches : ['']) : [''];
+    for (const н of ниши) {
+      const есть = (proj?.results || []).some(r => r && r.id === м.id && (r.niche || '') === н);
+      if (!есть && м.id !== curMod) ждут.push({ id: м.id, niche: н, ждёт: true });
+    }
+  }
+  const порядокЦепочки = (a,b)=>{
     const ga=!(a.niche), gb=!(b.niche);
     if (ga!==gb) return ga?-1:1;
     if ((a.niche||'')!==(b.niche||'')) {
@@ -15888,7 +15900,11 @@ function App() {
       return (ia<0?99:ia)-(ib<0?99:ib);
     }
     return MODULES.findIndex(x=>x.id===a.id)-MODULES.findIndex(x=>x.id===b.id);
-  });
+  };
+  // Готовые результаты — отдельно (на них смотрят другие места экрана),
+  // лента для показа — вместе с ожидающими, в одном порядке цепочки.
+  const orderedResults = dropOrphans(proj?.results||[]).slice().sort(порядокЦепочки);
+  const лентаМодулей = [...orderedResults, ...ждут].sort(порядокЦепочки);
 
   // ── ЭКРАН «НИШИ» в платформе ────────────────────────────────────────────
   // Веер карт по образцу ZIXO. До 15.09 компонент существовал, но его никто
@@ -16402,10 +16418,44 @@ function App() {
           </div>
         </div>
       )}
-      {orderedResults.filter(r => !(embedded && r.id === 'M2')).map((r,i,arr) => {
+      {лентаМодулей.filter(r => !(embedded && r.id === 'M2')).map((r,i,arr) => {
         const m = MODULES.find(x=>x.id===r.id); if (!m) return null;
         const open = exp[resKey(r)];
         const showNicheHeader = r.niche && (i===0 || (arr[i-1].niche||'') !== r.niche);
+        if (r.ждёт) return (
+          <React.Fragment key={resKey(r)}>
+            {showNicheHeader && (
+              <div style={{display:'flex',alignItems:'baseline',gap:10,margin:'26px 0 10px'}}>
+                <span className="tag">Ниша</span>
+                <span style={{fontSize:21,fontWeight:600,letterSpacing:'-.02em',color:'var(--ink)'}}>{r.niche}</span>
+                <div style={{flex:1,height:1,background:'var(--line)',alignSelf:'center'}}/>
+              </div>
+            )}
+            <div className="card" style={{marginBottom:14,padding:0,overflow:'hidden'}}>
+              <div style={{display:'flex',alignItems:'center'}}>
+                <div style={{display:'flex',alignItems:'center',gap:10,padding:'15px 20px',flex:1,minWidth:0}}>
+                  <span style={{flex:1,fontSize:16,fontWeight:600,color:'var(--ink-2)'}}>{m.titleRu||m.title}</span>
+                  <span className="tag">{m.id}</span>
+                  <span style={{fontSize:10,color:'var(--ink-3)',whiteSpace:'nowrap'}}>
+                    ≈ {m.estimatedMin} мин{(() => {
+                      const c = сметаЦентов([m.id], 1);
+                      return c != null ? ' · ' + деньгами(c) : '';
+                    })()}
+                  </span>
+                </div>
+                {!isRun && (
+                  <div style={{display:'flex',gap:6,padding:'0 16px 0 0'}}>
+                    <button className="cm-btn" onClick={()=>run([m.id], undefined, false, r.niche || undefined)}
+                      style={{whiteSpace:'nowrap'}}
+                      title={'Запустить только этот модуль: ' + (m.titleRu || m.title)}>
+                      Исследовать
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          </React.Fragment>
+        );
         return (
           <React.Fragment key={resKey(r)}>
             {showNicheHeader && (
@@ -16775,37 +16825,6 @@ function App() {
           </React.Fragment>
         );
       })}
-
-      {/* Модули, до которых очередь ещё не дошла. Раскрывающийся блок есть
-          только у отработавшего модуля, и цепочка обрывалась на последнем
-          готовом: нового модуля просто не было видно, а запустить его можно
-          было лишь общей кнопкой сверху (владелица 17.09, трижды). Теперь
-          вся цепочка на виду, и у каждого своя кнопка. */}
-      {!isRun && pending.length > 0 && (
-        <div style={{marginTop:4}}>
-          <p className="note" style={{margin:'0 0 8px'}}>Ещё не исследованы</p>
-          {pending.map(m => (
-            <div key={m.id} style={{display:'flex',alignItems:'center',gap:12,flexWrap:'wrap',
-                border:'1px solid var(--line)',borderRadius:12,padding:'10px 14px',marginBottom:8,
-                background:'var(--card-solid)'}}>
-              <span style={{fontSize:11,color:'var(--ink-3)',fontVariantNumeric:'tabular-nums',
-                minWidth:34}}>{m.id}</span>
-              <span style={{flex:'1 1 16ch',minWidth:0,fontSize:13}}>{m.titleRu || m.title}</span>
-              <span style={{fontSize:11,color:'var(--ink-3)',whiteSpace:'nowrap'}}>
-                ≈ {m.estimatedMin} мин{(() => {
-                  const c = сметаЦентов([m.id], nichesOf(brief).length || 1);
-                  return c != null ? ' · ' + деньгами(c) : '';
-                })()}
-              </span>
-              <button className="cm-btn" onClick={()=>run([m.id])}
-                style={{whiteSpace:'nowrap'}}
-                title={'Запустить только этот модуль: ' + (m.titleRu || m.title)}>
-                Исследовать
-              </button>
-            </div>
-          ))}
-        </div>
-      )}
 
       {/* В платформе этого блока нет: проверка языка — техническая часть
           (владелица: «сюда её выносить не нужно»), а выгрузка живёт на этапе
