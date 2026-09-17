@@ -1,6 +1,6 @@
 // СОБРАНО АВТОМАТИЧЕСКИ из app.jsx — не править руками.
 // Правки вносить в app.jsx, затем: osascript -l JavaScript tools/build.js
-// отпечаток-исходника: 54580f770eb65fdb
+// отпечаток-исходника: 36e16679346b881f
 // Функции контракта живут в lib/contract.js. Разбираем их сюда, чтобы весь
 // остальной код обращался к ним по прежним именам и не менялся.
 const{GLOBAL_MODS,isPerNiche,dropOrphans,nichesOf,resKey,splitMdRow,isMdSeparator,parseMdTables,buildModuleEntry,pickTable,pickColumn,withStableIds}=CAContract;// Название модуля берётся из MODULES — это конфиг ИНТЕРФЕЙСА, и сборщик
@@ -953,7 +953,9 @@ const СЛУЖЕБНАЯ_МЕТКА=/\s*\[[^\]\n]*(?:BLOCK|блок|строк|\
 // охват у постов; на каком основании ты говоришь, что это залетело, если
 // замеров нет». Публичные страницы Telegram, YouTube и VK отдают эти числа
 // без входа — берём их через тот же прокси, что читает сайты.
-const КАНАЛОВ_ЗАМЕР_МАКС=26;function числоИзТекста(т){const s=String(т||'').replace(/\u00A0/g,' ').trim();const м=s.match(/([\d\s.,]+)\s*(K|M|тыс\.?|млн)?/i);if(!м)return null;const n=parseFloat(м[1].replace(/[\s]/g,'').replace(',','.'));if(!Number.isFinite(n))return null;const множ=/^k$|^тыс/i.test(м[2]||'')?1000:/^m$|^млн/i.test(м[2]||'')?1000000:1;return Math.round(n*множ);}// Медиана, а не среднее: один вирусный пост среднее ломает. При чётном числе
+const КАНАЛОВ_ЗАМЕР_МАКС=26;// Общий срок на замеры одного модуля. Считается не по числу страниц, а по
+// часам: одна залипшая площадка не должна останавливать весь прогон.
+const ЗАМЕР_БЮДЖЕТ_МС=6*60*1000;function числоИзТекста(т){const s=String(т||'').replace(/\u00A0/g,' ').trim();const м=s.match(/([\d\s.,]+)\s*(K|M|тыс\.?|млн)?/i);if(!м)return null;const n=parseFloat(м[1].replace(/[\s]/g,'').replace(',','.'));if(!Number.isFinite(n))return null;const множ=/^k$|^тыс/i.test(м[2]||'')?1000:/^m$|^млн/i.test(м[2]||'')?1000000:1;return Math.round(n*множ);}// Медиана, а не среднее: один вирусный пост среднее ломает. При чётном числе
 // значений берём среднее двух средних — иначе результат зависит от того, с
 // какого края считать.
 function медиана(нечто){const м=(нечто||[]).slice().sort((а,б)=>а-б);if(!м.length)return null;const с=Math.floor(м.length/2);return м.length%2?м[с]:Math.round((м[с-1]+м[с])/2);}// Дзен. Сама страница канала закрыта входом, но служебная выгрузка ленты
@@ -1012,8 +1014,17 @@ if(/dzen\.ru|zen\.yandex/i.test(адрес)){const п=await постыДзен(�
 // и просмотры каждого поста.
 const цель=тг?'https://t.me/s/'+тг[1]:адрес;let html='';try{const r=await загрузитьСтраницу(цель);if(!r.ok)return null;html=await r.text();}catch(e){return null;}if(!html)return null;const итог={подписчики:null,просмотры:null,постов:0,откуда:цель,реакции:null,er:null,er_день:null,в_неделю:null,часы:'',дни:'',форматы:'',длина:null};// Витрина Telegram: <span class="counter_value">83.2K</span>
 //                   <span class="counter_type">subscribers</span>
-const счётчикПодписчиков=html.match(/counter_value[^>]*>([^<]+)<[\s\S]{0,80}?counter_type[^>]*>\s*(subscribers|подписчик|members|участник)/i);if(счётчикПодписчиков)итог.подписчики=числоИзТекста(счётчикПодписчиков[1]);if(итог.подписчики==null){// VK, YouTube и прочие: число стоит рядом со словом.
-const подп=html.match(/([\d\s.,]+[KMКМ]?(?:\s*(?:тыс|млн)\.?)?)\s*(?:subscribers|members|подписчик|участник)/i);if(подп)итог.подписчики=числоИзТекста(подп[1]);}// Просмотры постов: берём медиану, а не среднее — один вирусный пост
+const счётчикПодписчиков=html.match(/counter_value[^>]*>([^<]+)<[\s\S]{0,80}?counter_type[^>]*>\s*(subscribers|подписчик|members|участник)/i);if(счётчикПодписчиков)итог.подписчики=числоИзТекста(счётчикПодписчиков[1]);if(итог.подписчики==null){// VK, YouTube и прочие: число стоит рядом со словом. Ищем СНАЧАЛА слово,
+// и только потом разбираем короткий кусок перед ним.
+//
+// Раньше здесь стояла одна регулярка вида «[\d\s.,]+ ... subscribers».
+// На странице в сотни килобайт она уходит в перебор: время растёт
+// КВАДРАТИЧНО от длины (замерено 17.09: 16 КБ — 22 секунды, значит
+// 200 КБ — около часа), и всё это время вкладка стоит намертво. Прогон
+// замирал на замерах каналов, отчёт не досчитывался, а владелица видела
+// вечное «идёт сборка» и черновик без единого замера. Поиск слова —
+// линейный, окно перед ним ограничено, перебирать нечего.
+const слово=/subscribers|members|подписчик|участник/gi;let к,найдено=0;while(итог.подписчики==null&&(к=слово.exec(html))&&найдено<20){найдено++;const окно=html.slice(Math.max(0,к.index-48),к.index).replace(/<[^>]*>/g,' ');const ч=/([0-9][0-9\s.,\u00A0]{0,15})\s*(K|M|К|М|тыс\.?|млн\.?)?\s*$/i.exec(окно);if(ч)итог.подписчики=числоИзТекста(ч[1]+(ч[2]||''));}}// Просмотры постов: берём медиану, а не среднее — один вирусный пост
 // среднее ломает.
 const просм=[];const re=/tgme_widget_message_views[^>]*>([^<]+)</gi;let м;while(м=re.exec(html)){const v=числоИзТекста(м[1]);if(v)просм.push(v);}if(!просм.length){const reY=/"viewCount"\s*:\s*"?(\d+)/g;while((м=reY.exec(html))&&просм.length<40)просм.push(+м[1]);}if(просм.length){итог.просмотры=медиана(просм);итог.постов=просм.length;}// Вовлечённость: медиана реакций под постом. ER считаем от подписчиков —
 // так это и читают в отчётах по соцсетям (список метрик от владелицы 16.09).
@@ -1031,12 +1042,18 @@ const счёт={видео:(html.match(/tgme_widget_message_video|message_roundv
 // потом остальные. Раньше лимит съедали блоги на сайтах, где замерять
 // нечего, и до телеграм-каналов конкурентов очередь не доходила — вся
 // таблица была «не замерено» (владелица 17.09).
-const вес=url=>{const т=String(url||'').toLowerCase();if(/t\.me|telegram\.me/.test(т))return 0;if(/dzen\.ru|zen\.yandex/.test(т))return 1;if(/vk\.com|vk\.ru|youtube\.com|rutube\.ru/.test(т))return 2;return 3;};const адреса=[];for(const к of каналы){const u=String(к.url);if(!адреса.some(a=>a.url===u))адреса.push({url:u,вес:вес(u)});}адреса.sort((а,б)=>а.вес-б.вес);const замерено=new Map();let вызовов=0;for(const а of адреса){if(вызовов>=КАНАЛОВ_ЗАМЕР_МАКС)break;// Блог на своём сайте счётчиков не отдаёт — попытку на него не тратим.
-if(а.вес===3)continue;вызовов++;const з=await замерКанала(а.url);if(з)замерено.set(а.url,з);}if(!замерено.size)return{...д,замерКаналов:{нет:true,пробовали:вызовов}};const чис=n=>String(n).replace(/\B(?=(\d{3})+(?!\d))/g,'\u00A0');const обновлённые=(д.каналы||[]).map(к=>{const з=замерено.get(к.url);if(!з)return к;return{...к,подписчики:з.подписчики!=null?чис(з.подписчики)+' (замер)':к.подписчики,охват:з.просмотры!=null?чис(з.просмотры)+' просмотров, медиана по '+з.постов+' постам':'',вовлечённость:з.er!=null?з.er+'% на пост (медиана '+чис(з.реакции)+' реакций)'+(з.er_день!=null?', '+з.er_день+'% в день':''):'',длина_поста:з.длина!=null?з.длина+' знаков (медиана)':'',ритм_замер:з.в_неделю!=null?з.в_неделю+' публикаций в неделю'+(з.дни?', чаще '+з.дни:'')+(з.часы?', около '+з.часы:''):'',форматы_замер:з.форматы||''};});return{...д,каналы:обновлённые,замерКаналов:{всего:замерено.size,пробовали:вызовов}};}// Свои каналы — ВСЕГДА из брифа, а не из того, что модель заметила в поиске.
+const вес=url=>{const т=String(url||'').toLowerCase();if(/t\.me|telegram\.me/.test(т))return 0;if(/dzen\.ru|zen\.yandex/.test(т))return 1;if(/vk\.com|vk\.ru|youtube\.com|rutube\.ru/.test(т))return 2;return 3;};const адреса=[];for(const к of каналы){const u=String(к.url);if(!адреса.some(a=>a.url===u))адреса.push({url:u,вес:вес(u)});}адреса.sort((а,б)=>а.вес-б.вес);const замерено=new Map();let вызовов=0;// Замеры идут по живым страницам, и какая-то из них рано или поздно
+// окажется медленной. Держим общий срок: вышли за него — отдаём то, что
+// успели замерить, и идём дальше. Прогон обязан ЗАКОНЧИТЬСЯ: неполный
+// отчёт лучше вечного «идёт сборка» (владелица 17.09, третий случай).
+const срок=Date.now()+ЗАМЕР_БЮДЖЕТ_МС;let оборвано=false;for(const а of адреса){if(вызовов>=КАНАЛОВ_ЗАМЕР_МАКС)break;if(Date.now()>срок){оборвано=true;break;}// Блог на своём сайте счётчиков не отдаёт — попытку на него не тратим.
+if(а.вес===3)continue;вызовов++;const з=await замерКанала(а.url);if(з)замерено.set(а.url,з);}if(!замерено.size)return{...д,замерКаналов:{нет:true,пробовали:вызовов}};const чис=n=>String(n).replace(/\B(?=(\d{3})+(?!\d))/g,'\u00A0');const обновлённые=(д.каналы||[]).map(к=>{const з=замерено.get(к.url);if(!з)return к;return{...к,подписчики:з.подписчики!=null?чис(з.подписчики)+' (замер)':к.подписчики,охват:з.просмотры!=null?чис(з.просмотры)+' просмотров, медиана по '+з.постов+' постам':'',вовлечённость:з.er!=null?з.er+'% на пост (медиана '+чис(з.реакции)+' реакций)'+(з.er_день!=null?', '+з.er_день+'% в день':''):'',длина_поста:з.длина!=null?з.длина+' знаков (медиана)':'',ритм_замер:з.в_неделю!=null?з.в_неделю+' публикаций в неделю'+(з.дни?', чаще '+з.дни:'')+(з.часы?', около '+з.часы:''):'',форматы_замер:з.форматы||''};});return{...д,каналы:обновлённые,замерКаналов:{всего:замерено.size,пробовали:вызовов,...(оборвано?{оборвано:true}:{})}};}// Свои каналы — ВСЕГДА из брифа, а не из того, что модель заметила в поиске.
 // У заказчика был ВК, а в отчёт он не попал (владелица 16.09). И числа по ним
 // нужны даже нулевые: это точка отсчёта, от которой потом считают, помогает
 // ли контент.
-async function замерСвоихКаналов(д,brief){const свои=clientSocials(brief||{});if(!свои.length)return д;const чис=n=>String(n).replace(/\B(?=(\d{3})+(?!\d))/g,'\u00A0');const было=д.каналы_заказчика||[];const строки=[];for(const адрес of свои){const домен=адрес.replace(/^https?:\/\//,'').split('/')[0];const прежняя=было.find(к=>String(к.ссылка||'').includes(домен)||String(к.площадка||'').toLowerCase().includes(домен.split('.')[0]))||{};const з=await замерКанала(адрес);// Площадка не отдала счётчики — попробуем хотя бы узнать имя канала из
+async function замерСвоихКаналов(д,brief){const свои=clientSocials(brief||{});if(!свои.length)return д;const чис=n=>String(n).replace(/\B(?=(\d{3})+(?!\d))/g,'\u00A0');const было=д.каналы_заказчика||[];const строки=[];// Тот же общий срок, что и у конкурентов: свои площадки замеряем недолго,
+// но и здесь одна медленная страница не имеет права подвесить прогон.
+const срок=Date.now()+ЗАМЕР_БЮДЖЕТ_МС;for(const адрес of свои){if(Date.now()>срок)break;const домен=адрес.replace(/^https?:\/\//,'').split('/')[0];const прежняя=было.find(к=>String(к.ссылка||'').includes(домен)||String(к.площадка||'').toLowerCase().includes(домен.split('.')[0]))||{};const з=await замерКанала(адрес);// Площадка не отдала счётчики — попробуем хотя бы узнать имя канала из
 // мета-тегов: «Ai КРОЛИК Новости» в отчёте полезнее голого адреса
 // (владелица 17.09, канал в MAX).
 const мета=з?null:await имяКаналаПоМетатегам(адрес);// Из адреса достаём имя канала: «Telegram» ничего не говорит, когда
@@ -3689,7 +3706,7 @@ const p=prevContent||'';switch(modId){case'M1':return buildM1Prompt(brief,lang,p
 // «точно уйти?» (владелица 17.09: «висит уже час, не проходит»). Флаг
 // проверяется между модулями и после каждого тяжёлого шага сбора: уже
 // сделанное сохраняется, недоделанное просто не начинается.
-const остановитьRef=React.useRef(false);const run=React.useCallback(async(modsToRun,briefOverride,forceRerun,rerunNiche,regenNote,наСохранённыхДля)=>{const B=briefOverride||brief;if(!B.name)return;const id=proj?.id||'p'+Date.now();const allSelected=modsToRun||mods;const niches=nichesOf(B);// Единицы работы = модуль × ниша. Глобальные модули — один раз (ниша ''),
+const остановитьRef=React.useRef(false);const прогонВнутри=React.useCallback(async(modsToRun,briefOverride,forceRerun,rerunNiche,regenNote,наСохранённыхДля)=>{const B=briefOverride||brief;if(!B.name)return;const id=proj?.id||'p'+Date.now();const allSelected=modsToRun||mods;const niches=nichesOf(B);// Единицы работы = модуль × ниша. Глобальные модули — один раз (ниша ''),
 // по-нишевые — по разу на каждую выбранную нишу. rerunNiche ограничивает
 // перегенерацию одной нишей (кнопка ↺ на её модуле).
 const expand=m=>{if(!isPerNiche(m.id))return[{mod:m,niche:''}];const list=rerunNiche?[rerunNiche]:niches;return list.map(n=>({mod:m,niche:n}));};const wkey=w=>w.mod.id+'@@'+w.niche;const selMods=MODULES.filter(m=>!m.disabled&&!m.hidden&&allSelected.includes(m.id));// forceRerun (перегенерация): выкидываем старые результаты именно запрошенных единиц,
@@ -3896,7 +3913,11 @@ if(failed){failedNiches.add(wn);setBlockMsg('Модуль '+(mod.label||mod.id)+
 if(mod.id==='M2'&&!rerunNiche){setCurMod(null);setCurNiche('');setCurStep('');setCurStepIdx(0);записатьХод(null);const nn=(nicheData&&Array.isArray(nicheData.niches)?nicheData.niches:[]).slice().sort((a,b)=>(b.score||0)-(a.score||0));setNicheOpts(nn);const rec=nn.findIndex(x=>x.recommended);setSelNiches(rec>=0?[rec]:[]);setShowNiches(true);return;// ждём выбора ниш(и)
 }// After M1 — show price layer selection
 if(mod.id==='M1'){setCurMod(null);setCurNiche('');setCurStep('');setCurStepIdx(0);записатьХод(null);setShowLayers(true);await generatePriceLayers(cleanedContent);return;// stop — wait for user layer selection
-}}setCurMod(null);setCurNiche('');setCurStep('');setCurStepIdx(0);записатьХод(null);},[brief,lang,mods,proj,sv,priceLayers,selectedLayers,generatePriceLayers]);const continueAfterLayers=React.useCallback(()=>{setShowLayers(false);// Add selected layer info to brief context
+}}setCurMod(null);setCurNiche('');setCurStep('');setCurStepIdx(0);записатьХод(null);},[brief,lang,mods,proj,sv,priceLayers,selectedLayers,generatePriceLayers]);// Сеть прогона. Любая неожиданная ошибка ВНЕ разбора модуля (сохранение,
+// разметка, счётчики) раньше просто роняла обещание: полоска замирала на
+// последнем шаге, время шло, а человек ждал часами то, что уже не считалось.
+// Теперь сбой виден словами, а индикатор гасится.
+const run=React.useCallback(async(...арг)=>{try{return await прогонВнутри(...арг);}catch(e){setCurMod(null);setCurNiche('');setCurStep('');setCurStepIdx(0);записатьХод(null);if(window.console)console.error('Прогон оборвался:',e);setBlockMsg('Прогон прервался: '+(e&&e.message||e)+'. Посчитанные модули сохранены — нажмите ↺ на том, который не доделался.');}},[прогонВнутри]);const continueAfterLayers=React.useCallback(()=>{setShowLayers(false);// Add selected layer info to brief context
 const layerNames=selectedLayers.map(i=>priceLayers[i]?.name).filter(Boolean);const newBrief=layerNames.length>0?{...brief,priceLayer:layerNames.join(', ')}:brief;if(layerNames.length>0)setBrief(newBrief);// Run remaining modules
 const doneIds=(proj?.results||[]).map(r=>r.id);const remaining=mods.filter(id=>!doneIds.includes(id));if(remaining.length>0)run(remaining,newBrief);},[selectedLayers,priceLayers,brief,proj,mods,run]);const continueAfterNiche=React.useCallback(()=>{const names=selNiches.map(i=>nicheOpts[i]?.name).filter(Boolean);if(!names.length)return;setShowNiches(false);const newBrief={...brief,selectedNiche:names.join(', ')};setBrief(newBrief);// Раньше выбор ниш молча запускал всю цепочку выбранных модулей: владелица
 // перегенерировала разведку, отметила нишу — и получила прогон до M6, за

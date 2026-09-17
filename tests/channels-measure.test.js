@@ -17,6 +17,8 @@ function ok(n,g,w){var r=JSON.stringify(g)===JSON.stringify(w);
 globalThis.PROXY='https://proxy.test';
 var iМ=SRC.indexOf('const КАНАЛОВ_ЗАМЕР_МАКС');
 eval(SRC.slice(iМ, SRC.indexOf('\n', iМ)).replace('const ','globalThis.'));
+var iБ=SRC.indexOf('const ЗАМЕР_БЮДЖЕТ_МС');
+eval(SRC.slice(iБ, SRC.indexOf('\n', iБ)).replace('const ','globalThis.'));
 eval(взять('числоИзТекста')); eval(взять('медиана'));
 // Страницы грузятся через обёртку с потолком ожидания — она нужна всем замерам.
 eval(взять('загрузитьСтраницу')); globalThis.загрузитьСтраницу=загрузитьСтраницу;
