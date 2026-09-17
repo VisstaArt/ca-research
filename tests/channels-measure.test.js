@@ -37,6 +37,12 @@ var страницы={
     +'<span class="tgme_widget_message_views">800</span>'
     +'<span class="tgme_widget_message_views">3,4K</span>',
   'https://youtube.com/@chan':'"viewCount":"5000" "viewCount":"9000" 273 тыс. подписчиков',
+  // ВКонтакте отдаёт кириллицу битой кодировкой — слово «подписчики» не
+  // прочитать. Число участников лежит машинным полем, его и берём.
+  'https://vk.com/group':'"\u0431\u0438\u0442\u043e","members_count":141351,"x":1',
+  // YouTube: просмотров у канала нет, но они стоят у каждого ролика.
+  'https://youtube.com/@vids':'"viewCountText":{"simpleText":"28 940 просмотров"}'
+    +'"viewCountText":{"simpleText":"1,2 тыс. просмотров"} 479 подписчиков',
   'https://closed.example/x':'',
 };
 globalThis.fetch=function(u){
@@ -52,6 +58,13 @@ globalThis.fetch=function(u){
   return замерКанала('https://youtube.com/@chan');
 }).then(function(з2){
   ok('ютуб: просмотры сняты (медиана двух)', з2.просмотры, 7000);
+  return замерКанала('https://vk.com/group');
+}).then(function(зв){
+  ok('ВК: участники сняты машинным полем', зв && зв.подписчики, 141351);
+  return замерКанала('https://youtube.com/@vids');
+}).then(function(зю){
+  ok('ютуб: просмотры роликов, когда viewCount нет', зю && зю.просмотры, 15070);
+  ok('ютуб: подписчики рядом со словом', зю && зю.подписчики, 479);
   return замерКанала('https://closed.example/x');
 }).then(function(з3){
   ok('закрытая страница — не выдумываем', з3, null);
