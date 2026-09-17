@@ -167,6 +167,10 @@ ok('блок отказов рисуется скриптом, без сырой
 var исхПлан=SRC.slice(SRC.indexOf('function renderChannelSkip'), SRC.indexOf('function renderChannelSkip')+1400);
 ok('у строки есть кнопка решения', /class=\\"pltake\\"/.test(исхПлан), true);
 ok('кнопка знает свою площадку', /data-platform/.test(исхПлан), true);
+// Кнопка живёт в колонке решения, отдельного столбца под неё нет: он съедал
+// место у текста (владелица 17.09).
+ok('кнопка стоит под плашкой решения', /skdec[\s\S]{0,400}pltake/.test(исхПлан), true);
+ok('лишнего столбца «Моё решение» нет', /Моё решение/.test(исхПлан), false);
 // Классы блока «Где нам продвигаться» — со своим префиксом: имена .prow и
 // .pname заняты другой таблицей, её сетка ломала вид (владелица 17.09).
 var исхПлан2=SRC.slice(SRC.indexOf('function renderChannelPlan'), SRC.indexOf('function renderChannelPlan')+2000);
