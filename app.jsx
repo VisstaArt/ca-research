@@ -16136,8 +16136,16 @@ function App() {
             return <div key={m.id} title={m.title} style={{flex:1,height:4,borderRadius:2,background:d?m.color:a?m.color+'99':'var(--line)'}}/>;
           })}
         </div>
-        <p style={{fontSize:11,color:'var(--ink-3)'}}>
-          {isRun ? (curModData ? (curModData.titleRu||curModData.title) : '')+(curNiche?' · ниша: '+curNiche:'') : doneCount+' из '+allMods.length+' '+plural(allMods.length,'модуль','модуля','модулей')+' готово'+(pending.length?' · '+pending.length+' '+t.pending:'')+(workNiches.length?' · '+workNiches.length+' ниш(и)':'')}
+        <p style={{fontSize:11,color:'var(--ink-3)',display:'flex',gap:10,
+                   justifyContent:'space-between',flexWrap:'wrap'}}>
+          <span>{isRun ? (curModData ? (curModData.titleRu||curModData.title) : '')+(curNiche?' · ниша: '+curNiche:'') : doneCount+' из '+allMods.length+' '+plural(allMods.length,'модуль','модуля','модулей')+' готово'+(pending.length?' · '+pending.length+' '+t.pending:'')+(workNiches.length?' · '+workNiches.length+' ниш(и)':'')}</span>
+          {/* Версия ЗАГРУЖЕННОГО кода — всегда на виду. Метка в карточке
+              показывает код прогона, а до первого прогона её нет вовсе, и
+              проверить «свежая ли страница» было нечем (владелица 17.09). */}
+          <span title="Версия загруженного кода. Сверяйте с той, что называет Клод после выкладки: совпало — страница свежая."
+            style={{whiteSpace:'nowrap',fontVariantNumeric:'tabular-nums'}}>
+            код {отпечатокСборки()}
+          </span>
         </p>
       </div>
 
