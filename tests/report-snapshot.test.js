@@ -4,7 +4,7 @@ ObjC.import('Foundation');
 // Гарантия здесь одна — проверяемая: разметка собирается из строгих данных
 // фиксированной формы. Этот тест рисует отчёт на неизменных данных и сверяет
 // его с записанным снимком. Поменялся вид — тест падает и показывает, где.
-// Если изменение задумано, снимок обновляется руками: ЭТАЛОН=1 osascript ...
+// Если изменение задумано, снимок обновляется руками: ETALON=1 osascript ...
 function readFile(p){return $.NSString.stringWithContentsOfFileEncodingError($(p),$.NSUTF8StringEncoding,null).js;}
 function writeFile(p,t){$.NSString.alloc.initWithUTF8String(t).writeToFileAtomicallyEncodingError($(p),true,$.NSUTF8StringEncoding,null);}
 var ROOT=$.NSFileManager.defaultManager.currentDirectoryPath.js;
@@ -86,13 +86,18 @@ var снимок=JSON.stringify({
 
 var путь=ROOT+'/tests/эталон-m4.json';
 var прежний=readFile(путь);
+// Переменная окружения с кириллическим именем до JXA не доходит — берём
+// латинское имя ETALON (проверено 17.09).
 var эталонныйРежим=(function(){
-  var v=$.NSProcessInfo.processInfo.environment.objectForKey('ЭТАЛОН');
-  try { return !!(v && v.js && String(v.js).length); } catch(e){ return false; }
+  var среда=$.NSProcessInfo.processInfo.environment;
+  return ['ETALON','ЭТАЛОН'].some(function(имя){
+    try { var v=среда.objectForKey(имя); return !!(v && v.js && String(v.js).length); }
+    catch(e){ return false; }
+  });
 })();
 if (эталонныйРежим) {
   writeFile(путь, снимок);
-  console.log('  снимок перезаписан по требованию (ЭТАЛОН=1)');
+  console.log('  снимок перезаписан по требованию (ETALON=1)');
 } else if (!прежний) {
   writeFile(путь, снимок);
   console.log('  ok   снимок создан впервые');
@@ -109,6 +114,6 @@ if (эталонныйРежим) {
     if(пропало.length) console.log('       пропало ('+поле+'): '+пропало.join(', '));
     if(добавилось.length) console.log('       добавилось ('+поле+'): '+добавилось.join(', '));
   });
-  console.log('       если так и задумано: ЭТАЛОН=1 osascript -l JavaScript tests/report-snapshot.test.js');
+  console.log('       если так и задумано: ETALON=1 osascript -l JavaScript tests/report-snapshot.test.js');
 }
 console.log(провалов ? ('ПРОВАЛОВ: '+провалов) : 'вид отчёта под охраной');

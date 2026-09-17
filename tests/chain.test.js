@@ -23,7 +23,7 @@ function check(n,got,want){var ok=JSON.stringify(got)===JSON.stringify(want);
 console.log('tests/chain.test.js');
 
 var ids=MODULES.map(function(m){return m.id;});
-check('порядок модулей', ids, ['M1','M2','M3','M4','M5','M6','M7','M8','CONTENT']);
+check('порядок модулей', ids, ['M1','M2','M3','M4','M4A','M5','M6','M7','M8','CONTENT']);
 check('ёмкость рынка выключена', MODULES.filter(function(m){return m.disabled;}).map(function(m){return m.id;}), ['M1']);
 // Ни одного модуля вне автоцепочки: офферы вернули 12.09.2026.
 check('вне автоцепочки никого', MODULES.filter(function(m){return m.offChain;}).map(function(m){return m.id;}), []);
@@ -42,7 +42,7 @@ check('зависимости смотрят назад', bad, []);
 
 // Автоцепочка: что реально пойдёт в прогон при «выбрать всё».
 var chain=MODULES.filter(function(m){return !m.disabled && !m.offChain;}).map(function(m){return m.id;});
-check('автоцепочка', chain, ['M2','M3','M4','M5','M6','M7','M8','CONTENT']);
+check('автоцепочка', chain, ['M2','M3','M4','M4A','M5','M6','M7','M8','CONTENT']);
 
 // Симуляция сортировки из run(): глобальные сначала, потом ниша за нишей.
 var work=[];
@@ -60,7 +60,7 @@ work.sort(function(a,b){
 check('первым идёт глобальный модуль', work[0], {id:'M2',niche:''});
 check('ниша А целиком раньше ниши Б',
   work.filter(function(w){return w.niche==='Ниша А';}).map(function(w){return w.id;}),
-  ['M3','M4','M5','M6','M7','M8','CONTENT']);
+  ['M3','M4','M4A','M5','M6','M7','M8','CONTENT']);
 
 // Ни один модуль не должен оказаться заблокированным при полном прогоне.
 var ready={}, blocked=[];
