@@ -12982,6 +12982,25 @@ function QuizBrief(Q) {
 }
 
 // ── FIELD COMPONENT
+// Часть брифа. Бриф разросся до тридцати полей в одном столбце, и чтобы
+// поправить цвет бренда, приходилось прокручивать всё подряд (владелица
+// 18.09: «чтобы не надо было простыни перечитывать, а взял нужный кусок»).
+// Части открыты по умолчанию — свернуть можно, спрятать от новичка нельзя.
+function Разд({ имя, подпись, children }) {
+  const [открыт, setОткрыт] = React.useState(true);
+  return (
+    <div style={{borderTop:'1px solid var(--line)',marginTop:14,paddingTop:12}}>
+      <div onClick={()=>setОткрыт(о=>!о)}
+        style={{display:'flex',alignItems:'baseline',gap:8,cursor:'pointer',marginBottom:открыт?8:0}}>
+        <span style={{fontSize:13,fontWeight:600,color:'var(--ink)'}}>{имя}</span>
+        <span style={{flex:1,fontSize:11,color:'var(--ink-3)'}}>{подпись}</span>
+        <span style={{fontSize:12,color:'var(--ink-3)'}}>{открыт?'▲':'▼'}</span>
+      </div>
+      {открыт && <div style={{display:'grid',gap:2}}>{children}</div>}
+    </div>
+  );
+}
+
 function Field({ label, optional, info, children }) {
   return (
     <div style={{marginBottom:10}}>
@@ -14121,6 +14140,30 @@ function App() {
   };
 
   // Save brief to project when returning from edit form
+  // Набор модулей правится ПРЯМО на экране прогона. Раньше за ним надо было
+  // идти в бриф, править там, сохранять и возвращаться — три экрана ради
+  // галочки, и модули лежали вперемешку с данными о проекте, к которым они
+  // отношения не имеют (владелица 18.09).
+  const [выборМодулей, setВыборМодулей] = React.useState(false);
+  const наборДоПравки = React.useRef(null);
+  const открытьВыборМодулей = () => {
+    наборДоПравки.current = mods.slice();   // «Отмена» обязана вернуть как было
+    setВыборМодулей(в => !в);
+  };
+  const отменитьВыборМодулей = () => {
+    if (наборДоПравки.current) setMods(наборДоПравки.current);
+    setВыборМодулей(false);
+  };
+  const сохранитьНабор = React.useCallback(() => {
+    setВыборМодулей(false);
+    if (!proj) return;
+    const порядок = MODULES.map(x => x.id);
+    const upd = { ...proj,
+      mods: mods.slice().sort((а, б) => порядок.indexOf(а) - порядок.indexOf(б)),
+      updatedAt: new Date().toISOString() };
+    setProj(upd); sv(upd);
+  }, [proj, mods, sv]);
+
   const saveBriefToProject = React.useCallback(() => {
     if (proj) {
       // НАБОР МОДУЛЕЙ ТОЖЕ СОХРАНЯЕМ. Раньше здесь были только бриф и язык:
@@ -15652,7 +15695,11 @@ function App() {
           <p style={{fontSize:13,fontWeight:500}}>{t.briefTitle}</p>
           <span className="tag" style={{background:'color-mix(in srgb, var(--mid) 12%, transparent)',color:'var(--acc-ink)',borderColor:'var(--mid)'}}>fill in any language</span>
         </div>
-        <div style={{display:'grid',gap:2}}>
+        {/* Бриф разложен по частям: данные о компании, площадки и оформление.
+            Раньше это была одна простыня — чтобы поправить цвет бренда,
+            приходилось прокручивать всё (владелица 18.09). Части
+            сворачиваются, чтобы можно было открыть нужный кусок. */}
+        <Разд имя="О компании и продукте" подпись="Кто вы, что продаёте, кому и почём">
           <Field label={t.fName}><input value={brief.name} onChange={e=>setBrief(p=>({...p,name:e.target.value}))} placeholder={t.fNamePh}/></Field>
           <Field label={t.fNiche} info={t.fNicheInfo}><input value={brief.niche} onChange={e=>setBrief(p=>({...p,niche:e.target.value}))} placeholder={t.fNichePh}/></Field>
           <Field label={t.fGeoComp} info={t.fGeoCompInfo}><input value={brief.geoCompany} onChange={e=>setBrief(p=>({...p,geoCompany:e.target.value}))} placeholder={t.fGeoCompPh}/></Field>
@@ -15702,15 +15749,19 @@ function App() {
               placeholder={'ловит уход по 26 сигналам\nподбирает оффер под страницу\nставится без программиста за день'}
               rows={6} style={{resize:'vertical'}}/>
           </Field>
+        </Разд>
+        <Разд имя="Где вы уже есть" подпись="Ваши площадки и публикации — исследование их не тронет вердиктом «позже»">
           <Field label={t.fSocials}><textarea value={brief.socials} onChange={e=>setBrief(p=>({...p,socials:e.target.value}))} placeholder={t.fSocialsPh} rows={2} style={{resize:'vertical'}}/></Field>
           <Field label={t.fWePublish} info="Площадки, где вы публикуетесь СЕЙЧАС. Модуль «Где продвигаться» не имеет права отправить их в «позже»: решение по ним — только развивать или закрывать.">
             <textarea value={brief.wePublish||''} onChange={e=>setBrief(p=>({...p,wePublish:e.target.value}))} placeholder={t.fWePublishPh} rows={2} style={{resize:'vertical'}}/></Field>
           <Field label={t.fVcArticle} info="Аккаунт на vc.ru может быть общим — там пишет несколько человек. Дайте ссылку на ОДНУ свою статью: по ней найдём автора и подтянем остальные его материалы с просмотрами и реакциями.">
             <textarea value={brief.vcArticle||''} onChange={e=>setBrief(p=>({...p,vcArticle:e.target.value}))} placeholder={t.fVcArticlePh} rows={2} style={{resize:'vertical'}}/></Field>
+        </Разд>
+        <Разд имя="Оформление" подпись="Цвета, шрифты и логотип — отсюда отчёты и материалы берут вид бренда">
           <Field label={t.fBrandColors}><input value={brief.brandColors} onChange={e=>setBrief(p=>({...p,brandColors:e.target.value}))} placeholder={t.fBrandColorsPh}/></Field>
           <Field label={t.fBrandFonts}><input value={brief.brandFonts} onChange={e=>setBrief(p=>({...p,brandFonts:e.target.value}))} placeholder={t.fBrandFontsPh}/></Field>
           <Field label={t.fBrandLogo}><input value={brief.brandLogo} onChange={e=>setBrief(p=>({...p,brandLogo:e.target.value}))} placeholder={t.fBrandLogoPh}/></Field>
-        </div>
+        </Разд>
 
         {(brief.services||[]).length > 0 && (
           <React.Fragment>
@@ -16409,7 +16460,7 @@ function App() {
             )}
             {!isRun && (неВыбраны.length > 0 || (pending.length === 0 && doneCount > 0)) && (
               <button className={pending.length ? undefined : 'btn-primary'}
-                onClick={()=>setSc('form')}
+                onClick={открытьВыборМодулей}
                 style={pending.length ? {fontSize:12,padding:'7px 12px'} : undefined}
                 title={неВыбраны.length ? 'Не выбраны: ' + неВыбраны.map(m=>m.id).join(', ') : ''}>
                 ＋ Добавить модули{неВыбраны.length ? ' (' + неВыбраны.length + ')' : ''}
@@ -16474,7 +16525,7 @@ function App() {
             )}
             {(неВыбраны.length > 0 || (pending.length === 0 && doneCount > 0)) && (
               <button className={pending.length ? 'cm-btn' : 'cm-btn cm-btn-pri'}
-                onClick={()=>setSc('form')}
+                onClick={открытьВыборМодулей}
                 title={неВыбраны.length ? 'Не выбраны: ' + неВыбраны.map(m=>m.id).join(', ') : ''}>
                 Добавить модули{неВыбраны.length ? ' (' + неВыбраны.length + ')' : ''}
               </button>
@@ -16580,6 +16631,23 @@ function App() {
           </div>
         </div>
       )}
+      {/* Набор модулей — здесь же, а не в брифе: бриф хранит данные о проекте,
+          а это управление работой. Панель открывается кнопкой «Добавить
+          модули» выше (владелица 18.09). */}
+      {выборМодулей && !isRun && (
+        <div style={{marginBottom:14}}>
+          {картаМодулей}
+          <div style={{display:'flex',gap:8,marginTop:8}}>
+            <button className={embedded ? 'cm-btn cm-btn-pri' : 'btn-primary'} onClick={сохранитьНабор}>
+              Сохранить набор
+            </button>
+            <button className={embedded ? 'cm-btn' : undefined} onClick={отменитьВыборМодулей}>
+              Отмена
+            </button>
+          </div>
+        </div>
+      )}
+
       {лентаМодулей.filter(r => !(embedded && r.id === 'M2')).map((r,i,arr) => {
         const m = MODULES.find(x=>x.id===r.id); if (!m) return null;
         const open = exp[resKey(r)];
