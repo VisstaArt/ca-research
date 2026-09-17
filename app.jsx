@@ -85,6 +85,7 @@ const T = {
     fLimits: 'Limits', fLimitsPh: 'Who you do not work with, what the product does not do…',
     fSocials: 'Social profiles', fSocialsPh: 'Links to Instagram, Telegram, VK, YouTube… one per line',
     fWePublish: 'Where we already publish', fWePublishPh: 'Platforms you already run: Telegram, vc.ru, MAX… one per line',
+    fVcArticle: 'Your vc.ru articles — one link per author', fVcArticlePh: 'https://vc.ru/services/3104744-… — one link per author is enough',
     fBrandColors: 'Brand colors', fBrandColorsPh: '#0ABAB5, #171512…',
     fBrandFonts: 'Brand fonts', fBrandFontsPh: 'Montserrat, Source Serif 4…',
     fBrandLogo: 'Logo (link)', fBrandLogoPh: 'https://…/logo.svg',
@@ -191,6 +192,7 @@ const T = {
     fLimits: 'Ограничения', fLimitsPh: 'С кем не работаете, чего продукт не делает…',
     fSocials: 'Соцсети клиента', fSocialsPh: 'Ссылки на Instagram, Telegram, VK, YouTube… по одной на строку',
     fWePublish: 'Где уже публикуемся', fWePublishPh: 'Площадки, которые уже ведёте: Telegram, vc.ru, канал в MAX… по одной на строку',
+    fVcArticle: 'Ваши статьи на vc.ru — по одной ссылке на автора', fVcArticlePh: 'https://vc.ru/services/3104744-… — хватит одной ссылки на каждого автора',
     fBrandColors: 'Фирменные цвета', fBrandColorsPh: '#0ABAB5, #171512…',
     fBrandFonts: 'Фирменные шрифты', fBrandFontsPh: 'Montserrat, Source Serif 4…',
     fBrandLogo: 'Логотип (ссылка)', fBrandLogoPh: 'https://…/logo.svg',
@@ -4131,12 +4133,101 @@ async function метрикиVC(url) {
     const блог = (д.subsite && д.subsite.name) || '';
     return {
       заголовок: д.title, url: д.url || url, площадка: 'vc.ru',
-      автор, блог, дата: д.date ? new Date(д.date * 1000).toISOString().slice(0, 10) : '',
+      автор, блог, авторИд: (д.author && д.author.id != null) ? д.author.id : null,
+      дата: д.date ? new Date(д.date * 1000).toISOString().slice(0, 10) : '',
       просмотры: с.views != null ? с.views : null,
       реакции: (с.reactions || 0) + (с.favorites || 0),
       комментарии: с.comments != null ? с.comments : null,
     };
   } catch (e) { return null; }
+}
+
+// Свои статьи на vc.ru по ОДНОЙ ссылке. Владелица 17.09: аккаунт общий, там
+// пишут несколько человек, а ссылки на «свой канал» нет и копировать десятки
+// адресов вручную бессмысленно. Из одной статьи берём номер автора, по нему
+// тянем его ленту и оставляем только его материалы — с настоящими числами.
+// Признаки того, что материал — наш. Владелица 17.09: «у нас там указана
+// ссылка на ловец-лидов.рф прямо в тексте» — аккаунт общий, автор пишет и для
+// других клиентов, поэтому отбираем по упоминанию сайта или бренда в теле
+// статьи, а не по владельцу аккаунта.
+function признакиКлиента(brief) {
+  const пр = [];
+  const сайт = String((brief && brief.siteUrl) || '').trim();
+  if (сайт) {
+    const без = сайт.replace(/^https?:\/\//i, '').replace(/\/.*$/, '').replace(/^www\./i, '');
+    if (без) пр.push(без.toLowerCase());
+    // Кириллический домен в разметке живёт в punycode: браузер переводит его
+    // сам, руками таблицу перевода держать не нужно.
+    try {
+      const host = new URL(/^https?:\/\//i.test(сайт) ? сайт : 'https://' + сайт).hostname;
+      if (host) пр.push(host.toLowerCase());
+    } catch (e) {}
+  }
+  const имя = String((brief && brief.name) || '').trim().toLowerCase();
+  if (имя.length >= 4) пр.push(имя);
+  return пр.filter((x, i, a) => x && a.indexOf(x) === i);
+}
+
+function упоминаетКлиента(текст, признаки) {
+  const т = String(текст || '').toLowerCase();
+  return (признаки || []).some(п => п && т.includes(п));
+}
+
+async function моиСтатьиVC(ссылки, brief) {
+  const адреса = String(ссылки || '').split(/[\s,\n]+/).map(x => x.trim()).filter(Boolean);
+  const собрано = [];
+  const авторы = [];
+  for (const адрес of адреса.slice(0, 5)) {
+    const первая = await метрикиVC(адрес);
+    if (!первая) continue;
+    if (первая.автор && !авторы.includes(первая.автор)) авторы.push(первая.автор);
+    if (первая.авторИд == null) { собрано.push({ ...первая, наша: true }); continue; }
+    const ид = первая.авторИд;
+    let последний = '';
+    let последнееЗначение = '';
+    // Лента отдаёт по 12 записей за раз, продолжение — по lastId. Берём до
+    // трёх страниц: этого хватает, чтобы увидеть ритм и сильные материалы.
+    for (let стр = 0; стр < 3; стр++) {
+      try {
+        const хвост = последний
+          ? '&lastId=' + последний + '&lastSortingValue=' + последнееЗначение : '';
+        const r = await fetch(PROXY + '?url=' + encodeURIComponent(
+          'https://api.vc.ru/v2.5/timeline?subsitesIds=' + ид + '&sorting=new' + хвост));
+        if (!r.ok) break;
+        const рез = (await r.json()).result || {};
+        const items = рез.items || [];
+        if (!items.length) break;
+        const признаки = признакиКлиента(brief);
+        for (const и of items) {
+          const д2 = и && и.data;
+          if (!д2 || !д2.title) continue;
+          if (д2.author && д2.author.id !== ид) continue;
+          if (собрано.some(а => а.url === д2.url)) continue;
+          // Аккаунт общий: тот же автор пишет и для других клиентов. Нашей
+          // считаем статью, где в тексте есть наш сайт или наше имя.
+          if (признаки.length && !упоминаетКлиента(JSON.stringify(д2), признаки)) continue;
+          const с = д2.counters || {};
+          собрано.push({
+            заголовок: д2.title, url: д2.url || '', площадка: 'vc.ru',
+            автор: (д2.author && д2.author.name) || первая.автор, блог: '',
+            дата: д2.date ? new Date(д2.date * 1000).toISOString().slice(0, 10) : '',
+            просмотры: с.views != null ? с.views : null,
+            реакции: (с.reactions || 0) + (с.favorites || 0),
+            комментарии: с.comments != null ? с.comments : null,
+            наша: true,
+          });
+        }
+        if (!рез.lastId) break;
+        последний = рез.lastId;
+        const хв = items[items.length - 1];
+        последнееЗначение = (хв && хв.data && хв.data.date) || '';
+      } catch (e) { break; }
+    }
+    if (!собрано.some(а => а.url === первая.url)) собрано.unshift({ ...первая, наша: true });
+  }
+  // Сильные сверху: по просмотрам, а при равенстве — по отклику.
+  собрано.sort((а, б) => (б.просмотры || 0) - (а.просмотры || 0) || (б.реакции || 0) - (а.реакции || 0));
+  return { статьи: собрано.slice(0, 40), авторы };
 }
 
 // Статьи конкурентов среди того, что нашёл поиск: берём ссылки на vc.ru,
@@ -4749,6 +4840,28 @@ function разметкаM4(д, brief) {
            + 'смогли прочитать», а не «постов и просмотров нет»: их видно в личном '
            + 'кабинете площадки.' : '')
       + '</p>');
+  }
+  // Свои статьи на vc.ru: числа замерены через API площадки, автор — наш.
+  // Аккаунт там бывает общий, поэтому считаем не по аккаунту, а по автору
+  // (владелица 17.09).
+  const своиVC = (д.моиСтатьиVC || []).filter(а => а && а.заголовок);
+  if (своиVC.length) {
+    blockScriptsM3.push('renderNoMeasure(' + safeJson(своиVC.slice(0, 20).map(а => [
+      а.заголовок, а.автор || 'vc.ru',
+      [а.просмотры != null ? а.просмотры + ' просмотров' : 'просмотры не замерены',
+       а.реакции ? а.реакции + ' реакций' : '',
+       а.комментарии ? а.комментарии + ' комментариев' : '',
+       а.дата].filter(Boolean).join(' · '),
+      а.url || '',
+    ])) + ', "rpt-myvc");');
+    const просмотры = своиVC.map(а => а.просмотры).filter(х => х != null);
+    частиПодзаголовком('Наши статьи на vc.ru',
+      '<p class="note">Найдены по автору, а не по аккаунту: аккаунт общий, и метрики '
+      + 'чужих материалов к нам отношения не имеют. Числа сняты через открытый API '
+      + 'площадки.'
+      + (просмотры.length ? ' Медиана просмотров по нашим статьям — ' + медиана(просмотры)
+         + ', всего материалов: ' + своиVC.length + '.' : '')
+      + '</p><div class="nomeas" id="rpt-myvc"></div>');
   }
 
   const ист = (д.источники_радара || []).filter(и => и && /^https?:/.test(String(и.url || '')));
@@ -12261,6 +12374,15 @@ function App() {
     // которые владелица ведёт прямо сейчас (17.09: «мы уже на vc.ru
     // выкладываемся и канал в MAX ведём, а он говорит позже»).
     wePublish:'',
+    // Решение владелицы по площадкам из блока «Куда не идём»: что она всё-таки
+    // берёт в работу. Живёт в брифе, значит переживает пересчёт модуля и
+    // уходит контент-машине вместе с остальным брифом (17.09).
+    takenPlatforms:'',
+    // Ссылка на ОДНУ свою статью на vc.ru. Аккаунт там бывает общий, ссылки
+    // «на свой канал» нет, а копировать десятки адресов бессмысленно: по
+    // одной статье код находит автора и тянет остальные его материалы
+    // (владелица 17.09).
+    vcArticle:'',
     // С кем себя сравнивать: у маленького проекта и у того, кто метит в
     // лидеры, это разные списки конкурентов и разные выводы.
     ambition:'', ambitionWhy:'',
@@ -12811,6 +12933,7 @@ function App() {
       let постыКонкурентов = [];  // посты, снятые с их каналов (M4)
       let статьиVC = [];          // статьи на vc.ru с замеренными просмотрами (M4)
       let статьиДзен = [];        // публикации Дзена: темы и даты, без просмотров (M4)
+      let мойVC = [];             // свои статьи на vc.ru, найденные по автору (M4)
       searchCallCount = 0;       // для расчёта тарифов (26.08.2026) — считаем ТОЛЬКО за этот модуль
       keywordCallCount = 0;      // то же для частотности: Wordstat/Google Ads за этот модуль
       try {
@@ -12848,6 +12971,13 @@ function App() {
           реальныйШаг('Снимаю просмотры и лайки у статей на vc.ru');
           статьиVC = await статьиКонкурентовVC(
             (evidence || []).map(e => e && e.url).filter(Boolean), comps);
+          // Свои материалы на vc.ru: по одной ссылке из брифа находим автора
+          // и подтягиваем остальные его статьи — аккаунт может быть общим
+          // (владелица 17.09).
+          if (Bn.vcArticle) {
+            const своиVC = await моиСтатьиVC(Bn.vcArticle, Bn);
+            мойVC = своиVC.статьи || [];
+          }
           userPrompt = buildM4Prompt(Bn, lang, prevContent || '', evidence, comps,
                                      сСайтов.каналы, постыКонкурентов, статьиVC, статьиДзен);
         } else if (mod.id === 'M5') {
@@ -12955,6 +13085,25 @@ function App() {
         }
         if (mod.id === 'M4' && строгое) { реальныйШаг('Замеряю каналы конкурентов: подписчики, охват, ритм'); строгое = await замерКаналовСтрогое(строгое, Bn); }
         if (mod.id === 'M4' && строгое) { реальныйШаг('Замеряю ваши площадки'); строгое = await замерСвоихКаналов(строгое, Bn); }
+        // Свои статьи на vc.ru кладём в данные напрямую: их числа замерены
+        // через API площадки, и модель к ним не прикасается.
+        if (mod.id === 'M4' && строгое && мойVC.length) {
+          const просм = мойVC.map(а => а.просмотры).filter(х => х != null);
+          const строкаVC = {
+            площадка: 'vc.ru · ' + (мойVC[0].автор || 'наши статьи'),
+            ссылка: мойVC[0].url || '',
+            публикаций_в_месяц: null,
+            ритм_словами: мойVC.length + ' публикаций найдено по автору',
+            последняя: мойVC[0].дата || '',
+            форматы: 'статьи', темы: '', что_работает: '', как_сделать_лучше: '',
+            подписчики: 'не применимо',
+            охват: просм.length ? (медиана(просм) + ' просмотров, медиана по ' + просм.length + ' статьям') : '',
+            почему_не_замерено: '', имя_канала: мойVC[0].автор || '', описание_канала: '',
+          };
+          строгое = { ...строгое,
+            каналы_заказчика: [...(строгое.каналы_заказчика || []), строкаVC],
+            моиСтатьиVC: мойVC };
+        }
         if (mod.id === 'M5' && строгое) { реальныйШаг('Сверяю цитаты с живыми страницами'); строгое = await сверкаЦитатСтрогое(строгое); }
         else if (mod.id === 'M5') full = await processM5Voc(full, wn);
         // M2: известность конкурентов замеряется брендовым спросом, а не оценивается
@@ -13755,6 +13904,8 @@ function App() {
           <Field label={t.fSocials}><textarea value={brief.socials} onChange={e=>setBrief(p=>({...p,socials:e.target.value}))} placeholder={t.fSocialsPh} rows={2} style={{resize:'vertical'}}/></Field>
           <Field label={t.fWePublish} info="Площадки, где вы публикуетесь СЕЙЧАС. Модуль «Где продвигаться» не имеет права отправить их в «позже»: решение по ним — только развивать или закрывать.">
             <textarea value={brief.wePublish||''} onChange={e=>setBrief(p=>({...p,wePublish:e.target.value}))} placeholder={t.fWePublishPh} rows={2} style={{resize:'vertical'}}/></Field>
+          <Field label={t.fVcArticle} info="Аккаунт на vc.ru может быть общим — там пишет несколько человек. Дайте ссылку на ОДНУ свою статью: по ней найдём автора и подтянем остальные его материалы с просмотрами и реакциями.">
+            <textarea value={brief.vcArticle||''} onChange={e=>setBrief(p=>({...p,vcArticle:e.target.value}))} placeholder={t.fVcArticlePh} rows={2} style={{resize:'vertical'}}/></Field>
           <Field label={t.fBrandColors}><input value={brief.brandColors} onChange={e=>setBrief(p=>({...p,brandColors:e.target.value}))} placeholder={t.fBrandColorsPh}/></Field>
           <Field label={t.fBrandFonts}><input value={brief.brandFonts} onChange={e=>setBrief(p=>({...p,brandFonts:e.target.value}))} placeholder={t.fBrandFontsPh}/></Field>
           <Field label={t.fBrandLogo}><input value={brief.brandLogo} onChange={e=>setBrief(p=>({...p,brandLogo:e.target.value}))} placeholder={t.fBrandLogoPh}/></Field>

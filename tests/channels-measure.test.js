@@ -284,3 +284,55 @@ globalThis.fetch=function(u){
     console.log(f5?('ПРОВАЛЕНО(Дзен): '+f5):'  канал Дзена замерен лентой');
   });
 })();
+
+// Свои статьи на vc.ru: аккаунт общий, автор пишет и для других клиентов —
+// нашей считается статья, где в тексте есть наш сайт или имя (владелица 17.09:
+// «у нас там указана ссылка на ловец-лидов.рф прямо в тексте»).
+(function(){
+  var f6=0;
+  function ок(имя,усл,что){ if(усл) console.log('  ok   '+имя); else { f6++; console.log('  FAIL '+имя+(что?': '+что:'')); } }
+  // В JXA нет конструктора URL, в браузере есть — и именно он переводит
+  // кириллический домен в punycode. Заглушка повторяет это поведение.
+  globalThis.URL=function(адрес){
+    var host=String(адрес).replace(/^https?:\/\//,'').replace(/\/.*$/,'');
+    this.hostname = host==='ловец-лидов.рф' ? 'xn----ctbbhdtrdxg7f.xn--p1ai' : host;
+  };
+  eval(взять('признакиКлиента')); eval(взять('упоминаетКлиента'));
+  eval(взять('метрикиVC')); eval(взять('моиСтатьиVC'));
+  var статья={result:{id:3104744,title:'Три ловушки в данных',url:'https://vc.ru/services/3104744-lovushki',
+    date:1788043751,author:{id:705136,name:'Михаил Мятов'},subsite:{name:'Сервисы'},
+    counters:{views:461,reactions:0,favorites:1,comments:0}}};
+  var лента={result:{lastId:null,items:[
+    {data:{id:3104744,title:'Три ловушки в данных',url:'https://vc.ru/services/3104744-lovushki',
+      date:1788043751,author:{id:705136,name:'Михаил Мятов'},counters:{views:461,reactions:0,favorites:1,comments:0},
+      blocks:[{data:{text:'подробнее на ловец-лидов.рф'}}]}},
+    {data:{id:3104999,title:'Попап для SaaS',url:'https://vc.ru/services/3104999-popap',
+      date:1788143751,author:{id:705136,name:'Михаил Мятов'},counters:{views:406,reactions:2,favorites:0,comments:1},
+      blocks:[{data:{text:'ставим виджет xn----ctbbhdtrdxg7f.xn--p1ai'}}]}},
+    {data:{id:3105111,title:'Психолог: какой диплом нужен',url:'https://vc.ru/services/3105111-psiholog',
+      date:1788243751,author:{id:705136,name:'Михаил Мятов'},counters:{views:264,reactions:0,favorites:0,comments:0},
+      blocks:[{data:{text:'про переподготовку психологов'}}]}},
+  ]}};
+  var прежний6=globalThis.fetch;
+  globalThis.fetch=function(u){
+    var адрес=decodeURIComponent(String(u).split('url=')[1]||'');
+    if (адрес.indexOf('api.vc.ru/v2.5/content?id=3104744')>=0)
+      return Promise.resolve({ok:true,json:function(){return Promise.resolve(статья);}});
+    if (адрес.indexOf('api.vc.ru/v2.5/timeline?subsitesIds=705136')>=0)
+      return Promise.resolve({ok:true,json:function(){return Promise.resolve(лента);}});
+    return прежний6(u);
+  };
+  var бриф={siteUrl:'https://ловец-лидов.рф', name:'Ловец-Лидов.рф'};
+  var пр=признакиКлиента(бриф);
+  ок('домен в признаках', пр.indexOf('ловец-лидов.рф')>=0, пр.join(','));
+  ок('punycode-вариант домена тоже', пр.some(function(x){return x.indexOf('xn--')>=0;}), пр.join(','));
+  моиСтатьиVC('https://vc.ru/services/3104744-lovushki', бриф).then(function(р){
+    var имена=р.статьи.map(function(а){return а.заголовок;});
+    ок('наши статьи отобраны', р.статьи.length===2, имена.join(' | '));
+    ок('чужая тема того же автора отсеяна', имена.indexOf('Психолог: какой диплом нужен')<0, имена.join(' | '));
+    ок('сильные сверху', р.статьи[0].просмотры===461, String(р.статьи[0].просмотры));
+    ок('реакции = лайки + избранное', р.статьи[0].реакции===1, String(р.статьи[0].реакции));
+    ок('автор запомнен', (р.авторы||[]).indexOf('Михаил Мятов')>=0, (р.авторы||[]).join(','));
+    console.log(f6?('ПРОВАЛЕНО(свои vc.ru): '+f6):'  свои статьи на vc.ru отобраны по упоминанию');
+  });
+})();
