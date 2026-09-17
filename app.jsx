@@ -7299,16 +7299,14 @@ function CountdownTimer({ totalSeconds, label }) {
         {перебор ? 'Идёт дольше обычного · сверх оценки' : label}
       </div>
       <div className="timer">{перебор ? '+' : ''}{mm}:{ss}</div>
-      <div style={{marginTop:8,height:3,background:'var(--ink)',borderRadius:2}}>
+      <div style={{marginTop:8,height:3,background:'var(--line-2)',borderRadius:2}}>
         <div className={перебор ? 'tmbar over' : 'tmbar'}
           style={{height:'100%',width:перебор?'94%':`${pct}%`,background:'var(--mid)',
                   borderRadius:2,transition:'width 1s linear'}}/>
       </div>
       {перебор && (
         <div style={{fontSize:10.5,color:'var(--ink-3)',marginTop:6,lineHeight:1.45}}>
-          Оценка построена по прошлым прогонам. Дольше бывает, когда страниц
-          для замера много или источник отвечает медленно — шаг под счётчиком
-          показывает, что делается сейчас.
+          Дольше бывает, когда страниц для замера много.
         </div>
       )}
     </div>
@@ -14659,16 +14657,28 @@ function App() {
 
       {isRun && curModData && (
         <div className="status-bar">
-          <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',gap:16}}>
-            <div style={{flex:1}}>
-              <p style={{fontSize:12,color:'var(--ink-3)',marginBottom:4}}>{curModData.id} · {curModData.titleRu||curModData.title}{curNiche?' · ниша: '+curNiche:''}</p>
-              <p style={{fontSize:14,fontWeight:500,marginBottom:10}}>{curStep}</p>
-              <div style={{display:'flex',gap:4}}>
+          {/* Шапка во всю ширину: раньше имя модуля с нишей жило в колонке
+              рядом с таймером, колонка сжималась и слова переносились по
+              слогам (владелица 17.09 — «панель хода выглядит корявенько»). */}
+          <div style={{display:'flex',alignItems:'baseline',justifyContent:'space-between',
+                       gap:12,flexWrap:'wrap',marginBottom:10}}>
+            <p style={{fontSize:12,color:'var(--ink-3)',margin:0,minWidth:0}}>
+              {curModData.id} · {curModData.titleRu||curModData.title}{curNiche?' · ниша: '+curNiche:''}
+            </p>
+            <p style={{fontSize:11,color:'var(--ink-3)',margin:0,whiteSpace:'nowrap'}}>
+              шаг {curStepIdx+1} из {curModData.steps.length}
+            </p>
+          </div>
+          <div style={{display:'grid',gridTemplateColumns:'minmax(0,1fr) 168px',gap:20,alignItems:'start'}}>
+            <div style={{minWidth:0}}>
+              <p style={{fontSize:15,fontWeight:500,margin:'0 0 12px',lineHeight:1.35,
+                         overflowWrap:'anywhere'}}>{curStep}</p>
+              <div style={{display:'flex',gap:5}}>
                 {curModData.steps.map((_,i)=>(
-                  <div key={i} style={{flex:1,height:2,borderRadius:1,background:i<=curStepIdx?curModData.color:'var(--ink)'}}/>
+                  <div key={i} style={{flex:1,height:3,borderRadius:2,
+                    background:i<=curStepIdx?curModData.color:'var(--line-2)'}}/>
                 ))}
               </div>
-              <p style={{fontSize:10,color:'var(--ink-2)',marginTop:4}}>шаг {curStepIdx+1} из {curModData.steps.length}</p>
             </div>
             <CountdownTimer totalSeconds={оценкаСекунд(curModData.id, projs)} label="Осталось примерно"/>
           </div>

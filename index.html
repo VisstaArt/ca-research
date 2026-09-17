@@ -85,11 +85,17 @@ tr:nth-child(even) td { background: none; }
 
 .tag { display: inline-block; font-size: var(--fs-label); font-weight: 700;
   letter-spacing: .07em; text-transform: uppercase; color: var(--ink-3); }
-.status-bar { position: sticky; top: 0; z-index: 20; padding: 10px 14px;
+.status-bar { position: sticky; top: 0; z-index: 20; padding: 14px 18px;
   border-radius: 14px; margin-bottom: 14px;
   background: color-mix(in srgb, var(--mid) 8%, var(--card-solid));
   border: 1px solid var(--line); font-size: var(--fs-small); }
-.timer { font-variant-numeric: tabular-nums; color: var(--ink-3); }
+/* Узкое окно: счётчик уходит под текст шага, а не жмёт его в колонку
+   шириной в одно слово (владелица 17.09). */
+@media (max-width: 620px) {
+  .status-bar > div:last-child { grid-template-columns: 1fr !important; gap: 12px !important; }
+}
+.timer { font-variant-numeric: tabular-nums; color: var(--ink-3);
+  font-size: 22px; line-height: 1.1; }
 /* Счётчик перешёл за оценку: полоса не полная и тихо дышит — видно, что
    работа идёт, а не замерла (владелица 17.09). */
 .tmbar.over { animation: tmpulse 1.6s ease-in-out infinite; }
@@ -235,6 +241,6 @@ html[data-embed] #root { max-width: none; padding: 0; }
      без сборки — как и весь остальной проект. -->
 <script src="lib/contract.js?v=c5d82d20"></script>
 <script src="lib/auth.js?v=c0e4610f"></script>
-<script src="app.js?v=4929c3f9"></script>
+<script src="app.js?v=e553e443"></script>
 </body>
 </html>

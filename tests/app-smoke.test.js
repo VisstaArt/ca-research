@@ -180,4 +180,19 @@ var тм=исх.slice(исх.indexOf('function CountdownTimer'), исх.indexOf(
    if (п[1].test(исх)) console.log('  ok   '+п[0]);
    else { провалов++; console.log('  FAIL '+п[0]); }
  });
+// Панель хода: имя модуля и ниша идут строкой во всю ширину, а не в колонке
+// рядом с таймером — там они переносились по слогам (владелица 17.09).
+var пан=исх.slice(исх.indexOf('<div className="status-bar">'), исх.indexOf('<div className="status-bar">')+2600);
+[['шапка панели отдельной строкой', /alignItems:'baseline',justifyContent:'space-between'/],
+ ['текст шага не в узкой колонке', /gridTemplateColumns:'minmax\(0,1fr\) 168px'/],
+ ['будущие шаги светлые, а не чернильные', /background:i<=curStepIdx\?curModData\.color:'var\(--line-2\)'/]]
+ .forEach(function(п){
+   if (п[1].test(пан)) console.log('  ok   '+п[0]);
+   else { провалов++; console.log('  FAIL '+п[0]); }
+ });
+var инд=readFile(ROOT+'/index.html');
+if (/\.status-bar > div:last-child \{ grid-template-columns: 1fr/.test(инд))
+  console.log('  ok   в узком окне счётчик уходит вниз');
+else { провалов++; console.log('  FAIL панель не перестраивается в узком окне'); }
+
 console.log(провалов===0 ? '\nвсё сошлось (ход прогона)' : '\nПРОВАЛОВ: '+провалов);
