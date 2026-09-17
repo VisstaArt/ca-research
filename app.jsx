@@ -13237,6 +13237,67 @@ function App() {
     } catch (e) { setKeyMsg(e.message); }
     setKeyBusy(false);
   };
+  // Канал согласования: телеграм-группа, куда контент-машина приносит материал
+  // на проверку. Владелица 17.09 захотела подключить её своими руками, «чтобы
+  // понимать, как всё устроено». Токен бота идёт в Vault прямо из браузера —
+  // тем же путём, что ключи провайдеров: через наш сервер он не проходит и
+  // назад не читается.
+  const [chTitle, setChTitle] = React.useState('');
+  const [chToken, setChToken] = React.useState('');
+  const [chAddr, setChAddr] = React.useState('');
+  const [chBusy, setChBusy] = React.useState(false);
+  const [chMsg, setChMsg] = React.useState('');
+  const [chSaved, setChSaved] = React.useState('');
+  const saveApprovalChannel = async () => {
+    setChBusy(true); setChMsg('');
+    try {
+      const A = window.CAAuth;
+      const r = await fetch(A.SUPABASE_URL + '/rest/v1/rpc/set_approval_channel', {
+        method: 'POST',
+        headers: { apikey: A.SUPABASE_ANON_KEY, Authorization: 'Bearer ' + A.getAccessToken(),
+                   'Content-Type': 'application/json' },
+        body: JSON.stringify({ p_client: clientIdFromUrl, p_kind: 'telegram',
+          // purpose обязателен: у клиента ДВА телеграма — группа согласования и
+          // канал публикации. Без него второй вытесняет первый, и материал
+          // уходит подписчикам вместо проверки (контент-машина, миграция 007).
+          p_purpose: 'approval', p_token: chToken.trim(), p_address: chAddr.trim(),
+          p_title: chTitle.trim() || 'Группа согласования', p_default: true }),
+      });
+      const d = await r.json().catch(() => null);
+      if (!r.ok) {
+        const m = (d && (d.message || d.hint)) || '';
+        throw new Error(/does not exist|schema cache/i.test(m)
+          ? 'Хранилище каналов в базе ещё не заведено — нужна миграция, её применяет владелица.'
+          : (m || 'Не получилось сохранить'));
+      }
+      setChSaved(typeof d === 'string' ? d : chAddr.trim());
+      setChToken(''); 
+      setChMsg('Группа сохранена. Она пока помечена непроверенной: база в интернет не ходит. '
+        + 'Нажмите «Проверить связь» — бот поздоровается в группе, и это единственное '
+        + 'доказательство, что всё работает.');
+    } catch (e) { setChMsg(e.message); }
+    setChBusy(false);
+  };
+  // Живая проверка: задание воркеру. Галочку рисует не он, а доставленное
+  // сообщение — зелёный значок можно нарисовать и при чужой ошибке.
+  const checkApprovalChannel = async () => {
+    setChBusy(true); setChMsg('');
+    try {
+      const A = window.CAAuth;
+      const r = await A.authFetch(A.SUPABASE_URL + '/rest/v1/jobs', {
+        method: 'POST',
+        headers: { apikey: A.SUPABASE_ANON_KEY, 'Content-Type': 'application/json',
+                   Prefer: 'return=minimal' },
+        body: JSON.stringify({ client_id: clientIdFromUrl, kind: 'verify_channel',
+          payload: { kind: 'telegram', purpose: 'approval' } }),
+      });
+      if (!r.ok) throw new Error('Не получилось поставить проверку в очередь');
+      setChMsg('Проверка поставлена в очередь. Через минуту загляните в группу: '
+        + 'там должно появиться сообщение от бота.');
+    } catch (e) { setChMsg(e.message); }
+    setChBusy(false);
+  };
+
   const saveSearchKey = async () => {
     setSearchBusy(true); setSearchMsg('');
     try {
@@ -14568,6 +14629,47 @@ function App() {
                 </div>
               )}
               {searchMsg && <p style={{fontSize:12,color:'var(--ink-2)',marginTop:6}}>{searchMsg}</p>}
+            </div>
+
+            {/* Группа согласования: куда контент-машина приносит материал на
+                проверку. Владелица 17.09 подключает её сама, чтобы понимать,
+                как устроено. Токен идёт в хранилище мимо нашего сервера. */}
+            <div style={{marginTop:14,paddingTop:14,borderTop:'1px solid var(--line)'}}>
+              <p style={{fontSize:13,fontWeight:600,marginBottom:4}}>Группа согласования</p>
+              <p style={{fontSize:12,color:'var(--ink-2)',marginBottom:8}}>
+                {chSaved
+                  ? <>Подключена: <b style={{color:'var(--ink)'}}>{chSaved}</b>. Готовый материал
+                     приходит туда на проверку — и только после вашего «да» идёт в канал.</>
+                  : <>Телеграм-группа, куда приходит готовый материал на проверку. Это не канал
+                     для подписчиков: у них разное назначение, и подключаются они отдельно.
+                     Нужен бот из <a href="https://t.me/BotFather" target="_blank" rel="noreferrer">@BotFather</a>,
+                     добавленный в группу, и её идентификатор — число, обычно со знаком минус.</>}
+              </p>
+              {!chSaved && (
+                <div style={{display:'grid',gap:6}}>
+                  <input value={chTitle} onChange={e=>setChTitle(e.target.value)}
+                    placeholder="как назвать в списке — например, «Согласование с Ольгой»"/>
+                  <input type="password" value={chToken} autoComplete="new-password"
+                    onChange={e=>setChToken(e.target.value)}
+                    placeholder="токен бота от @BotFather — 123456789:AA…"/>
+                  <input value={chAddr} onChange={e=>setChAddr(e.target.value)}
+                    placeholder="идентификатор группы — например, -1001234567890"/>
+                  <div style={{display:'flex',gap:6}}>
+                    <button onClick={saveApprovalChannel}
+                      disabled={!chToken.trim()||!chAddr.trim()||chBusy}>
+                      {chBusy ? 'Сохраняю…' : 'Подключить группу'}</button>
+                  </div>
+                </div>
+              )}
+              {chSaved && (
+                <div style={{display:'flex',gap:6}}>
+                  <button onClick={checkApprovalChannel} disabled={chBusy}>
+                    {chBusy ? 'Ставлю в очередь…' : 'Проверить связь'}</button>
+                  <button onClick={()=>{ setChSaved(''); setChMsg(''); }}
+                    style={{color:'var(--ink-2)'}}>Подключить другую</button>
+                </div>
+              )}
+              {chMsg && <p style={{fontSize:12,color:'var(--ink-2)',marginTop:6,lineHeight:1.5}}>{chMsg}</p>}
             </div>
           </>
         ) : (
