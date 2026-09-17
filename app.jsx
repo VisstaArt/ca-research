@@ -13809,6 +13809,18 @@ function App() {
     return из;
   };
 
+  // Набор модулей ПРОЕКТА — это всё, что человек выбрал, а не то, что сейчас
+  // запущено. Раньше сюда писался запущенный список: нажала ↺ на одном модуле —
+  // и набор проекта схлопывался до него одного, а остальные пропадали с экрана
+  // до следующего открытия (владелица 17.09: «модуль опять не появился»).
+  const наборПроекта = запущенные => {
+    const было = дополнитьНовыми(mods);
+    const всё = [...было, ...(запущенные || []).filter(id => !было.includes(id))];
+    const порядок = MODULES.map(m => m.id);
+    return всё.filter((id, i, a) => a.indexOf(id) === i)
+      .sort((а, б) => порядок.indexOf(а) - порядок.indexOf(б));
+  };
+
   const sv = React.useCallback(p => { upsert(p); ref(); return p; }, []);
   // Память браузера переполнена — говорим прямо и подсказываем, что делать.
   React.useEffect(() => {
@@ -13991,7 +14003,7 @@ function App() {
     const B = briefOverride || brief;
     if (!B.name) return;
     const id = proj?.id || ('p' + Date.now());
-    const allSelected = modsToRun || mods;
+    const allSelected = modsToRun || дополнитьНовыми(mods);
     const niches = nichesOf(B);
 
     // Единицы работы = модуль × ниша. Глобальные модули — один раз (ниша ''),
@@ -14048,7 +14060,7 @@ function App() {
     остановитьRef.current = false;   // новый прогон — прежняя остановка забыта
     начатьПрогон();                  // и новый выключатель: старый уже сорван
 
-    const p = { id, createdAt: proj?.createdAt||new Date().toISOString(), updatedAt: new Date().toISOString(), brief: B, lang, mods:allSelected, results:existing, report:proj?.report||'', priceLayers, selectedLayers };
+    const p = { id, createdAt: proj?.createdAt||new Date().toISOString(), updatedAt: new Date().toISOString(), brief: B, lang, mods: наборПроекта(allSelected), results:existing, report:proj?.report||'', priceLayers, selectedLayers };
     setProj(p); setRep(p.report); sv(p); setSc('work');
 
     const col = [...existing];
@@ -15748,7 +15760,12 @@ function App() {
   );
 
   // ── WORK
-  const allMods = MODULES.filter(m => mods.includes(m.id) && !m.hidden);
+  // Новые модули показываем даже тем проектам, чей сохранённый набор их не
+  // знает: набор пишется при создании проекта, а модуль появился позже.
+  // Раньше это правилось только при открытии проекта, и если набор успевал
+  // перезаписаться прогоном, модуль снова пропадал (владелица 17.09, дважды).
+  const модулиПроекта = дополнитьНовыми(mods);
+  const allMods = MODULES.filter(m => модулиПроекта.includes(m.id) && !m.hidden);
   const workNiches = nichesOf(brief);
   // Модуль «полностью готов»: глобальный — если есть его результат; по-нишевой — если сделан у ВСЕХ выбранных ниш.
   const modDone = id => {
