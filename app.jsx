@@ -13292,13 +13292,36 @@ function App() {
     setChBusy(true); setChMsg('');
     try {
       const A = window.CAAuth;
-      const r = await A.authFetch(A.SUPABASE_URL + '/rest/v1/jobs', {
-        method: 'POST',
-        headers: { apikey: A.SUPABASE_ANON_KEY, 'Content-Type': 'application/json',
-                   Prefer: 'return=minimal' },
-        body: JSON.stringify({ client_id: clientIdFromUrl, kind: 'verify_channel',
-          payload: { kind: 'telegram', purpose: 'approval' } }),
+      const заголовки = { apikey: A.SUPABASE_ANON_KEY,
+        Authorization: 'Bearer ' + A.getAccessToken(), 'Content-Type': 'application/json' };
+      // Через функцию базы, а не прямой записью в очередь: она проверяет доступ,
+      // отказывает, если канал не подключён, и склеивает повторные нажатия в
+      // одно задание. Человек, нажавший «Проверить» пять раз, получит одно
+      // сообщение в рабочую группу, а не пять — пять выглядели бы как
+      // сломавшийся сервис (контент-машина, миграция 009).
+      let r = await fetch(A.SUPABASE_URL + '/rest/v1/rpc/queue_channel_check', {
+        method: 'POST', headers: заголовки,
+        body: JSON.stringify({ p_client: clientIdFromUrl, p_kind: 'telegram',
+          p_purpose: 'approval' }),
       });
+      if (!r.ok) {
+        const д = await r.json().catch(() => null);
+        const м = (д && (д.message || д.hint)) || '';
+        // Миграции применяет владелица, и до этого функции в базе нет. Тогда
+        // идём прежним путём — прямой записью задания: он рабочий, просто без
+        // склейки повторов.
+        if (/does not exist|schema cache/i.test(м)) {
+          r = await A.authFetch(A.SUPABASE_URL + '/rest/v1/jobs', {
+            method: 'POST',
+            headers: { apikey: A.SUPABASE_ANON_KEY, 'Content-Type': 'application/json',
+                       Prefer: 'return=minimal' },
+            body: JSON.stringify({ client_id: clientIdFromUrl, kind: 'verify_channel',
+              payload: { kind: 'telegram', purpose: 'approval' } }),
+          });
+        } else if (м) {
+          throw new Error(м);
+        }
+      }
       if (!r.ok) throw new Error('Не получилось поставить проверку в очередь');
       setChMsg('Проверка поставлена в очередь. Через минуту загляните в группу: '
         + 'там должно появиться сообщение от бота.');
