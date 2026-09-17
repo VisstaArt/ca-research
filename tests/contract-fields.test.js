@@ -17,6 +17,11 @@ var res=[
    залетает:[{заголовок:'z',площадка:'Telegram',дата:'2026-09-01',просмотры:100,просмотры_текст:'100',отклик:'10',тема:'t',формат:'пост',хук:'h',длительность:'',призыв:'c',url:'https://t.me/k/1',нам_подходит:'да',почему_подходит:'наша тема'}],
    паттерны:[{паттерн:'p',на_чём_основан:'1',почему_срабатывает:'w',что_делаем:'d'}],
    бенчмарки:[{показатель:'охват',медиана:'100',разброс:'50-200',на_скольких:'10',примечание:''}],
+   через_кого_узнают:[{кто:'Маркетолог',площадка:'Telegram',url:'https://t.me/m',
+     кого_упоминает:'Envybox',характер:'реклама или интеграция',охват:'42 000',
+     что_сказано:'поставил виджет',что_нам_делать:'прийти с интеграцией'}],
+   интересыЗамер:[{сегмент:'Владельцы клиник',источник:'Яндекс Wordstat',
+     фразы:[{фраза:'управление клиникой',частота:12000}]}],
    где_говорит_аудитория:[{площадка:'Клуб владельцев',тип:'сообщество',url:'https://vk.com/club',
      что_там_делают:'спрашивают про возвраты',признак_живости:'20 тем в неделю',как_использовать:'отвечать'}],
    лидеры_мнений:[{имя:'Эксперт',площадка:'Telegram',url:'https://t.me/expert',кто_это:'блогер',
@@ -53,7 +58,7 @@ var ОБЯЗАТЕЛЬНЫЕ = ['NICHE_DESCRIPTION','CHANNEL_FRAME','AUDIENCE_PE
  'SEO_COMPETITIVE_ANGLE','AWARENESS_MIX','OBJECTIONS','HOOK_BANK','COGNITIVE_TACTICS',
  'AUDIENCE_CHANNELS','ALTERNATIVES','OFFERS_FINAL','OFFER_INPUT','MAIN_BET','CONTENT_PATTERNS',
  'CONTENT_TOP_PERFORMERS','CONTENT_BENCHMARKS','CLIENT_CHANNELS','competitors','CONTENT_CHANNELS',
- 'CHANNEL_STRATEGY','hypotheses','AUDIENCE_VOICES'];
+ 'CHANNEL_STRATEGY','hypotheses','AUDIENCE_VOICES','DISCOVERY_PATHS','AUDIENCE_INTERESTS'];
 
 console.log('tests/contract-fields.test.js');
 var провалов=0;
