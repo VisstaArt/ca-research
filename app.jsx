@@ -283,7 +283,7 @@ const MODULES = [
     whatRu: 'Отвечает: Каков размер рынка (TAM→SAM→SOM)? Где компания относительно адресного рынка? Строится на официальной статистике (блоки 01–03).',
     outputsEn: ['Geo & open statistics','TAM → SAM → SOM model','Market share vs company position'],
     outputsRu: ['Гео и открытая статистика','Модель TAM → SAM → SOM','Доля рынка и позиция компании'],
-    estimatedMin: 3,
+    estimatedMin: 5,
     model: 'gpt-5.6-terra',
     steps: ['Collecting geo & demographic statistics (Block 01)…','Mapping open data sources (Block 02)…','Building TAM→SAM→SOM model (Block 03)…'],
     stepsRu: ['Собираю статистику по географии и населению…','Ищу открытые источники данных…','Считаю ёмкость рынка: весь рынок → доступный → достижимый…'],
@@ -298,7 +298,7 @@ const MODULES = [
     whatRu: 'Отвечает: Какие ниши есть вокруг ваших услуг? В какие стоит входить — по спросу, конкуренции и экономике? Заканчивается стопом: вы (или заказчик) выбираете ОДНУ нишу, и все следующие модули исследуют только её. Блоки 04, 04_1, 04_2 методологии, заземление на реальный веб-поиск.',
     outputsEn: ['Audience segments map','Service effectiveness per niche','Niche prioritization matrix (scoring)','Niche selection stop-point'],
     outputsRu: ['Карта сегментов аудитории','Эффективность услуг по нишам','Матрица приоритизации ниш (скоринг)','Стоп-точка выбора ниши'],
-    estimatedMin: 2,
+    estimatedMin: 8,
     model: 'gpt-5.6-terra',
     steps: ['Searching real market signals (web search)…','Describing target audience segments (Block 04)…','Evaluating service effectiveness per niche (Block 04_1)…','Prioritizing niches with scoring (Block 04_2)…','Preparing niche cards…'],
     stepsRu: ['Ищу живые сигналы рынка в поиске…','Описываю сегменты аудитории…','Оцениваю, какие услуги работают в каждой нише…','Расставляю ниши по приоритету и считаю баллы…','Собираю карточки ниш…'],
@@ -313,7 +313,7 @@ const MODULES = [
     whatRu: 'Отвечает: Кто реальные конкуренты в вашем ценовом слое? Что предлагают и по какой цене? Где гэпы (Win/Parity/Lose) которые можно использовать?',
     outputsEn: ['Competitor map (10–20)','Win / Parity / Lose table','Positioning gaps & opportunities','Competitor positioning chart'],
     outputsRu: ['Карта конкурентов (10–20)','Таблица Win / Parity / Lose','Гэпы и возможности','График позиционирования'],
-    estimatedMin: 3,
+    estimatedMin: 15,
     model: 'gpt-5.6-sol',
     steps: ['Building open sources index (Block 05)…','Mapping competitors — offers, pricing, positioning (Block 06)…','Running Win/Parity/Lose gap analysis (Block 06_1)…','Generating competitor positioning chart…'],
     stepsRu: ['Собираю индекс открытых источников…','Составляю карту конкурентов: офферы, цены, позиционирование…','Сравниваю нас с ними: где выигрываем, где наравне, где отстаём…','Рисую график позиционирования…'],
@@ -331,7 +331,7 @@ const MODULES = [
     whatRu: 'Отвечает: Какие форматы, хуки и длительности реально работают в нише? Смотрит на тех же конкурентов, что нашёл M2, но как на медиа: каналы, топ-контент, паттерны и бенчмарки ниши. Только публично видимые числа — ничего из закрытых источников.',
     outputsEn: ['Radar sources','Competitor channels','Top content breakdown','Working patterns','Niche benchmarks'],
     outputsRu: ['Источники радара','Каналы конкурентов','Разбор того, что залетает','Работающие паттерны','Бенчмарки ниши'],
-    estimatedMin: 3,
+    estimatedMin: 25,
     model: 'gpt-5.6-terra',
     steps: ['Collecting competitor channels (Block 24_0)…','Measuring channel size and cadence (Block 24)…','Breaking down top content (Block 24A)…','Deriving what works (Block 24B)…','Computing niche benchmarks (Block 24C)…'],
     stepsRu: ['Собираю каналы конкурентов…','Замеряю размер каналов и частоту публикаций…','Разбираю, что у них залетает…','Вывожу работающие приёмы…','Считаю опорные числа ниши…'],
@@ -349,7 +349,7 @@ const MODULES = [
     whatRu: 'Отвечает: Какими словами клиенты описывают проблему? Чего боятся? Чего хотят? Используется для текстов рекламы, заголовков лендинга и скриптов продаж.',
     outputsEn: ['VoC table (25–40 real quotes)','Intent clusters by awareness stage','Customer language glossary'],
     outputsRu: ['Таблица VoC (25–40 реальных цитат)','Кластеры намерений по стадиям','Словарь языка клиента'],
-    estimatedMin: 3,
+    estimatedMin: 10,
     model: 'gpt-5.6-terra',
     steps: ['Collecting VoC quotes from reviews, forums, social media (Block 07)…','Clustering search intents by awareness stage (Block 08)…','Mapping funnel roles and headline formulas…'],
     stepsRu: ['Собираю живые цитаты из отзывов, форумов и соцсетей…','Группирую запросы по стадиям осознания…','Раскладываю роли в воронке и формулы заголовков…'],
@@ -366,7 +366,7 @@ const MODULES = [
     whatRu: 'Отвечает: Зачем клиент нанимает ваш продукт? На какой стадии осознанности он находится? Какие страхи и критерии движут решением? Какие когнитивные триггеры использовать?',
     outputsEn: ['LPR personas (4–8)','JTBD map','Fears & decision criteria','Customer Journey Map','Cognitive tactics'],
     outputsRu: ['Персоны LPR (4–8)','Карта JTBD','Страхи и критерии выбора','Карта пути клиента CJM','Когнитивные тактики'],
-    estimatedMin: 2,
+    estimatedMin: 3,
     наДанныхПредыдущих: true,
     model: 'gpt-5.6-sol',
     steps: ['Building LPR personas with real language (Block 09)…','Mapping Jobs-to-be-Done per segment (Block 10)…','Assessing awareness levels by Schwartz (Block 11)…','Cataloguing fears and doubts (Block 12)…','Mapping decision criteria and trust triggers (Block 13)…','Building customer journey map CJM (Block 14)…','Identifying cognitive tactics and influence patterns (Block 15)…'],
@@ -390,7 +390,7 @@ const MODULES = [
     whatRu: 'Отвечает: Какие гипотезы тестировать первыми? Какой оффер сильнейший по сегменту? Как структурировать ценностное предложение для максимальной конверсии?',
     outputsEn: ['Marketing hypotheses (10–15)','Offer workshop (draft variants)','Final offers per segment'],
     outputsRu: ['Маркетинговые гипотезы (10–15)','Воркшоп офферов (черновики)','Финальные офферы по сегментам'],
-    estimatedMin: 2,
+    estimatedMin: 4,
     наДанныхПредыдущих: true,
     model: 'gpt-5.6-sol',
     steps: ['Generating marketing hypotheses (Block 16)…','Collecting offer input data (Block 17A)…','Running offer workbench — draft options (Block 17B)…','Finalising offers per segment (Block 17 Final)…'],
@@ -411,7 +411,7 @@ const MODULES = [
     whatRu: 'Отвечает: По каким запросам ищет ваша аудитория и сколько их на самом деле? Какие страницы уже находятся по этим запросам? Что и как часто публикуют конкуренты?',
     outputsEn: ['Search competitor analysis','Semantic core by clusters with real volumes','Competitor content audit','Full keyword export as returned by the source'],
     outputsRu: ['Анализ поисковых конкурентов','Семантическое ядро по кластерам с реальной частотностью','Контент-аудит конкурентов','Полная выгрузка запросов как её вернул источник'],
-    estimatedMin: 3,
+    estimatedMin: 15,
     model: 'gpt-5.6-terra',
     steps: ['Collecting sources (SEO-00)…','Analysing search competitors (SEO-01)…','Building semantic core by clusters (SEO-02)…','Auditing competitor content (SEO-03)…'],
     stepsRu: ['Собираю источники…','Разбираю конкурентов в поисковой выдаче…','Строю семантическое ядро по кластерам…','Проверяю контент конкурентов…'],
@@ -627,6 +627,11 @@ function оценкаСекунд(id, проекты) {
     свои.sort((a, b) => a - b);
     return свои[Math.floor(свои.length / 2)];   // медиана: один затык не сдвигает
   }
+  // Пока своих прогонов нет, берём оценку из описания модуля. Она нужна
+  // честная: контент-радар за сутки оброс сбором (портреты аудитории,
+  // частотность интересов, сайты конкурентов, витрины каналов, vc.ru, Дзен)
+  // и идёт под полчаса, а в карточке стояло «3 минуты» — человек ждал три
+  // и не понимал, что происходит (владелица 17.09).
   const m = MODULES.find(x => x.id === id);
   return (m && m.estimatedMin ? m.estimatedMin : 2) * 60;
 }
@@ -12754,7 +12759,23 @@ function ModuleCard({ m, on, onToggle, uiLang }) {
           <div style={{fontSize:13,fontWeight:500,color:'var(--ink)'}}>{title}</div>
           <div style={{fontSize:11,color:'var(--ink-3)',marginTop:1}}>{tagline}</div>
         </div>
-        <span style={{fontSize:10,color:'var(--ink-3)',flexShrink:0}}>{времяСловами(оценкаСекунд(m.id, loadAll()))}</span>
+        {(() => {
+          // Откуда взята оценка: по СВОИМ прошлым прогонам или пока из
+          // справочника. Владелица 17.09 ждала три минуты, а модуль шёл
+          // двадцать семь: цифра должна говорить, насколько ей верить.
+          const проекты = loadAll();
+          const своих = проекты.reduce((н, п) => н + ((п && п.results) || [])
+            .filter(r => r && r.id === m.id && r.sec > 0 && !r.failed).length, 0);
+          return (
+            <span style={{fontSize:10,color:'var(--ink-3)',flexShrink:0}}
+              title={своих
+                ? ('Медиана по вашим прогонам этого модуля: ' + своих + ' ' +
+                   plural(своих, 'замер', 'замера', 'замеров') + '.')
+                : 'Пока оценка приблизительная — после первого прогона здесь будет ваше фактическое время.'}>
+              {времяСловами(оценкаСекунд(m.id, проекты))}{своих ? '' : ' ≈'}
+            </span>
+          );
+        })()}
         <div style={{width:18,height:18,borderRadius:4,border:on?'none':'1.5px solid var(--line)',background:on?m.color:'transparent',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
           {on && <span style={{color:'var(--card-solid)',fontSize:11}}>✓</span>}
         </div>
