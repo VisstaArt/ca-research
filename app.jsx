@@ -13659,6 +13659,12 @@ function App() {
   // поиска и замеров. Владелица 17.09: «мы опять будем править и править и
   // тратить деньги на API» — правка промпта теперь проверяется одним вызовом
   // модели вместо полного сбора.
+  // Остановка прогона человеком. Раньше её не было вовсе: если модуль завис
+  // или пошёл не туда, оставалось закрыть вкладку, а мы ещё и переспрашивали
+  // «точно уйти?» (владелица 17.09: «висит уже час, не проходит»). Флаг
+  // проверяется между модулями и после каждого тяжёлого шага сбора: уже
+  // сделанное сохраняется, недоделанное просто не начинается.
+  const остановитьRef = React.useRef(false);
   const run = React.useCallback(async (modsToRun, briefOverride, forceRerun, rerunNiche, regenNote, наСохранённыхДля) => {
     const B = briefOverride || brief;
     if (!B.name) return;
@@ -13717,6 +13723,7 @@ function App() {
       return;
     }
     setBlockMsg('');
+    остановитьRef.current = false;   // новый прогон — прежняя остановка забыта
 
     const p = { id, createdAt: proj?.createdAt||new Date().toISOString(), updatedAt: new Date().toISOString(), brief: B, lang, mods:allSelected, results:existing, report:proj?.report||'', priceLayers, selectedLayers };
     setProj(p); setRep(p.report); sv(p); setSc('work');
@@ -13759,6 +13766,15 @@ function App() {
       // зависимые ниже перегенерируются штатно и видят уже исправленный контент через
       // prevContent/findDep, повторно замечание им не нужно.
       if (regenNote && mod.id === allSelected[0]) Bn.regenNote = regenNote;
+      // Человек нажал «Остановить» — не начинаем следующий модуль. Всё, что
+      // успело посчитаться, уже сохранено: цикл кладёт результат сразу.
+      if (остановитьRef.current) {
+        setCurMod(null); setCurNiche(''); setCurStep(''); setCurStepIdx(0);
+        записатьХод(null);
+        setBlockMsg('Прогон остановлен. Готовые модули сохранены — можно запустить снова, '
+          + 'они не пересчитываются заново.');
+        return;
+      }
       // Прошлый результат этого же модуля и ниши — источник сохранённых
       // материалов, когда человек просит пересчитать «по сохранённому».
       const наСохранённых = наСохранённыхДля === mod.id
@@ -13857,6 +13873,7 @@ function App() {
           сСайтов = await каналыКонкурентовССайтов(конкурентыССайтамиИзM3(findDep('M3')));
           // И сам контент — с этих каналов: настоящие посты с просмотрами и
           // реакциями вместо статей «около темы» из поиска (владелица 17.09).
+          if (остановитьRef.current) throw new Error('Остановлено вами');
           реальныйШаг('Читаю посты на каналах конкурентов');
           const снято = await материалыКаналовКонкурентов(сСайтов.каналы);
           постыКонкурентов = снято.посты;
@@ -13876,6 +13893,7 @@ function App() {
           // Статьи на vc.ru — по ссылкам из поиска снимаем настоящие числа
           // через открытый API площадки и оставляем те, что написаны самими
           // конкурентами: это их SEO-материалы (владелица 17.09).
+          if (остановитьRef.current) throw new Error('Остановлено вами');
           реальныйШаг('Снимаю просмотры и лайки у статей на vc.ru');
           статьиVC = await статьиКонкурентовVC(
             (evidence || []).map(e => e && e.url).filter(Boolean), comps);
@@ -13999,6 +14017,7 @@ function App() {
             if (window.console) console.warn('Строгий формат не вышел, работаем как раньше:', e);
           }
         }
+        if (остановитьRef.current) throw new Error('Остановлено вами');
         if (!строгое) реальныйШаг('Жду ответ модели');
         full = строгое ? '' : await callGPT(sys, userPrompt, temp, maxTok);
         // Приклеен кодом ПОСЛЕ ответа модели — не проходит через LLM, значит не может
@@ -15761,9 +15780,25 @@ function App() {
             <p style={{fontSize:12,color:'var(--ink-3)',margin:0,minWidth:0}}>
               {curModData.id} · {curModData.titleRu||curModData.title}{curNiche?' · ниша: '+curNiche:''}
             </p>
-            <p style={{fontSize:11,color:'var(--ink-3)',margin:0,whiteSpace:'nowrap'}}>
-              шаг {curStepIdx+1} из {curModData.steps.length}
-            </p>
+            <span style={{display:'flex',alignItems:'center',gap:10,whiteSpace:'nowrap'}}>
+              <span style={{fontSize:11,color:'var(--ink-3)'}}>
+                шаг {curStepIdx+1} из {curModData.steps.length}
+              </span>
+              {/* Остановить прогон. Раньше выхода не было вовсе: оставалось
+                  закрыть вкладку, и мы же переспрашивали «точно уйти?»
+                  (владелица 17.09: «висит уже час»). Готовые модули при
+                  остановке остаются — пересчитывать их заново не придётся. */}
+              <button onClick={()=>{
+                  остановитьRef.current = true;
+                  setCurStep('Останавливаю — доделываю текущий шаг…');
+                }}
+                title="Остановить прогон. Всё, что уже посчитано, сохранится: при следующем запуске эти модули не пересчитываются."
+                style={{fontSize:11,padding:'3px 10px',color:'var(--ink-2)',
+                        border:'1px solid var(--line)',borderRadius:6,
+                        background:'var(--card-solid)',cursor:'pointer'}}>
+                Остановить
+              </button>
+            </span>
           </div>
           <div style={{display:'grid',gridTemplateColumns:'minmax(0,1fr) 168px',gap:20,alignItems:'start'}}>
             <div style={{minWidth:0}}>
