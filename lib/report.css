@@ -3073,4 +3073,17 @@ th{font-size:10px}
 .voices .vf span{display:block;font-size:10px;font-weight:700;letter-spacing:.07em;
   text-transform:uppercase;color:var(--ink-3);margin-bottom:3px}
 .voices .vf b{font-weight:400;color:var(--ink-2);overflow-wrap:anywhere}
+/* Портреты аудитории: от них строится весь поиск радара. */
+.portraits{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:12px}
+.portraits .pcard2{border:1px solid var(--line);border-radius:16px;padding:14px 16px;
+  background:var(--card);min-width:0}
+.portraits .ph2{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;margin-bottom:8px}
+.portraits .ph2 b{font-size:13.5px;color:var(--ink)}
+.portraits .ph2 span{font-size:11.5px;color:var(--ink-3)}
+.portraits .pcard2>p{margin:0 0 8px;font-size:12.5px;line-height:1.55;color:var(--ink-2)}
+.portraits .pf{display:block;margin-top:8px;padding-top:8px;border-top:1px solid var(--line-2);
+  font-size:12.5px;line-height:1.5}
+.portraits .pf span{display:block;font-size:10px;font-weight:700;letter-spacing:.07em;
+  text-transform:uppercase;color:var(--ink-3);margin-bottom:3px}
+.portraits .pf b{font-weight:400;color:var(--ink-2);overflow-wrap:anywhere}
 
