@@ -6170,8 +6170,16 @@ const СХЕМЫ = { M3: СХЕМА_M3, M2: СХЕМА_M2, M4: СХЕМА_M4, M5
 const РАЗМЕТКИ = { M3: разметкаM3, M2: разметкаM2, M4: разметкаM4, M5: разметкаM5, M6: разметкаM6, M7: разметкаM7, M8: разметкаM8 };
 const ВЫЖИМКИ = { M3: текстИзСтрогогоM3, M2: текстИзСтрогогоM2, M4: текстИзСтрогогоM4, M5: текстИзСтрогогоM5, M6: текстИзСтрогогоM6, M7: текстИзСтрогогоM7, M8: текстИзСтрогогоM8 };
 
+// Поля брифа, которые НЕ уходят в модель. Вторая часть брифа (заполняется
+// после исследования, на развилке про воронку) несёт юридические реквизиты:
+// ИНН, адрес, правовую форму. Исследованию они не нужны ни для чего, а в
+// промпте это персональные данные, отправленные наружу без причины
+// (17.09, до того как поля появились).
+const БРИФ_НЕ_В_ПРОМПТ = /^(legal|funnel|contact|requisites|inn|ogrn|address|passport)/i;
 function buildSystem(brief, lang, модуль) {
-  const lines = Object.entries(brief).filter(([,v])=>v).map(([k,v])=>{
+  const lines = Object.entries(brief)
+    .filter(([k]) => !БРИФ_НЕ_В_ПРОМПТ.test(k))
+    .filter(([,v])=>v).map(([k,v])=>{
     if(k==='geoCompany') return '- Company Geography (all markets): '+v;
     if(k==='geoMarket') return '- Research Market (focus of this research): '+v;
     if(k==='currentRevenue') return '- Company Current Revenue: '+v;
