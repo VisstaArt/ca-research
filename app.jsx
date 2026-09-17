@@ -2563,10 +2563,10 @@ async function замерИнтересов(brief, портреты) {
       .map(х => String(х || '').trim())
       .filter(х => х.length > 3)
       .filter((х, i, a) => a.indexOf(х) === i)
-      .slice(0, 6);                       // по 6 фраз на портрет — считаем деньги
+      .slice(0, 7);                       // по 7 фраз на портрет — считаем деньги
     const строки = [];
     for (const фраза of фразы) {
-      if (вызовов >= 20) break;           // общий потолок на модуль
+      if (вызовов >= 28) break;           // общий потолок на модуль
       вызовов++;
       try {
         const д = источник === 'yandex'
@@ -2807,7 +2807,7 @@ async function gatherAudienceEvidence(brief, competitors, сегменты, по
   const market = brief.geoMarket || brief.geoCompany || '';
   const product = brief.niche || brief.name || '';
   const topic = brief.selectedNiche || product;
-  const comps = (competitors || []).filter(Boolean).slice(0, 6);
+  const comps = (competitors || []).filter(Boolean).slice(0, 4);
   const аудитория = topic && topic !== product
     ? 'владельцы ' + topic
     : (brief.audience || 'владельцы бизнеса');
@@ -2819,8 +2819,6 @@ async function gatherAudienceEvidence(brief, competitors, сегменты, по
   for (const имя of comps) {
     queries.push(имя + ' обзор блогер ' + market);
     queries.push(имя + ' отзыв эксперта telegram');
-    queries.push('рекомендую ' + имя + ' ' + market);
-    queries.push(имя + ' интеграция реклама у блогера');
     queries.push('подборка сервисов ' + имя + ' ' + market);
   }
 
@@ -2836,29 +2834,38 @@ async function gatherAudienceEvidence(brief, competitors, сегменты, по
     'отраслевое медиа издание для ' + аудитория + ' ' + market,
   ]) queries.push(запрос);
 
-  // 3. ГДЕ АУДИТОРИЯ ГОВОРИТ — от жизни человека, а не от названия продукта.
-  for (const п of (портреты || []).slice(0, 4)) {
-    for (const тема of (п.интересы || []).slice(0, 3)) {
-      if (тема && String(тема).length > 3) queries.push(тема + ' ' + market + ' телеграм канал');
-    }
-    for (const что of (п.что_читают || []).slice(0, 3)) {
-      if (что && String(что).length > 4) queries.push(что + ' ' + market);
-    }
-    for (const фраза of (п.поисковые_фразы || []).slice(0, 4)) {
-      if (фраза && String(фраза).length > 4) queries.push(фраза + ' ' + market);
-    }
+  // 3. ГДЕ АУДИТОРИЯ СИДИТ — по каждой площадке рынка отдельно. Спрашиваем про
+  //    ЛЮДЕЙ, а не про продукт: «чаты продавцов Wildberries», а не «сервис для
+  //    магазинов в телеграме». 18.09 эти запросы были из сбора убраны как
+  //    «работа радара» — и блок «где говорит аудитория» приехал пустым. Для
+  //    радара площадка — канал конкурента, здесь — место, где сидят люди.
+  for (const пара of площадкиРынка(market, brief.lang || '')) {
+    queries.push(аудитория + ' ' + market + ' ' + пара[1]);
   }
   for (const с of (сегменты || []).slice(0, 4)) {
     queries.push(с.имя + ' ' + market + ' телеграм чат сообщество');
     queries.push(с.имя + ' ' + market + ' форум обсуждение');
   }
+
+  // 4. ЖИЗНЬ ЧЕЛОВЕКА: темы, которыми он занят помимо нашей.
+  for (const п of (портреты || []).slice(0, 4)) {
+    for (const тема of (п.интересы || []).slice(0, 2)) {
+      if (тема && String(тема).length > 3) queries.push(тема + ' ' + market + ' телеграм канал');
+    }
+    for (const что of (п.что_читают || []).slice(0, 2)) {
+      if (что && String(что).length > 4) queries.push(что + ' ' + market);
+    }
+    for (const фраза of (п.поисковые_фразы || []).slice(0, 2)) {
+      if (фраза && String(фраза).length > 4) queries.push(фраза + ' ' + market);
+    }
+  }
   queries.push(аудитория + ' ' + market + ' форум обсуждение');
   queries.push(аудитория + ' ' + market + ' рассылка подписаться');
 
-  // Потолок выше, чем у радара: у этого модуля нет своего разбора сайтов и
-  // каналов конкурентов — весь его материал приходит поиском.
-  return gatherEvidence(queries, 70, 6,
-    { depth: 'advanced', raw: true, contentChars: 1200, perDomain: 4, maxItems: 70 });
+  // Потолок покрывает ВЕСЬ список: обрезать хвост — значит снова оставить
+  // какой-то из четырёх блоков без сырья.
+  return gatherEvidence(queries, Math.max(80, queries.length), 6,
+    { depth: 'advanced', raw: true, contentChars: 1200, perDomain: 4, maxItems: 80 });
 }
 
 // M8 (тренд-монитор): в отличие от остальных gather-функций явно ограничена
