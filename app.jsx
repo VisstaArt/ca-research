@@ -331,23 +331,25 @@ const MODULES = [
     whatRu: 'Отвечает: Какие форматы, хуки и длительности реально работают в нише? Смотрит на тех же конкурентов, что нашёл M2, но как на медиа: каналы, топ-контент, паттерны и бенчмарки ниши. Только публично видимые числа — ничего из закрытых источников.',
     outputsEn: ['Radar sources','Competitor channels','Top content breakdown','Working patterns','Niche benchmarks'],
     outputsRu: ['Источники радара','Каналы конкурентов','Разбор того, что залетает','Работающие паттерны','Бенчмарки ниши'],
-    estimatedMin: 25,
+    estimatedMin: 14,
     model: 'gpt-5.6-terra',
     // Шаги = РЕАЛЬНЫЕ этапы прогона, а не выдуманные подписи: владелица
     // 17.09 увидела «шаг 5 из 5» на первой минуте, потому что подписи ставились
     // по таймеру, а настоящая работа шла своим чередом. Порядок здесь совпадает
     // с порядком в run(), и реальныйШаг() находит себя по этому списку.
-    steps: ['Audience portrait…','Measuring interest demand…','Opening competitor sites…',
-      'Reading channel posts…','Searching the web…','Measuring vc.ru articles…',
-      'Waiting for the model…','Measuring channels…','Building the report…'],
-    stepsRu: ['Собираю портрет аудитории: чем живёт и что читает',
-      'Меряю, насколько эти интересы живые',
-      'Открываю сайты конкурентов — ищу их каналы',
+    // Портрет аудитории и замер интересов уехали в модуль «Аудитория»
+    // (разделение 17.09) — в шагах радара их больше нет, иначе счётчик
+    // показывает этапы, которых не будет.
+    steps: ['Opening competitor sites…','Reading channel posts…','Searching the web…',
+      'Measuring vc.ru articles…','Waiting for the model…','Measuring channels…',
+      'Measuring your channels…','Building the report…'],
+    stepsRu: ['Открываю сайты конкурентов — ищу их каналы',
       'Читаю посты на каналах конкурентов',
       'Ищу площадки и материалы в поиске',
       'Снимаю просмотры и лайки у статей на vc.ru',
       'Жду ответ модели по строгой форме',
       'Замеряю каналы конкурентов: подписчики, охват, ритм',
+      'Замеряю ваши площадки',
       'Собираю отчёт'],
   },
   {
@@ -14439,6 +14441,10 @@ function App() {
       }
       if (stepTimer) clearInterval(stepTimer);
 
+      // Дальше — сохранение: разбор в таблицы, запись в проект, выгрузка в
+      // облако. Это секунды, но шаг «Собираю отчёт» висел молча, и человек
+      // не понимал, стоит оно или идёт (владелица 17.09).
+      if (!остановитьRef.current) setCurStep('Сохраняю результат');
       const usage = lastGptUsage;
       const searchCalls = searchCallCount;
       const keywordCalls = keywordCallCount;
