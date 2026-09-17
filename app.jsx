@@ -4648,7 +4648,11 @@ function разметкаM4(д, brief) {
     const n = parseInt(м[1].replace(/\s/g, ''), 10);
     return Number.isFinite(n) ? n : null;
   };
-  const мерено = т => /замер/i.test(String(т || ''));
+  // «не замерено» тоже содержит «замер» — и старая проверка считала пустую
+  // строку замером. Из-за этого строки без чисел попадали в решётку, а блок
+  // карточек «без нашего замера» оказывался пустым (владелица 17.09).
+  const мерено = т => /\(замер\)/i.test(String(т || ''))
+    || (/замер/i.test(String(т || '')) && !/не\s+замер/i.test(String(т || '')));
   // Свои каналы берём ТОЛЬКО из каналы_заказчика: там они уже замерены нами.
   // Иначе те же площадки приходили дважды — строкой модели и нашей строкой
   // (владелица 17.09: «Ловец-Лидов.рф — мы» и «t · aikrolik — мы» рядом).
@@ -4666,6 +4670,9 @@ function разметкаM4(д, brief) {
       (() => { const м = String(к.вовлечённость || '').match(/([\d.,]+)%/); return м ? parseFloat(м[1].replace(',', '.')) : null; })(),
       (() => { const м = String(к.ритм_замер || '').match(/([\d.,]+)\s*публикац/); return м ? parseFloat(м[1].replace(',', '.')) : null; })(),
       /заказчик/i.test(String(к.чей || '')),
+      // Адрес канала: имя в решётке должно быть кликабельным — владелице
+      // нужно попасть на канал одним щелчком (17.09).
+      /^https?:/.test(String(к.url || '')) ? к.url : '',
     ])) + ');');
     const зк0 = д.замерКаналов;
     блок('Каналы: кто где и что там происходит',
@@ -4727,7 +4734,10 @@ function разметкаM4(д, brief) {
             ? '<p class="note">Снять числа с публичных страниц в этом прогоне не удалось '
               + '(' + зк.пробовали + ' попыток): страницы не открылись. Подписчики и охват '
               + 'здесь — со слов источников, а не замер.</p>' : '')));
-  } else {
+  } else if (дляСравнения.length < 2) {
+    // Если решётка выше собрана, молчим: все каналы уже показаны там, а
+    // «не нашлось ни одного канала» под своим заголовком читается как
+    // поломка (владелица 17.09, второй раз).
     блок('Каналы конкурентов',
       '<p class="note">В собранном материале не нашлось ни одного канала с публично '
       + 'видимыми данными. Так бывает, когда конкуренты ведут только закрытые площадки '
@@ -4836,12 +4846,10 @@ function разметкаM4(д, brief) {
       '<div class="bmk" id="rpt-bmk"></div>'
       + '<p class="note">Медиана, а не среднее: один вирусный ролик среднее ломает. '
       + 'Рядом с каждым числом — на скольких единицах оно посчитано.</p>');
-  } else {
-    блок('Бенчмарки ниши',
-      '<p class="note">Бенчмарков не набралось: у площадок этой ниши слишком мало '
-      + 'публичных чисел. Медиана по двум-трём единицам — не ориентир, поэтому '
-      + 'выдуманных цифр здесь нет.</p>');
   }
+  // Раздела «Бенчмарки ниши» с одной строкой «их не набралось» больше нет:
+  // пустой блок под своим заголовком читается как поломка (владелица 17.09).
+  // Если чисел мало, об этом сказано в примечании к каналам выше.
 
   const свои = (д.каналы_заказчика || []).filter(к => к && непусто(к.площадка));
   if (свои.length) {
@@ -4897,7 +4905,25 @@ function разметкаM4(д, brief) {
       + '</p><div class="nomeas" id="rpt-myvc"></div>');
   }
 
-  const ист = (д.источники_радара || []).filter(и => и && /^https?:/.test(String(и.url || '')));
+  let ист = (д.источники_радара || []).filter(и => и && /^https?:/.test(String(и.url || '')));
+  // Модель выписывает в источники две-три ссылки из десятков открытых нами
+  // страниц — и отчёт выглядит так, будто мы никуда не заходили (владелица
+  // 17.09). Дополняем список тем, что открывали САМИ: сайты конкурентов,
+  // витрины каналов, статьи. Порядок сохраняем: сначала её, потом наши.
+  const открытые = (д.просмотрено || []).filter(п => п && /^https?:/.test(String(п.url || '')));
+  if (открытые.length > ист.length) {
+    const есть = new Set(ист.map(и => String(и.url).replace(/\/$/, '').toLowerCase()));
+    const добавка = [];
+    for (const п of открытые) {
+      const ключ = String(п.url).replace(/\/$/, '').toLowerCase();
+      if (есть.has(ключ)) continue;
+      есть.add(ключ);
+      добавка.push({ номер: ист.length + добавка.length + 1,
+        канал: п.площадка || п.url, площадка: '', чей: '', url: п.url,
+        что_видно: 'открыта нами при сборе данных' + (п.дата ? ', ' + п.дата : '') });
+    }
+    ист = ист.concat(добавка.slice(0, 60));
+  }
   if (ист.length) {
     const перенос = {};
     ист.forEach((и, i) => { if (перенос[и.номер] == null) перенос[и.номер] = i + 1; });
@@ -8602,7 +8628,7 @@ function renderResearchHTML(content, opts) {
     "function renderNicheBoard(D){",
     "\n  const VD={go:['Идём','kchip-go','var(--acc-strong)'],\n            mb:['Под вопросом','kchip-mb','var(--acc-mid)'],\n            no:['Не идём','kchip-no','var(--acc-quiet)']};\n  ",
     ";\n\n  /* ── полосы: мера из «Приоритета ниш», цвет — по вердикту ── */\n  const W=520,padL=196,padR=54,rowH=27,top=4,H=top+D.length*rowH+4,max=20;\n  const x=v=>padL+(W-padL-padR)*(v/max);\n  const svg=el('svg',{viewBox:`0 0 ${W} ${H}`,width:'100%',height:H});\n  const bars=[];\n  D.forEach((d,i)=>{\n    const y=top+i*rowH;\n    const t=el('text',{x:padL-10,y:y+14,class:'lbl','text-anchor':'end'});\n    t.textContent=d.n; svg.appendChild(t);\n    svg.appendChild(el('rect',{x:padL,y:y+3,width:W-padL-padR,height:14,fill:'var(--line-2)'}));\n    const bw=Math.max(x(d.t)-padL,3);\n    const r=el('rect',{x:padL,y:y+3,width:bw,height:14,fill:VD[d.vd][2]});\n    svg.appendChild(r); bars.push(r);\n    const val=el('text',{x:padL+bw+8,y:y+14,class:'val'}); val.textContent=d.t; svg.appendChild(val);\n    /* прозрачная полоса на всю ширину строки — попасть по ней легче, чем по\n       короткому столбику: цель для нажатия должна быть больше самой метки */\n    const hit=el('rect',{x:0,y,width:W,height:rowH,fill:'transparent',class:'nbar'});\n    hit.addEventListener('click',()=>pick(i));\n    svg.appendChild(hit);\n  });\n  var ящикПолос=document.getElementById('rpt-niches'); ящикПолос.innerHTML='';\n  ящикПолос.appendChild(svg);\n\n  /* ── профили: только те, куда можем пойти ── */\n  const AX=['Спрос','Конкуренция','Экономика','Соответствие'];\n  const S=132, R=46;\n  const Wr=l=>l?252:S, C=l=>[Wr(l)/2,S/2];\n  const pt=(i,v,l)=>{const [cx,cy]=C(l),a=(-90+i*90)*Math.PI/180,r=R*(v/5);\n    return [cx+r*Math.cos(a),cy+r*Math.sin(a)];};\n  const radar=(vals,col,labels)=>{\n    /* Круговая на четыре сектора вместо паутинки: решение владелицы 15.09 —\n       «круговая красивее и нагляднее». Радиус сектора = оценка 1–5, то есть\n       площадь и есть мера. Заливка — оттенки ОДНОГО цвета (цвет вердикта):\n       величину несёт светлота, различимость не зависит от цветовосприятия,\n       а какая ось где — говорят подписи, а не оттенок. */\n    const [CX,CY]=C(labels);\n    const R2=R;\n    const g=el('svg',{viewBox:`0 0 ${Wr(labels)} ${S}`,width:Wr(labels),height:S});\n    [1,2,3,4,5].forEach(k=>{\n      g.appendChild(el('circle',{cx:CX,cy:CY,r:(R2*k/5).toFixed(1),fill:'none',\n        stroke:k===5?'var(--line)':'var(--line-2)','stroke-width':1}));\n    });\n    if(vals){\n      const ТОН=[100,76,56,38];\n      vals.forEach((v,i)=>{\n        const r=R2*Math.max(0,Math.min(5,v))/5; if(!(r>0)) return;\n        const a0=(-90+i*90)*Math.PI/180, a1=(-90+(i+1)*90)*Math.PI/180;\n        const x0=CX+r*Math.cos(a0), y0=CY+r*Math.sin(a0);\n        const x1=CX+r*Math.cos(a1), y1=CY+r*Math.sin(a1);\n        g.appendChild(el('path',{d:`M ${CX} ${CY} L ${x0.toFixed(1)} ${y0.toFixed(1)} `\n          +`A ${r.toFixed(1)} ${r.toFixed(1)} 0 0 1 ${x1.toFixed(1)} ${y1.toFixed(1)} Z`,\n          fill:`color-mix(in srgb, ${col} ${ТОН[i]}%, transparent)`,\n          stroke:'var(--card-solid)','stroke-width':2}));\n      });\n    }\n    [0,1,2,3].forEach(i=>{const p=pt(i,5,labels);\n      g.appendChild(el('line',{x1:CX,y1:CY,x2:p[0],y2:p[1],stroke:'var(--line-2)','stroke-width':1}));});\n    if(labels){\n      const off=[[0,-10],[13,4],[0,17],[-13,4]];\n      AX.forEach((n,i)=>{const p=pt(i,5,labels);\n        const t=el('text',{x:p[0]+off[i][0],y:p[1]+off[i][1],class:'axis',\n          'text-anchor':i===1?'start':(i===3?'end':'middle')});\n        t.textContent=n; g.appendChild(t);});\n    }\n    return g;\n  };\n  var ящикКлюча=document.getElementById('rpt-rkey'); ящикКлюча.innerHTML='';\n  ящикКлюча.appendChild(radar(null,null,true));\n\n  const box=document.getElementById('rpt-nprof'), cards=[];\n  box.innerHTML='';\n  const cls=(d,on)=>'ncard2'+(d.vd==='no'?' slim':'')+(on?' on':'');\n  D.forEach((d,i)=>{\n\n    const card=document.createElement('div');\n    card.className=cls(d,false);\n    if(d.vd==='no'){\n      /* Разбор тот же и в том же объёме — меняется только вес: нет фигуры,\n         подложка тише. Прятать данные по отброшенной нише нельзя: решение\n         «не идём» проверяется по тем же сигналам, что и «идём». */\n      card.innerHTML=`<div><div class=\"nh\"><b>${d.n}</b></div>\n        <div class=\"tot\"><i>${d.t}</i><em>из 20 баллов</em></div>\n        <span class=\"kchip ${VD[d.vd][1]}\"><span class=\"d\"></span>${VD[d.vd][0]}</span>\n        ${d.why?`<div class=\"why2\"><b>Почему не идём.</b> ${d.why}</div>`:''}\n        <div class=\"sigrows\">${d.sig.map(([k,v])=>\n          `<div class=\"sigrow\"><span class=\"k2\">${k}</span><span class=\"v3\">${typeof v==='string'?v:v.h}</span></div>`).join('')}</div></div>`;\n    }else{\n      const шапка=document.createElement('div');\n      шапка.className='nhd';\n      left=document.createElement('div');\n      left.appendChild(radar(d.v,VD[d.vd][2],false));\n      const правая=document.createElement('div');\n      правая.innerHTML=`<div class=\"nh\"><b>${d.n}</b></div>\n        <div class=\"tot\"><i>${d.t}</i><em>из 20 баллов</em></div>\n        <span class=\"kchip ${VD[d.vd][1]}\"><span class=\"d\"></span>${VD[d.vd][0]}</span>`;\n      шапка.appendChild(left); шапка.appendChild(правая);\n      const тело=document.createElement('div');\n      тело.innerHTML=`<div class=\"sigrows\">${d.sig.map(([k,v])=>\n          `<div class=\"sigrow\"><span class=\"k2\">${k}</span><span class=\"v3\">${v}</span></div>`).join('')}</div>`;\n      card.appendChild(шапка); card.appendChild(тело);\n    }\n    card.addEventListener('click',()=>pick(i));\n    /* Кнопка «взять в работу» прямо в карточке: веером показываем только семь главных ниш, а решение может касаться любой (владелица 15.09). Своё состояние кнопка не хранит — она сообщает наружу имя ниши, а вид ей выставляет тот, кто знает, что уже в работе. */var left=null;var взять=document.createElement('button');взять.className='ntake';взять.type='button';взять.setAttribute('data-niche',d.n);взять.textContent='+ Взять в работу';взять.addEventListener('click',function(ev){ev.stopPropagation();document.dispatchEvent(new CustomEvent('ca-nishe',{detail:d.n}));});card.appendChild(взять);box.appendChild(card); cards.push(card);\n  });\n\n  const hint=document.getElementById('rpt-nhint');\n  let cur=-1;\n  function pick(i){\n    cur = (cur===i ? -1 : i);\n    bars.forEach((r,k)=>r.setAttribute('opacity', cur<0||cur===k ? '1' : '.32'));\n    cards.forEach((c,k)=>{ if(c) c.className=cls(D[k],cur===k); });\n    hint.textContent = cur<0 ? ''\n      : `Выбрана ниша «${D[cur].n}» — подсвечена ниже.`;\n    if(cur>=0 && cards[cur] && cards[cur].scrollIntoView){\n      try { cards[cur].scrollIntoView({behavior:'smooth',block:'center'}); } catch(e){}\n    }\n  }\n}",
-    "function renderChannelCompare(D){\n  var box=document.getElementById('rpt-chncmp'); if(!box) return;\n  /* Сравнение каналов одной решёткой: так делают сервисы аналитики соцсетей\n     (разбор Popsters/Lucmus, прислан владелицей 16.09). Полоса показывает\n     долю от лучшего в столбце — разные величины в одном взгляде. */\n  var мкс=function(i){ return Math.max.apply(null, D.map(function(r){ return r[i]||0; }).concat([1])); };\n  var мП=мкс(2), мО=мкс(3), мE=мкс(4), мЧ=мкс(5);\n  var чис=function(n){ return n==null?'—':String(Math.round(n)).replace(/\\B(?=(\\d{3})+(?!\\d))/g,'\\u00A0'); };\n  var кл=function(v,max,текст){\n    if(v==null) return '<span class=\"cmpv no\">не замерено</span>';\n    var ш=Math.max(3,Math.round(v/max*100));\n    return '<span class=\"cmpv\"><span class=\"rail\"><span class=\"b\" style=\"width:'+ш+'%\"></span></span>'\n      +'<span class=\"v\">'+текст+'</span></span>'; };\n  box.innerHTML='<div class=\"th\"><span>Канал</span><span>Подписчики</span>'\n    +'<span>Охват поста</span><span>ER на пост</span><span>Публикаций в неделю</span></div>'\n    +D.map(function(r){\n      return '<div class=\"tr'+(r[6]?' mine':'')+'\"><span class=\"nm\">'+значок(r[1]||r[0])+escText(r[0])\n        +(r[6]?' — мы':'')+'<i>'+escText(r[1]||'')+'</i></span>'\n        +кл(r[2],мП,чис(r[2]))+кл(r[3],мО,чис(r[3]))\n        +кл(r[4],мE,r[4]!=null?(r[4]+'%'):'—')\n        +кл(r[5],мЧ,r[5]!=null?r[5]:'—')+'</div>';\n    }).join('');\n}",
+    "function renderChannelCompare(D){\n  var box=document.getElementById('rpt-chncmp'); if(!box) return;\n  /* Сравнение каналов одной решёткой: так делают сервисы аналитики соцсетей\n     (разбор Popsters/Lucmus, прислан владелицей 16.09). Полоса показывает\n     долю от лучшего в столбце — разные величины в одном взгляде. */\n  var мкс=function(i){ return Math.max.apply(null, D.map(function(r){ return r[i]||0; }).concat([1])); };\n  var мП=мкс(2), мО=мкс(3), мE=мкс(4), мЧ=мкс(5);\n  var чис=function(n){ return n==null?'—':String(Math.round(n)).replace(/\\B(?=(\\d{3})+(?!\\d))/g,'\\u00A0'); };\n  var кл=function(v,max,текст){\n    if(v==null) return '<span class=\"cmpv no\">не замерено</span>';\n    var ш=Math.max(3,Math.round(v/max*100));\n    return '<span class=\"cmpv\"><span class=\"rail\"><span class=\"b\" style=\"width:'+ш+'%\"></span></span>'\n      +'<span class=\"v\">'+текст+'</span></span>'; };\n  box.innerHTML='<div class=\"th\"><span>Канал</span><span>Подписчики</span>'\n    +'<span>Охват поста</span><span>ER на пост</span><span>Публикаций в неделю</span></div>'\n    +D.map(function(r){\n      var имя=escText(r[0])+(r[6]?' — мы':'');\n      var ссыл=r[7] ? '<a href=\"'+escText(r[7])+'\" target=\"_blank\" rel=\"noopener\">'+имя+'</a>' : имя;\n      return '<div class=\"tr'+(r[6]?' mine':'')+'\"><span class=\"nm\">'+значок(r[1]||r[0])+ссыл\n        +'<i>'+escText(r[1]||'')+'</i></span>'\n        +кл(r[2],мП,чис(r[2]))+кл(r[3],мО,чис(r[3]))\n        +кл(r[4],мE,r[4]!=null?(r[4]+'%'):'—')\n        +кл(r[5],мЧ,r[5]!=null?r[5]:'—')+'</div>';\n    }).join('');\n}",
     "function renderPositioningSteps(D){\n  var box=document.getElementById('rpt-pos3'); if(!box) return;\n  /* Цепочка: от чего отталкиваемся → чем отличаемся → что это даёт → кому\n     важнее всех → как называемся. Итоговая фраза внизу, крупно: она и есть\n     результат (метод Данфорд, решение владелицы 16.09). */\n  var ШАГИ=['Если не мы, то','Чего у них нет','Что это даёт','Кому важнее всех','Категория'];\n  box.innerHTML=D.map(function(r){\n    var шаги=r[1]||[];\n    return '<div class=\"poscard\">'\n      +'<div class=\"posh\"><span class=\"eb\">сегмент</span><b>'+escText(r[0])+'</b></div>'\n      +'<div class=\"posline\">'+шаги.map(function(з,i){\n        return з?'<div class=\"posstep\"><span>'+escText(ШАГИ[i]||'')+'</span><b>'\n          +escText(з)+'</b></div>':''; }).join('')+'</div>'\n      +(r[2]?'<div class=\"posfin\"><span>формулировка</span><b>'+escText(r[2])+'</b></div>':'')\n      +(r[3]?'<div class=\"posproof\">Чем подтверждено: '+escText(r[3])+'</div>':'')\n      +'</div>';\n  }).join('');\n}",
     "function renderNoMeasure(D, где){\n  var box=document.getElementById(где||'rpt-nomeas'); if(!box) return;\n  /* Материалы без чисел: те же строки, что у замеренных, но без колонок с\n     цифрами — иначе раздел под крупным заголовком выглядит пустым\n     (владелица 17.09). */\n  box.innerHTML=D.map(function(r){\n    var имя=r[3] ? '<a href=\"'+escText(r[3])+'\" target=\"_blank\" rel=\"noopener\">'+escText(r[0])+'</a>'\n                 : escText(r[0]);\n    return '<div class=\"nmrow\"><span class=\"nmname\">'+имя+'</span>'\n      +'<span class=\"nmplat\">'+(r[1]?значок(r[1])+escText(r[1]):'')+'</span>'\n      +'<span class=\"nmmeta\">'+escText(r[2]||'')+'</span></div>';\n  }).join('');\n}",
     "function renderChannelSkip(D){\n  var box=document.getElementById('rpt-skip'); if(!box) return;\n  /* Площадки, куда не идём, — тот же вид строки, что у остальных таблиц\n     отчёта: значок, имя, решение плашкой, причина и что пошло бы туда. */\n  box.innerHTML='<div class=\"th\"><span>Площадка</span><span>Решение</span>'\n    +'<span>Почему</span><span>Что пошло бы туда</span></div>'\n    +D.map(function(r){\n      var поз=r[1]==='позже';\n      return '<div class=\"tr\"><span class=\"nm\">'+значок(r[0])+escText(r[0])+'</span>'\n        +'<span class=\"skdec\"><span class=\"kchip '+(поз?'kchip-mb':'kchip-no')+'\"><span class=\"d\"></span>'+escText(r[1])+'</span>'\n        +'<button type=\"button\" class=\"pltake\" data-platform=\"'+escText(r[0])+'\">'\n        +'+ Беру в работу</button></span>'\n        +'<span>'+escText(r[2]||'—')+'</span>'\n        +'<span>'+escText(r[3]||'—')+'</span></div>';\n    }).join('');\n}",
@@ -13011,6 +13037,25 @@ function App() {
           }
           userPrompt = buildM4Prompt(Bn, lang, prevContent || '', evidence, comps,
                                      сСайтов.каналы, постыКонкурентов, статьиVC, статьиДзен);
+          // Список просмотренного ведём САМИ: модель выписывала в источники
+          // две ссылки из десятков открытых страниц, и отчёт выглядел так,
+          // будто мы никуда не заходили (владелица 17.09).
+          просмотрено = []
+            .concat((evidence || []).map(e => ({ url: e && e.url,
+              площадка: (e && e.title) || '', дата: (e && e.date) || '' })))
+            .concat(сСайтов.каналы.map(к => ({ url: к.url,
+              площадка: (к.конкурент ? к.конкурент + ' — ' : '') + (к.площадка || 'канал'),
+              дата: '' })))
+            .concat(постыКонкурентов.map(п => ({ url: п.url,
+              площадка: (п.чей ? п.чей + ' — ' : '') + 'пост в Telegram', дата: п.дата || '' })))
+            .concat(статьиДзен.map(а => ({ url: а.url,
+              площадка: (а.чей ? а.чей + ' — ' : '') + 'публикация в Дзене', дата: а.дата || '' })))
+            .concat(статьиVC.map(а => ({ url: а.url,
+              площадка: (а.чей ? а.чей + ' — ' : '') + 'статья на vc.ru', дата: а.дата || '' })))
+            .concat(мойVC.map(а => ({ url: а.url, площадка: 'наша статья на vc.ru',
+              дата: а.дата || '' })))
+            .filter(п => п.url && /^https?:/.test(String(п.url)))
+            .filter((п, i, a) => a.findIndex(x => x.url === п.url) === i);
         } else if (mod.id === 'M5') {
           // VoC: живые цитаты только из реального поиска.
           // Конкурентов берём из уже готового M2 ТОЙ ЖЕ ниши — по ним ищем жалобы;

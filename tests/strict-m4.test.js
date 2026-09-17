@@ -49,7 +49,7 @@ for (var i=1;i<=14;i++){
     чей:i<=2?'заказчик':'конкурент',url:'https://t.me/c'+i,что_видно:'посты и реакции'});
   д.каналы.push({канал:'Канал '+i,площадка:i%2?'Telegram':'YouTube',
     чей:i<=2?'заказчик':(i%5?'конкурент':'медиа'),
-    подписчики:i%3?'12 400':'не замерено',как_часто:i%4?'2-3 в неделю':'не замерено',
+    подписчики:i%4===1?'12 400 (замер)':'не замерено',как_часто:i%4?'2-3 в неделю':'не замерено',
     формат:i%2?'посты':'ролики',о_чём:'про захват заявок',url:'https://t.me/c'+i,источники:[i]});
 }
 for (var j=1;j<=16;j++){
@@ -106,6 +106,15 @@ ok('ни одна рисовалка не падает', р.упало, []);
 ok('ни один блок не остался пустым', р.пустые, []);
 ok('сырых таблиц нет', (р.html.match(/<table/g)||[]).length, 0);
 ok('каналы собраны', /renderChannels\(/.test(blockScriptsM3.join(' ')), true);
+// «не замерено» содержит слово «замер» — и старая проверка считала пустую
+// строку замером: карточки «без нашего замера» оказывались пустыми, а в
+// решётку шли строки без чисел (владелица 17.09).
+var срав0=blockScriptsM3.filter(function(x){return x.indexOf('renderChannelCompare(')===0;})[0];
+if (срав0) {
+  var стрк=JSON.parse(срав0.slice('renderChannelCompare('.length,-2));
+  ok('в решётке только строки с числами',
+     стрк.every(function(r){ return r[2]!=null || r[3]!=null || r[4]!=null || r[5]!=null; }), true);
+}
 ok('что залетает собрано', /renderTopContent\(/.test(blockScriptsM3.join(' ')), true);
 ok('паттерны собраны', /renderPatterns\(/.test(blockScriptsM3.join(' ')), true);
 ok('бенчмарки собраны', /renderBenchmarks\(/.test(blockScriptsM3.join(' ')), true);
@@ -147,6 +156,19 @@ ok('комплект площадок собран', /renderChannelPlan\(/.test(
 ok('таблицы-дубля больше нет', /renderPlanTable\(/.test(blockScriptsM3.join(' ')), false);
 ok('блок «Где нам продвигаться» первым', р.html.indexOf('Где нам продвигаться') < р.html.indexOf('Каналы'), true);
 ok('период материалов указан', /за последние 6 месяцев/.test(р.html), true);
+
+// Решётка каналов: имя — ссылка на сам канал, и одна площадка одного игрока
+// даёт ОДНУ строку (владелица 17.09: «Jivo · Telegram» стояло дважды, причём
+// пустая строка выше замеренной).
+var срав=blockScriptsM3.filter(function(x){return x.indexOf('renderChannelCompare(')===0;})[0];
+if (срав) {
+  var стр=JSON.parse(срав.slice('renderChannelCompare('.length,-2));
+  var ключи=стр.map(function(r){return String(r[0]).toLowerCase()+'|'+String(r[1]).toLowerCase();});
+  ok('дублей площадок нет', ключи.length, ключи.filter(function(x,i,a){return a.indexOf(x)===i;}).length);
+  ok('адрес канала передан в решётку', стр.some(function(r){return /^https?:/.test(r[7]||'');}), true);
+}
+var исхСрав=SRC.slice(SRC.indexOf('function renderChannelCompare'), SRC.indexOf('function renderChannelCompare')+1800);
+ok('имя канала кликабельно', /<a href=\\"'\+escText\(r\[7\]\)/.test(исхСрав), true);
 // Раскладка по ВСЕМ площадкам: отказ — такой же результат, как выбор.
 var план=JSON.parse(blockScriptsM3.filter(function(x){return x.indexOf('renderChannelPlan(')===0;})[0]
   .slice('renderChannelPlan('.length,-2));
@@ -197,6 +219,25 @@ ok('и его имя названо', /Безымянный/.test(рБ.html), tr
 // Источники: сквозная нумерация и переставленные ссылки каналов.
 var ис=JSON.parse(blockScriptsM3.filter(function(x){return x.indexOf('renderSources(')===0;})[0]
   .slice('renderSources('.length,-5));
+// Источники: модель выписывает две-три ссылки из десятков открытых страниц,
+// и отчёт выглядит так, будто мы никуда не заходили (владелица 17.09).
+var мало={источники_радара:[{номер:1,канал:'Jivo',площадка:'Telegram',чей:'конкурент',
+    url:'https://t.me/jivosite/1',что_видно:'пост'}],
+  стратегия:[],каналы:[],залетает:[],паттерны:[],бенчмарки:[],каналы_заказчика:[],
+  период:'', итог:{что_узнали:[],что_это_значит:[],что_делаем:[]},
+  просмотрено:[{url:'https://t.me/jivosite/1',площадка:'Jivo — пост',дата:''},
+    {url:'https://callibri.ru',площадка:'Callibri — сайт',дата:''},
+    {url:'https://t.me/callibri',площадка:'Callibri — Telegram',дата:''},
+    {url:'https://vc.ru/a/1',площадка:'статья на vc.ru',дата:'2026-09-01'}]};
+blockScriptsM3=[];
+var рМ=разметкаM4(мало,{name:'Мы'});
+var исте=JSON.parse(blockScriptsM3.filter(function(x){return x.indexOf('renderSources(')===0;})[0]
+  .slice('renderSources('.length).replace(/, 1\);$/,''));
+ok('в источники вошли и наши открытые страницы', исте.length, 4);
+ok('дубля по одному адресу нет',
+   исте.filter(function(r){return /jivosite/.test(r[4]);}).length, 1);
+ok('видно, что страницу открыли мы', /открыта нами/.test(JSON.stringify(исте)), true);
+
 ok('нумерация источников сквозная', ис.map(function(с){return с[0];}).slice(0,3), [1,2,3]);
 
 var текст=текстИзСтрогогоM4(д);
@@ -211,5 +252,8 @@ ok('на пустых данных не падает', р2.упало, []);
 // Пустой блок читается как поломка: если каналов или бенчмарков не нашлось,
 // отчёт обязан сказать это словами (владелица 16.09).
 ok('про отсутствие каналов сказано', /не нашлось ни одного канала/.test(р2.html), true);
-ok('про отсутствие бенчмарков сказано', /Бенчмарков не набралось/.test(р2.html), true);
+// Пустой раздел «Бенчмарки ниши» с одной строкой «их не набралось» больше не
+// печатается: блок под своим заголовком без данных читается как поломка
+// (владелица 17.09).
+ok('пустого раздела бенчмарков нет', /Бенчмарки ниши/.test(р2.html), false);
 console.log(fails?('ПРОВАЛЕНО: '+fails):'  всё зелёное');
