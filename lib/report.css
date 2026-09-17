@@ -3024,4 +3024,34 @@ th{font-size:10px}
 .nmplat{display:flex;align-items:center;color:var(--ink-3)}
 .nmmeta{color:var(--ink-3);font-size:11.5px;overflow-wrap:anywhere}
 @media (max-width:760px){.nmrow{grid-template-columns:1fr;gap:3px}}
+/* Какой формат заходит: отдача по формату, полоса от лучшего. */
+.fmts{overflow-x:auto}
+.fmts .th,.fmts .tr{display:grid;grid-template-columns:minmax(120px,1fr) 96px 132px minmax(140px,1fr) minmax(0,1.2fr);
+  gap:14px;align-items:center;min-width:660px}
+.fmts .th{padding:0 0 8px;border-bottom:1px solid var(--line);font-size:10px;font-weight:700;
+  letter-spacing:.07em;text-transform:uppercase;color:var(--ink-3)}
+.fmts .tr{padding:10px 0;border-top:1px solid var(--line-2);font-size:12.5px;color:var(--ink-2)}
+.fmts .nm{font-size:13px;font-weight:700;color:var(--ink);text-transform:capitalize}
+.fmts .v{font-variant-numeric:tabular-nums;white-space:nowrap}
+.fmts .fmtb{display:flex;align-items:center;gap:8px;min-width:0}
+.fmts .fmtb .rail{flex:1;height:14px;background:var(--line-2);overflow:hidden}
+.fmts .fmtb .rail .b{display:block;height:14px;background:var(--mid)}
+.fmts .fmtb .no{color:var(--ink-3);font-size:11.5px}
+.fmts .fmtp{color:var(--ink-3);font-size:11.5px;overflow-wrap:anywhere}
+/* Кого читает аудитория: карточки голосов ниши. */
+.voices{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:12px}
+.voices .vcard{border:1px solid var(--line);border-radius:16px;padding:14px 16px;
+  background:var(--card);min-width:0}
+.voices .vh{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px}
+.voices .vh b{font-size:13.5px;color:var(--ink);min-width:0;overflow-wrap:anywhere}
+.voices .vh b a{color:var(--ink);text-decoration:underline;text-underline-offset:2px}
+.voices .vkind{font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
+  color:var(--ink-3)}
+.voices .vsub{font-size:11.5px;color:var(--ink-3);font-variant-numeric:tabular-nums}
+.voices .vcard>p{margin:0 0 8px;font-size:12.5px;line-height:1.55;color:var(--ink-2)}
+.voices .vf{display:block;margin-top:8px;padding-top:8px;border-top:1px solid var(--line-2);
+  font-size:12.5px;line-height:1.5}
+.voices .vf span{display:block;font-size:10px;font-weight:700;letter-spacing:.07em;
+  text-transform:uppercase;color:var(--ink-3);margin-bottom:3px}
+.voices .vf b{font-weight:400;color:var(--ink-2);overflow-wrap:anywhere}
 
