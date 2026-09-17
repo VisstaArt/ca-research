@@ -3046,6 +3046,17 @@ th{font-size:10px}
   font-variant-numeric:tabular-nums;line-height:1.1}
 .harvest .hv span{display:block;margin-top:4px;font-size:10.5px;color:var(--ink-3);line-height:1.35}
 .harvest .hv.zero b{color:var(--ink-3)}
+/* Знак «здесь собираются персональные данные». Единственное место, где в
+   отчёте появляется красный: владелица 17.09 согласовала его отдельно —
+   «лишних цветов не хочу, но это должно отличаться от всего». Не для
+   украшения: знак говорит, что приём упирается в закон. */
+:root{--pd-red:#C0271F;--pd-red-soft:#FBEAE8}
+.pdwarn{display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;
+  margin-left:6px;border-radius:50%;background:var(--pd-red);color:#fff;
+  font-size:12px;font-weight:700;line-height:1;vertical-align:-3px;cursor:help;
+  flex:0 0 auto;font-family:var(--sans);box-shadow:0 0 0 3px var(--pd-red-soft)}
+.pdwarn:hover,.pdwarn:focus{outline:2px solid var(--pd-red);outline-offset:2px}
+@media (prefers-color-scheme:dark){:root{--pd-red-soft:rgba(192,39,31,.22)}}
 /* Кого читает аудитория: карточки голосов ниши. */
 .voices{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:12px}
 .voices .vcard{border:1px solid var(--line);border-radius:16px;padding:14px 16px;
