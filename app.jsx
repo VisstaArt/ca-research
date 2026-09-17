@@ -13248,6 +13248,12 @@ function App() {
   const [chBusy, setChBusy] = React.useState(false);
   const [chMsg, setChMsg] = React.useState('');
   const [chSaved, setChSaved] = React.useState('');
+  // Чей бот приходит в группу. По умолчанию наш: клиенту не надо идти к
+  // @BotFather ради утверждения постов. Но выбор за человеком, а не за
+  // тарифом — владелица 17.09: «я думала, что у каждого будет свой».
+  const [chOwnBot, setChOwnBot] = React.useState(false);
+  // На своих ключах свой бот подразумевается, на подписке — по желанию.
+  const свойБотВыбран = !!тарифРазработчика || chOwnBot;
   const saveApprovalChannel = async () => {
     setChBusy(true); setChMsg('');
     try {
@@ -13265,8 +13271,8 @@ function App() {
           // @BotFather ради утверждения постов — ровно та возня, за отсутствие
           // которой платят подписку (контент-машина, миграция 008). На своих
           // ключах человек ставит своего бота и даёт его токен.
-          p_bot: тарифРазработчика ? 'own' : 'platform',
-          ...(тарифРазработчика ? { p_token: chToken.trim() } : {}),
+          p_bot: свойБотВыбран ? 'own' : 'platform',
+          ...(свойБотВыбран ? { p_token: chToken.trim() } : {}),
           p_address: chAddr.trim(),
           p_title: chTitle.trim() || 'Группа согласования', p_default: true }),
       });
@@ -13282,7 +13288,7 @@ function App() {
       setChMsg('Группа сохранена. Она пока помечена непроверенной: база в интернет не ходит. '
         + 'Нажмите «Проверить связь» — бот поздоровается в группе, и это единственное '
         + 'доказательство, что всё работает.'
-        + (тарифРазработчика ? '' : ' Не забудьте добавить нашего бота в группу и дать ему право писать.'));
+        + (свойБотВыбран ? '' : ' Не забудьте добавить нашего бота в группу и дать ему право писать.'));
     } catch (e) { setChMsg(e.message); }
     setChBusy(false);
   };
@@ -14602,7 +14608,7 @@ function App() {
                  туда на проверку — и только после вашего «да» идёт в канал.</>
               : <>Телеграм-группа, куда приходит готовый материал на проверку. Это не канал
                  для подписчиков: у них разное назначение, и подключаются они отдельно.{' '}
-                 {тарифРазработчика
+                 {свойБотВыбран
                    ? <>Нужен бот из <a href="https://t.me/BotFather" target="_blank" rel="noreferrer">@BotFather</a>,
                       добавленный в группу, и её идентификатор.</>
                    : <>Своего бота заводить не нужно — добавьте в группу нашего и дайте ему право
@@ -14612,7 +14618,7 @@ function App() {
             <div style={{display:'grid',gap:6,maxWidth:520}}>
               <input value={chTitle} onChange={e=>setChTitle(e.target.value)}
                 placeholder="как назвать в списке — например, «Согласование с Ольгой»"/>
-              {тарифРазработчика && (
+              {свойБотВыбран && (
                 <input type="password" value={chToken} autoComplete="new-password"
                   onChange={e=>setChToken(e.target.value)}
                   placeholder="токен бота от @BotFather — 123456789:AA…"/>
@@ -14621,8 +14627,18 @@ function App() {
                 placeholder="идентификатор группы — например, -1001234567890"/>
               <div>
                 <button onClick={saveApprovalChannel}
-                  disabled={!chAddr.trim()||(тарифРазработчика&&!chToken.trim())||chBusy}>
+                  disabled={!chAddr.trim()||(свойБотВыбран&&!chToken.trim())||chBusy}>
                   {chBusy ? 'Сохраняю…' : 'Подключить группу'}</button>
+                {/* Выбор за человеком: по умолчанию наш бот, но своего можно
+                    поставить всегда — тогда в группе будет ваше имя, а лимиты
+                    Telegram у вас свои (владелица 17.09). */}
+                {!тарифРазработчика && (
+                  <button onClick={()=>{ setChOwnBot(!chOwnBot); setChToken(''); }}
+                    style={{color:'var(--ink-2)',background:'none',border:'none',
+                            textDecoration:'underline',cursor:'pointer',fontSize:12,padding:0}}>
+                    {chOwnBot ? 'проще: пусть будет ваш бот' : 'хочу своего бота'}
+                  </button>
+                )}
               </div>
             </div>
           )}
