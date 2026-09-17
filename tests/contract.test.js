@@ -178,4 +178,23 @@ check('BLOCK 07C берётся отдельно', C.pickTable(m2, 'M5', 'BLOCK 
   check('CHART_DATA главнее таблицы', p4.research_by_niche['Н'].key_data.GUARDRAILS, ['из chart']);
 })();
 
+// Площадки владельца доезжают до контент-машины. Адрес без «https://» —
+// обычная человеческая запись, и раньше она молча выпадала (владелица 17.09:
+// «vc.ru записала, а сюда не попадает»).
+(function () {
+  var бриф = { name:'Т', selectedNiche:'Н',
+    socials: 'vc.ru/lovec\nt.me/kanal\nhttps://vk.com/club1\nпросто текст',
+    wePublish: 'vc.ru; канал в MAX\nДзен',
+    takenPlatforms: 'Pinterest',
+    vcArticle: 'https://vc.ru/services/3104744-lovushki' };
+  var p = C.buildAgentPackage(бриф, 'Russian', [], '');
+  check('адрес без схемы не потерян', p.brand_assets.socials.indexOf('https://vc.ru/lovec') >= 0, true);
+  check('телеграм на месте', p.brand_assets.socials.indexOf('https://t.me/kanal') >= 0, true);
+  check('полный адрес не испорчен', p.brand_assets.socials.indexOf('https://vk.com/club1') >= 0, true);
+  check('мусор отброшен', p.brand_assets.socials.indexOf('просто текст') < 0, true);
+  check('где уже публикуемся — доехало', p.owner_platforms.already_running.length, 3);
+  check('взятое в работу — доехало', p.owner_platforms.taken_into_work[0], 'Pinterest');
+  check('ссылка на свою статью vc.ru — доехала', p.owner_platforms.vc_articles.length, 1);
+})();
+
 console.log(failed === 0 ? '\nвсё сошлось' : '\nПРОВАЛОВ: ' + failed);
