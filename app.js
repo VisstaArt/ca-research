@@ -1,6 +1,6 @@
 // СОБРАНО АВТОМАТИЧЕСКИ из app.jsx — не править руками.
 // Правки вносить в app.jsx, затем: osascript -l JavaScript tools/build.js
-// отпечаток-исходника: a043abc6ba49f688
+// отпечаток-исходника: 54580f770eb65fdb
 // Функции контракта живут в lib/contract.js. Разбираем их сюда, чтобы весь
 // остальной код обращался к ним по прежним именам и не менялся.
 const{GLOBAL_MODS,isPerNiche,dropOrphans,nichesOf,resKey,splitMdRow,isMdSeparator,parseMdTables,buildModuleEntry,pickTable,pickColumn,withStableIds}=CAContract;// Название модуля берётся из MODULES — это конфиг ИНТЕРФЕЙСА, и сборщик
@@ -3637,7 +3637,13 @@ const[showNiches,setShowNiches]=React.useState(false);const[nicheOpts,setNicheOp
 // это только для чтения внутри run(), рендерить не нужно.
 const[showSeedConfirm,setShowSeedConfirm]=React.useState(false);const[seedCandidates,setSeedCandidates]=React.useState([]);const[seedError,setSeedError]=React.useState(null);// подбор фраз не удался — показываем причину
 const[pendingM7Niche,setPendingM7Niche]=React.useState('');const confirmedSeedsRef=React.useRef({});const pausedRunRef=React.useRef(null);// параметры run(), прерванного паузой — см. continueAfterSeeds
-const switchUiLang=()=>{const nl=uiLang==='en'?'ru':'en';setUiLang(nl);saveUiLang(nl);};const ref=()=>setProjs(loadAll());const sv=React.useCallback(p=>{upsert(p);ref();return p;},[]);// Память браузера переполнена — говорим прямо и подсказываем, что делать.
+const switchUiLang=()=>{const nl=uiLang==='en'?'ru':'en';setUiLang(nl);saveUiLang(nl);};const ref=()=>setProjs(loadAll());// Модули, появившиеся ПОСЛЕ создания проекта, сами в него не попадают: у
+// проекта свой сохранённый набор. Владелица 17.09 разделила контент-радар
+// надвое и не увидела нового модуля в старом проекте — он честно не был
+// выбран. Дополняем набор новинками, ставя каждую на её место в цепочке.
+const НОВЫЕ_МОДУЛИ=[{id:'M4A',после:'M4'}];const дополнитьНовыми=список=>{let из=(список||[]).slice();for(const н of НОВЫЕ_МОДУЛИ){const м=MODULES.find(x=>x.id===н.id);if(!м||м.disabled||м.hidden)continue;if(из.includes(н.id))continue;// Добавляем только если в проекте есть сосед: иначе человек мог сам
+// снять всё лишнее, и мы бы вернули ему то, от чего он отказался.
+const где=из.indexOf(н.после);if(где<0)continue;из=[...из.slice(0,где+1),н.id,...из.slice(где+1)];}return из;};const sv=React.useCallback(p=>{upsert(p);ref();return p;},[]);// Память браузера переполнена — говорим прямо и подсказываем, что делать.
 React.useEffect(()=>{наПотерю=()=>setBlockMsg('Память браузера переполнена, и результат туда не '+'помещается. Он выгружен в облако и вернётся при следующем открытии, но '+'чтобы это не повторялось, удалите старые проекты в списке — каждый прогон '+'занимает место.');return()=>{наПотерю=null;};},[]);// Site reading
 const parseSite=React.useCallback(async()=>{if(!siteUrl.trim())return;setParsing(true);setPMsg('⟳ Reading site pages…');try{const{pages,дизайн}=await fetchSite(siteUrl.trim());// Адрес сайта нужен потом в M7 (карта опубликованных страниц), а жил он
 // только в состоянии формы и терялся сразу после разбора брифа.
@@ -3664,7 +3670,7 @@ const автовходСделан=React.useRef(false);React.useEffect(()=>{if(!
 // результаты под новыми номерами читаются как каша («M3 ошибка»,
 // модули не те). Владелица решила: старое не переносим, перепрогоняем.
 !(p.results||[]).some(r=>r&&r.id==='M1_2'));if(свои.length){openP(свои[0]);// Экран «Бриф» открывает форму даже при готовом проекте: это его страница.
-if(шагИзАдреса==='brief')setSc('form');}else goNew();},[projs,sc]);const openP=p=>{const b={...(p.brief||{})};if(b.geo&&!b.geoMarket){b.geoMarket=b.geo;delete b.geo;}setProj(p);setBrief({...empty,...b});setLang(p.lang||'Russian');setMods((p.mods||['M2','M3']).filter(id=>{const м=MODULES.find(m=>m.id===id);return м&&!м.disabled&&!м.hidden;}));setRep(p.report||'');setExp({});setRepOpen(false);setXled('');setShowLayers(false);setPriceLayers(p.priceLayers||[]);setSelectedLayers(p.selectedLayers||[]);// Если разведка сделана, а ниша ещё не выбрана — восстановить стоп-точку выбора
+if(шагИзАдреса==='brief')setSc('form');}else goNew();},[projs,sc]);const openP=p=>{const b={...(p.brief||{})};if(b.geo&&!b.geoMarket){b.geoMarket=b.geo;delete b.geo;}setProj(p);setBrief({...empty,...b});setLang(p.lang||'Russian');setMods(дополнитьНовыми((p.mods||['M2','M3']).filter(id=>{const м=MODULES.find(m=>m.id===id);return м&&!м.disabled&&!м.hidden;})));setRep(p.report||'');setExp({});setRepOpen(false);setXled('');setShowLayers(false);setPriceLayers(p.priceLayers||[]);setSelectedLayers(p.selectedLayers||[]);// Если разведка сделана, а ниша ещё не выбрана — восстановить стоп-точку выбора
 const m12=(p.results||[]).find(r=>r.id==='M2');if(m12&&!b.selectedNiche){const nd=m12.nicheData||extractNicheData(m12.content||'');const niches=(nd&&Array.isArray(nd.niches)?nd.niches:[]).slice().sort((a,b)=>(b.score||0)-(a.score||0));if(niches.length){setNicheOpts(niches);const rec=niches.findIndex(x=>x.recommended);setSelNiches(rec>=0?[rec]:[]);setShowNiches(true);}else setShowNiches(false);}else setShowNiches(false);setSc('work');};// Save brief to project when returning from edit form
 const saveBriefToProject=React.useCallback(()=>{if(proj){const upd={...proj,brief,lang,updatedAt:new Date().toISOString()};setProj(upd);sv(upd);}},[proj,brief,lang,sv]);const goNew=()=>{setProj(null);setBrief(empty);setLang('Russian');setMods(['M2','M3']);setSiteUrl('');setPMsg('');setRep('');setExp({});setRepOpen(false);setXled('');setShowLayers(false);setPriceLayers([]);setSelectedLayers([]);setSc('form');};// extractChartData/extractNicheData/cleanContent — теперь на уровне модуля
 // (см. рядом с parseMdTables), processM5Voc тоже их использует.

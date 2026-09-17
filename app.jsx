@@ -13759,6 +13759,26 @@ function App() {
   const switchUiLang = () => { const nl = uiLang==='en'?'ru':'en'; setUiLang(nl); saveUiLang(nl); };
 
   const ref = () => setProjs(loadAll());
+  // Модули, появившиеся ПОСЛЕ создания проекта, сами в него не попадают: у
+  // проекта свой сохранённый набор. Владелица 17.09 разделила контент-радар
+  // надвое и не увидела нового модуля в старом проекте — он честно не был
+  // выбран. Дополняем набор новинками, ставя каждую на её место в цепочке.
+  const НОВЫЕ_МОДУЛИ = [{ id: 'M4A', после: 'M4' }];
+  const дополнитьНовыми = список => {
+    let из = (список || []).slice();
+    for (const н of НОВЫЕ_МОДУЛИ) {
+      const м = MODULES.find(x => x.id === н.id);
+      if (!м || м.disabled || м.hidden) continue;
+      if (из.includes(н.id)) continue;
+      // Добавляем только если в проекте есть сосед: иначе человек мог сам
+      // снять всё лишнее, и мы бы вернули ему то, от чего он отказался.
+      const где = из.indexOf(н.после);
+      if (где < 0) continue;
+      из = [...из.slice(0, где + 1), н.id, ...из.slice(где + 1)];
+    }
+    return из;
+  };
+
   const sv = React.useCallback(p => { upsert(p); ref(); return p; }, []);
   // Память браузера переполнена — говорим прямо и подсказываем, что делать.
   React.useEffect(() => {
@@ -13844,10 +13864,10 @@ function App() {
     const b={...(p.brief||{})};
     if(b.geo&&!b.geoMarket){b.geoMarket=b.geo;delete b.geo;}
     setProj(p); setBrief({...empty,...b}); setLang(p.lang||'Russian');
-    setMods((p.mods||['M2','M3']).filter(id => {
+    setMods(дополнитьНовыми((p.mods||['M2','M3']).filter(id => {
       const м = MODULES.find(m=>m.id===id);
       return м && !м.disabled && !м.hidden;
-    })); setRep(p.report||'');
+    }))); setRep(p.report||'');
     setExp({}); setRepOpen(false); setXled('');
     setShowLayers(false); setPriceLayers(p.priceLayers||[]); setSelectedLayers(p.selectedLayers||[]);
     // Если разведка сделана, а ниша ещё не выбрана — восстановить стоп-точку выбора
