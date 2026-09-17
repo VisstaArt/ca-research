@@ -1,6 +1,6 @@
 // СОБРАНО АВТОМАТИЧЕСКИ из app.jsx — не править руками.
 // Правки вносить в app.jsx, затем: osascript -l JavaScript tools/build.js
-// отпечаток-исходника: 40ae42a993ca5697
+// отпечаток-исходника: 0708ed38adb77460
 // Функции контракта живут в lib/contract.js. Разбираем их сюда, чтобы весь
 // остальной код обращался к ним по прежним именам и не менялся.
 const{GLOBAL_MODS,isPerNiche,dropOrphans,nichesOf,resKey,splitMdRow,isMdSeparator,parseMdTables,buildModuleEntry,pickTable,pickColumn,withStableIds}=CAContract;// Название модуля берётся из MODULES — это конфиг ИНТЕРФЕЙСА, и сборщик
@@ -70,7 +70,15 @@ const LANGS=['Russian','Turkish','English','Arabic','Kazakh','Ukrainian','Uzbek'
 // Английские ярлыки LANGS остаются внутренними: они уходят в промпт модели,
 // где именно английское название работает надёжнее всего.
 const LANG_SELF={Russian:'Русский',Turkish:'Türkçe',English:'English',Arabic:'العربية',Kazakh:'Қазақша',Ukrainian:'Українська',Uzbek:'Oʻzbekcha',German:'Deutsch',Spanish:'Español',French:'Français'};const langSelf=l=>LANG_SELF[l]||l;// ── STORAGE
-const loadAll=()=>{try{return JSON.parse(localStorage.getItem(SK)||'[]');}catch{return[];}};const saveAll=l=>{try{localStorage.setItem(SK,JSON.stringify(l));}catch{}};const upsert=p=>{const a=loadAll();const i=a.findIndex(x=>x.id===p.id);if(i>=0)a[i]=p;else a.unshift(p);saveAll(a);syncToDb(p);};const loadUiLang=()=>{// Внутри платформы язык интерфейса — русский: платформа сейчас русская, и
+const loadAll=()=>{try{return JSON.parse(localStorage.getItem(SK)||'[]');}catch{return[];}};const saveAll=l=>{try{localStorage.setItem(SK,JSON.stringify(l));return true;}catch(e){// Память браузера переполнена (обычно 5 МБ). Раньше ошибка глоталась
+// молча, и прогон «пропадал» после обновления страницы. Сбрасываем самое
+// тяжёлое — собранные материалы — и пробуем снова: лучше потерять
+// возможность дешёвого повтора, чем сам результат (владелица 17.09).
+try{const облегчённые=(l||[]).map(п=>({...п,results:(п.results||[]).map(r=>{if(!r||!r.материалы)return r;const{материалы,...остальное}=r;return остальное;})}));localStorage.setItem(SK,JSON.stringify(облегчённые));if(window.console)console.warn('Память браузера переполнена: собранные материалы сброшены, результаты сохранены');return true;}catch(e2){if(window.console)console.warn('Результат не помещается в память браузера:',e2);return false;}}};// Сохранение проекта. Если память браузера не приняла — человек должен об
+// этом УЗНАТЬ, а не обнаружить после обновления страницы, что оплаченного
+// прогона нет (владелица 17.09: «обновила — данные не сохранились»).
+let наПотерю=null;// сюда интерфейс кладёт обработчик предупреждения
+const upsert=p=>{const a=loadAll();const i=a.findIndex(x=>x.id===p.id);if(i>=0)a[i]=p;else a.unshift(p);const легло=saveAll(a);if(!легло&&наПотерю)наПотерю();syncToDb(p);};const loadUiLang=()=>{// Внутри платформы язык интерфейса — русский: платформа сейчас русская, и
 // английские кнопки в русском пути читались как «иностранные слова в
 // кнопках» (замечание владелицы 14.09). Отдельно открытый инструмент
 // помнит выбор человека, по умолчанию английский, как было.
@@ -88,9 +96,13 @@ const{signIn,refreshTokens,authFetch,getRefreshToken,clearTokens}=window.CAAuth;
 // «дошлёт» накопленное на следующем шаге, отдельная очередь ретраев не нужна.
 const dbHeaders=()=>({'Content-Type':'application/json'});// Неудачные выгрузки помним: по ним видно, что облако отстало от браузера,
 // и слияние при следующем открытии обязано отдать предпочтение местной копии.
-const неВыгружены=new Set();const syncToDb=async(p,повтор)=>{try{const r=await authFetch('/api/projects',{method:'POST',headers:dbHeaders(),body:JSON.stringify(p)});if(r&&r.ok){неВыгружены.delete(p.id);return true;}// Тело запроса ограничено (4,5 МБ у площадки), а готовый отчёт — самая
+const неВыгружены=new Set();const безМатериалов=p=>({...p,results:(p.results||[]).map(r=>{if(!r||!r.материалы)return r;const{материалы,...остальное}=r;return остальное;})});const syncToDb=async(p,повтор)=>{try{// Собранные материалы в облако не шлём: это десятки постов и выдержек,
+// тело запроса раздувается до мегабайтов, площадка его режет, а прогон
+// висит на отправке (владелица 17.09 — «завис на сборке отчёта»).
+// Для повтора разбора они и не нужны: он делается в том же браузере.
+const r=await authFetch('/api/projects',{method:'POST',headers:dbHeaders(),body:JSON.stringify(безМатериалов(p))});if(r&&r.ok){неВыгружены.delete(p.id);return true;}// Тело запроса ограничено (4,5 МБ у площадки), а готовый отчёт — самая
 // тяжёлая часть проекта и при этом пересобираемая. Второй заход без него.
-if(!повтор)return syncToDb({...p,report:''},true);неВыгружены.add(p.id);if(window.console)console.warn('Проект не выгружен в облако:',p.id,r&&r.status);return false;}catch(e){if(!повтор)return syncToDb({...p,report:''},true);неВыгружены.add(p.id);if(window.console)console.warn('Проект не выгружен в облако:',p.id,e);return false;}};const deleteFromDb=id=>{authFetch('/api/projects?id='+encodeURIComponent(id),{method:'DELETE',headers:dbHeaders()}).catch(()=>{});};const hydrateFromDb=async()=>{try{const r=await authFetch('/api/projects',{headers:dbHeaders()});if(!r.ok)return null;const d=await r.json();if(!Array.isArray(d.projects))return null;const изОблака=d.projects.map(row=>({id:row.id,createdAt:row.created_at,updatedAt:row.updated_at,brief:row.brief||{},lang:row.lang||'Russian',mods:row.mods||[],results:row.results||[],report:row.report||'',priceLayers:row.price_layers||[],selectedLayers:row.selected_layers||[]}));// СЛИЯНИЕ, а не замена. Раньше список из облака затирал локальный, и если
+if(!повтор)return syncToDb({...безМатериалов(p),report:''},true);неВыгружены.add(p.id);if(window.console)console.warn('Проект не выгружен в облако:',p.id,r&&r.status);return false;}catch(e){if(!повтор)return syncToDb({...безМатериалов(p),report:''},true);неВыгружены.add(p.id);if(window.console)console.warn('Проект не выгружен в облако:',p.id,e);return false;}};const deleteFromDb=id=>{authFetch('/api/projects?id='+encodeURIComponent(id),{method:'DELETE',headers:dbHeaders()}).catch(()=>{});};const hydrateFromDb=async()=>{try{const r=await authFetch('/api/projects',{headers:dbHeaders()});if(!r.ok)return null;const d=await r.json();if(!Array.isArray(d.projects))return null;const изОблака=d.projects.map(row=>({id:row.id,createdAt:row.created_at,updatedAt:row.updated_at,brief:row.brief||{},lang:row.lang||'Russian',mods:row.mods||[],results:row.results||[],report:row.report||'',priceLayers:row.price_layers||[],selectedLayers:row.selected_layers||[]}));// СЛИЯНИЕ, а не замена. Раньше список из облака затирал локальный, и если
 // выгрузка проекта не прошла (тело больше лимита, обрыв сети), прогон
 // пропадал при первом же обновлении страницы: модуль снова просил
 // «запустить исследование» (владелица 17.09, уже не первый раз).
@@ -3625,7 +3637,8 @@ const[showNiches,setShowNiches]=React.useState(false);const[nicheOpts,setNicheOp
 // это только для чтения внутри run(), рендерить не нужно.
 const[showSeedConfirm,setShowSeedConfirm]=React.useState(false);const[seedCandidates,setSeedCandidates]=React.useState([]);const[seedError,setSeedError]=React.useState(null);// подбор фраз не удался — показываем причину
 const[pendingM7Niche,setPendingM7Niche]=React.useState('');const confirmedSeedsRef=React.useRef({});const pausedRunRef=React.useRef(null);// параметры run(), прерванного паузой — см. continueAfterSeeds
-const switchUiLang=()=>{const nl=uiLang==='en'?'ru':'en';setUiLang(nl);saveUiLang(nl);};const ref=()=>setProjs(loadAll());const sv=React.useCallback(p=>{upsert(p);ref();return p;},[]);// Site reading
+const switchUiLang=()=>{const nl=uiLang==='en'?'ru':'en';setUiLang(nl);saveUiLang(nl);};const ref=()=>setProjs(loadAll());const sv=React.useCallback(p=>{upsert(p);ref();return p;},[]);// Память браузера переполнена — говорим прямо и подсказываем, что делать.
+React.useEffect(()=>{наПотерю=()=>setBlockMsg('Память браузера переполнена, и результат туда не '+'помещается. Он выгружен в облако и вернётся при следующем открытии, но '+'чтобы это не повторялось, удалите старые проекты в списке — каждый прогон '+'занимает место.');return()=>{наПотерю=null;};},[]);// Site reading
 const parseSite=React.useCallback(async()=>{if(!siteUrl.trim())return;setParsing(true);setPMsg('⟳ Reading site pages…');try{const{pages,дизайн}=await fetchSite(siteUrl.trim());// Адрес сайта нужен потом в M7 (карта опубликованных страниц), а жил он
 // только в состоянии формы и терялся сразу после разбора брифа.
 setBrief(p=>({...p,siteUrl:siteUrl.trim()}));// Дизайн-система и соцсети — с сайта, без вопросов клиенту (владелица
@@ -3862,9 +3875,11 @@ const failed=/^Error:/.test(cleanedContent.trim());// СОБРАННЫЕ МАТ�
 // Сбор — это 40-60 поисковых запросов, десятки открытых страниц и до
 // двадцати обращений к частотности; сам разбор моделью — один вызов.
 // Сохранив сбор, повтор разбора стоит один вызов вместо всего прогона.
-const материалы=mod.id==='M4'&&(сСайтов.каналы.length||постыКонкурентов.length)?{собрано:new Date().toISOString(),каналыССайтов:сСайтов.каналы.slice(0,40),посты:постыКонкурентов.slice(0,45),дзен:статьиДзен.slice(0,25),статьиVC:статьиVC.slice(0,15),мойVC:мойVC.slice(0,40),портреты,сегменты,интересыЗамер,// Выдержки поиска — самое тяжёлое; держим урезанно, ровно
+const материалы=mod.id==='M4'&&(сСайтов.каналы.length||постыКонкурентов.length)?{собрано:new Date().toISOString(),каналыССайтов:сСайтов.каналы.slice(0,30),// Тексты урезаем: для повторного разбора хватает начала, а
+// полные посты раздували хранилище браузера до отказа.
+посты:постыКонкурентов.slice(0,30).map(п=>({...п,текст:String(п.текст||'').slice(0,200)})),дзен:статьиДзен.slice(0,15).map(а=>({...а,текст:String(а.текст||'').slice(0,160)})),статьиVC:статьиVC.slice(0,12),мойVC:мойVC.slice(0,25),портреты,сегменты,интересыЗамер,// Выдержки поиска — самое тяжёлое; держим урезанно, ровно
 // столько, сколько уходит в промпт.
-выдержки:(просмотрено||[]).slice(0,60)}:null;const result={id:mod.id,niche:wn,content:cleanedContent,...(строгое?{строгое}:{}),...(материалы?{материалы}:{}),...(сбойСхемы?{сбойСхемы}:{}),кодСборки:отпечатокСборки(),chartData,...(failed?{failed:true,error:cleanedContent.trim()}:{}),...(nicheData?{nicheData}:{}),...(usage?{usage}:{}),...(searchCalls?{searchCalls}:{}),...(keywordCalls?{keywordCalls}:{}),// Сколько модуль шёл на самом деле. Оценка «53 минуты» была взята из
+выдержки:(просмотрено||[]).slice(0,40)}:null;const result={id:mod.id,niche:wn,content:cleanedContent,...(строгое?{строгое}:{}),...(материалы?{материалы}:{}),...(сбойСхемы?{сбойСхемы}:{}),кодСборки:отпечатокСборки(),chartData,...(failed?{failed:true,error:cleanedContent.trim()}:{}),...(nicheData?{nicheData}:{}),...(usage?{usage}:{}),...(searchCalls?{searchCalls}:{}),...(keywordCalls?{keywordCalls}:{}),// Сколько модуль шёл на самом деле. Оценка «53 минуты» была взята из
 // головы, а прогон занимает пять-десять (владелица 14.09). Дальше
 // время показывается по замерам, а не по догадке.
 sec:Math.round((Date.now()-началоМодуля)/1000),at:new Date().toISOString()};col.push(result);const upd={...p,results:col,updatedAt:new Date().toISOString()};setProj(upd);sv(upd);setExp(ex=>({...ex,[resKey(result)]:false}));// Дальше по цепочке этой ниши идти НЕЛЬЗЯ: зависимые модули построятся на

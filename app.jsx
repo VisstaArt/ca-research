@@ -506,8 +506,41 @@ const langSelf = l => LANG_SELF[l] || l;
 
 // ── STORAGE
 const loadAll = () => { try { return JSON.parse(localStorage.getItem(SK)||'[]'); } catch { return []; } };
-const saveAll = l => { try { localStorage.setItem(SK, JSON.stringify(l)); } catch {} };
-const upsert = p => { const a=loadAll(); const i=a.findIndex(x=>x.id===p.id); if(i>=0)a[i]=p; else a.unshift(p); saveAll(a); syncToDb(p); };
+const saveAll = l => {
+  try { localStorage.setItem(SK, JSON.stringify(l)); return true; }
+  catch (e) {
+    // Память браузера переполнена (обычно 5 МБ). Раньше ошибка глоталась
+    // молча, и прогон «пропадал» после обновления страницы. Сбрасываем самое
+    // тяжёлое — собранные материалы — и пробуем снова: лучше потерять
+    // возможность дешёвого повтора, чем сам результат (владелица 17.09).
+    try {
+      const облегчённые = (l || []).map(п => ({ ...п,
+        results: (п.results || []).map(r => {
+          if (!r || !r.материалы) return r;
+          const { материалы, ...остальное } = r;
+          return остальное;
+        }) }));
+      localStorage.setItem(SK, JSON.stringify(облегчённые));
+      if (window.console) console.warn('Память браузера переполнена: собранные материалы сброшены, результаты сохранены');
+      return true;
+    } catch (e2) {
+      if (window.console) console.warn('Результат не помещается в память браузера:', e2);
+      return false;
+    }
+  }
+};
+// Сохранение проекта. Если память браузера не приняла — человек должен об
+// этом УЗНАТЬ, а не обнаружить после обновления страницы, что оплаченного
+// прогона нет (владелица 17.09: «обновила — данные не сохранились»).
+let наПотерю = null;   // сюда интерфейс кладёт обработчик предупреждения
+const upsert = p => {
+  const a = loadAll();
+  const i = a.findIndex(x => x.id === p.id);
+  if (i >= 0) a[i] = p; else a.unshift(p);
+  const легло = saveAll(a);
+  if (!легло && наПотерю) наПотерю();
+  syncToDb(p);
+};
 const loadUiLang = () => {
   // Внутри платформы язык интерфейса — русский: платформа сейчас русская, и
   // английские кнопки в русском пути читались как «иностранные слова в
@@ -537,19 +570,29 @@ const dbHeaders = () => ({ 'Content-Type':'application/json' });
 // Неудачные выгрузки помним: по ним видно, что облако отстало от браузера,
 // и слияние при следующем открытии обязано отдать предпочтение местной копии.
 const неВыгружены = new Set();
+const безМатериалов = p => ({ ...p,
+  results: (p.results || []).map(r => {
+    if (!r || !r.материалы) return r;
+    const { материалы, ...остальное } = r;
+    return остальное;
+  }) });
 const syncToDb = async (p, повтор) => {
   try {
+    // Собранные материалы в облако не шлём: это десятки постов и выдержек,
+    // тело запроса раздувается до мегабайтов, площадка его режет, а прогон
+    // висит на отправке (владелица 17.09 — «завис на сборке отчёта»).
+    // Для повтора разбора они и не нужны: он делается в том же браузере.
     const r = await authFetch('/api/projects', { method:'POST', headers: dbHeaders(),
-      body: JSON.stringify(p) });
+      body: JSON.stringify(безМатериалов(p)) });
     if (r && r.ok) { неВыгружены.delete(p.id); return true; }
     // Тело запроса ограничено (4,5 МБ у площадки), а готовый отчёт — самая
     // тяжёлая часть проекта и при этом пересобираемая. Второй заход без него.
-    if (!повтор) return syncToDb({ ...p, report: '' }, true);
+    if (!повтор) return syncToDb({ ...безМатериалов(p), report: '' }, true);
     неВыгружены.add(p.id);
     if (window.console) console.warn('Проект не выгружен в облако:', p.id, r && r.status);
     return false;
   } catch (e) {
-    if (!повтор) return syncToDb({ ...p, report: '' }, true);
+    if (!повтор) return syncToDb({ ...безМатериалов(p), report: '' }, true);
     неВыгружены.add(p.id);
     if (window.console) console.warn('Проект не выгружен в облако:', p.id, e);
     return false;
@@ -13717,6 +13760,14 @@ function App() {
 
   const ref = () => setProjs(loadAll());
   const sv = React.useCallback(p => { upsert(p); ref(); return p; }, []);
+  // Память браузера переполнена — говорим прямо и подсказываем, что делать.
+  React.useEffect(() => {
+    наПотерю = () => setBlockMsg('Память браузера переполнена, и результат туда не '
+      + 'помещается. Он выгружен в облако и вернётся при следующем открытии, но '
+      + 'чтобы это не повторялось, удалите старые проекты в списке — каждый прогон '
+      + 'занимает место.');
+    return () => { наПотерю = null; };
+  }, []);
 
   // Site reading
   const parseSite = React.useCallback(async () => {
@@ -14499,15 +14550,17 @@ function App() {
       const материалы = (mod.id === 'M4' && (сСайтов.каналы.length || постыКонкурентов.length))
         ? {
             собрано: new Date().toISOString(),
-            каналыССайтов: сСайтов.каналы.slice(0, 40),
-            посты: постыКонкурентов.slice(0, 45),
-            дзен: статьиДзен.slice(0, 25),
-            статьиVC: статьиVC.slice(0, 15),
-            мойVC: мойVC.slice(0, 40),
+            каналыССайтов: сСайтов.каналы.slice(0, 30),
+            // Тексты урезаем: для повторного разбора хватает начала, а
+            // полные посты раздували хранилище браузера до отказа.
+            посты: постыКонкурентов.slice(0, 30).map(п => ({ ...п, текст: String(п.текст || '').slice(0, 200) })),
+            дзен: статьиДзен.slice(0, 15).map(а => ({ ...а, текст: String(а.текст || '').slice(0, 160) })),
+            статьиVC: статьиVC.slice(0, 12),
+            мойVC: мойVC.slice(0, 25),
             портреты, сегменты, интересыЗамер,
             // Выдержки поиска — самое тяжёлое; держим урезанно, ровно
             // столько, сколько уходит в промпт.
-            выдержки: (просмотрено || []).slice(0, 60),
+            выдержки: (просмотрено || []).slice(0, 40),
           }
         : null;
       const result = { id:mod.id, niche:wn, content:cleanedContent,
