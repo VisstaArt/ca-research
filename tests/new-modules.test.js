@@ -88,10 +88,20 @@ var iНабор=SRC.indexOf('const наборПроекта');
    /const лентаМодулей = \[\.\.\.orderedResults, \.\.\.ждут\]\.sort\(порядокЦепочки\)/.test(SRC)
    && /лентаМодулей\.filter/.test(SRC),
    'ожидающие снова показываются отдельным списком, не в цепочке');
-ок('карточка у них та же, что у готовых',
-   /if \(r\.ждёт\) return \(/.test(SRC)
-   && (SRC.match(/className="card" style=\{\{marginBottom:14,padding:0,overflow:'hidden'\}\}/g)||[]).length>=2,
-   'заглушка нарисована не карточкой модуля');
+// Оформление сверяем ДОСЛОВНО: «похоже» владелицу не устроило трижды.
+// Каждый кусок стиля должен встречаться дважды — у готовой карточки и у той,
+// что ещё ждёт. Разошлись — значит заглушку нарисовали «по памяти».
+[['обёртка карточки', "className=\"card\" style={{marginBottom:14,padding:0,overflow:'hidden'}}"],
+ ['шапка и её отступы', "alignItems:'center',gap:10,padding:'15px 20px'"],
+ ['кегль и цвет названия', "style={{flex:1,fontSize:16,fontWeight:600,color:'var(--ink)'}}>{m.titleRu||m.title}"],
+ ['полоса кнопок', "style={{display:'flex',gap:5,margin:'0 8px',flexShrink:0}}"],
+ ['сама кнопка', "style={{padding:'3px 8px',fontSize:10,color:m.dark,borderColor:m.border,background:'rgba(255,255,255,0.7)'}}"],
+ ['метка справа', "style={{fontSize:10,marginRight:8,color:'var(--ink-3)'}}"],
+].forEach(function(п){
+  var n = SRC.split(п[1]).length - 1;
+  ок('как у готовой карточки: ' + п[0], n >= 2, 'встречается ' + n + ' раз, нужно минимум 2');
+});
+ок('заглушка вообще есть', /if \(r\.ждёт\) return \(/.test(SRC), 'нет карточки ожидающего модуля');
 ок('у каждого своя кнопка запуска',
    /onClick=\{\(\)=>run\(\[m\.id\], undefined, false, r\.niche \|\| undefined\)\}/.test(SRC),
    'нельзя запустить один модуль из цепочки');

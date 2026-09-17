@@ -16431,12 +16431,17 @@ function App() {
                 <div style={{flex:1,height:1,background:'var(--line)',alignSelf:'center'}}/>
               </div>
             )}
+            {/* Ровно та же карточка, что у готового модуля: обёртка, отступы,
+                кегль и цвет названия, тег с номером, метки справа и та же
+                кнопочная полоса. Отличие одно — вместо содержимого кнопка
+                запуска (владелица 17.09: «возьми образец верхней строки»). */}
             <div className="card" style={{marginBottom:14,padding:0,overflow:'hidden'}}>
               <div style={{display:'flex',alignItems:'center'}}>
-                <div style={{display:'flex',alignItems:'center',gap:10,padding:'15px 20px',flex:1,minWidth:0}}>
-                  <span style={{flex:1,fontSize:16,fontWeight:600,color:'var(--ink-2)'}}>{m.titleRu||m.title}</span>
+                <div style={{display:'flex',alignItems:'center',gap:10,padding:'15px 20px',flex:1}}>
+                  <span style={{flex:1,fontSize:16,fontWeight:600,color:'var(--ink)'}}>{m.titleRu||m.title}</span>
                   <span className="tag">{m.id}</span>
-                  <span style={{fontSize:10,color:'var(--ink-3)',whiteSpace:'nowrap'}}>
+                  <span style={{fontSize:10,marginRight:8,color:'var(--ink-3)'}}
+                    title="Оценка по расходу прошлых запусков. Точная сумма известна после прогона.">
                     ≈ {m.estimatedMin} мин{(() => {
                       const c = сметаЦентов([m.id], 1);
                       return c != null ? ' · ' + деньгами(c) : '';
@@ -16444,9 +16449,9 @@ function App() {
                   </span>
                 </div>
                 {!isRun && (
-                  <div style={{display:'flex',gap:6,padding:'0 16px 0 0'}}>
-                    <button className="cm-btn" onClick={()=>run([m.id], undefined, false, r.niche || undefined)}
-                      style={{whiteSpace:'nowrap'}}
+                  <div style={{display:'flex',gap:5,margin:'0 8px',flexShrink:0}}>
+                    <button onClick={()=>run([m.id], undefined, false, r.niche || undefined)}
+                      style={{padding:'3px 8px',fontSize:10,color:m.dark,borderColor:m.border,background:'rgba(255,255,255,0.7)'}}
                       title={'Запустить только этот модуль: ' + (m.titleRu || m.title)}>
                       Исследовать
                     </button>
