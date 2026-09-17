@@ -13260,7 +13260,14 @@ function App() {
           // purpose обязателен: у клиента ДВА телеграма — группа согласования и
           // канал публикации. Без него второй вытесняет первый, и материал
           // уходит подписчикам вместо проверки (контент-машина, миграция 007).
-          p_purpose: 'approval', p_token: chToken.trim(), p_address: chAddr.trim(),
+          p_purpose: 'approval',
+          // На подписке в группу добавляют НАШЕГО бота: заводить своего у
+          // @BotFather ради утверждения постов — ровно та возня, за отсутствие
+          // которой платят подписку (контент-машина, миграция 008). На своих
+          // ключах человек ставит своего бота и даёт его токен.
+          p_bot: тарифРазработчика ? 'own' : 'platform',
+          ...(тарифРазработчика ? { p_token: chToken.trim() } : {}),
+          p_address: chAddr.trim(),
           p_title: chTitle.trim() || 'Группа согласования', p_default: true }),
       });
       const d = await r.json().catch(() => null);
@@ -13271,10 +13278,11 @@ function App() {
           : (m || 'Не получилось сохранить'));
       }
       setChSaved(typeof d === 'string' ? d : chAddr.trim());
-      setChToken(''); 
+      setChToken('');
       setChMsg('Группа сохранена. Она пока помечена непроверенной: база в интернет не ходит. '
         + 'Нажмите «Проверить связь» — бот поздоровается в группе, и это единственное '
-        + 'доказательство, что всё работает.');
+        + 'доказательство, что всё работает.'
+        + (тарифРазработчика ? '' : ' Не забудьте добавить нашего бота в группу и дать ему право писать.'));
     } catch (e) { setChMsg(e.message); }
     setChBusy(false);
   };
@@ -14556,8 +14564,60 @@ function App() {
         </div>
       </div>
   );
+  const картаСогласования = (
+    <>
+    {/* Группа согласования — ВСЕМ клиентам, а не только тем, кто на своих
+          ключах: вопрос про ключ прячется на подписке потому, что ключа там
+          нет, а согласование есть у каждого (17.09). На подписке в группу
+          добавляют нашего бота, свой заводить не нужно. */}
+      {clientIdFromUrl && (
+        <div className="card">
+          <p style={{fontSize:16,fontWeight:600,marginBottom:4,letterSpacing:'-.01em'}}>Группа согласования</p>
+          <p style={{fontSize:12,color:'var(--ink-2)',marginBottom:10,lineHeight:1.55}}>
+            {chSaved
+              ? <>Подключена: <b style={{color:'var(--ink)'}}>{chSaved}</b>. Готовый материал приходит
+                 туда на проверку — и только после вашего «да» идёт в канал.</>
+              : <>Телеграм-группа, куда приходит готовый материал на проверку. Это не канал
+                 для подписчиков: у них разное назначение, и подключаются они отдельно.{' '}
+                 {тарифРазработчика
+                   ? <>Нужен бот из <a href="https://t.me/BotFather" target="_blank" rel="noreferrer">@BotFather</a>,
+                      добавленный в группу, и её идентификатор.</>
+                   : <>Своего бота заводить не нужно — добавьте в группу нашего и дайте ему право
+                      писать. От вас только идентификатор группы: число, обычно со знаком минус.</>}</>}
+          </p>
+          {!chSaved && (
+            <div style={{display:'grid',gap:6,maxWidth:520}}>
+              <input value={chTitle} onChange={e=>setChTitle(e.target.value)}
+                placeholder="как назвать в списке — например, «Согласование с Ольгой»"/>
+              {тарифРазработчика && (
+                <input type="password" value={chToken} autoComplete="new-password"
+                  onChange={e=>setChToken(e.target.value)}
+                  placeholder="токен бота от @BotFather — 123456789:AA…"/>
+              )}
+              <input value={chAddr} onChange={e=>setChAddr(e.target.value)}
+                placeholder="идентификатор группы — например, -1001234567890"/>
+              <div>
+                <button onClick={saveApprovalChannel}
+                  disabled={!chAddr.trim()||(тарифРазработчика&&!chToken.trim())||chBusy}>
+                  {chBusy ? 'Сохраняю…' : 'Подключить группу'}</button>
+              </div>
+            </div>
+          )}
+          {chSaved && (
+            <div style={{display:'flex',gap:6}}>
+              <button onClick={checkApprovalChannel} disabled={chBusy}>
+                {chBusy ? 'Ставлю в очередь…' : 'Проверить связь'}</button>
+              <button onClick={()=>{ setChSaved(''); setChMsg(''); }}
+                style={{color:'var(--ink-2)'}}>Подключить другую</button>
+            </div>
+          )}
+          {chMsg && <p style={{fontSize:12,color:'var(--ink-2)',marginTop:8,lineHeight:1.55}}>{chMsg}</p>}
+        </div>
+      )}
+    </>
+  );
   const картаМодельКлюч = (
-    <div className="card">
+<div className="card">
         <p style={{fontSize:16,fontWeight:600,marginBottom:4,letterSpacing:'-.01em'}}>Модель и ключ</p>
         <p style={{fontSize:12,color:'var(--ink-2)',marginBottom:10}}>
           На чём считаем и за чей счёт. Меняется в любой момент — модели улучшаются,
@@ -14631,46 +14691,6 @@ function App() {
               {searchMsg && <p style={{fontSize:12,color:'var(--ink-2)',marginTop:6}}>{searchMsg}</p>}
             </div>
 
-            {/* Группа согласования: куда контент-машина приносит материал на
-                проверку. Владелица 17.09 подключает её сама, чтобы понимать,
-                как устроено. Токен идёт в хранилище мимо нашего сервера. */}
-            <div style={{marginTop:14,paddingTop:14,borderTop:'1px solid var(--line)'}}>
-              <p style={{fontSize:13,fontWeight:600,marginBottom:4}}>Группа согласования</p>
-              <p style={{fontSize:12,color:'var(--ink-2)',marginBottom:8}}>
-                {chSaved
-                  ? <>Подключена: <b style={{color:'var(--ink)'}}>{chSaved}</b>. Готовый материал
-                     приходит туда на проверку — и только после вашего «да» идёт в канал.</>
-                  : <>Телеграм-группа, куда приходит готовый материал на проверку. Это не канал
-                     для подписчиков: у них разное назначение, и подключаются они отдельно.
-                     Нужен бот из <a href="https://t.me/BotFather" target="_blank" rel="noreferrer">@BotFather</a>,
-                     добавленный в группу, и её идентификатор — число, обычно со знаком минус.</>}
-              </p>
-              {!chSaved && (
-                <div style={{display:'grid',gap:6}}>
-                  <input value={chTitle} onChange={e=>setChTitle(e.target.value)}
-                    placeholder="как назвать в списке — например, «Согласование с Ольгой»"/>
-                  <input type="password" value={chToken} autoComplete="new-password"
-                    onChange={e=>setChToken(e.target.value)}
-                    placeholder="токен бота от @BotFather — 123456789:AA…"/>
-                  <input value={chAddr} onChange={e=>setChAddr(e.target.value)}
-                    placeholder="идентификатор группы — например, -1001234567890"/>
-                  <div style={{display:'flex',gap:6}}>
-                    <button onClick={saveApprovalChannel}
-                      disabled={!chToken.trim()||!chAddr.trim()||chBusy}>
-                      {chBusy ? 'Сохраняю…' : 'Подключить группу'}</button>
-                  </div>
-                </div>
-              )}
-              {chSaved && (
-                <div style={{display:'flex',gap:6}}>
-                  <button onClick={checkApprovalChannel} disabled={chBusy}>
-                    {chBusy ? 'Ставлю в очередь…' : 'Проверить связь'}</button>
-                  <button onClick={()=>{ setChSaved(''); setChMsg(''); }}
-                    style={{color:'var(--ink-2)'}}>Подключить другую</button>
-                </div>
-              )}
-              {chMsg && <p style={{fontSize:12,color:'var(--ink-2)',marginTop:6,lineHeight:1.5}}>{chMsg}</p>}
-            </div>
           </>
         ) : (
           <p style={{fontSize:12,color:'var(--ink-2)'}}>
@@ -14705,7 +14725,7 @@ function App() {
         siteUrl={siteUrl} setSiteUrl={setSiteUrl}
         parseSite={parseSite} parsing={parsing} pMsg={pMsg}
         mods={mods}
-        настройка={<>{картаМодельКлюч}{картаЯзыка}{картаМодулей}</>}
+        настройка={<>{картаМодельКлюч}{картаСогласования}{картаЯзыка}{картаМодулей}</>}
         смета={деньгами(сметаЦентов(mods, nichesOf(brief).length || 1))}
         запуск={()=>run()}/>
       </div>
@@ -14990,6 +15010,7 @@ function App() {
           настраивает работу (замечание владелицы 13.09.2026). В личном кабинете
           они потом видны и меняются, но первый раз их спрашивают тут. */}
       {картаМодельКлюч}
+      {картаСогласования}
 
       {картаМодулей}
 
