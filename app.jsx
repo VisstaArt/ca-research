@@ -17932,12 +17932,22 @@ function App() {
       )}
 
       <div style={{marginBottom:'1.25rem'}}>
-        <div style={{display:'flex',gap:3,marginBottom:5}}>
-          {allMods.map(m => {
-            const d=modDone(m.id), a=curMod===m.id;
-            return <div key={m.id} title={m.title} style={{flex:1,height:4,borderRadius:2,background:d?m.color:a?m.color+'99':'var(--line)'}}/>;
-          })}
-        </div>
+        {/* Полоска готовности модулей. Цвет берём из палитры, а не из m.color:
+            там у всех модулей стоят основные чернила, и лента выходила чёрной,
+            да ещё с приклеенной строкой прозрачности — невалидный цвет
+            (владелица 18.09, скрин). Во время прогона полоску не показываем:
+            ниже стоит панель хода с теми же шагами, два ряда полос подряд
+            читались как поломка. */}
+        {!isRun && (
+          <div style={{display:'flex',gap:3,marginBottom:5}}>
+            {allMods.map(m => {
+              const d = modDone(m.id);
+              return <div key={m.id} title={m.titleRu || m.title}
+                style={{flex:1,height:4,borderRadius:2,
+                  background: d ? 'var(--mid)' : 'var(--line-2)'}}/>;
+            })}
+          </div>
+        )}
         <p style={{fontSize:11,color:'var(--ink-3)',display:'flex',gap:10,
                    justifyContent:'space-between',flexWrap:'wrap'}}>
           <span>{isRun ? (curModData ? (curModData.titleRu||curModData.title) : '')+(curNiche?' · ниша: '+curNiche:'') : doneCount+' из '+allMods.length+' '+plural(allMods.length,'модуль','модуля','модулей')+' готово'+(pending.length?' · '+pending.length+' '+t.pending:'')+(workNiches.length?' · '+workNiches.length+' ниш(и)':'')}</span>

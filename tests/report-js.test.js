@@ -203,4 +203,21 @@ check('значки без заливки и одним цветом', /\.pico\{
   if(ф) провалов+=ф;
 })();
 
+// Фон на фоне: подложка под карточками давала вторую заливку, а карточки и так
+// со своим фоном (владелица 18.09 — «подложка тоже никуда не делась»).
+(function(){
+  var ф=0;
+  var HTML = readFile(ROOT + '/index.html');
+  var m = /\.worksurface \{[^}]*\}/.exec(HTML);
+  if(!m){ ф++; console.log('  FAIL нет правила .worksurface'); }
+  else if(!/background: transparent/.test(m[0])){ ф++;
+    console.log('  FAIL подложка снова с заливкой — фон на фоне'); }
+  else console.log('  ok   подложка прозрачная');
+  var s2 = /\.status-bar \{[^}]*\}/.exec(HTML);
+  if(s2 && /color-mix\(in srgb, var\(--mid\)/.test(s2[0])){ ф++;
+    console.log('  FAIL панель хода снова залита цветом'); }
+  else console.log('  ok   панель хода без цветной заливки');
+  if(ф) провалов+=ф;
+})();
+
 console.log(failed===0?'\nвсё сошлось':'\nпровалов: '+failed);

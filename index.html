@@ -86,9 +86,10 @@ tr:nth-child(even) td { background: none; }
 .tag { display: inline-block; font-size: var(--fs-label); font-weight: 700;
   letter-spacing: .07em; text-transform: uppercase; color: var(--ink-3); }
 .status-bar { position: sticky; top: 0; z-index: 20; padding: 14px 18px;
-  border-radius: 14px; margin-bottom: 14px;
-  background: color-mix(in srgb, var(--mid) 8%, var(--card-solid));
-  border: 1px solid var(--line); font-size: var(--fs-small); }
+  border-radius: 22px; margin-bottom: 14px;
+  background: var(--card-solid);
+  border: 1px solid var(--line); font-size: var(--fs-small);
+  box-shadow: inset 0 1px 0 var(--hi); }
 /* Узкое окно: счётчик уходит под текст шага, а не жмёт его в колонку
    шириной в одно слово (владелица 17.09). */
 @media (max-width: 620px) {
@@ -118,10 +119,8 @@ tr:nth-child(even) td { background: none; }
 /* Рабочая поверхность этапа: тот же материал, что панель бокового меню
    платформы — владелица сверила цвета, они обязаны совпадать. Шапка-плашка
    стоит отдельно НАД поверхностью, карточки данных лежат на ней. */
-.worksurface { background: color-mix(in srgb, var(--card-solid) 88%, transparent);
-  border: 1px solid rgba(255,255,255,.7); border-radius: 24px;
-  padding: 24px 26px 28px;
-  box-shadow: 0 20px 44px -26px rgba(45,36,22,.3), inset 0 1px 0 rgba(255,255,255,.8); }
+.worksurface { background: transparent; border: none; border-radius: 0;
+  padding: 0; box-shadow: none; }
 .worksurface .card { box-shadow: inset 0 1px 0 var(--hi); }
 /* Роль колонки «.main» отчёта здесь играет рабочая поверхность. Часть правил
    эталона привязана именно к .main (кегль и отступы заголовков внутри
@@ -241,6 +240,6 @@ html[data-embed] #root { max-width: none; padding: 0; }
      без сборки — как и весь остальной проект. -->
 <script src="lib/contract.js?v=c5d82d20"></script>
 <script src="lib/auth.js?v=a2c796f5"></script>
-<script src="app.js?v=49169594"></script>
+<script src="app.js?v=dc376d91"></script>
 </body>
 </html>
