@@ -3123,6 +3123,21 @@ th{font-size:10px}
   padding:7px 0;border-top:1px solid var(--line-2);font-size:12.5px}
 .introw:first-of-type{border-top:0}
 .intn{color:var(--ink-2);overflow-wrap:anywhere}
+/* Форматы: чем аудитория потребляет контент. Та же мера полосы, что и в
+   остальных графиках отчёта — 14px с дорожкой. */
+.fmts{display:block}
+.fmrow{display:grid;grid-template-columns:minmax(0,1fr) 110px 150px 130px;gap:12px;
+  align-items:center;padding:9px 0;border-top:1px solid var(--line-2);font-size:12.5px}
+.fmrow:first-child{border-top:none}
+.fmn{color:var(--ink);font-weight:600;overflow-wrap:anywhere}
+.fmn i{display:block;font-style:normal;font-weight:400;font-size:11px;color:var(--ink-3);
+  margin-top:2px}
+.fmv{text-align:right;font-variant-numeric:tabular-nums;font-weight:600;white-space:nowrap;
+  font-size:12px}
+.fmv.no{font-weight:400;color:var(--ink-3)}
+.fmc{text-align:right;font-size:11px;color:var(--ink-3);white-space:nowrap}
+@media (max-width:700px){.fmrow{grid-template-columns:1fr;gap:4px}
+  .fmv,.fmc{text-align:left}}
 /* Как эту тему спрашивают на самом деле: наша формулировка почти всегда
    реже той, которой пользуются люди. Подсказки источника идут под своей
    строкой, с отступом — видно, что это её расшифровка, а не новая тема. */
