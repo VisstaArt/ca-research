@@ -864,7 +864,14 @@ async function callGPT(system, user, temperature, maxTokens, попытка, ф�
   }
   const d = await res.json();
   if (d.error) throw new Error(d.error.message||'API error');
-  if (d.usage) lastGptUsage = { prompt: d.usage.prompt_tokens||0, completion: d.usage.completion_tokens||0, total: d.usage.total_tokens||0 };
+  // Рассуждение модели считается провайдером внутри completion_tokens, но
+  // видеть его отдельно важно: у моделей нового поколения оно и составляет
+  // основную часть выхода, а выход дороже входа в шесть раз. Без этой строки
+  // непонятно, за что заплачено — за написанный отчёт или за размышления
+  // (владелица 18.09: «расход больше, чем ты посчитал»).
+  if (d.usage) lastGptUsage = { prompt: d.usage.prompt_tokens||0, completion: d.usage.completion_tokens||0, total: d.usage.total_tokens||0,
+    ...(d.usage.completion_tokens_details?.reasoning_tokens
+        ? { думала: d.usage.completion_tokens_details.reasoning_tokens } : {}) };
   const текст = d.choices?.[0]?.message?.content || '';
   // Пустой ответ — это НЕ «ничего не нашлось». Это либо кончился бюджет
   // ответа, либо модель отказалась. Молча вернуть пустоту значит показать
@@ -14254,6 +14261,26 @@ function App() {
     }
   }, []);
 
+  // Фактический расход — по замерам, а не по моим прикидкам. Владелица 18.09:
+  // «мне кажется, по gpt расход больше, около доллара на модуль». Проверить
+  // это можно только её числами: они лежат в результатах прогонов, а не у меня.
+  const [показатьРасход, setПоказатьРасход] = React.useState(false);
+  const расходПоМодулям = () => {
+    if (!прайс || !proj) return [];
+    return (proj.results || []).filter(r => r && !r.failed).map(r => {
+      const ц = ценаМодели(r.id);
+      const вх = r.usage ? r.usage.prompt : 0;
+      const вых = r.usage ? r.usage.completion : 0;
+      const думала = r.usage && r.usage.думала ? r.usage.думала : 0;
+      const модель = ц ? (вх * ц.in + вых * ц.out) / 1e6 : 0;
+      const поиск = ((r.searchCalls || 0) + (r.keywordCalls || 0)) * прайс.search_cents;
+      const м = MODULES.find(x => x.id === r.id);
+      return { id: r.id, ниша: r.niche || '', имя: (м && (м.titleRu || м.title)) || r.id,
+        вх, вых, думала, поиск, модель, всего: модель + поиск,
+        поисков: r.searchCalls || 0, частот: r.keywordCalls || 0 };
+    }).sort((а, б) => б.всего - а.всего);
+  };
+
   const [выборМодулей, setВыборМодулей] = React.useState(false);
   const наборДоПравки = React.useRef(null);
   const открытьВыборМодулей = () => {
@@ -16579,6 +16606,10 @@ function App() {
                 ＋ Добавить модули{неВыбраны.length ? ' (' + неВыбраны.length + ')' : ''}
               </button>
             )}
+            {!isRun && (proj?.results || []).some(r => r && r.usage) && (
+              <button onClick={()=>setПоказатьРасход(п=>!п)} style={{fontSize:12,padding:'7px 12px'}}
+                title="Сколько на самом деле стоили прогоны — по замерам">Расход</button>
+            )}
             {!isRun && (
               <button onClick={проверитьПоиск} style={{fontSize:12,padding:'7px 12px'}}
                 title="Один запрос к поисковой системе — сразу видно, работает ли поиск">Проверить поиск</button>
@@ -16645,6 +16676,12 @@ function App() {
                 onClick={открытьВыборМодулей}
                 title={неВыбраны.length ? 'Не выбраны: ' + неВыбраны.map(m=>m.id).join(', ') : ''}>
                 Добавить модули{неВыбраны.length ? ' (' + неВыбраны.length + ')' : ''}
+              </button>
+            )}
+            {(proj?.results || []).some(r => r && r.usage) && (
+              <button className="cm-btn" onClick={()=>setПоказатьРасход(п=>!п)}
+                title="Сколько на самом деле стоили прогоны этого проекта — по замерам, не по оценке">
+                Расход
               </button>
             )}
             <button className="cm-btn" onClick={проверитьПоиск}
@@ -16752,6 +16789,62 @@ function App() {
           </div>
         </div>
       )}
+      {показатьРасход && (() => {
+        const ряды = расходПоМодулям();
+        if (!ряды.length) return null;
+        const сум = f => ряды.reduce((с, р) => с + (f(р) || 0), 0);
+        const ч = n => Math.round(n).toLocaleString('ru-RU');
+        return (
+          <div className="card" style={{marginBottom:14,padding:'14px 16px',overflowX:'auto'}}>
+            <p style={{fontSize:13,fontWeight:600,marginBottom:2}}>Фактический расход проекта</p>
+            <p className="note" style={{fontSize:11,color:'var(--ink-3)',margin:'0 0 10px'}}>
+              По замерам каждого прогона, не по оценке. «Думала» — токены рассуждения
+              модели: они входят в выход и оплачиваются наравне с написанным текстом.
+            </p>
+            <table style={{width:'100%',borderCollapse:'collapse',fontSize:12,
+              fontVariantNumeric:'tabular-nums'}}>
+              <thead><tr style={{textAlign:'left',color:'var(--ink-3)',fontSize:11}}>
+                <th style={{padding:'4px 8px 4px 0'}}>Модуль</th>
+                <th style={{padding:'4px 8px',textAlign:'right'}}>Вход</th>
+                <th style={{padding:'4px 8px',textAlign:'right'}}>Выход</th>
+                <th style={{padding:'4px 8px',textAlign:'right'}}>из них думала</th>
+                <th style={{padding:'4px 8px',textAlign:'right'}}>Поисков</th>
+                <th style={{padding:'4px 8px',textAlign:'right'}}>Модель</th>
+                <th style={{padding:'4px 8px',textAlign:'right'}}>Поиск</th>
+                <th style={{padding:'4px 0 4px 8px',textAlign:'right'}}>Всего</th>
+              </tr></thead>
+              <tbody>
+                {ряды.map((р, i) => (
+                  <tr key={i} style={{borderTop:'1px solid var(--line)'}}>
+                    <td style={{padding:'5px 8px 5px 0'}}>{р.id}{р.ниша ? ' · ' + р.ниша : ''}</td>
+                    <td style={{padding:'5px 8px',textAlign:'right'}}>{ч(р.вх)}</td>
+                    <td style={{padding:'5px 8px',textAlign:'right'}}>{ч(р.вых)}</td>
+                    <td style={{padding:'5px 8px',textAlign:'right',color:'var(--ink-3)'}}>
+                      {р.думала ? ч(р.думала) : '—'}</td>
+                    <td style={{padding:'5px 8px',textAlign:'right'}}>{р.поисков + р.частот || '—'}</td>
+                    <td style={{padding:'5px 8px',textAlign:'right'}}>{деньгами(р.модель)}</td>
+                    <td style={{padding:'5px 8px',textAlign:'right'}}>{деньгами(р.поиск)}</td>
+                    <td style={{padding:'5px 0 5px 8px',textAlign:'right',fontWeight:600}}>{деньгами(р.всего)}</td>
+                  </tr>
+                ))}
+                <tr style={{borderTop:'2px solid var(--line)',fontWeight:600}}>
+                  <td style={{padding:'6px 8px 6px 0'}}>Итого</td>
+                  <td style={{padding:'6px 8px',textAlign:'right'}}>{ч(сум(р=>р.вх))}</td>
+                  <td style={{padding:'6px 8px',textAlign:'right'}}>{ч(сум(р=>р.вых))}</td>
+                  <td style={{padding:'6px 8px',textAlign:'right',color:'var(--ink-3)'}}>{ч(сум(р=>р.думала))}</td>
+                  <td style={{padding:'6px 8px',textAlign:'right'}}>{сум(р=>р.поисков+р.частот)}</td>
+                  <td style={{padding:'6px 8px',textAlign:'right'}}>{деньгами(сум(р=>р.модель))}</td>
+                  <td style={{padding:'6px 8px',textAlign:'right'}}>{деньгами(сум(р=>р.поиск))}</td>
+                  <td style={{padding:'6px 0 6px 8px',textAlign:'right'}}>{деньгами(сум(р=>р.всего))}</td>
+                </tr>
+              </tbody>
+            </table>
+            <button onClick={()=>setПоказатьРасход(false)}
+              style={{marginTop:10,fontSize:11,padding:'3px 8px'}}>Скрыть</button>
+          </div>
+        );
+      })()}
+
       {проверкаПоиска && (
         <div className="card" style={{marginBottom:14,padding:'12px 16px'}}>
           <p style={{fontSize:13,margin:0,color:/НЕ работает/.test(проверкаПоиска)

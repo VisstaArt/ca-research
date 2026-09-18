@@ -1,0 +1,35 @@
+ObjC.import('Foundation');
+// Фактический расход должен быть виден в интерфейсе.
+// 18.09 владелица: «мне кажется, по gpt расход больше — около доллара на
+// модуль, но это не точно. Ты не видишь точный расход?» Не вижу: замеры
+// лежат в её прогонах. Значит она должна видеть их сама, одним взглядом.
+function readFile(p){return $.NSString.stringWithContentsOfFileEncodingError($(p),$.NSUTF8StringEncoding,null).js;}
+var ROOT=$.NSFileManager.defaultManager.currentDirectoryPath.js;
+var SRC=readFile(ROOT+'/app.jsx');
+console.log('tests/spend-view.test.js');
+var провалов=0;
+function ок(имя,усл,что){ if(усл) console.log('  ok   '+имя); else { провалов++; console.log('  FAIL '+имя+(что?': '+что:'')); } }
+
+ок('токены рассуждения сохраняются',
+   /completion_tokens_details\?\.reasoning_tokens\s*\n?\s*\? \{ думала:/.test(SRC),
+   'рассуждение не пишется в usage — непонятно, за что заплачено');
+ок('есть сводка расхода', /const расходПоМодулям = \(\) =>/.test(SRC), 'нет сводки');
+ок('считается по замерам, а не по оценке',
+   /const вх = r\.usage \? r\.usage\.prompt : 0/.test(SRC), 'сводка снова считает по прикидке');
+ок('поиск и частотность входят в расход',
+   /\(\(r\.searchCalls \|\| 0\) \+ \(r\.keywordCalls \|\| 0\)\) \* прайс\.search_cents/.test(SRC),
+   'в расходе только модель');
+ок('кнопка «Расход» есть в обоих видах экрана',
+   (SRC.match(/setПоказатьРасход\(п=>!п\)/g)||[]).length >= 2, 'кнопки не выведены');
+ок('кнопка появляется только когда есть что показать',
+   (SRC.match(/\(proj\?\.results \|\| \[\]\)\.some\(r => r && r\.usage\)/g)||[]).length >= 2,
+   'кнопка ведёт в пустую таблицу');
+ок('в таблице виден столбец рассуждения',
+   /из них думала/.test(SRC), 'самая дорогая часть выхода не показана');
+ок('есть итоговая строка', /<td style=\{\{padding:'6px 8px 6px 0'\}\}>Итого<\/td>/.test(SRC),
+   'нет итога — придётся складывать в уме');
+ок('числа выровнены по разрядам', /fontVariantNumeric:'tabular-nums'/.test(SRC),
+   'колонки цифр поедут');
+
+console.log(провалов?('ПРОВАЛОВ: '+провалов):'  фактический расход виден в интерфейсе');
+if(провалов) $.NSException.exceptionWithNameReasonUserInfo($('tests'),$('spend-view'),$()).raise;
