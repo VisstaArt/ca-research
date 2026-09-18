@@ -66,7 +66,8 @@ console.log(провалов ? ('ПРОВАЛОВ: '+провалов) : 'цеп
   ок('у модуля аудитории свой сборщик', i>0, 'M4A снова зовёт сборщик радара');
   var тело=SRC.slice(i, SRC.indexOf('\n}\n', i));
   ок('M4A зовёт именно его',
-     /const evidenceA = await gatherAudienceEvidence\(/.test(SRC), 'вызов не переключён');
+     /const evidenceA = сохранённыеВыдержки\s*\n?\s*\|\| await gatherAudienceEvidence\(/.test(SRC),
+     'вызов не переключён');
   var пУзнают=тело.indexOf('обзор блогер'),
       пЧитают=тело.indexOf('блогер эксперт '),
       пМеста=тело.indexOf('площадкиРынка(market');
