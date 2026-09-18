@@ -41,6 +41,11 @@ var страницы={
   // прочитать. Число участников лежит машинным полем, его и берём.
   'https://vk.com/group':'"\u0431\u0438\u0442\u043e","members_count":141351,"x":1',
   // YouTube: просмотров у канала нет, но они стоят у каждого ролика.
+  // На странице канала лежат счётчики НЕСКОЛЬКИХ каналов: свой и рекомендации.
+  // Свой — первый subscriberCountText.
+  'https://youtube.com/@own':'"subscriberCountText":{"accessibility":{"accessibilityData":'
+    +'{"label":"400 тыс. подписчиков"}}} потом чужой "subscriberCountText":{"accessibility":'
+    +'{"accessibilityData":{"label":"80 тыс. подписчиков"}}} и ещё 9 000 подписчиков',
   'https://youtube.com/@vids':'"viewCountText":{"simpleText":"28 940 просмотров"}'
     +'"viewCountText":{"simpleText":"1,2 тыс. просмотров"} 479 подписчиков',
   'https://closed.example/x':'',
@@ -68,6 +73,9 @@ globalThis.fetch=function(u){
 }).then(function(зю){
   ok('ютуб: просмотры роликов, когда viewCount нет', зю && зю.просмотры, 15070);
   ok('ютуб: подписчики рядом со словом', зю && зю.подписчики, 479);
+  return замерКанала('https://youtube.com/@own');
+}).then(function(зс2){
+  ok('ютуб: берём свой счётчик, а не чужой из рекомендаций', зс2 && зс2.подписчики, 400000);
   return замерКанала('https://youtube.com/watch?v=abc');
 }).then(function(зр){
   ok('длительность ролика снята', зр && зр.секунды, 213);
