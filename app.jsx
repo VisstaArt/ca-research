@@ -3002,8 +3002,13 @@ async function gatherAudienceEvidence(brief, competitors, сегменты, по
       if (тема && String(тема).length > 3) местные.push(тема + ' чат обсуждение');
     }
   }
+  // Заход по площадкам идёт ОБЫЧНЫМ поиском, не глубоким: он вдвое дешевле
+  // (1 кредит против 2), а нужен здесь адрес сообщества, его имя и тема —
+  // это видно и в коротком описании. Глубина нужна там, где важен текст
+  // страницы, и такие страницы мы всё равно дочитываем сами через прокси
+  // (владелица 18.09: «давай экономить»).
   const места = await gatherEvidence(местные, 13, 10,
-    { depth: 'advanced', raw: true, contentChars: 600, perDomain: 5, maxItems: 40,
+    { raw: false, contentChars: 600, perDomain: 5, maxItems: 40,
       include_domains: площадкиЖизни });
 
   const вместе = (общее || []).concat(места || [])
