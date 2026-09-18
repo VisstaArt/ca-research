@@ -5977,6 +5977,84 @@ function сводкаФорматовАудитории(д) {
   return из;
 }
 
+// ГЛАВНАЯ СТРАНИЦА НИШИ. Сводка по всему исследованию одной ниши: главное из
+// каждого модуля по паре строк, чтобы охватить глазом и не проваливаться в
+// каждый модуль (решение владелицы 18.09). Берём ТОЛЬКО из строгих данных —
+// это факты модулей, а не пересказ.
+function сводкаПоНише(результаты, ниша) {
+  const по = {};
+  for (const r of (результаты || [])) {
+    if (!r || (r.niche || '') !== (ниша || '') && CAContract.isPerNiche(r.id)) continue;
+    if (r.строгое) по[r.id] = r.строгое;
+  }
+  const строк = [];
+  const непусто2 = в => {
+    const т = String(в == null ? '' : в).trim();
+    return т && !/^(нет данных|не замерено|не определ|—|-)$/i.test(т) ? т : '';
+  };
+  const первые = (сп, поле, сколько) => (сп || []).slice(0, сколько)
+    .map(x => непусто2(поле ? x[поле] : x)).filter(Boolean);
+
+  const m3 = по.M3;
+  if (m3) {
+    const к = (m3.конкуренты || []).length;
+    const имена = первые(m3.конкуренты, 'название', 3);
+    строк.push(['M3', 'Конкуренты',
+      к ? (к + ' ' + plural(к, 'конкурент', 'конкурента', 'конкурентов') + ' разобрано'
+           + (имена.length ? ': ' + имена.join(', ') + (к > 3 ? ' и другие' : '') : ''))
+        : 'разбор конкурентов есть',
+      непусто2(m3.позиционирование && m3.позиционирование.формулировка)]);
+  }
+  const m4 = по.M4;
+  if (m4) {
+    const идём = (m4.стратегия || []).filter(п => /идём/i.test(String(п.вердикт || '')));
+    строк.push(['M4', 'Где продвигаться',
+      идём.length ? ('идём на ' + идём.length + ' '
+        + plural(идём.length, 'площадку', 'площадки', 'площадок') + ': '
+        + первые(идём, 'площадка', 4).join(', ')) : 'площадки разобраны',
+      (m4.каналы || []).length ? ((m4.каналы || []).length + ' каналов конкурентов замерено') : '']);
+  }
+  const m4a = по.M4A;
+  if (m4a) {
+    const мест = (m4a.где_говорит_аудитория || []).length;
+    const голосов = (m4a.лидеры_мнений || []).length;
+    const замеров = (m4a.каналыЗамеренные || []).length;
+    const форматы = сводкаФорматовАудитории(m4a);
+    const лучший = (форматы.топ || [])[0];
+    строк.push(['M4A', 'Аудитория',
+      [мест ? мест + ' ' + plural(мест, 'место', 'места', 'мест') + ', где сидит' : '',
+       голосов ? голосов + ' ' + plural(голосов, 'голос', 'голоса', 'голосов') + ' ниши' : '',
+       замеров ? замеров + ' каналов замерено' : ''].filter(Boolean).join(' · '),
+      лучший ? ('чаще всего у лидеров — ' + лучший.вид + ' (' + лучший.доля + '%)') : '']);
+  }
+  const m5 = по.M5;
+  if (m5) {
+    строк.push(['M5', 'Голос клиента',
+      (m5.цитаты || []).length ? ((m5.цитаты || []).length + ' живых цитат собрано') : 'цитаты собраны',
+      первые(m5.боли || m5.банк_болей, 'боль', 2).join('; ')]);
+  }
+  const m6 = по.M6;
+  if (m6) {
+    const п = (m6.персоны || []).length;
+    строк.push(['M6', 'Психология покупки',
+      п ? (п + ' ' + plural(п, 'персона', 'персоны', 'персон') + ': ' + первые(m6.персоны, 'имя', 3).join(', ')) : 'персоны построены',
+      первые(m6.страхи, 'страх', 2).join('; ')]);
+  }
+  const m7 = по.M7;
+  if (m7) {
+    строк.push(['M7', 'Офферы',
+      (m7.офферы || []).length ? ((m7.офферы || []).length + ' офферов') : 'офферы готовы',
+      непусто2((m7.офферы || [])[0] && (m7.офферы[0].оффер || m7.офферы[0].формулировка))]);
+  }
+  const m8 = по.M8;
+  if (m8) {
+    строк.push(['M8', 'SEO',
+      (m8.кластеры || []).length ? ((m8.кластеры || []).length + ' кластеров запросов') : 'ключи собраны',
+      непусто2(m8.итог)]);
+  }
+  return строк;
+}
+
 function разметкаM4A(д, brief) {
   if (!д || typeof д !== 'object') return null;
   const esc = escHtml;
@@ -13306,7 +13384,7 @@ function generateHTMLReport(brief, results, lang, priceLayers, selectedLayers, s
     +'\n.cover .coveract{display:flex;align-items:center;gap:14px;flex-wrap:wrap;'
     +'white-space:nowrap}'
     // Персоны. Портрет рассчитан на широкую колонку разбора; в карточке модуля
-    // он у́же, и левая плашка налезала на правую, а нижняя обрезалась.
+    // он более узкий, и левая плашка налезала на правую, а нижняя обрезалась.
     // Даём колонкам минимумы и разрешаем перенос, а не давим содержимое.
     +'\n.perslist{display:flex;flex-direction:column;gap:14px}'
     +'\n.main .pers{grid-template-columns:minmax(0,230px) minmax(0,1fr);overflow:visible;'
@@ -15229,6 +15307,7 @@ function App() {
     }).sort((а, б) => б.всего - а.всего);
   };
 
+  const [развёрнутаяНиша, setРазвёрнутаяНиша] = React.useState('');
   const [выборМодулей, setВыборМодулей] = React.useState(false);
   const наборДоПравки = React.useRef(null);
   const открытьВыборМодулей = () => {
@@ -17877,6 +17956,68 @@ function App() {
           </div>
         );
       })()}
+
+      {/* ГЛАВНАЯ СТРАНИЦА НИШИ. Верхний уровень — ниши; внутри сводка по всему
+          исследованию этой ниши, а подробности модулей ниже, в ленте
+          (решение владелицы 18.09: «открываешь нишу — видишь общую картину,
+          которую можно быстро оценить глазами»). */}
+      {!isRun && workNiches.length > 0 && (proj?.results || []).some(r => r && r.строгое) && (
+        <div style={{marginBottom:16}}>
+          {workNiches.map(н => {
+            const строки = сводкаПоНише(proj?.results || [], н);
+            const открыта = развёрнутаяНиша === н;
+            const готово = (proj?.results || []).filter(r => r && (r.niche || '') === н && !r.черновик).length;
+            return (
+              <div key={н} className="card" style={{marginBottom:10,padding:0,overflow:'hidden'}}>
+                <div onClick={()=>setРазвёрнутаяНиша(открыта ? '' : н)}
+                  style={{display:'flex',alignItems:'center',gap:10,padding:'15px 20px',cursor:'pointer'}}>
+                  <span className="tag">Ниша</span>
+                  <span style={{flex:1,fontSize:16,fontWeight:600,color:'var(--ink)'}}>{н}</span>
+                  <span style={{fontSize:10,color:'var(--ink-3)'}}>
+                    {готово} {plural(готово,'модуль','модуля','модулей')} готово
+                  </span>
+                  <span style={{fontSize:12,color:'var(--ink-3)'}}>{открыта?'▲':'▼'}</span>
+                </div>
+                {открыта && (
+                  <div style={{padding:'0 20px 16px'}}>
+                    {строки.length ? (
+                      <div style={{display:'grid',gap:10}}>
+                        {строки.map(([ид, имя, главное, второе]) => (
+                          <div key={ид} style={{display:'grid',
+                              gridTemplateColumns:'minmax(0,150px) minmax(0,1fr)',gap:14,
+                              alignItems:'start',paddingTop:10,
+                              borderTop:'1px solid var(--line-2)'}}>
+                            <span style={{display:'flex',alignItems:'baseline',gap:8}}>
+                              <span className="tag">{ид}</span>
+                              <span style={{fontSize:12.5,fontWeight:600,color:'var(--ink)'}}>{имя}</span>
+                            </span>
+                            <span style={{minWidth:0}}>
+                              <span style={{fontSize:12.5,color:'var(--ink)',display:'block'}}>{главное}</span>
+                              {второе && (
+                                <span style={{fontSize:11.5,color:'var(--ink-3)',display:'block',marginTop:3,
+                                  lineHeight:1.45}}>{второе}</span>
+                              )}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="note" style={{margin:0}}>
+                        По этой нише ещё нет готовых модулей со строгими данными —
+                        сводка появится после первого прогона.
+                      </p>
+                    )}
+                    <p className="note" style={{marginTop:10}}>
+                      Это сводка по нише: главное из каждого модуля одной строкой.
+                      Подробности — в карточках модулей ниже.
+                    </p>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
 
       {проверкаПоиска && (
         <div className="card" style={{marginBottom:14,padding:'12px 16px'}}>
