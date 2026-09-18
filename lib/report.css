@@ -2916,6 +2916,18 @@ th{font-size:10px}
 .plan .ph b{font-size:15px;font-weight:700;color:var(--ink)}
 .plan .pcard>p{margin:0 0 10px;font-size:13px;line-height:1.55;color:var(--ink-2)}
 .plan .pf{display:block;margin-top:8px;padding-top:8px;border-top:1px solid var(--line-2);font-size:12.5px;line-height:1.5}
+/* Перечисления в портрете — плашками, а не строкой через точки: восемь
+   интересов подряд читались стеной текста (владелица 18.09). */
+.pf>span{display:block;font-size:10px;font-weight:700;letter-spacing:.06em;
+  text-transform:uppercase;color:var(--ink-3);margin-bottom:6px}
+.pchips{display:flex;flex-wrap:wrap;gap:6px}
+.pchip{display:inline-block;padding:4px 12px;border-radius:999px;font-style:normal;
+  font-size:12px;line-height:1.35;background:color-mix(in srgb, var(--mid) 12%, var(--card-solid));
+  color:var(--ink);border:1px solid color-mix(in srgb, var(--mid) 26%, var(--line))}
+.pchip.quiet{background:var(--card-solid);color:var(--ink-3);border-color:var(--line-2);font-size:11.5px}
+/* Роль — отдельной строкой под именем сегмента, а не в одну строку с ним:
+   вместе они переносились по слогам и читались как одно длинное имя. */
+.prole{font-size:12.5px;color:var(--ink-2);line-height:1.45;margin:-4px 0 6px}
 .plan .pf span{display:block;font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--ink-3);margin-bottom:3px}
 .plan .pf b{font-weight:400;color:var(--ink-2)}
 /* Сводка стратегии: куда идём и что выкладываем — одной решёткой. */
