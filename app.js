@@ -1,6 +1,6 @@
 // СОБРАНО АВТОМАТИЧЕСКИ из app.jsx — не править руками.
 // Правки вносить в app.jsx, затем: osascript -l JavaScript tools/build.js
-// отпечаток-исходника: bdf0b69df44dd72f
+// отпечаток-исходника: 7160376d0df17079
 // Функции контракта живут в lib/contract.js. Разбираем их сюда, чтобы весь
 // остальной код обращался к ним по прежним именам и не менялся.
 const{GLOBAL_MODS,isPerNiche,dropOrphans,nichesOf,resKey,splitMdRow,isMdSeparator,parseMdTables,buildModuleEntry,pickTable,pickColumn,withStableIds}=CAContract;// Название модуля берётся из MODULES — это конфиг ИНТЕРФЕЙСА, и сборщик
@@ -810,9 +810,9 @@ return gatherEvidence(queries,46+clientSocials(brief).length,6,{depth:'advanced'
 async function gatherAudienceEvidence(brief,competitors,сегменты,портреты){const market=brief.geoMarket||brief.geoCompany||'';const product=brief.niche||brief.name||'';const topic=brief.selectedNiche||product;const comps=(competitors||[]).filter(Boolean).slice(0,4);const аудитория=topic&&topic!==product?'владельцы '+topic:brief.audience||'владельцы бизнеса';const queries=[];// 1. ЧЕРЕЗ КОГО УЗНАЮТ О КОНКУРЕНТАХ. Владелица 17.09: «Envybox популярен не
 //    за счёт своего контента, а потому что его рекламируют маркетологи с
 //    широкими охватами. Откуда люди ИЗНАЧАЛЬНО узнают — вот это и важно».
-for(const имя of comps){queries.push(имя+' обзор блогер '+market);queries.push('подборка сервисов '+имя+' '+market);}// 2. КОГО ЧИТАЕТ АУДИТОРИЯ. Нужны не площадки, а ИМЕНА: с них берутся темы
+for(const имя of comps){queries.push(имя+' обзор блогер '+market);queries.push(имя+' отзыв эксперта telegram');queries.push('подборка сервисов '+имя+' '+market);}// 2. КОГО ЧИТАЕТ АУДИТОРИЯ. Нужны не площадки, а ИМЕНА: с них берутся темы
 //    для переработки под себя (владелица 17.09).
-for(const запрос of['блогер эксперт '+аудитория+' '+market,'подборка телеграм каналов '+аудитория+' '+market,'youtube канал эксперта для '+аудитория+' '+market,'отраслевое медиа издание для '+аудитория+' '+market])queries.push(запрос);// 3. ГДЕ АУДИТОРИЯ СИДИТ — по каждой площадке рынка отдельно. Спрашиваем про
+for(const запрос of['блогер эксперт '+аудитория+' '+market,'кого читают '+аудитория+' телеграм канал эксперта','лучшие telegram каналы для '+аудитория+' '+market,'подборка телеграм каналов '+аудитория+' '+market,'youtube канал эксперта для '+аудитория+' '+market,'подкаст для '+аудитория+' '+market,'отраслевое медиа издание для '+аудитория+' '+market])queries.push(запрос);// 3. ГДЕ АУДИТОРИЯ СИДИТ — по каждой площадке рынка отдельно. Спрашиваем про
 //    ЛЮДЕЙ, а не про продукт: «чаты продавцов Wildberries», а не «сервис для
 //    магазинов в телеграме». 18.09 эти запросы были из сбора убраны как
 //    «работа радара» — и блок «где говорит аудитория» приехал пустым. Для
@@ -820,15 +820,15 @@ for(const запрос of['блогер эксперт '+аудитория+' '+
 // Восемь площадок, а не весь список рынка: дальше идут те, где деловой
 // аудитории почти нет, а каждый запрос — деньги поисковой системы.
 for(const пара of площадкиРынка(market,brief.lang||'').slice(0,8)){queries.push(аудитория+' '+market+' '+пара[1]);}for(const с of(сегменты||[]).slice(0,4)){queries.push(с.имя+' '+market+' телеграм чат сообщество');}// 4. ЖИЗНЬ ЧЕЛОВЕКА: темы, которыми он занят помимо нашей.
-for(const п of(портреты||[]).slice(0,4)){for(const тема of(п.интересы||[]).slice(0,1)){if(тема&&String(тема).length>3)queries.push(тема+' '+market+' телеграм канал');}for(const что of(п.что_читают||[]).slice(0,1)){if(что&&String(что).length>4)queries.push(что+' '+market);}for(const фраза of(п.поисковые_фразы||[]).slice(0,1)){if(фраза&&String(фраза).length>4)queries.push(фраза+' '+market);}}queries.push(аудитория+' '+market+' форум обсуждение');queries.push(аудитория+' '+market+' рассылка подписаться');// Потолок покрывает ВЕСЬ список: обрезать хвост — значит снова оставить
+for(const п of(портреты||[]).slice(0,4)){for(const тема of(п.интересы||[]).slice(0,2)){if(тема&&String(тема).length>3)queries.push(тема+' '+market+' телеграм канал');}for(const что of(п.что_читают||[]).slice(0,2)){if(что&&String(что).length>4)queries.push(что+' '+market);}for(const фраза of(п.поисковые_фразы||[]).slice(0,1)){if(фраза&&String(фраза).length>4)queries.push(фраза+' '+market);}}queries.push(аудитория+' '+market+' форум обсуждение');queries.push(аудитория+' '+market+' рассылка подписаться');// Потолок покрывает ВЕСЬ список: обрезать хвост — значит снова оставить
 // какой-то из четырёх блоков без сырья.
-// Расход поисковой системы — настоящие деньги: 18.09 кредиты кончились
-// посреди работы, и модули стали отдавать пустые разделы. Здесь список
-// держится в сорока с небольшим запросами вместо восьмидесяти, и при этом
-// каждый из четырёх разделов получает своё сырьё — за счёт порядка, а не
-// объёма. Потолок выше длины списка: обрезать хвост нельзя, иначе снова
-// останется пустой раздел.
-return gatherEvidence(queries,46,6,{depth:'advanced',raw:true,contentChars:700,perDomain:3,maxItems:60});}// M8 (тренд-монитор): в отличие от остальных gather-функций явно ограничена
+// Число ЗАПРОСОВ и объём МАТЕРИАЛА — разные вещи, и качество страдало от
+// второго. Восемьдесят выдержек по 1200 знаков давали сто тысяч символов, в
+// которых модель тонула и отдавала пустые списки. Запросы же — это охват:
+// чем их больше, тем больше шансов найти голос или чат. Поэтому запросы
+// оставляем широкими (около шестидесяти), а в промпт кладём шестьдесят
+// лучших выдержек по 700 знаков. Владелица 18.09: «мы за качество».
+return gatherEvidence(queries,64,6,{depth:'advanced',raw:true,contentChars:700,perDomain:3,maxItems:60});}// M8 (тренд-монитор): в отличие от остальных gather-функций явно ограничена
 // свежестью (days) — модуль отвечает на вопрос «что изменилось НЕДАВНО», а не
 // общий срез рынка.
 async function gatherTrendEvidence(brief){const market=brief.geoMarket||brief.geoCompany||'';const product=brief.niche||brief.name||'';const niche=brief.selectedNiche||'';const topic=niche||product;const queries=[topic+' '+market+' новости тренды',topic+' '+market+' новые игроки продукты запуск',topic+' '+market+' форум обсуждение свежие жалобы проблемы',topic+' '+market+' инфоповод событие'];return gatherEvidence(queries,8,5,{days:30});}// Единый блок «работай только с этим материалом» для промптов
@@ -3722,7 +3722,11 @@ const[прайс,setПрайс]=React.useState(null);React.useEffect(()=>{authFe
 // «Разработчик» главнее ручной выбор — там человек платит своим ключом.
 const ценаМодели=id=>{if(!прайс)return null;const м=!тарифРазработчика&&id&&(MODULES.find(x=>x.id===id)||{}).model||model;return прайс.prices&&прайс.prices[м]||прайс.price;};// Оценка модуля: СРЕДНЕЕ по фактическим прогонам этого же модуля (замер
 // дороже догадки); фактов нет — ориентир, помеченный в подписи «≈».
-const центыМодуля=id=>{if(!прайс)return null;const факты=[];(projs||[]).forEach(п=>(п.results||[]).forEach(r=>{if(r.id===id&&r.usage&&!r.failed)факты.push(r);}));let tin=25000,tout=8000,поиск=12,частот=id==='M8'?10:0;if(факты.length){const ср=f=>факты.reduce((s,r)=>s+(f(r)||0),0)/факты.length;tin=ср(r=>r.usage.prompt);tout=ср(r=>r.usage.completion);поиск=ср(r=>r.searchCalls);частот=ср(r=>r.keywordCalls);}const ц=ценаМодели(id);return(tin*ц.in+tout*ц.out)/1e6+(поиск+частот)*прайс.search_cents;};const сметаCentsДляМодулей=(ids,ниш)=>сметаЦентов(ids,ниш);const сметаЦентов=(ids,ниш)=>{if(!прайс)return null;let всего=0;for(const id of ids){const c=центыМодуля(id);if(c==null)return null;всего+=c*(CAContract.isPerNiche(id)?Math.max(1,ниш):1);}return всего;};const деньгами=c=>c==null?'':c>=100?'$'+(c/100).toFixed(2):Math.round(c)+' ¢';// Уже потрачено в этом проекте — по фактическим usage результатов.
+const центыМодуля=id=>{if(!прайс)return null;const факты=[];(projs||[]).forEach(п=>(п.results||[]).forEach(r=>{if(r.id===id&&r.usage&&!r.failed)факты.push(r);}));// Сколько поиска модуль тратит, пока своих замеров ещё нет. Раньше тут
+// стояла одна догадка «12 запросов» на всё — при реальных сорока с лишним
+// у радара и аудитории. Смета врала втрое, а на поиске держится почти вся
+// себестоимость (владелица 18.09: «заложи, чтобы правильно считать тарифы»).
+const ПОИСК_ПО_МОДУЛЮ={M2:26,M3:35,M4:46,M4A:60,M5:40,M6:0,M7:0,M8:12};let tin=25000,tout=8000,поиск=ПОИСК_ПО_МОДУЛЮ[id]!=null?ПОИСК_ПО_МОДУЛЮ[id]:12,частот=id==='M8'?10:id==='M4A'?28:0;if(факты.length){const ср=f=>факты.reduce((s,r)=>s+(f(r)||0),0)/факты.length;tin=ср(r=>r.usage.prompt);tout=ср(r=>r.usage.completion);поиск=ср(r=>r.searchCalls);частот=ср(r=>r.keywordCalls);}const ц=ценаМодели(id);return(tin*ц.in+tout*ц.out)/1e6+(поиск+частот)*прайс.search_cents;};const сметаCentsДляМодулей=(ids,ниш)=>сметаЦентов(ids,ниш);const сметаЦентов=(ids,ниш)=>{if(!прайс)return null;let всего=0;for(const id of ids){const c=центыМодуля(id);if(c==null)return null;всего+=c*(CAContract.isPerNiche(id)?Math.max(1,ниш):1);}return всего;};const деньгами=c=>c==null?'':c>=100?'$'+(c/100).toFixed(2):Math.round(c)+' ¢';// Уже потрачено в этом проекте — по фактическим usage результатов.
 const потраченоЦентов=()=>{if(!прайс||!proj)return null;return(proj.results||[]).reduce((s,r)=>s+(r.usage?(r.usage.prompt*ценаМодели(r.id).in+r.usage.completion*ценаМодели(r.id).out)/1e6:0)+((r.searchCalls||0)+(r.keywordCalls||0))*прайс.search_cents,0);};const[blockMsg,setBlockMsg]=React.useState('');// «модуль не стартует без предыдущих стадий»
 const[curMod,setCurMod]=React.useState(null);const шёлПрогон=React.useRef(false);React.useEffect(()=>{if(curMod){шёлПрогон.current=true;return;}if(!шёлПрогон.current)return;шёлПрогон.current=false;// Условие «мы внутри платформы» берём прямо из окна, а не из embedded:
 // тот объявлен ниже, а хук обязан стоять выше всех ранних возвратов.
