@@ -18036,23 +18036,26 @@ function App() {
                     По этой нише ещё нет готовых модулей — картина появится после прогона.
                   </p>
                 ) : (
-                  <div style={{padding:'0 20px 18px'}}>
+                  <div style={{padding:'4px 22px 24px'}}>
                     {/* Крупные числа: ответ на «сколько» без чтения таблиц. */}
+                    {/* Плитки БЕЗ заливки и рамки — только тонкая линия сверху, как
+                        в эталоне (.rb-item). Карточка внутри карточки даёт фон на
+                        фоне и съедает воздух (владелица 18.09). */}
                     {д.плитки.length > 0 && (
-                      <div style={{display:'grid',gap:10,marginBottom:16,
-                          gridTemplateColumns:'repeat(auto-fit,minmax(130px,1fr))'}}>
+                      <div style={{display:'grid',gap:'20px 24px',marginBottom:26,
+                          gridTemplateColumns:'repeat(auto-fit,minmax(170px,1fr))'}}>
                         {д.плитки.map(([знач, имя, пояснение], i) => (
-                          <div key={i} style={{border:'1px solid var(--line)',borderRadius:14,
-                              padding:'13px 15px',background:'var(--card-solid)'}}>
-                            <div style={{fontSize:String(знач).length > 9 ? 17 : 23,
+                          <div key={i} style={{paddingTop:14,
+                              borderTop:'1px solid var(--line-2)'}}>
+                            <div style={{fontSize:String(знач).length > 9 ? 18 : 26,
                               fontWeight:700,color:'var(--ink)',
                               fontVariantNumeric:'tabular-nums',lineHeight:1.15,
                               overflowWrap:'anywhere'}}>{знач}</div>
-                            <div style={{fontSize:11,color:'var(--ink-2)',marginTop:5,
-                              lineHeight:1.35}}>{имя}</div>
+                            <div style={{fontSize:12,color:'var(--ink-2)',marginTop:7,
+                              lineHeight:1.45}}>{имя}</div>
                             {пояснение && (
-                              <div style={{fontSize:10,color:'var(--ink-3)',marginTop:3,
-                                lineHeight:1.35}}>{пояснение}</div>
+                              <div style={{fontSize:10.5,color:'var(--ink-3)',marginTop:4,
+                                lineHeight:1.45}}>{пояснение}</div>
                             )}
                           </div>
                         ))}
@@ -18062,9 +18065,9 @@ function App() {
                     {д.графики.map(([имя, ряды, ед], gi) => {
                       const макс = Math.max(1, ...ряды.map(([, v]) => v || 0));
                       return (
-                        <div key={gi} style={{marginBottom:16}}>
+                        <div key={gi} style={{marginBottom:26}}>
                           <p style={{fontSize:11,fontWeight:700,letterSpacing:'.06em',
-                            textTransform:'uppercase',color:'var(--ink-3)',margin:'0 0 8px'}}>{имя}</p>
+                            textTransform:'uppercase',color:'var(--ink-3)',margin:'0 0 12px'}}>{имя}</p>
                           <div style={{display:'grid',gap:13}}>
                             {ряды.map(([т, v], ri) => (
                               <div key={ri} style={{display:'grid',
@@ -18087,7 +18090,7 @@ function App() {
                     })}
                     {/* И по одной строке вывода на модуль — что это значит. */}
                     {д.выводы.length > 0 && (
-                      <div style={{display:'grid',gap:8,paddingTop:12,
+                      <div style={{display:'grid',gap:14,paddingTop:18,
                           borderTop:'1px solid var(--line-2)'}}>
                         {д.выводы.map(([ид, имя, текст], i) => (
                           <div key={i} style={{display:'grid',
