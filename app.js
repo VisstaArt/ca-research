@@ -1,6 +1,6 @@
 // СОБРАНО АВТОМАТИЧЕСКИ из app.jsx — не править руками.
 // Правки вносить в app.jsx, затем: osascript -l JavaScript tools/build.js
-// отпечаток-исходника: 9fddc0d6cb668bb0
+// отпечаток-исходника: bdf0b69df44dd72f
 // Функции контракта живут в lib/contract.js. Разбираем их сюда, чтобы весь
 // остальной код обращался к ним по прежним именам и не менялся.
 const{GLOBAL_MODS,isPerNiche,dropOrphans,nichesOf,resKey,splitMdRow,isMdSeparator,parseMdTables,buildModuleEntry,pickTable,pickColumn,withStableIds}=CAContract;// Название модуля берётся из MODULES — это конфиг ИНТЕРФЕЙСА, и сборщик
@@ -810,22 +810,25 @@ return gatherEvidence(queries,46+clientSocials(brief).length,6,{depth:'advanced'
 async function gatherAudienceEvidence(brief,competitors,сегменты,портреты){const market=brief.geoMarket||brief.geoCompany||'';const product=brief.niche||brief.name||'';const topic=brief.selectedNiche||product;const comps=(competitors||[]).filter(Boolean).slice(0,4);const аудитория=topic&&topic!==product?'владельцы '+topic:brief.audience||'владельцы бизнеса';const queries=[];// 1. ЧЕРЕЗ КОГО УЗНАЮТ О КОНКУРЕНТАХ. Владелица 17.09: «Envybox популярен не
 //    за счёт своего контента, а потому что его рекламируют маркетологи с
 //    широкими охватами. Откуда люди ИЗНАЧАЛЬНО узнают — вот это и важно».
-for(const имя of comps){queries.push(имя+' обзор блогер '+market);queries.push(имя+' отзыв эксперта telegram');queries.push('подборка сервисов '+имя+' '+market);}// 2. КОГО ЧИТАЕТ АУДИТОРИЯ. Нужны не площадки, а ИМЕНА: с них берутся темы
+for(const имя of comps){queries.push(имя+' обзор блогер '+market);queries.push('подборка сервисов '+имя+' '+market);}// 2. КОГО ЧИТАЕТ АУДИТОРИЯ. Нужны не площадки, а ИМЕНА: с них берутся темы
 //    для переработки под себя (владелица 17.09).
-for(const запрос of['блогер эксперт '+аудитория+' '+market,'кого читают '+аудитория+' телеграм канал эксперта','лучшие telegram каналы для '+аудитория+' '+market,'подборка телеграм каналов '+аудитория+' '+market,'youtube канал эксперта для '+аудитория+' '+market,'подкаст для '+аудитория+' '+market,'отраслевое медиа издание для '+аудитория+' '+market])queries.push(запрос);// 3. ГДЕ АУДИТОРИЯ СИДИТ — по каждой площадке рынка отдельно. Спрашиваем про
+for(const запрос of['блогер эксперт '+аудитория+' '+market,'подборка телеграм каналов '+аудитория+' '+market,'youtube канал эксперта для '+аудитория+' '+market,'отраслевое медиа издание для '+аудитория+' '+market])queries.push(запрос);// 3. ГДЕ АУДИТОРИЯ СИДИТ — по каждой площадке рынка отдельно. Спрашиваем про
 //    ЛЮДЕЙ, а не про продукт: «чаты продавцов Wildberries», а не «сервис для
 //    магазинов в телеграме». 18.09 эти запросы были из сбора убраны как
 //    «работа радара» — и блок «где говорит аудитория» приехал пустым. Для
 //    радара площадка — канал конкурента, здесь — место, где сидят люди.
-for(const пара of площадкиРынка(market,brief.lang||'')){queries.push(аудитория+' '+market+' '+пара[1]);}for(const с of(сегменты||[]).slice(0,4)){queries.push(с.имя+' '+market+' телеграм чат сообщество');queries.push(с.имя+' '+market+' форум обсуждение');}// 4. ЖИЗНЬ ЧЕЛОВЕКА: темы, которыми он занят помимо нашей.
-for(const п of(портреты||[]).slice(0,4)){for(const тема of(п.интересы||[]).slice(0,2)){if(тема&&String(тема).length>3)queries.push(тема+' '+market+' телеграм канал');}for(const что of(п.что_читают||[]).slice(0,2)){if(что&&String(что).length>4)queries.push(что+' '+market);}for(const фраза of(п.поисковые_фразы||[]).slice(0,2)){if(фраза&&String(фраза).length>4)queries.push(фраза+' '+market);}}queries.push(аудитория+' '+market+' форум обсуждение');queries.push(аудитория+' '+market+' рассылка подписаться');// Потолок покрывает ВЕСЬ список: обрезать хвост — значит снова оставить
+// Восемь площадок, а не весь список рынка: дальше идут те, где деловой
+// аудитории почти нет, а каждый запрос — деньги поисковой системы.
+for(const пара of площадкиРынка(market,brief.lang||'').slice(0,8)){queries.push(аудитория+' '+market+' '+пара[1]);}for(const с of(сегменты||[]).slice(0,4)){queries.push(с.имя+' '+market+' телеграм чат сообщество');}// 4. ЖИЗНЬ ЧЕЛОВЕКА: темы, которыми он занят помимо нашей.
+for(const п of(портреты||[]).slice(0,4)){for(const тема of(п.интересы||[]).slice(0,1)){if(тема&&String(тема).length>3)queries.push(тема+' '+market+' телеграм канал');}for(const что of(п.что_читают||[]).slice(0,1)){if(что&&String(что).length>4)queries.push(что+' '+market);}for(const фраза of(п.поисковые_фразы||[]).slice(0,1)){if(фраза&&String(фраза).length>4)queries.push(фраза+' '+market);}}queries.push(аудитория+' '+market+' форум обсуждение');queries.push(аудитория+' '+market+' рассылка подписаться');// Потолок покрывает ВЕСЬ список: обрезать хвост — значит снова оставить
 // какой-то из четырёх блоков без сырья.
-// Выдержек много, но КОРОЧЕ каждая: 80 кусков по 1200 знаков — это почти сто
-// тысяч символов только материала, и модель в такой каше начинает отдавать
-// пустые списки вместо находок. Для «где сидит» и «кто читает» важен охват
-// разных источников, а не длина каждого: имя канала и его тема видны в
-// первых строках.
-return gatherEvidence(queries,Math.max(80,queries.length),6,{depth:'advanced',raw:true,contentChars:700,perDomain:3,maxItems:70});}// M8 (тренд-монитор): в отличие от остальных gather-функций явно ограничена
+// Расход поисковой системы — настоящие деньги: 18.09 кредиты кончились
+// посреди работы, и модули стали отдавать пустые разделы. Здесь список
+// держится в сорока с небольшим запросами вместо восьмидесяти, и при этом
+// каждый из четырёх разделов получает своё сырьё — за счёт порядка, а не
+// объёма. Потолок выше длины списка: обрезать хвост нельзя, иначе снова
+// останется пустой раздел.
+return gatherEvidence(queries,46,6,{depth:'advanced',raw:true,contentChars:700,perDomain:3,maxItems:60});}// M8 (тренд-монитор): в отличие от остальных gather-функций явно ограничена
 // свежестью (days) — модуль отвечает на вопрос «что изменилось НЕДАВНО», а не
 // общий срез рынка.
 async function gatherTrendEvidence(brief){const market=brief.geoMarket||brief.geoCompany||'';const product=brief.niche||brief.name||'';const niche=brief.selectedNiche||'';const topic=niche||product;const queries=[topic+' '+market+' новости тренды',topic+' '+market+' новые игроки продукты запуск',topic+' '+market+' форум обсуждение свежие жалобы проблемы',topic+' '+market+' инфоповод событие'];return gatherEvidence(queries,8,5,{days:30});}// Единый блок «работай только с этим материалом» для промптов
