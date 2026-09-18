@@ -14273,11 +14273,16 @@ function App() {
       const вых = r.usage ? r.usage.completion : 0;
       const думала = r.usage && r.usage.думала ? r.usage.думала : 0;
       const модель = ц ? (вх * ц.in + вых * ц.out) / 1e6 : 0;
-      const поиск = ((r.searchCalls || 0) + (r.keywordCalls || 0)) * прайс.search_cents;
+      // За неудавшийся запрос площадка кредит не списывает: ошибка «кончились
+      // кредиты» или «ключ отозван» — это отказ, а не поиск. Наш счётчик считает
+      // ПОПЫТКИ, поэтому вычитаем неудачи, иначе расход завышен (владелица 18.09
+      // резонно спросила, реальные ли это деньги).
+      const удачных = Math.max(0, (r.searchCalls || 0) - (r.searchFails || 0));
+      const поиск = (удачных + (r.keywordCalls || 0)) * прайс.search_cents;
       const м = MODULES.find(x => x.id === r.id);
       return { id: r.id, ниша: r.niche || '', имя: (м && (м.titleRu || м.title)) || r.id,
         вх, вых, думала, поиск, модель, всего: модель + поиск,
-        поисков: r.searchCalls || 0, частот: r.keywordCalls || 0 };
+        поисков: удачных, впустую: r.searchFails || 0, частот: r.keywordCalls || 0 };
     }).sort((а, б) => б.всего - а.всего);
   };
 
@@ -15026,7 +15031,7 @@ function App() {
       const result = { id:mod.id, niche:wn, content:cleanedContent,
         ...(строгое ? { строгое } : {}),
         ...(материалы ? { материалы } : {}),
-        ...(сбойСхемы ? { сбойСхемы } : {}), кодСборки: отпечатокСборки(), chartData, ...(failed?{failed:true, error:cleanedContent.trim()}:{}), ...(nicheData?{nicheData}:{}), ...(usage?{usage}:{}), ...(searchCalls?{searchCalls}:{}), ...(keywordCalls?{keywordCalls}:{}),
+        ...(сбойСхемы ? { сбойСхемы } : {}), кодСборки: отпечатокСборки(), chartData, ...(failed?{failed:true, error:cleanedContent.trim()}:{}), ...(nicheData?{nicheData}:{}), ...(usage?{usage}:{}), ...(searchCalls?{searchCalls}:{}), ...(сбойПоиска.неудач?{searchFails: сбойПоиска.неудач}:{}), ...(keywordCalls?{keywordCalls}:{}),
         // Сколько модуль шёл на самом деле. Оценка «53 минуты» была взята из
         // головы, а прогон занимает пять-десять (владелица 14.09). Дальше
         // время показывается по замерам, а не по догадке.
@@ -16798,8 +16803,11 @@ function App() {
           <div className="card" style={{marginBottom:14,padding:'14px 16px',overflowX:'auto'}}>
             <p style={{fontSize:13,fontWeight:600,marginBottom:2}}>Фактический расход проекта</p>
             <p className="note" style={{fontSize:11,color:'var(--ink-3)',margin:'0 0 10px'}}>
-              По замерам каждого прогона, не по оценке. «Думала» — токены рассуждения
-              модели: они входят в выход и оплачиваются наравне с написанным текстом.
+              Токены и число запросов — <b className="nm">настоящие</b>: токены присылает
+              сам провайдер в ответе, запросы считает наш счётчик. Деньги — наш пересчёт
+              по ценам из прейскуранта, а не счёт от провайдера: сверяйте с их кабинетом.
+              «Впустую» — запросы, на которые поиск ответил ошибкой; за них кредиты не
+              списываются, и в деньги они не входят.
             </p>
             <table style={{width:'100%',borderCollapse:'collapse',fontSize:12,
               fontVariantNumeric:'tabular-nums'}}>
@@ -16809,6 +16817,7 @@ function App() {
                 <th style={{padding:'4px 8px',textAlign:'right'}}>Выход</th>
                 <th style={{padding:'4px 8px',textAlign:'right'}}>из них думала</th>
                 <th style={{padding:'4px 8px',textAlign:'right'}}>Поисков</th>
+                <th style={{padding:'4px 8px',textAlign:'right'}}>впустую</th>
                 <th style={{padding:'4px 8px',textAlign:'right'}}>Модель</th>
                 <th style={{padding:'4px 8px',textAlign:'right'}}>Поиск</th>
                 <th style={{padding:'4px 0 4px 8px',textAlign:'right'}}>Всего</th>
@@ -16822,6 +16831,8 @@ function App() {
                     <td style={{padding:'5px 8px',textAlign:'right',color:'var(--ink-3)'}}>
                       {р.думала ? ч(р.думала) : '—'}</td>
                     <td style={{padding:'5px 8px',textAlign:'right'}}>{р.поисков + р.частот || '—'}</td>
+                    <td style={{padding:'5px 8px',textAlign:'right',color:'var(--ink-3)'}}>
+                      {р.впустую || '—'}</td>
                     <td style={{padding:'5px 8px',textAlign:'right'}}>{деньгами(р.модель)}</td>
                     <td style={{padding:'5px 8px',textAlign:'right'}}>{деньгами(р.поиск)}</td>
                     <td style={{padding:'5px 0 5px 8px',textAlign:'right',fontWeight:600}}>{деньгами(р.всего)}</td>
@@ -16833,6 +16844,7 @@ function App() {
                   <td style={{padding:'6px 8px',textAlign:'right'}}>{ч(сум(р=>р.вых))}</td>
                   <td style={{padding:'6px 8px',textAlign:'right',color:'var(--ink-3)'}}>{ч(сум(р=>р.думала))}</td>
                   <td style={{padding:'6px 8px',textAlign:'right'}}>{сум(р=>р.поисков+р.частот)}</td>
+                  <td style={{padding:'6px 8px',textAlign:'right',color:'var(--ink-3)'}}>{сум(р=>р.впустую)}</td>
                   <td style={{padding:'6px 8px',textAlign:'right'}}>{деньгами(сум(р=>р.модель))}</td>
                   <td style={{padding:'6px 8px',textAlign:'right'}}>{деньгами(сум(р=>р.поиск))}</td>
                   <td style={{padding:'6px 0 6px 8px',textAlign:'right'}}>{деньгами(сум(р=>р.всего))}</td>
