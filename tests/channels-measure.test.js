@@ -247,7 +247,7 @@ globalThis.fetch=function(u){
 (function(){
   var f4=0;
   function ок(имя,усл,что){ if(усл) console.log('  ok   '+имя); else { f4++; console.log('  FAIL '+имя+(что?': '+что:'')); } }
-  eval(взять('метрикиVC')); eval(взять('статьиКонкурентовVC'));
+  eval(взять('длинаБлоковVC')); eval(взять('метрикиVC')); eval(взять('статьиКонкурентовVC'));
   var ответы={
     'https://api.vc.ru/v2.5/content?id=3141688':{result:{id:3141688,title:'Как вернуть уходящего посетителя',
       url:'https://vc.ru/marketing/3141688-popap',date:1789556558,
@@ -329,7 +329,7 @@ globalThis.fetch=function(u){
     this.hostname = host==='ловец-лидов.рф' ? 'xn----ctbbhdtrdxg7f.xn--p1ai' : host;
   };
   eval(взять('признакиКлиента')); eval(взять('упоминаетКлиента'));
-  eval(взять('метрикиVC')); eval(взять('моиСтатьиVC'));
+  eval(взять('длинаБлоковVC')); eval(взять('метрикиVC')); eval(взять('моиСтатьиVC'));
   var статья={result:{id:3104744,title:'Три ловушки в данных',url:'https://vc.ru/services/3104744-lovushki',
     date:1788043751,author:{id:705136,name:'Михаил Мятов'},subsite:{name:'Сервисы'},
     counters:{views:461,reactions:0,favorites:1,comments:0}}};
