@@ -3123,6 +3123,14 @@ th{font-size:10px}
   padding:7px 0;border-top:1px solid var(--line-2);font-size:12.5px}
 .introw:first-of-type{border-top:0}
 .intn{color:var(--ink-2);overflow-wrap:anywhere}
+/* Как эту тему спрашивают на самом деле: наша формулировка почти всегда
+   реже той, которой пользуются люди. Подсказки источника идут под своей
+   строкой, с отступом — видно, что это её расшифровка, а не новая тема. */
+.intreal{margin:2px 0 6px 0;padding:6px 0 2px 14px;border-left:2px solid var(--line-2)}
+.intlab{display:block;font-size:10px;font-weight:700;letter-spacing:.06em;
+  text-transform:uppercase;color:var(--ink-3);margin-bottom:2px}
+.introw.sub{border-top:none;padding:4px 0;font-size:12px}
+.introw.sub .intn{color:var(--ink-3)}
 .introw .rail{height:14px;background:var(--line-2);overflow:hidden}
 .introw .rail i{display:block;height:14px;background:var(--mid)}
 .intv{text-align:right;font-variant-numeric:tabular-nums;color:var(--ink);font-weight:600;
