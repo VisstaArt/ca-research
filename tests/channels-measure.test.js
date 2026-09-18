@@ -44,6 +44,9 @@ var страницы={
   'https://youtube.com/@vids':'"viewCountText":{"simpleText":"28 940 просмотров"}'
     +'"viewCountText":{"simpleText":"1,2 тыс. просмотров"} 479 подписчиков',
   'https://closed.example/x':'',
+  // Размер материала снимаем попутно, на уже загруженной странице.
+  'https://youtube.com/watch?v=abc':'"lengthSeconds":"213" "viewCount":"9000"',
+  'https://habr.com/ru/articles/1/':'<article>'+new Array(60).join('Текст статьи про ремонт техники и учёт заказ-нарядов. ')+'</article>',
 };
 globalThis.fetch=function(u){
   var адрес=decodeURIComponent(String(u).split('url=')[1]||'');
@@ -65,6 +68,13 @@ globalThis.fetch=function(u){
 }).then(function(зю){
   ok('ютуб: просмотры роликов, когда viewCount нет', зю && зю.просмотры, 15070);
   ok('ютуб: подписчики рядом со словом', зю && зю.подписчики, 479);
+  return замерКанала('https://youtube.com/watch?v=abc');
+}).then(function(зр){
+  ok('длительность ролика снята', зр && зр.секунды, 213);
+  return замерКанала('https://habr.com/ru/articles/1/');
+}).then(function(зс){
+  ok('объём статьи посчитан', зс && зс.длина > 2000 && зс.длина < 4000, true);
+  ok('у статьи подписчиков не выдумываем', зс && зс.подписчики, null);
   return замерКанала('https://closed.example/x');
 }).then(function(з3){
   ok('закрытая страница — не выдумываем', з3, null);
