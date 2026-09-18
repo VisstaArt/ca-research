@@ -112,8 +112,8 @@ html{-webkit-font-smoothing:antialiased}
    reflected through glass, not obvious gradient blobs» — прошлые пятна на
    16–18% непрозрачности были заметны как цветные кляксы. Снизила до 6–9% и
    растянула пятна шире — теперь это скорее ощущение, чем форма. */
-body{margin:0;color:var(--ink);font-family:var(--sans);font-size:14.5px;
-  line-height:1.5;font-variant-numeric:tabular-nums;position:relative;overflow-x:hidden;
+body{margin:0;color:var(--ink);font-family:var(--sans);font-size:13.5px;
+  line-height:1.45;font-variant-numeric:tabular-nums;position:relative;overflow-x:hidden;
   /* Главное, чего не хватало фону: в референсе сверху по центру стоит крупный
      мягкий СВЕТОВОЙ ИСТОЧНИК — почти белое пятно, от которого фон темнеет к
      краям. Именно он даёт ощущение освещённой сцены, а не просто заливки.
@@ -135,7 +135,7 @@ h1,h2,h3{margin:0;font-weight:600;letter-spacing:-.02em;text-wrap:balance}
    исключением без причины.
    Антиква остаётся только у ЦИТАТ — там она оправдана, это чужая прямая речь,
    другой род содержимого. */
-.top h1{font-weight:600;font-size:30px;letter-spacing:-.02em}
+.top h1{font-weight:600;font-size:26.5px;letter-spacing:-.02em}
 a{color:inherit}
 
 /* ── панель сравнения палитр ── */
@@ -144,7 +144,7 @@ a{color:inherit}
   border-bottom:1px solid var(--line);flex-wrap:wrap}
 .compare .sp{flex:1}
 .tbtn{border:1px solid var(--line);background:var(--card-solid);color:var(--ink-2);
-  border-radius:999px;padding:6px 13px;font-size:12.5px;font-weight:500}
+  border-radius:999px;padding:6px 13px;font-size:12px;font-weight:500}
 .tbtn[aria-pressed="true"]{background:var(--ink);color:var(--mist-1);border-color:var(--ink)}
 
 /* ── оболочка ── */
@@ -169,7 +169,7 @@ a{color:inherit}
 .client{display:flex;align-items:center;gap:9px;padding:0 8px 16px;
   margin-bottom:14px;border-bottom:1px solid var(--line-2)}
 .client span{display:flex;flex-direction:column;min-width:0}
-.client b{font-size:13px;font-weight:700;letter-spacing:-.01em}
+.client b{font-size:12px;font-weight:700;letter-spacing:-.01em}
 .client i{font-style:normal;font-size:11px;color:var(--ink-3);margin-top:1px}
 .cmark{width:26px;height:26px;border-radius:8px;flex:0 0 auto;
   display:flex;align-items:center;justify-content:center;
@@ -179,13 +179,13 @@ a{color:inherit}
   box-shadow:inset 0 1px 0 rgba(255,255,255,1)}
 .search{display:flex;align-items:center;gap:9px;padding:10px 16px;margin-bottom:16px;
   background:var(--card);backdrop-filter:blur(10px);border:1px solid var(--line);
-  border-radius:999px;color:var(--ink-3);font-size:13px}
+  border-radius:999px;color:var(--ink-3);font-size:12px}
 
 /* Сетка-плитки — эхо экрана 1 ZIXO: основные разделы не список, а иконки 2×N. */
 .navgrid{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:16px}
 .navtile{display:flex;flex-direction:column;align-items:flex-start;gap:12px;
   padding:14px 13px;border-radius:16px;background:var(--card);backdrop-filter:blur(10px);
-  border:1px solid var(--line);color:var(--ink-2);font-size:12px;font-weight:600;
+  border:1px solid var(--line);color:var(--ink-2);font-size:11.5px;font-weight:600;
   text-align:left;box-shadow:inset 0 1px 0 var(--hi)}
 .navtile .ic{width:32px;height:32px;border-radius:10px;background:var(--line-2);
   display:flex;align-items:center;justify-content:center}
@@ -209,7 +209,7 @@ a{color:inherit}
   color:var(--ink-3);padding:14px 12px 6px}
 .navrow{display:flex;align-items:center;gap:10px;width:100%;text-align:left;
   border:0;background:none;padding:8px 12px;border-radius:12px;color:var(--ink-2);
-  font-size:13px;font-weight:500}
+  font-size:12px;font-weight:500}
 .navrow .dot{width:6px;height:6px;border-radius:50%;background:var(--line);flex:0 0 auto}
 .navrow:hover:not(:disabled){background:var(--card)}
 .navrow:disabled{opacity:.42}
@@ -221,7 +221,7 @@ a{color:inherit}
    к точке в 5 пикселей — она отмечает, что раздел ЖДЁТ решения, и не более
    того. Тонкая линия слева отделяет счётчик от названия, не рисуя коробку. */
 .navrow .cnt{margin-left:auto;display:inline-flex;align-items:center;gap:6px;
-  font-size:11.5px;font-weight:700;color:var(--ink);
+  font-size:11px;font-weight:700;color:var(--ink);
   font-variant-numeric:tabular-nums;letter-spacing:.02em;
   padding-left:9px;border-left:1px solid var(--line);line-height:1}
 .navrow .cnt::before{content:"";width:5px;height:5px;border-radius:50%;
@@ -248,26 +248,26 @@ a{color:inherit}
   box-shadow:0 12px 26px -18px rgba(30,42,48,.3), inset 0 1px 0 rgba(255,255,255,.95)}
 /* Число кредитов — главное здесь, поэтому оно крупное и табличными цифрами;
    подпись под ним объясняет, на сколько этого хватит. */
-.upsell b{display:block;font-size:20px;font-weight:700;letter-spacing:-.02em;
+.upsell b{display:block;font-size:18px;font-weight:700;letter-spacing:-.02em;
   margin-bottom:2px;font-variant-numeric:tabular-nums}
 .upsell b i{font-style:normal;font-size:11px;font-weight:600;color:var(--ink-3);
   letter-spacing:.06em;text-transform:uppercase;display:block;margin-bottom:3px}
-.upsell span{display:block;font-size:11.5px;color:var(--ink-2);line-height:1.5}
+.upsell span{display:block;font-size:11px;color:var(--ink-2);line-height:1.5}
 
 .main{padding:26px 28px 70px;min-width:0;position:relative;z-index:2}
 .top{display:flex;align-items:flex-end;justify-content:space-between;
   margin-bottom:22px;flex-wrap:wrap;gap:14px}
-.top .date{color:var(--ink-3);font-size:13px;margin-top:3px}
+.top .date{color:var(--ink-3);font-size:12px;margin-top:3px}
 .top-actions{display:flex;gap:8px;align-items:center}
 .btn{padding:9px 18px;border-radius:999px;border:1px solid var(--line);
-  background:var(--card);backdrop-filter:blur(10px);font-size:13px;font-weight:600}
+  background:var(--card);backdrop-filter:blur(10px);font-size:12px;font-weight:600}
 .btn-dark{background:var(--ink);color:var(--mist-1);border-color:var(--ink)}
 .avatar{width:36px;height:36px;border-radius:50%;color:var(--ink);
   background:
     linear-gradient(155deg, rgba(255,255,255,.75), rgba(255,255,255,.4));
   backdrop-filter:blur(6px);border:1px solid rgba(255,255,255,.7);
   display:flex;align-items:center;justify-content:center;
-  font-weight:700;font-size:13px}
+  font-weight:700;font-size:12px}
 
 /* ── геройная зона ───────────────────────────────────────────────────────
    Третий заход — на этот раз меняю не цвет, а РАСКЛАДКУ, потому что дело
@@ -347,10 +347,10 @@ a{color:inherit}
     inset 0 1px 0 rgba(255,255,255,.95);
   transition:transform .45s cubic-bezier(.2,.8,.2,1), box-shadow .45s ease}
 .fcard .tag{font-size:10px;font-weight:600;letter-spacing:.03em;color:var(--ink-3)}
-.fcard .name{font-size:14.5px;font-weight:700;letter-spacing:-.01em;line-height:1.25}
+.fcard .name{font-size:13.5px;font-weight:700;letter-spacing:-.01em;line-height:1.25}
 .fcard .foot{display:flex;justify-content:space-between;align-items:flex-end;
   font-size:10.5px;color:var(--ink-3)}
-.fcard .foot b{display:block;font-size:13px;font-weight:700;color:var(--ink)}
+.fcard .foot b{display:block;font-size:12px;font-weight:700;color:var(--ink)}
 
 /* Передняя карта — теплее: шампань сильнее, холодные ноты слабее.
    «Центральная карта чуть теплее, боковые холоднее» — прямо из брифа. */
@@ -415,9 +415,9 @@ a{color:inherit}
 .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:16px}
 .stat{background:var(--card);backdrop-filter:blur(14px);border:1px solid var(--line);
   border-radius:20px;padding:18px 20px;box-shadow:inset 0 1px 0 var(--hi)}
-.stat .k{font-size:12px;color:var(--ink-3);margin-bottom:8px}
+.stat .k{font-size:11.5px;color:var(--ink-3);margin-bottom:8px}
 .stat .row{display:flex;align-items:center;justify-content:space-between;gap:8px}
-.stat .v{font-size:25px;font-weight:700;letter-spacing:-.02em}
+.stat .v{font-size:22.5px;font-weight:700;letter-spacing:-.02em}
 .stat svg{display:block;flex:0 0 auto}
 .delta{display:inline-flex;align-items:baseline;gap:5px;font-size:11px;margin-top:7px}
 .delta b{font-weight:700;letter-spacing:.01em}
@@ -436,16 +436,16 @@ a{color:inherit}
   border-radius:22px;padding:22px 24px;box-shadow:inset 0 1px 0 var(--hi)}
 .chead{display:flex;align-items:baseline;justify-content:space-between;
   margin-bottom:16px;gap:10px;flex-wrap:wrap}
-.chead h2{font-size:16px}
-.note{font-size:12px;color:var(--ink-3);line-height:1.55;margin:0}
+.chead h2{font-size:14.5px}
+.note{font-size:11.5px;color:var(--ink-3);line-height:1.55;margin:0}
 /* .strong — сквозной способ выделить величину. Раньше он был описан только
    внутри .dtbl, и в карточках ниш выделение молча не срабатывало: разметка
    была, вида не было (владелица 15.09: «цифры опять не жирные»). */
 .strong{color:var(--ink);font-weight:700}
 /* Число в середине кольца доли внимания: главное значение читается без
    легенды, поэтому оно и стоит в центре. */
-.ring-n{fill:var(--ink);font-size:30px;font-weight:700;letter-spacing:-.02em;font-family:var(--sans)}
-.ring-t{fill:var(--ink-3);font-size:11.5px;font-family:var(--sans)}
+.ring-n{fill:var(--ink);font-size:26.5px;font-weight:700;letter-spacing:-.02em;font-family:var(--sans)}
+.ring-t{fill:var(--ink-3);font-size:11px;font-family:var(--sans)}
 /* Шкала уверенности сноской под таблицей, где стоит эта колонка. Цифры
    выделены, пояснения нет: глазами находишь свою цифру, а не читаешь
    строку целиком. Пункты не переносятся по одному слову — каждый держится
@@ -468,7 +468,7 @@ a{color:inherit}
    потоке: приклеенная к углу, она налезала на последнюю строку сигналов
    (скрин владелицы 15.09). Форма — как у кнопок платформы, скругление 12px:
    капсулы мы не используем. */
-.ntake{display:block;margin:14px auto 0;font-size:12px;font-weight:600;
+.ntake{display:block;margin:14px auto 0;font-size:11.5px;font-weight:600;
   padding:7px 14px;border-radius:12px;border:1px solid var(--line);
   background:var(--card-solid);color:var(--ink-2);cursor:pointer;white-space:nowrap}
 .ntake:hover{border-color:var(--ink-3);color:var(--ink)}
@@ -482,12 +482,12 @@ a{color:inherit}
    пара признаков, по которой видно, что тут есть что посмотреть. */
 .term{border-bottom:1px dotted var(--ink-3);cursor:help;text-decoration:none}
 .ref:hover{text-decoration:underline}
-.chead .note{font-size:12px;color:var(--ink-3)}
+.chead .note{font-size:11.5px;color:var(--ink-3)}
 
 svg{display:block}
 .axis{fill:var(--ink-3);font-size:10.5px;font-family:var(--sans)}
-.lbl{fill:var(--ink-2);font-size:12.5px;font-family:var(--sans)}
-.val{fill:var(--ink);font-size:12px;font-weight:600;font-family:var(--sans)}
+.lbl{fill:var(--ink-2);font-size:12px;font-family:var(--sans)}
+.val{fill:var(--ink);font-size:11.5px;font-weight:600;font-family:var(--sans)}
 .bar{transition:opacity .12s}
 .bar:hover{opacity:.75}
 .tip-pill{fill:var(--ink)}
@@ -498,10 +498,10 @@ svg{display:block}
 .arc-wrap{display:flex;flex-direction:column;align-items:center}
 .arc-nums{display:flex;gap:22px;margin-top:14px}
 .arc-nums div{text-align:center}
-.arc-nums b{display:block;font-size:16px;font-weight:700}
+.arc-nums b{display:block;font-size:14.5px;font-weight:700}
 .arc-nums span{font-size:11px;color:var(--ink-3)}
 
-.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--ink-2);margin-top:12px}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:11.5px;color:var(--ink-2);margin-top:12px}
 .legend i{width:11px;height:8px;display:inline-block;margin-right:6px}
 
 /* Блок этапов шёл сразу за рабочей панелью и визуально «заходил под неё»:
@@ -514,12 +514,12 @@ svg{display:block}
   border-radius:18px;padding:16px 18px;position:relative;box-shadow:inset 0 1px 0 var(--hi)}
 .stage .dot{width:9px;height:9px;border-radius:50%;margin-bottom:10px}
 .stage .n{font-size:10.5px;color:var(--ink-3);letter-spacing:.05em;text-transform:uppercase}
-.stage h3{font-size:14px;margin:5px 0 3px}
-.stage .r{font-size:11.5px;color:var(--ink-2)}
+.stage h3{font-size:13px;margin:5px 0 3px}
+.stage .r{font-size:11px;color:var(--ink-2)}
 
 .tbl{overflow-x:auto;background:var(--card);backdrop-filter:blur(14px);
   border:1px solid var(--line);border-radius:22px;margin-bottom:14px}
-table{width:100%;border-collapse:collapse;font-size:13px;min-width:600px}
+table{width:100%;border-collapse:collapse;font-size:12px;min-width:600px}
 th{text-align:left;font-weight:600;color:var(--ink-3);font-size:10.5px;
   letter-spacing:.05em;text-transform:uppercase;padding:16px 18px 10px;white-space:nowrap}
 td{padding:10px 18px;border-top:1px solid var(--line-2);color:var(--ink-2);vertical-align:middle}
@@ -528,14 +528,14 @@ td b{color:var(--ink);font-weight:600}
 .circ{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;
   justify-content:center;font-size:11px;font-weight:700;flex:0 0 auto;
   background:var(--line-2);color:var(--ink-2);border:1px solid var(--line)}
-.scale-pill{display:inline-block;padding:3px 11px;border-radius:999px;font-size:11.5px;
+.scale-pill{display:inline-block;padding:3px 11px;border-radius:999px;font-size:11px;
   font-weight:600;background:var(--line-2);color:var(--ink-2)}
 
 .quote{background:var(--card);backdrop-filter:blur(14px);border:1px solid var(--line);
   border-radius:22px;padding:26px 28px;margin-bottom:14px;box-shadow:inset 0 1px 0 var(--hi)}
-.quote p{margin:0;font-family:var(--serif);font-style:italic;font-size:18px;
+.quote p{margin:0;font-family:var(--serif);font-style:italic;font-size:16.5px;
   line-height:1.55;color:var(--ink)}
-.quote cite{display:block;margin-top:12px;font-style:normal;font-size:12px;color:var(--ink-3)}
+.quote cite{display:block;margin-top:12px;font-style:normal;font-size:11.5px;color:var(--ink-3)}
 
 /* Ссылка на сайт конкурента — акцентный, но контраст-безопасный цвет текста,
    не сама заливка кнопки: mid как есть на карточке часто не проходит 4.5. */
@@ -562,14 +562,14 @@ td b{color:var(--ink);font-weight:600}
 .rule-card{position:relative;overflow:hidden;
   background:var(--card);backdrop-filter:blur(14px);border:1px solid var(--line);
   border-radius:20px;padding:22px 24px 22px 26px;
-  font-size:13.6px;line-height:1.6;color:var(--ink-2);
+  font-size:13px;line-height:1.6;color:var(--ink-2);
   box-shadow:inset 0 1px 0 var(--hi), 0 10px 26px -20px rgba(45,36,22,.3);
   transition:box-shadow .4s ease, transform .4s cubic-bezier(.2,.8,.2,1)}
 .rule-card:hover{transform:translateY(-2px);
   box-shadow:inset 0 1px 0 var(--hi), 0 18px 34px -20px rgba(45,36,22,.4)}
 /* Крупная цифра-«водяной знак» в углу — типографика, а не значок. */
 .rule-card b{position:absolute;right:16px;bottom:-14px;
-  font-size:74px;font-weight:700;line-height:1;
+  font-size:65px;font-weight:700;line-height:1;
   color:color-mix(in srgb, var(--ink) 12%, transparent);
   pointer-events:none;user-select:none}
 /* Акцентная линия по верхнему краю — прочерчивается при наведении. */
@@ -582,7 +582,7 @@ td b{color:var(--ink);font-weight:600}
 .rule-card .ft{margin-top:7px;color:var(--ink-2);line-height:1.5}
 .rule-card .ft b{position:static;font-size:inherit;line-height:inherit;right:auto;bottom:auto;pointer-events:auto;user-select:auto;color:var(--ink);font-weight:700}
 /* Кнопка выбора архетипа — внутри карточки, поверх подложки. */
-.rule-card .archpick{position:relative;z-index:1;display:inline-block;margin-top:16px;padding:8px 16px;font-size:12px;line-height:1.2}
+.rule-card .archpick{position:relative;z-index:1;display:inline-block;margin-top:16px;padding:8px 16px;font-size:11.5px;line-height:1.2}
 .rules.bet{align-items:start;margin-bottom:26px}
 .rule-card .eb + span{margin-top:2px}
 .rule-card .eb{margin-top:10px}
@@ -594,7 +594,7 @@ td b{color:var(--ink);font-weight:600}
    со скроллом и защёлкиванием (scroll-snap) плюс стрелки: работает и с тремя
    цитатами, и с тридцатью — не переделывать разметку, когда их станет больше. */
 .qhead{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
-.qhead h2{font-size:16px}
+.qhead h2{font-size:14.5px}
 .qarrows{display:flex;gap:6px}
 .qarrow{width:30px;height:30px;border-radius:50%;border:1px solid var(--line);
   background:var(--card-solid);display:flex;align-items:center;justify-content:center;
@@ -606,7 +606,7 @@ td b{color:var(--ink);font-weight:600}
 .qtile{flex:0 0 auto;width:236px;scroll-snap-align:start;background:var(--card);
   backdrop-filter:blur(14px);border:1px solid var(--line);border-radius:16px;
   padding:15px 17px;box-shadow:inset 0 1px 0 var(--hi)}
-.qtile p{margin:0 0 9px;font-family:var(--serif);font-style:italic;font-size:13.5px;
+.qtile p{margin:0 0 9px;font-family:var(--serif);font-style:italic;font-size:12.5px;
   line-height:1.45;color:var(--ink);
   display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden}
 .qtile cite{font-style:normal;font-size:11px;color:var(--ink-3)}
@@ -616,16 +616,16 @@ td b{color:var(--ink);font-weight:600}
    выделения и т.д. во всех палитрах разом — «пока для примера, потом уберём».
    Секция помечена явно, чтобы её было легко найти и удалить целиком. */
 .kit-mark{margin:40px 0 14px;padding:10px 16px;border-radius:12px;background:var(--maybe-bg,var(--line-2));
-  border:1px dashed var(--line);font-size:12px;color:var(--ink-2)}
+  border:1px dashed var(--line);font-size:11.5px;color:var(--ink-2)}
 .kit{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(260px,1fr))}
-.kit .card h3{font-size:12.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;
+.kit .card h3{font-size:12px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;
   color:var(--ink-3);margin:0 0 14px}
 .kit .row{display:flex;gap:9px;flex-wrap:wrap;align-items:center;margin-bottom:10px}
 /* Плоские кнопки с мягким градиентом — одна конструкция у всех, различаются
    только насыщенностью. Первый заход был выпуклым (блик + тень), и главная
    выбивалась из общего плоского строя. */
 .kbtn{padding:9px 18px;border-radius:999px;border:1px solid var(--line);
-  font-size:13px;font-weight:600;color:var(--ink);
+  font-size:12px;font-weight:600;color:var(--ink);
   background:linear-gradient(180deg,
     color-mix(in srgb, var(--card-solid) 50%, white),
     color-mix(in srgb, var(--card-solid) 96%, black));
@@ -654,7 +654,7 @@ td b{color:var(--ink);font-weight:600}
 .kbtn-acc.force-hover{filter:brightness(.97)}
 .kbtn-dark.force-hover{filter:brightness(1.25)}
 .kchip{display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:999px;
-  font-size:12px;font-weight:600}
+  font-size:11.5px;font-weight:600}
 .kchip .d{width:7px;height:7px;border-radius:50%}
 .kchip-go{background:color-mix(in srgb, var(--acc-strong) 12%, var(--card-solid));color:var(--ink)}
 .kchip-go .d{background:var(--acc-strong)}
@@ -663,11 +663,11 @@ td b{color:var(--ink);font-weight:600}
 .kchip-no{background:color-mix(in srgb, var(--acc-quiet) 30%, var(--card-solid));color:var(--ink)}
 .kchip-no .d{background:var(--acc-quiet)}
 .kfield{display:block;margin-bottom:12px}
-.kfield span{display:block;font-size:12px;color:var(--ink-2);margin-bottom:5px;font-weight:500}
+.kfield span{display:block;font-size:11.5px;color:var(--ink-2);margin-bottom:5px;font-weight:500}
 .kfield input{width:100%;padding:9px 12px;border:1px solid var(--line);border-radius:10px;
-  background:var(--card-solid);color:var(--ink);font:inherit;font-size:13.5px}
+  background:var(--card-solid);color:var(--ink);font:inherit;font-size:12.5px}
 .kfield input:focus{outline:2px solid var(--mid);outline-offset:1px}
-.klink{color:var(--acc-mid-ink);font-weight:600;text-decoration:none;font-size:13.5px;
+.klink{color:var(--acc-mid-ink);font-weight:600;text-decoration:none;font-size:12.5px;
   border-bottom:1px solid color-mix(in srgb, var(--acc-mid-ink) 45%, transparent)}
 .klink:hover{border-bottom-color:var(--acc-mid-ink)}
 
@@ -681,14 +681,14 @@ td b{color:var(--ink);font-weight:600}
 .rulebook{margin-top:20px;padding:26px 28px;border-radius:22px;
   background:var(--card);backdrop-filter:blur(14px);
   border:1px solid var(--line);box-shadow:inset 0 1px 0 var(--hi)}
-.rulebook h3{font-size:18px;font-weight:700;
+.rulebook h3{font-size:16.5px;font-weight:700;
   letter-spacing:-.01em;margin:0 0 8px}
-.rb-lead{margin:0 0 22px;font-size:13.5px;line-height:1.6;color:var(--ink-2);max-width:62ch}
+.rb-lead{margin:0 0 22px;font-size:12.5px;line-height:1.6;color:var(--ink-2);max-width:62ch}
 .rb-grid{display:grid;gap:18px;grid-template-columns:repeat(auto-fit,minmax(230px,1fr))}
 .rb-item{display:flex;flex-direction:column;gap:7px;padding-top:14px;
   border-top:1px solid var(--line-2)}
-.rb-item b{font-size:13.5px;font-weight:700}
-.rb-item span:last-child{font-size:12.5px;line-height:1.55;color:var(--ink-2)}
+.rb-item b{font-size:12.5px;font-weight:700}
+.rb-item span:last-child{font-size:12px;line-height:1.55;color:var(--ink-2)}
 .rb-chip{width:34px;height:8px;border-radius:999px;display:block}
 .rb-three{display:flex;gap:3px;background:none!important;width:auto}
 .rb-three i{width:14px;height:8px;border-radius:999px;display:block}
@@ -718,7 +718,7 @@ td b{color:var(--ink);font-weight:600}
    (крайняя карта уходит за край на 14px при ширине 380). Ещё сжимаем. */
 @media (max-width:460px){
   .fcard{width:184px;height:126px;padding:13px;border-radius:18px;--step:min(10%, 50px)}
-  .fcard .name{font-size:13px} .fcard .foot b{font-size:12px}
+  .fcard .name{font-size:12px} .fcard .foot b{font-size:11.5px}
   .f1,.f5{top:44px} .f2,.f4{top:32px} .f3{top:20px}
   .hero{height:164px}
   .dock{margin-top:-32px;padding:20px 16px 6px;border-radius:22px}
@@ -733,13 +733,13 @@ td b{color:var(--ink);font-weight:600}
 
 .page{max-width:1180px;margin:0 auto;padding:30px 24px 60px}
 .lede{max-width:66ch;margin-bottom:24px}
-.lede h1{font-size:29px;margin-bottom:10px}
+.lede h1{font-size:25.5px;margin-bottom:10px}
 /* Вступление лежит ПРЯМО НА ФОТОГРАФИИ фона, а у неё яркость гуляет от 0.58
    до 0.95. На тёмных участках вторичные чернила давали 3.35 при норме 4.5 —
    вот это и читалось бледным. Текст поверх фона идёт основными чернилами:
    на самом тёмном участке 11.0, на самом светлом ещё выше. Правило общее:
    на фон-фотографию вторичный цвет не кладём, только основной. */
-.lede p{margin:0 0 10px;color:var(--ink);font-size:15px;line-height:1.65}
+.lede p{margin:0 0 10px;color:var(--ink);font-size:14px;line-height:1.65}
 .lede b{color:var(--ink)}
 
 /* ПРАВКА 10.09, владелица: «таблички бледно читаются на этом фоне».
@@ -756,14 +756,14 @@ td b{color:var(--ink);font-weight:600}
   box-shadow:inset 0 1px 0 var(--hi), 0 14px 30px -24px rgba(45,36,22,.3)}
 .vh{display:flex;align-items:baseline;justify-content:space-between;gap:12px;
   flex-wrap:wrap;margin-bottom:6px}
-.vh h2{font-size:19px}
+.vh h2{font-size:17px}
 .vh .src{font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;
   color:var(--acc-ink)}
-.vn{margin:0 0 14px;font-size:12.5px;color:var(--ink-3);max-width:70ch;line-height:1.55}
+.vn{margin:0 0 14px;font-size:12px;color:var(--ink-3);max-width:70ch;line-height:1.55}
 .two{display:grid;gap:12px;grid-template-columns:1fr 1fr}
 .axis{fill:var(--ink-3);font-size:10.5px;font-family:var(--sans)}
-.lbl{fill:var(--ink-2);font-size:12px;font-family:var(--sans)}
-.val{fill:var(--ink);font-size:11.5px;font-weight:700;font-family:var(--sans)}
+.lbl{fill:var(--ink-2);font-size:11.5px;font-family:var(--sans)}
+.val{fill:var(--ink);font-size:11px;font-weight:700;font-family:var(--sans)}
 .gridln{stroke:var(--line-2);stroke-width:1}
 
 /* ── SWOT: четыре поля, различаются не цветом, а положением и весом ── */
@@ -775,7 +775,7 @@ td b{color:var(--ink);font-weight:600}
 .sw h3 i{width:16px;height:3px;border-radius:2px;display:block}
 .sw h3 i:not([style]){width:auto;height:auto;border-radius:0}
 .sw ul{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:7px}
-.sw li{font-size:13px;color:var(--ink-2);padding-left:14px;position:relative;line-height:1.5}
+.sw li{font-size:12px;color:var(--ink-2);padding-left:14px;position:relative;line-height:1.5}
 .sw li::before{content:"";position:absolute;left:0;top:8px;width:5px;height:5px;
   border-radius:50%;background:var(--ink-3)}
 
@@ -790,7 +790,7 @@ td b{color:var(--ink);font-weight:600}
 /* Матрица приоритизации и решётка сигналов по нишам. */
 .nmx{overflow-x:auto}
 .srcall{display:flex;flex-direction:column;gap:5px;margin-top:10px;padding-top:10px;border-top:1px solid var(--line-2)}
-.srcall a{font-size:12px;color:var(--ink-2);overflow-wrap:anywhere}
+.srcall a{font-size:11.5px;color:var(--ink-2);overflow-wrap:anywhere}
 .nprof{grid-template-columns:repeat(auto-fit,minmax(460px,1fr))}
 .ncard2 .sigrow{display:block;padding:8px 0}
 .ncard2 .sigrow .k2{display:block;margin-bottom:3px}
@@ -799,13 +799,13 @@ td b{color:var(--ink);font-weight:600}
 .rkey-side>div:first-child{grid-row:1 / span 3}
 @media (max-width:760px){.rkey-side{grid-template-columns:1fr}.rkey-side>div:first-child{grid-row:auto}}
 .nmx .th,.nmx .tr{display:grid;grid-template-columns:minmax(150px,1.6fr) repeat(4,54px) 58px 124px;gap:10px;align-items:center;min-width:660px}
-.nmx .tr,.nsig .tr{padding:10px 0;border-top:1px solid var(--line-2);font-size:12.5px;color:var(--ink-2);line-height:1.5}
+.nmx .tr,.nsig .tr{padding:10px 0;border-top:1px solid var(--line-2);font-size:12px;color:var(--ink-2);line-height:1.5}
 .nmx .th,.nsig .th{padding:0 0 8px;border-bottom:1px solid var(--line);font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--ink-3)}
-.nmx .nm,.nsig .nm{font-size:13px;font-weight:700;color:var(--ink);line-height:1.3}
+.nmx .nm,.nsig .nm{font-size:12px;font-weight:700;color:var(--ink);line-height:1.3}
 .nmx .mxv{font-variant-numeric:tabular-nums;color:var(--ink-2)}
 .nmx .mxv.hi{color:var(--acc-strong-ink);font-weight:700}
 .nmx .mxv.lo{color:var(--ink-3)}
-.nmx .mxt{font-size:15px;font-weight:700;color:var(--ink);font-variant-numeric:tabular-nums}
+.nmx .mxt{font-size:14px;font-weight:700;color:var(--ink);font-variant-numeric:tabular-nums}
 
 /* Подпись квадранта SWOT («наше · помогает») — рядом с именем, обычным
    начертанием: она поясняет, а не называет. Боковая колонка с этими
@@ -824,31 +824,31 @@ td b{color:var(--ink);font-weight:600}
 .apick:hover{transform:translateY(-2px);box-shadow:0 18px 34px -20px rgba(45,36,22,.4)}
 .apick.on{box-shadow:inset 3px 0 0 var(--mid)}
 .apick .aph .eb{display:block;font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--ink-3);margin-bottom:7px}
-.apick .aph .nm{display:block;font-size:15px;font-weight:700;color:var(--ink);line-height:1.3}
-.apick>p{margin:9px 0 0;font-size:13px;line-height:1.55;color:var(--ink-2);max-width:72ch}
-.apick .apf{margin-top:10px;font-size:12.5px;line-height:1.5}
+.apick .aph .nm{display:block;font-size:14px;font-weight:700;color:var(--ink);line-height:1.3}
+.apick>p{margin:9px 0 0;font-size:12px;line-height:1.55;color:var(--ink-2);max-width:72ch}
+.apick .apf{margin-top:10px;font-size:12px;line-height:1.5}
 .apick .apf span{display:block;font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--ink-3);margin-bottom:2px}
 .apick .apf b{font-weight:400;color:var(--ink-2)}
 .apick .apmore{margin-top:14px;border-top:1px solid var(--line-2);padding-top:11px}
-.apick .apmore summary{cursor:pointer;list-style:none;font-size:12px;font-weight:700;letter-spacing:.02em;color:var(--acc-strong-ink)}
+.apick .apmore summary{cursor:pointer;list-style:none;font-size:11.5px;font-weight:700;letter-spacing:.02em;color:var(--acc-strong-ink)}
 .apick .apmore summary::-webkit-details-marker{display:none}
 .apick .apmore summary::before{content:"+ ";font-weight:700}
 .apick .apmore[open] summary::before{content:"\2212 "}
 .apick .apml{display:flex;flex-direction:column;gap:12px;margin-top:12px}
-.apick .apmrow{display:grid;grid-template-columns:150px minmax(0,1fr);gap:3px 18px;font-size:12.5px;line-height:1.5}
+.apick .apmrow{display:grid;grid-template-columns:150px minmax(0,1fr);gap:3px 18px;font-size:12px;line-height:1.5}
 .apick .apmrow b{grid-column:1;grid-row:1 / span 3;font-weight:700;color:var(--ink)}
 .apick .apmrow span{grid-column:2;color:var(--ink-2)}
 .apick .apmrow i{grid-column:2;font-style:normal;color:var(--ink);font-family:var(--serif)}
-.apick .apmrow u{grid-column:2;text-decoration:none;color:var(--ink-3);font-size:11.5px}
-.apick .archpick{position:relative;z-index:1;display:inline-block;margin-top:16px;padding:8px 16px;font-size:12px;line-height:1.2}
+.apick .apmrow u{grid-column:2;text-decoration:none;color:var(--ink-3);font-size:11px}
+.apick .archpick{position:relative;z-index:1;display:inline-block;margin-top:16px;padding:8px 16px;font-size:11.5px;line-height:1.2}
 @media (max-width:760px){.apick .apmrow{grid-template-columns:1fr}.apick .apmrow b{grid-row:auto}.apick .apmrow span,.apick .apmrow i,.apick .apmrow u{grid-column:1}}
 
 /* Легенда кольца «Доля внимания»: четыре короткие колонки, строки плотные. */
 #rpt-share-leg .leghead,#rpt-share-leg .sl.rich{grid-template-columns:20px minmax(0,1fr) 62px 96px;gap:12px;align-items:center}
 #rpt-share-leg .sl.rich{padding:7px 0}
 #rpt-share-leg .sl.rich .sw{width:12px;height:12px;min-width:12px;padding:0;margin:0;border-radius:4px;border:0;flex:0 0 auto;background-clip:padding-box}
-#rpt-share-leg .sl.rich .nm{font-size:12.5px;color:var(--ink);line-height:1.3}
-#rpt-share-leg .sl.rich .n,#rpt-share-leg .sl.rich .t{font-size:12.5px;color:var(--ink-2);font-variant-numeric:tabular-nums;white-space:nowrap}
+#rpt-share-leg .sl.rich .nm{font-size:12px;color:var(--ink);line-height:1.3}
+#rpt-share-leg .sl.rich .n,#rpt-share-leg .sl.rich .t{font-size:12px;color:var(--ink-2);font-variant-numeric:tabular-nums;white-space:nowrap}
 .gcard{position:relative;overflow:hidden;border:1px solid var(--line);border-radius:16px;
   padding:16px 18px;background:color-mix(in srgb, var(--ink) 2%, transparent);
   transition:box-shadow .4s ease, transform .4s cubic-bezier(.2,.8,.2,1)}
@@ -865,14 +865,14 @@ td b{color:var(--ink);font-weight:600}
 .gcard.g-parity:hover{box-shadow:inset 3px 0 0 var(--acc-quiet), 0 18px 34px -20px rgba(45,36,22,.4)}
 .gcard .gh{display:flex;align-items:baseline;justify-content:space-between;gap:12px;
   margin-bottom:4px}
-.gcard .gh b{font-size:13.5px;font-weight:700;color:var(--ink);line-height:1.35}
+.gcard .gh b{font-size:12.5px;font-weight:700;color:var(--ink);line-height:1.35}
 .gcard .gv{font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;
   white-space:nowrap;flex:0 0 auto}
-.gcard .gf{display:block;margin-top:9px;font-size:12.5px;line-height:1.5}
+.gcard .gf{display:block;margin-top:9px;font-size:12px;line-height:1.5}
 .gcard .gf span{display:block;font-size:10px;font-weight:700;letter-spacing:.07em;
   text-transform:uppercase;color:var(--ink-3);margin-bottom:3px}
 .gcard .gf b{font-weight:400;color:var(--ink-2)}
-.gcard .gl{display:inline-block;margin-top:12px;font-size:12px;color:var(--ink-2)}
+.gcard .gl{display:inline-block;margin-top:12px;font-size:11.5px;color:var(--ink-2)}
 
 /* ── Половозрастная пирамида ──────────────────────────────────────────────
    Из присланного дашборда. Ценна тем, что показывает возраст и пол ОДНОЙ
@@ -893,7 +893,7 @@ td b{color:var(--ink);font-weight:600}
    фигура и подпись, а сам цвет живёт в полосах, где он и кодирует пол.
    И рисунок сменён с условного знака (♂/♀) на ФИГУРУ человека — значок
    уместен там, где им нарисован образ, а не подставлен символ. */
-.pyr-head .t{font-size:16px;font-weight:700;letter-spacing:-.02em;color:var(--ink);
+.pyr-head .t{font-size:14.5px;font-weight:700;letter-spacing:-.02em;color:var(--ink);
   display:flex;align-items:center;gap:9px}
 .pyr-head .t.r{justify-content:flex-end}
 .pyr-head .t .sx{width:26px;height:26px;border-radius:8px;display:flex;
@@ -915,11 +915,11 @@ td b{color:var(--ink);font-weight:600}
 .pyrow .bar{height:14px;flex:0 0 auto;min-width:3px}
 .pyrow .l .bar{background:var(--mid)}
 .pyrow .r .bar{background:var(--sw-violet)}
-.pyrow .s .v{font-size:11.5px;font-weight:700;color:var(--ink);
+.pyrow .s .v{font-size:11px;font-weight:700;color:var(--ink);
   font-variant-numeric:tabular-nums;min-width:38px}
 .pyrow .s.l .v{text-align:right;margin-right:9px}
 .pyrow .s.r .v{text-align:left;margin-left:9px}
-.pyrow .age{text-align:center;font-size:11.5px;color:var(--ink-2);font-weight:600;
+.pyrow .age{text-align:center;font-size:11px;color:var(--ink-2);font-weight:600;
   font-variant-numeric:tabular-nums}
 
 /* ── Тепловая карта активности: дни × часы ───────────────────────────────── */
@@ -950,13 +950,13 @@ td b{color:var(--ink);font-weight:600}
   color:var(--ink-3);padding-bottom:8px;margin-bottom:3px;border-bottom:1px solid var(--line)}
 .geohead .r{text-align:right}
 .grow{padding:0}
-.grow .nm{font-size:12.5px;color:var(--ink-2);line-height:1.3}
+.grow .nm{font-size:12px;color:var(--ink-2);line-height:1.3}
 .grow.base .nm{font-weight:700;color:var(--ink)}
 .gvol{display:flex;align-items:center;gap:9px}
 .gvol .rail{flex:1;height:14px;background:var(--line-2);display:flex}
 .gvol .b{height:14px;background:var(--mid);flex:0 0 auto}
 .grow.base .gvol .b{background:color-mix(in srgb, var(--mid) 38%, var(--line-2))}
-.gvol .v{font-size:12px;font-weight:700;font-variant-numeric:tabular-nums}
+.gvol .v{font-size:11.5px;font-weight:700;font-variant-numeric:tabular-nums}
 /* Расходящаяся полоса: середина — «ровно по населению» */
 .gden{position:relative;height:14px;background:var(--line-2)}
 .gden .mid0{position:absolute;left:50%;top:0;bottom:0;width:1px;
@@ -964,10 +964,10 @@ td b{color:var(--ink);font-weight:600}
 .gden .d{position:absolute;top:0;height:14px}
 .gden .d.up{left:50%;background:var(--mid)}
 .gden .d.dn{right:50%;background:var(--sw-violet)}
-.gx{font-size:12px;font-weight:700;text-align:right;font-variant-numeric:tabular-nums}
+.gx{font-size:11.5px;font-weight:700;text-align:right;font-variant-numeric:tabular-nums}
 .gvol .v{min-width:52px;text-align:right}
 .gx.up{color:var(--acc-ink)} .gx.dn{color:var(--acc-mid-ink)} .gx.eq{color:var(--ink-3)}
-.geoleg{display:flex;gap:18px;flex-wrap:wrap;margin-top:14px;font-size:11.5px;
+.geoleg{display:flex;gap:18px;flex-wrap:wrap;margin-top:14px;font-size:11px;
   color:var(--ink-3)}
 .geoleg span{display:flex;align-items:center;gap:7px}
 .geoleg i{width:11px;height:9px;border-radius:2px;display:block}
@@ -994,9 +994,9 @@ td b{color:var(--ink);font-weight:600}
    числу оставшихся замеров (владелица 14.09). */
 .bmet h4{font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;
   color:var(--ink-3);margin:0 0 11px}
-.bmet .big{font-size:19px;font-weight:700;letter-spacing:-.02em;line-height:1.15;
+.bmet .big{font-size:17px;font-weight:700;letter-spacing:-.02em;line-height:1.15;
   margin-bottom:3px}
-.bmet .sm{font-size:11.5px;color:var(--ink-3);line-height:1.45}
+.bmet .sm{font-size:11px;color:var(--ink-3);line-height:1.45}
 /* фигурки: закрашенные = участвуют в решении */
 .ppl{display:flex;gap:5px;margin-bottom:9px}
 .ppl svg{width:17px;height:19px;display:block}
@@ -1011,7 +1011,7 @@ td b{color:var(--ink);font-weight:600}
 .aw5{display:flex;align-items:flex-end;gap:4px;height:46px;margin-bottom:8px}
 .aw5 div{flex:1;background:var(--mid);position:relative}
 .aw5 div span{position:absolute;left:-2px;right:-2px;bottom:-16px;text-align:center;
-  font-size:9px;color:var(--ink-3);white-space:nowrap}
+  font-size:10px;color:var(--ink-3);white-space:nowrap}
 .bpain{padding:20px 22px;border-bottom:1px solid var(--line)}
 .bpain h4{font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;
   color:var(--ink-3);margin:0 0 12px}
@@ -1052,7 +1052,7 @@ td b{color:var(--ink);font-weight:600}
   border-radius:16px;display:flex;flex-direction:column;gap:12px;
   justify-content:space-between}
 .vq blockquote{margin:0;font-family:var(--serif);font-style:italic;
-  font-size:14px;line-height:1.5;color:var(--ink)}
+  font-size:13px;line-height:1.5;color:var(--ink)}
 /* Состояние цитаты приходит ОТ контент-машины, исследование его не хранит.
    Три состояния различаются формой метки, а не только цветом: пустой кружок,
    закрашенный фирменный, закрашенный серый. */
@@ -1066,7 +1066,7 @@ td b{color:var(--ink);font-weight:600}
 .vq .vf{display:flex;justify-content:space-between;align-items:center;gap:12px;
   padding-top:12px;border-top:1px solid var(--line-2)}
 .vq .vsrc{font-size:11px;color:var(--ink-3);line-height:1.4}
-.vq .vsrc b{display:block;color:var(--ink-2);font-weight:600;font-size:11.5px}
+.vq .vsrc b{display:block;color:var(--ink-2);font-weight:600;font-size:11px}
 .vq .vcnt{font-size:11px;font-weight:700;color:var(--ink);white-space:nowrap;
   display:flex;align-items:center;gap:7px}
 .vq .vcnt i{width:8px;height:8px;background:var(--mid);display:block}
@@ -1084,9 +1084,9 @@ td b{color:var(--ink);font-weight:600}
   text-transform:uppercase;color:var(--ink-3);
   background:color-mix(in srgb, var(--ink) 3%, transparent)}
 .orow{padding:14px 18px;border-top:1px solid var(--line-2);align-items:start}
-.orow .of{font-family:var(--serif);font-style:italic;font-size:13.5px;
+.orow .of{font-family:var(--serif);font-style:italic;font-size:12.5px;
   line-height:1.5;color:var(--ink)}
-.orow .oa{font-size:12.5px;color:var(--ink-2);line-height:1.5}
+.orow .oa{font-size:12px;color:var(--ink-2);line-height:1.5}
 
 /* ── Альтернативы: против чего мы на самом деле конкурируем ────────────────
    Главный конкурент почти всегда «ничего не делать», и его надо выделить
@@ -1100,10 +1100,10 @@ td b{color:var(--ink);font-weight:600}
   text-transform:uppercase;color:var(--ink-3);
   background:color-mix(in srgb, var(--ink) 3%, transparent)}
 .arow{align-items:start;padding:14px 18px;border-top:1px solid var(--line-2)}
-.arow .an{font-size:13.5px;font-weight:700;line-height:1.3}
+.arow .an{font-size:12.5px;font-weight:700;line-height:1.3}
 .arow .aty{display:inline-block;font-size:10px;font-weight:700;letter-spacing:.05em;
   text-transform:uppercase;color:var(--ink-3);margin-top:5px}
-.arow .atx{font-size:12.5px;color:var(--ink-2);line-height:1.5}
+.arow .atx{font-size:12px;color:var(--ink-2);line-height:1.5}
 /* ПРАВКА: плашка «главный» стояла сразу за названием — толкала строку и
    выглядела грубо. Выделение ушло вбок: полоса фирменного цвета по левому
    краю плюс тихая надпись НАД названием. Строка читается ровно, а особый
@@ -1128,7 +1128,7 @@ td b{color:var(--ink);font-weight:600}
 .chnwrap{display:grid;grid-template-columns:1fr 268px;gap:22px;align-items:start}
 .chnside h4{font-size:10px;font-weight:700;letter-spacing:.07em;
   text-transform:uppercase;color:var(--ink-3);margin:0 0 4px}
-.chnside .sub{font-size:11.5px;color:var(--ink-3);line-height:1.45;margin:0 0 14px}
+.chnside .sub{font-size:11px;color:var(--ink-3);line-height:1.45;margin:0 0 14px}
 .chn{display:grid;grid-template-columns:repeat(auto-fit,minmax(296px,1fr));gap:12px}
 .ccard{border:1px solid var(--line);background:var(--card-solid);border-radius:16px;
   padding:16px 18px;display:flex;flex-direction:column;gap:11px}
@@ -1137,15 +1137,15 @@ td b{color:var(--ink);font-weight:600}
   display:flex;align-items:center;justify-content:center;flex:0 0 auto}
 .ccard .ci svg{width:19px;height:19px;fill:none;stroke:var(--ink-2);stroke-width:1.6;
   stroke-linecap:round;stroke-linejoin:round;display:block}
-.ccard .cn{font-size:14px;font-weight:700;line-height:1.25}
+.ccard .cn{font-size:13px;font-weight:700;line-height:1.25}
 .ccard .cn span{display:block;font-size:11px;font-weight:600;color:var(--ink-3);
   margin-top:3px}
-.ccard .cd{font-size:12.5px;color:var(--ink-2);line-height:1.5}
+.ccard .cd{font-size:12px;color:var(--ink-2);line-height:1.5}
 .ccard .cf{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;
   padding-top:11px;border-top:1px solid var(--line-2);margin-top:auto}
 .ccard .cf div span{display:block;font-size:10px;font-weight:700;letter-spacing:.07em;
   text-transform:uppercase;color:var(--ink-3);margin-bottom:3px}
-.ccard .cf div b{font-size:12px;font-weight:700;color:var(--ink)}
+.ccard .cf div b{font-size:11.5px;font-weight:700;color:var(--ink)}
 .ccard .cf .r{text-align:right}
 @media (max-width:1000px){ .chnwrap{grid-template-columns:1fr} }
 @media (max-width:900px){.nprof{grid-template-columns:1fr}
@@ -1168,14 +1168,14 @@ td b{color:var(--ink);font-weight:600}
   text-transform:uppercase;color:var(--ink-3);
   background:color-mix(in srgb, var(--ink) 3%, transparent)}
 .dtbl .tr{padding:14px 18px;border-top:1px solid var(--line-2);align-items:start;
-  font-size:12.5px;line-height:1.5;color:var(--ink-2)}
+  font-size:12px;line-height:1.5;color:var(--ink-2)}
 /* ПРАВКА: перенос рвал слово где попало, вплоть до одной буквы. Виноват был
    overflow-wrap:anywhere — он ломает строку в любом месте, не глядя на слоги.
    Убран. Оставлен hyphens:auto, но он работает только когда браузер знает
    язык — поэтому на .page стоит lang="ru", иначе словаря переносов нет и
    ничего не переносится вовсе. И задан минимум: слово от 6 букв, не меньше
    трёх до переноса и трёх после — одна буква на строке больше невозможна. */
-.dtbl .nm{font-size:13.5px;font-weight:700;color:var(--ink);line-height:1.3;display:block}
+.dtbl .nm{font-size:12.5px;font-weight:700;color:var(--ink);line-height:1.3;display:block}
 .dtbl .tr .tag{display:block;margin-top:5px}
 .dtbl .tr .q{display:block;margin-top:5px;color:var(--ink-2);line-height:1.45}
 .dtbl .tr>div{min-width:0}
@@ -1185,7 +1185,7 @@ td b{color:var(--ink);font-weight:600}
 .val,.axis,.lbl,.gx,.dbar .n,.kpi .n,.pyrow .s .v,.gvol .v{hyphens:none;-webkit-hyphens:none}
 .dtbl .tag{display:inline-block;font-size:10px;font-weight:700;letter-spacing:.05em;
   text-transform:uppercase;color:var(--ink-3);margin-top:5px}
-.dtbl .q{font-family:var(--serif);font-style:italic;font-size:13px;color:var(--ink);
+.dtbl .q{font-family:var(--serif);font-style:italic;font-size:12px;color:var(--ink);
   line-height:1.5}
 .dtbl .no{color:var(--ink-3);font-style:italic}
 .dtbl .lead{box-shadow:inset 3px 0 0 var(--mid);padding-left:15px;
@@ -1207,20 +1207,20 @@ td b{color:var(--ink);font-weight:600}
 .hrow{display:grid;grid-template-columns:26px 1fr 190px;gap:16px;align-items:baseline;
   padding:13px 0;border-top:1px solid var(--line-2)}
 .hrow:first-child{border-top:0}
-.hrow .hn{font-size:12px;font-weight:700;color:var(--ink-3);
+.hrow .hn{font-size:11.5px;font-weight:700;color:var(--ink-3);
   font-variant-numeric:tabular-nums}
-.hrow .ht{font-family:var(--serif);font-size:15px;line-height:1.45;color:var(--ink)}
-.hrow .hu{font-size:11.5px;color:var(--ink-3);line-height:1.4;text-align:right}
-.hrow .hu b{display:block;color:var(--ink-2);font-weight:600;font-size:12px}
+.hrow .ht{font-family:var(--serif);font-size:14px;line-height:1.45;color:var(--ink)}
+.hrow .hu{font-size:11px;color:var(--ink-3);line-height:1.4;text-align:right}
+.hrow .hu b{display:block;color:var(--ink-2);font-weight:600;font-size:11.5px}
 
 /* ── Контент-система: рубрики и ритм ──────────────────────────────────────── */
 .rub{display:grid;grid-template-columns:repeat(auto-fit,minmax(238px,1fr));gap:12px}
 .rcard{border:1px solid var(--line);background:var(--card-solid);border-radius:16px;
   padding:16px 18px;display:flex;flex-direction:column;gap:9px}
-.rcard .rn{font-size:14px;font-weight:700;line-height:1.25}
-.rcard .rj{font-size:12.5px;color:var(--ink-2);line-height:1.5}
+.rcard .rn{font-size:13px;font-weight:700;line-height:1.25}
+.rcard .rj{font-size:12px;color:var(--ink-2);line-height:1.5}
 .rcard .rf{display:flex;justify-content:space-between;gap:10px;padding-top:10px;
-  border-top:1px solid var(--line-2);margin-top:auto;font-size:11.5px}
+  border-top:1px solid var(--line-2);margin-top:auto;font-size:11px}
 .rcard .rf span{color:var(--ink-3)}
 .rcard .rf b{color:var(--ink);font-weight:700}
 .rhy{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-top:14px}
@@ -1228,7 +1228,7 @@ td b{color:var(--ink);font-weight:600}
   background:var(--card-solid);min-height:78px}
 .rhy .rd .dw{font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;
   color:var(--ink-3);margin-bottom:7px}
-.rhy .rd .dt{font-size:11.5px;color:var(--ink);line-height:1.35;font-weight:600}
+.rhy .rd .dt{font-size:11px;color:var(--ink);line-height:1.35;font-weight:600}
 .rhy .rd.off .dt{color:var(--ink-3);font-weight:400}
 .rhy .rd .dbar2{height:5px;margin-top:8px}
 
@@ -1240,11 +1240,11 @@ td b{color:var(--ink);font-weight:600}
 .lstep{display:grid;grid-template-columns:52px 1fr 1fr;gap:18px;padding:15px 0;
   border-top:1px solid var(--line-2);align-items:start}
 .lstep:first-child{border-top:0}
-.lstep .ln{font-size:19px;font-weight:700;color:var(--ink-3);letter-spacing:-.02em;
+.lstep .ln{font-size:17px;font-weight:700;color:var(--ink-3);letter-spacing:-.02em;
   font-variant-numeric:tabular-nums;line-height:1.1}
-.lstep .lt{font-size:13.5px;font-weight:700;line-height:1.3}
-.lstep .lj{font-size:12px;color:var(--ink-3);line-height:1.45;margin-top:4px}
-.lstep .lc{font-size:12.5px;color:var(--ink-2);line-height:1.5}
+.lstep .lt{font-size:12.5px;font-weight:700;line-height:1.3}
+.lstep .lj{font-size:11.5px;color:var(--ink-3);line-height:1.45;margin-top:4px}
+.lstep .lc{font-size:12px;color:var(--ink-2);line-height:1.5}
 .lstep .lc b{display:block;font-size:10px;font-weight:700;letter-spacing:.07em;
   text-transform:uppercase;color:var(--ink-3);margin-bottom:4px}
 @media (max-width:820px){
@@ -1260,7 +1260,7 @@ td b{color:var(--ink);font-weight:600}
    а показать покрытие. Три состояния различаются и цветом, и формой метки. */
 .mapg{display:grid;grid-template-columns:repeat(auto-fill,minmax(232px,1fr));gap:8px}
 .mcell{display:flex;gap:10px;align-items:flex-start;padding:11px 13px;border-radius:12px;
-  border:1px solid var(--line);background:var(--card-solid);font-size:12.5px;
+  border:1px solid var(--line);background:var(--card-solid);font-size:12px;
   line-height:1.4}
 .mcell i{width:9px;height:9px;border-radius:50%;flex:0 0 auto;margin-top:4px;display:block}
 .mcell span{flex:1}
@@ -1273,7 +1273,7 @@ td b{color:var(--ink);font-weight:600}
 .mcell.none i{background:var(--sw-grey)}
 .mcell.out{opacity:.72}
 .mcell.out i{background:var(--card-solid);border:1.5px solid var(--sw-grey)}
-.mlegend{display:flex;gap:18px;flex-wrap:wrap;margin-top:14px;font-size:11.5px;
+.mlegend{display:flex;gap:18px;flex-wrap:wrap;margin-top:14px;font-size:11px;
   color:var(--ink-3)}
 .mlegend span{display:flex;align-items:center;gap:8px}
 .mlegend i{width:9px;height:9px;border-radius:50%;display:block}
@@ -1285,18 +1285,18 @@ td b{color:var(--ink);font-weight:600}
 .sw2{display:flex;gap:0;margin-bottom:8px}
 .sw2 div{flex:1;height:52px;display:flex;align-items:flex-end;padding:7px 9px;
   font-size:10px;font-weight:700;font-variant-numeric:tabular-nums}
-.sw2 div small{font-size:9px;font-weight:600;opacity:.75;display:block}
-.visnote{font-size:12px;color:var(--ink-3);line-height:1.5;margin:0}
+.sw2 div small{font-size:10px;font-weight:600;opacity:.75;display:block}
+.visnote{font-size:11.5px;color:var(--ink-3);line-height:1.5;margin:0}
 .typo{border:1px solid var(--line);border-radius:14px;padding:16px 18px;
   background:var(--card-solid)}
-.typo .t1{font-size:22px;font-weight:700;letter-spacing:-.02em;line-height:1.2}
-.typo .t2{font-family:var(--serif);font-size:14px;line-height:1.5;color:var(--ink-2);
+.typo .t1{font-size:20px;font-weight:700;letter-spacing:-.02em;line-height:1.2}
+.typo .t2{font-family:var(--serif);font-size:13px;line-height:1.5;color:var(--ink-2);
   margin-top:8px}
 .typo .t3{font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;
   color:var(--ink-3);margin-top:12px}
 .rules{display:flex;flex-direction:column;gap:0}
 .rr{display:grid;grid-template-columns:1fr 1fr;gap:16px;padding:11px 0;
-  border-top:1px solid var(--line-2);font-size:12.5px;line-height:1.45}
+  border-top:1px solid var(--line-2);font-size:12px;line-height:1.45}
 .rr:first-child{border-top:0}
 .rr .y{color:var(--ink)}
 .rr .n2{color:var(--ink-3)}
@@ -1313,7 +1313,7 @@ td b{color:var(--ink);font-weight:600}
 /* Номера источников — те же ссылки, значит тот же вид: фирменный цвет плюс
    постоянное подчёркивание. Размер поднят с 10.5 до 11.5: на бирюзе мелкий
    кегль читается тяжелее всего, а уменьшать контраст здесь нечем. */
-.rn2{display:inline-block;font-size:11.5px;font-weight:700;color:var(--acc-mid-ink);
+.rn2{display:inline-block;font-size:11px;font-weight:700;color:var(--acc-mid-ink);
   text-decoration:none;vertical-align:0;white-space:nowrap;hyphens:none;
   border-bottom:1px solid color-mix(in srgb, var(--acc-mid-ink) 45%, transparent)}
 .rn2:hover{border-bottom-color:var(--acc-mid-ink)}
@@ -1330,9 +1330,9 @@ td b{color:var(--ink);font-weight:600}
 .srcs{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:0 28px}
 .srow{display:grid;grid-template-columns:32px 1fr;gap:12px;padding:13px 0;
   border-top:1px solid var(--line-2);align-items:baseline}
-.srow .sn{font-size:11.5px;font-weight:700;color:var(--acc-mid-ink);
+.srow .sn{font-size:11px;font-weight:700;color:var(--acc-mid-ink);
   font-variant-numeric:tabular-nums;hyphens:none}
-.srow .sd{font-size:12.5px;line-height:1.45;min-width:0}
+.srow .sd{font-size:12px;line-height:1.45;min-width:0}
 .srow .sd .dom{display:flex;align-items:baseline;justify-content:space-between;gap:12px}
 /* ССЫЛКИ — ОДИН вид на всё: синий плюс постоянное подчёркивание.
    Решение владелицы 10.09: «прийти к одному знаменателю, лучше синим —
@@ -1343,7 +1343,7 @@ td b{color:var(--ink);font-weight:600}
    ни один не мешает другому.
    Подчёркивание оставлено постоянным: оно отличает ссылку от просто цветного
    слова, а на цвет одного этого мало. */
-.srow .sd .dom a{font-size:13.5px;font-weight:700;color:var(--acc-mid-ink);
+.srow .sd .dom a{font-size:12.5px;font-weight:700;color:var(--acc-mid-ink);
   text-decoration:none;border-bottom:1px solid color-mix(in srgb, var(--acc-mid-ink) 45%, transparent);
   overflow-wrap:break-word;hyphens:none}
 .srow .sd .dom a:hover{border-bottom-color:var(--acc-mid-ink)}
@@ -1354,7 +1354,7 @@ td b{color:var(--ink);font-weight:600}
 .srow .sd .took{margin-top:8px}
 .srow .sd .took span{display:block;font-size:10px;font-weight:700;letter-spacing:.07em;
   text-transform:uppercase;color:var(--ink-3);margin-bottom:3px}
-.srow .sd .took em{font-style:normal;color:var(--ink-2);font-size:12.5px;line-height:1.45}
+.srow .sd .took em{font-style:normal;color:var(--ink-2);font-size:12px;line-height:1.45}
 
 /* ── Доля внимания ────────────────────────────────────────────────────────── */
 .att .dbar{grid-template-columns:172px 1fr 104px}
@@ -1365,7 +1365,7 @@ td b{color:var(--ink);font-weight:600}
    строке и съедала ширину у остальных — владелица 15.09: «слишком широкая,
    надо равномерно, заголовок перенести». Фиксируем раскладку и разрешаем
    переносы в шапке. */
-.heat{width:100%;border-collapse:separate;border-spacing:3px;font-size:12px;table-layout:fixed}
+.heat{width:100%;border-collapse:separate;border-spacing:3px;font-size:11.5px;table-layout:fixed}
 .heat th{white-space:normal;word-break:normal;overflow-wrap:anywhere}
 .heat th:first-child,.heat td:first-child{width:210px}
 .heat th{font-weight:600;color:var(--ink-3);font-size:10.5px;letter-spacing:.05em;
@@ -1382,8 +1382,8 @@ td b{color:var(--ink);font-weight:600}
   color:var(--ink-3);margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid var(--line)}
 .kcard{border:1px solid var(--line);border-radius:14px;padding:13px 15px;margin-bottom:9px;
   background:var(--card-solid)}
-.kcard b{display:block;font-size:12.5px;margin-bottom:4px}
-.kcard span{display:block;font-size:11.5px;color:var(--ink-3);line-height:1.5}
+.kcard b{display:block;font-size:12px;margin-bottom:4px}
+.kcard span{display:block;font-size:11px;color:var(--ink-3);line-height:1.5}
 .kcard .met{margin-top:8px;padding-top:8px;border-top:1px solid var(--line-2);
   font-size:11px;color:var(--ink-2);font-weight:600}
 /* Критерий успеха — единственное, что в карточке фирменного цвета: карточка
@@ -1393,10 +1393,10 @@ td b{color:var(--ink);font-weight:600}
 /* ── Дерево ниш ── */
 .tree{display:flex;flex-direction:column;gap:5px}
 .tnode{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:12px;
-  background:color-mix(in srgb, var(--ink) 2.5%, transparent);font-size:13px}
+  background:color-mix(in srgb, var(--ink) 2.5%, transparent);font-size:12px}
 .tnode .bar{height:6px;border-radius:0;flex:0 0 auto}
 .tnode .nm{flex:1;color:var(--ink-2)}
-.tnode .sc{font-weight:700;font-size:12.5px;color:var(--ink)}
+.tnode .sc{font-weight:700;font-size:12px;color:var(--ink)}
 .tnode.lead{background:color-mix(in srgb, var(--mid) 10%, transparent)}
 .tnode.lead .nm{color:var(--ink);font-weight:600}
 
@@ -1407,9 +1407,9 @@ td b{color:var(--ink);font-weight:600}
 .kpi{display:grid;grid-template-columns:repeat(5,1fr);gap:14px}
 .kpi > div{background:var(--card-solid);border:1px solid var(--line);
   border-radius:20px;padding:18px 20px}
-.kpi .k{font-size:12px;color:var(--ink-3);margin-bottom:8px}
+.kpi .k{font-size:11.5px;color:var(--ink-3);margin-bottom:8px}
 .kpi .row{display:flex;align-items:center;justify-content:space-between;gap:8px}
-.kpi .n{font-size:25px;font-weight:700;letter-spacing:-.02em;line-height:1.1}
+.kpi .n{font-size:22.5px;font-weight:700;letter-spacing:-.02em;line-height:1.1}
 .kpi svg{display:block;flex:0 0 auto}
 .kpi .d{font-size:11px;margin-top:7px;display:inline-flex;gap:5px;align-items:baseline}
 .kpi .d b{font-weight:700}
@@ -1418,7 +1418,7 @@ td b{color:var(--ink);font-weight:600}
 .kpi .d b.flat{color:var(--ink-2)}       /* без изменений — тёмно-серый */
 .kpi .d span{color:var(--ink-2);font-weight:700}
 
-.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--ink-2);margin-top:14px}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:11.5px;color:var(--ink-2);margin-top:14px}
 .legend i{width:11px;height:8px;display:inline-block;margin-right:6px}
 @media (max-width:1000px){ .kpi{grid-template-columns:repeat(2,1fr)} }
 @media (max-width:820px){ .two,.swot,.kan{grid-template-columns:1fr} }
@@ -1441,21 +1441,21 @@ td b{color:var(--ink);font-weight:600}
     color-mix(in srgb, var(--mid) 22%, var(--card-solid)),
     color-mix(in srgb, var(--mid) 6%, var(--card-solid)))}
 .pers-av{width:74px;height:74px;border-radius:22px;display:flex;align-items:center;
-  justify-content:center;font-size:25px;font-weight:800;letter-spacing:-.02em;
+  justify-content:center;font-size:22.5px;font-weight:800;letter-spacing:-.02em;
   color:#12100D;background:linear-gradient(160deg,
     color-mix(in srgb, var(--mid) 92%, white), color-mix(in srgb, var(--mid) 92%, black))}
 .pers-side .rl{font-size:10px;font-weight:700;letter-spacing:.07em;
   text-transform:uppercase;color:var(--ink-3)}
-.pers-side h3{font-size:18px;line-height:1.25;letter-spacing:-.02em}
-.pers-side .one{font-size:12.5px;color:var(--ink-2);line-height:1.55}
+.pers-side h3{font-size:16.5px;line-height:1.25;letter-spacing:-.02em}
+.pers-side .one{font-size:12px;color:var(--ink-2);line-height:1.55}
 .pers-share{margin-top:auto;padding-top:14px;border-top:1px solid rgba(23,21,18,.1)}
-.pers-share b{display:block;font-size:32px;font-weight:700;letter-spacing:-.03em;line-height:1}
-.pers-share span{font-size:11.5px;color:var(--ink-3)}
+.pers-share b{display:block;font-size:28px;font-weight:700;letter-spacing:-.03em;line-height:1}
+.pers-share span{font-size:11px;color:var(--ink-3)}
 .pers-main{background:var(--card-solid)}
 .prow{display:grid;grid-template-columns:150px 1fr 1fr;gap:16px;
-  padding:12px 22px;border-top:1px solid var(--line-2);font-size:13px;line-height:1.5}
+  padding:12px 22px;border-top:1px solid var(--line-2);font-size:12px;line-height:1.5}
 .prow:first-child{border-top:0}
-.prow .p{color:var(--ink-3);font-size:11.5px;font-weight:600;padding-top:1px}
+.prow .p{color:var(--ink-3);font-size:11px;font-weight:600;padding-top:1px}
 .prow .v{color:var(--ink)}
 .prow .a{color:var(--acc-ink);font-weight:600}
 /* «Что из этого следует» в блоке 09 нет — тогда колонок две, а не три,
@@ -1475,7 +1475,7 @@ td b{color:var(--ink);font-weight:600}
 .dsplit span{display:flex;align-items:center;justify-content:center;font-size:11px;
   font-weight:700;color:#12100D}
 .dbars{display:flex;flex-direction:column;gap:13px}
-.dbar{display:grid;grid-template-columns:46px 1fr 30px;gap:8px;align-items:center;font-size:11.5px}
+.dbar{display:grid;grid-template-columns:46px 1fr 30px;gap:8px;align-items:center;font-size:11px}
 .dbar .t{color:var(--ink-3)}
 .dbar .g{height:14px;background:var(--line-2)}
 .dbar .g i{display:block;height:100%;background:var(--mid)}
@@ -1508,7 +1508,7 @@ td b{color:var(--ink);font-weight:600}
   align-items:center;justify-content:center;background:var(--line-2)}
 .chips figure svg{width:19px;height:19px;fill:none;stroke:var(--ink-2);
   stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;display:block}
-.chips figcaption{font-size:12.5px;font-weight:600;color:var(--ink-2);line-height:1.35}
+.chips figcaption{font-size:12px;font-weight:600;color:var(--ink-2);line-height:1.35}
 /* Два списка рядом: линия по середине показывает, что вопросы разные. */
 .demo.split{grid-template-columns:1fr 1fr;gap:0}
 .demo.split > div + div{border-left:1px solid var(--line);padding-left:24px}
@@ -1522,7 +1522,7 @@ td b{color:var(--ink);font-weight:600}
 /* Покрытие вопросов — вместо радужного колеса */
 .cov{display:grid;grid-template-columns:repeat(auto-fill,minmax(215px,1fr));gap:9px}
 .cq{display:flex;gap:11px;align-items:flex-start;padding:12px 14px;border-radius:13px;
-  border:1px solid var(--line);background:var(--card-solid);font-size:12.5px;line-height:1.45}
+  border:1px solid var(--line);background:var(--card-solid);font-size:12px;line-height:1.45}
 .cq b{font-size:11px;font-weight:800;color:var(--ink-3);min-width:17px;letter-spacing:-.02em}
 .cq.yes{background:color-mix(in srgb, var(--mid) 9%, var(--card-solid));
   border-color:color-mix(in srgb, var(--mid) 35%, var(--line))}
@@ -1546,9 +1546,9 @@ td b{color:var(--ink);font-weight:600}
 .sl .ic{width:38px;height:38px;border-radius:12px;flex:0 0 auto;display:flex;
   align-items:center;justify-content:center;border:1px solid var(--line)}
 .sl .ic svg{width:19px;height:19px;fill:none;stroke-width:1.6}
-.sl .nm{flex:1;font-size:12.5px;color:var(--ink-3);line-height:1.35}
-.sl .nm b{display:block;color:var(--ink);font-weight:700;font-size:13.5px}
-.sl .pc{font-size:17px;font-weight:700;letter-spacing:-.02em;min-width:44px;text-align:right}
+.sl .nm{flex:1;font-size:12px;color:var(--ink-3);line-height:1.35}
+.sl .nm b{display:block;color:var(--ink);font-weight:700;font-size:12.5px}
+.sl .pc{font-size:15.5px;font-weight:700;letter-spacing:-.02em;min-width:44px;text-align:right}
 
 /* ── SWOT: четыре поля — четыре цвета ────────────────────────────────────────
    Владелица попросила просто четыре разных цвета вместо кодировки оттенком.
@@ -1564,7 +1564,7 @@ td b{color:var(--ink);font-weight:600}
   background:color-mix(in srgb, var(--c) 9%, transparent);
   border-color:color-mix(in srgb, var(--c) 34%, var(--line))}
 .sw-s li::before,.sw-w li::before,.sw-o li::before,.sw-t li::before{background:var(--c)}
-.sw-note{grid-column:1/-1;font-size:11.5px;color:var(--ink-3);margin-top:2px;line-height:1.5}
+.sw-note{grid-column:1/-1;font-size:11px;color:var(--ink-3);margin-top:2px;line-height:1.5}
 @media (max-width:820px){ .seg{grid-template-columns:1fr} }
 
 /* ── Путь клиента лесенкой ───────────────────────────────────────────────────
@@ -1595,15 +1595,15 @@ td b{color:var(--ink);font-weight:600}
   padding:14px 26px 14px 18px;color:var(--ink);border-radius:12px 0 0 12px;
   /* один косой срез вместо стрелки: верх длиннее низа */
   clip-path:polygon(0 0, 100% 0, calc(100% - 20px) 100%, 0 100%)}
-.lleft .num{font-size:19px;font-weight:700;letter-spacing:-.02em;opacity:.5;
+.lleft .num{font-size:17px;font-weight:700;letter-spacing:-.02em;opacity:.5;
   min-width:28px;text-align:right}
-.lleft .nm{font-size:13px;font-weight:700;line-height:1.3;letter-spacing:-.01em}
+.lleft .nm{font-size:12px;font-weight:700;line-height:1.3;letter-spacing:-.01em}
 .lright{padding:14px 20px 14px 22px;margin-left:-14px;border-radius:0 12px 12px 0;
   background:color-mix(in srgb, var(--ink) 2%, transparent);
   display:flex;flex-direction:column;justify-content:center;gap:3px}
-.lright b{font-size:13px;font-weight:700;color:var(--ink);line-height:1.4}
-.lright span{font-size:12.5px;color:var(--ink-2);line-height:1.5}
-.lright .meta{margin-top:6px;font-size:11.5px;font-weight:600;
+.lright b{font-size:12px;font-weight:700;color:var(--ink);line-height:1.4}
+.lright span{font-size:12px;color:var(--ink-2);line-height:1.5}
+.lright .meta{margin-top:6px;font-size:11px;font-weight:600;
   color:var(--ink-3);display:flex;gap:16px;flex-wrap:wrap}
 .lright .meta i{font-style:normal}
 .lright .meta i.rk-high{color:var(--acc-mid-ink)}
@@ -1619,7 +1619,7 @@ td b{color:var(--ink);font-weight:600}
 
 
 /* ── Разбор модуля: «как сейчас» рядом с «как предлагаю» ─────────────────── */
-.sech{font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
+.sech{font-size:11.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
   color:var(--ink-3);margin:34px 0 14px;display:flex;align-items:center;gap:14px}
 .sech::after{content:"";flex:1;height:1px;background:var(--line)}
 .two2{display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:start}
@@ -1627,7 +1627,7 @@ td b{color:var(--ink);font-weight:600}
 /* Настоящая таблица отчёта — намеренно без украшений: она должна выглядеть
    ровно так, как выглядит сегодня, иначе сравнение нечестное. */
 .rawwrap{overflow-x:auto}
-table.raw{border-collapse:collapse;width:100%;font-size:11.5px;line-height:1.4}
+table.raw{border-collapse:collapse;width:100%;font-size:11px;line-height:1.4}
 table.raw th,table.raw td{border:1px solid var(--line);padding:6px 8px;
   text-align:left;vertical-align:top;hyphens:none}
 table.raw th{background:color-mix(in srgb, var(--ink) 4%, transparent);
@@ -1637,7 +1637,7 @@ table.raw td.num{font-variant-numeric:tabular-nums;text-align:center;white-space
 .verd{background:color-mix(in srgb, var(--sw-violet) 5%, var(--raise));
   border:1px solid color-mix(in srgb, var(--sw-violet) 24%, var(--line));
   border-radius:16px;padding:16px 20px;margin:12px 0 0}
-.verd p{margin:0 0 9px;font-size:13px;line-height:1.55;color:var(--ink-2)}
+.verd p{margin:0 0 9px;font-size:12px;line-height:1.55;color:var(--ink-2)}
 .verd p:last-child{margin-bottom:0}
 .verd b{color:var(--ink)}
 @media (max-width:1000px){ .two2{grid-template-columns:1fr} }
@@ -1662,25 +1662,25 @@ table.raw td.num{font-variant-numeric:tabular-nums;text-align:center;white-space
   border-bottom:1px solid var(--line)}
 .ccard2 .cid{font-size:10.5px;font-weight:700;letter-spacing:.06em;color:var(--ink-3);
   hyphens:none}
-.ccard2 .cnm{font-size:16px;font-weight:700;letter-spacing:-.02em;margin:3px 0 4px}
-.ccard2 .cmeta{display:flex;gap:8px;flex-wrap:wrap;align-items:center;font-size:11.5px;
+.ccard2 .cnm{font-size:14.5px;font-weight:700;letter-spacing:-.02em;margin:3px 0 4px}
+.ccard2 .cmeta{display:flex;gap:8px;flex-wrap:wrap;align-items:center;font-size:11px;
   color:var(--ink-3)}
 .ccard2 .scale{display:inline-block;font-size:10px;font-weight:700;letter-spacing:.05em;
   text-transform:uppercase;padding:2px 8px;border-radius:999px;background:var(--line-2);
   color:var(--ink-2);hyphens:none}
 .ccard2 .price{text-align:right}
-.ccard2 .price b{display:block;font-size:16px;font-weight:700;letter-spacing:-.02em}
-.ccard2 .price.word b{font-size:12px;font-weight:600;letter-spacing:.02em;text-transform:lowercase;color:var(--ink-2)}
+.ccard2 .price b{display:block;font-size:14.5px;font-weight:700;letter-spacing:-.02em}
+.ccard2 .price.word b{font-size:11.5px;font-weight:600;letter-spacing:.02em;text-transform:lowercase;color:var(--ink-2)}
 .ccard2 .price span{display:block;font-size:10.5px;color:var(--ink-3);margin-top:2px}
 .cgrid{display:grid;grid-template-columns:1fr 1fr;gap:0}
 .cbox{padding:15px 20px;border-top:1px solid var(--line-2)}
 .cbox:nth-child(odd){border-right:1px solid var(--line-2)}
 .cbox h5{margin:0 0 8px;font-size:10px;font-weight:700;letter-spacing:.07em;
   text-transform:uppercase;color:var(--ink-3)}
-.cbox p{margin:0;font-size:12.5px;line-height:1.5;color:var(--ink-2)}
+.cbox p{margin:0;font-size:12px;line-height:1.5;color:var(--ink-2)}
 .cbox p+p{margin-top:7px}
 .cbox ul{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:6px}
-.cbox li{font-size:12.5px;line-height:1.45;color:var(--ink-2);padding-left:14px;
+.cbox li{font-size:12px;line-height:1.45;color:var(--ink-2);padding-left:14px;
   position:relative}
 .cbox li::before{content:"";position:absolute;left:0;top:7px;width:5px;height:5px;
   background:var(--ink-3)}
@@ -1701,23 +1701,23 @@ table.raw td.num{font-variant-numeric:tabular-nums;text-align:center;white-space
 .gap{display:flex;flex-direction:column;gap:14px}
 .gsec{border:1px solid var(--line);border-radius:16px;overflow:hidden;
   background:var(--card-solid)}
-.gsec h4{margin:0;padding:14px 18px;font-size:12px;font-weight:700;letter-spacing:.08em;
+.gsec h4{margin:0;padding:14px 18px;font-size:11.5px;font-weight:700;letter-spacing:.08em;
   text-transform:uppercase;color:var(--ink);display:flex;align-items:center;gap:14px;
   border-bottom:1px solid var(--line)}
 /* Заголовок с эмоцией: крупный значок слева, рядом название и подсказка в две
    строки — блок начинается с образа, а не с полоски текста. */
 .gsec h4.wemo .etxt{display:flex;flex-direction:column;gap:3px;min-width:0}
-.gsec h4.wemo .etxt b{font-size:15px;font-weight:700;letter-spacing:-.01em;
+.gsec h4.wemo .etxt b{font-size:14px;font-weight:700;letter-spacing:-.01em;
   text-transform:none;color:var(--ink)}
-.gsec h4.wemo .etxt span{font-size:11.5px;font-weight:600;letter-spacing:0;
+.gsec h4.wemo .etxt span{font-size:11px;font-weight:600;letter-spacing:0;
   text-transform:none;color:var(--ink-3)}
 .gsec h4 .cnt{margin-left:auto;font-size:11px;font-weight:700;color:var(--ink-2);
   letter-spacing:0;text-transform:none;hyphens:none;white-space:nowrap}
 .grow2{display:grid;grid-template-columns:186px 1fr 1fr 1fr;gap:16px;
-  padding:12px 18px;border-top:1px solid var(--line-2);align-items:start;font-size:12.5px;
+  padding:12px 18px;border-top:1px solid var(--line-2);align-items:start;font-size:12px;
   line-height:1.45}
 .grow2:first-of-type{border-top:0}
-.grow2 .kk{font-weight:700;color:var(--ink);font-size:13px}
+.grow2 .kk{font-weight:700;color:var(--ink);font-size:12px}
 .grow2 .vv{color:var(--ink-2)}
 .grow2 .vv b{color:var(--ink);font-weight:600}
 .ghead{display:grid;grid-template-columns:186px 1fr 1fr 1fr;gap:16px;
@@ -1728,7 +1728,7 @@ table.raw td.num{font-variant-numeric:tabular-nums;text-align:center;white-space
 .warn{background:color-mix(in srgb, var(--sw-violet) 7%, var(--raise));
   border:1px solid color-mix(in srgb, var(--sw-violet) 28%, var(--line));
   border-radius:16px;padding:16px 20px;margin:12px 0 0}
-.warn p{margin:0 0 9px;font-size:13px;line-height:1.55;color:var(--ink-2)}
+.warn p{margin:0 0 9px;font-size:12px;line-height:1.55;color:var(--ink-2)}
 .warn p:last-child{margin-bottom:0}
 .warn b{color:var(--ink)}
 @media (max-width:900px){
@@ -1764,28 +1764,28 @@ table.raw td.num{font-variant-numeric:tabular-nums;text-align:center;white-space
   padding:0;display:flex;flex-direction:column;overflow:hidden}
 .vq2 .vtop{padding:15px 18px 0}
 .vq2 blockquote{margin:12px 0 0;font-family:var(--serif);font-style:italic;
-  font-size:15px;line-height:1.5;color:var(--ink)}
+  font-size:14px;line-height:1.5;color:var(--ink)}
 .vq2 .vtheme{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;
   margin:14px 0 0;padding:0 18px}
-.vq2 .vtheme b{font-size:13.5px;font-weight:700;color:var(--ink);letter-spacing:-.01em}
+.vq2 .vtheme b{font-size:12.5px;font-weight:700;color:var(--ink);letter-spacing:-.01em}
 .vq2 .seg2{display:inline-block;font-size:10px;font-weight:700;letter-spacing:.05em;
   text-transform:uppercase;color:var(--ink-2);background:var(--line-2);
   padding:3px 9px;border-radius:999px;hyphens:none}
-.vq2 .vsrc2{padding:5px 18px 0;font-size:11.5px;color:var(--ink-3)}
+.vq2 .vsrc2{padding:5px 18px 0;font-size:11px;color:var(--ink-3)}
 .vq2 .vnums{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:14px;
   padding:12px 18px;border-top:1px solid var(--line-2);
   background:color-mix(in srgb, var(--ink) 2%, transparent)}
 .vq2 .vnums .lab{display:block;font-size:10px;font-weight:700;letter-spacing:.07em;
   text-transform:uppercase;color:var(--ink-3);margin-bottom:5px}
-.vq2 .vnums .big2{font-size:15px;font-weight:700;color:var(--ink);letter-spacing:-.02em}
-.vq2 .vnums .big2 em{font-style:normal;font-size:11.5px;font-weight:600;
+.vq2 .vnums .big2{font-size:14px;font-weight:700;color:var(--ink);letter-spacing:-.02em}
+.vq2 .vnums .big2 em{font-style:normal;font-size:11px;font-weight:600;
   color:var(--ink-3);margin-left:4px}
 /* Мера силы — дорожка и заливка, как у всех полос на платформе. */
 .pain{display:flex;align-items:center;gap:9px;margin-top:2px}
 .pain .rail2{flex:1;max-width:78px;height:9px;background:var(--line-2)}
 .pain .rail2 i{display:block;height:100%;background:var(--mid)}
-.pain b{font-size:12.5px;font-weight:700;color:var(--ink)}
-.vq2 .vans{padding:13px 18px;border-top:1px solid var(--line-2);font-size:12.5px;
+.pain b{font-size:12px;font-weight:700;color:var(--ink)}
+.vq2 .vans{padding:13px 18px;border-top:1px solid var(--line-2);font-size:12px;
   line-height:1.45;color:var(--ink)}
 .vq2 .vans span{display:block;font-size:10px;font-weight:700;letter-spacing:.07em;
   text-transform:uppercase;color:var(--ink-3);margin-bottom:3px}
@@ -1827,13 +1827,13 @@ table.raw td.num{font-variant-numeric:tabular-nums;text-align:center;white-space
 .lmeter{display:flex;align-items:center;gap:10px;margin-top:2px}
 .lmeter .rail3{flex:1;height:9px;background:var(--line-2)}
 .lmeter .rail3 i{display:block;height:100%}
-.lmeter b{font-size:11.5px;font-weight:700;color:var(--ink);white-space:nowrap;
+.lmeter b{font-size:11px;font-weight:700;color:var(--ink);white-space:nowrap;
   hyphens:none}
-.ltag .ename{font-size:14.5px;font-weight:700;color:var(--ink);line-height:1.25}
+.ltag .ename{font-size:13.5px;font-weight:700;color:var(--ink);line-height:1.25}
 .ltag .ename span{display:block;font-size:11px;font-weight:600;color:var(--ink-3);
   margin-top:4px}
 .llist{display:flex;flex-direction:column;gap:8px;padding:16px 18px 16px 6px}
-.llist div{font-family:var(--serif);font-size:13.5px;line-height:1.45;color:var(--ink);
+.llist div{font-family:var(--serif);font-size:12.5px;line-height:1.45;color:var(--ink);
   padding-left:16px;position:relative}
 .llist div::before{content:"";position:absolute;left:0;top:7.5px;width:5px;height:5px;
   /* Было «--c2» — такой переменной в файле нет вовсе, и точки рисовались
@@ -1858,9 +1858,9 @@ table.raw td.num{font-variant-numeric:tabular-nums;text-align:center;white-space
 .vrow{display:grid;grid-template-columns:236px 1fr;gap:20px;padding:18px 0;
   border-top:1px solid var(--line-2);align-items:center}
 .vrow:first-child{border-top:0}
-.vrow .vinfo b{display:block;font-size:14px;font-weight:700;color:var(--ink);
+.vrow .vinfo b{display:block;font-size:13px;font-weight:700;color:var(--ink);
   letter-spacing:-.01em;margin-bottom:5px}
-.vrow .vinfo span{font-size:12px;color:var(--ink-2);line-height:1.45}
+.vrow .vinfo span{font-size:11.5px;color:var(--ink-2);line-height:1.45}
 .vset{display:flex;align-items:center;gap:26px;flex-wrap:wrap}
 .vset figure{margin:0;display:flex;flex-direction:column;align-items:center;gap:7px}
 .vset figcaption{font-size:10px;font-weight:700;letter-spacing:.07em;
@@ -1885,7 +1885,7 @@ table.raw td.num{font-variant-numeric:tabular-nums;text-align:center;white-space
 
 .bias{background:color-mix(in srgb, var(--sw-grey) 8%, var(--raise));
   border:1px solid var(--line);border-radius:14px;padding:14px 18px;margin-top:14px;
-  font-size:12.5px;line-height:1.55;color:var(--ink-2)}
+  font-size:12px;line-height:1.55;color:var(--ink-2)}
 .bias b{color:var(--ink)}
 
 /* ── Своё для этой страницы ─────────────────────────────────── */
@@ -1898,7 +1898,7 @@ table.raw td.num{font-variant-numeric:tabular-nums;text-align:center;white-space
 .mkt .hd{font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;
   color:var(--ink-3);display:flex;align-items:flex-end;justify-content:center;
   padding-bottom:7px;text-align:center;line-height:1.3}
-.mkt .rw{font-size:11.5px;font-weight:700;color:var(--ink-2);display:flex;
+.mkt .rw{font-size:11px;font-weight:700;color:var(--ink-2);display:flex;
   align-items:center;justify-content:flex-end;padding-right:12px;text-align:right;
   line-height:1.3}
 .mkt .cell{background:var(--line-2);min-height:74px;padding:9px;display:flex;
@@ -1922,19 +1922,19 @@ table.raw td.num{font-variant-numeric:tabular-nums;text-align:center;white-space
   background:var(--card-solid);border:1px solid var(--line);padding:10px 12px;min-width:186px;
   max-width:260px;box-shadow:0 6px 20px rgba(0,0,0,.12);transition:opacity .12s ease}
 .mkttip.on{opacity:1}
-.mkttip b{display:block;font-size:13px;font-weight:700;color:var(--ink);margin-bottom:7px;line-height:1.25}
-.mkttip dl{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;margin:0;font-size:11.5px}
+.mkttip b{display:block;font-size:12px;font-weight:700;color:var(--ink);margin-bottom:7px;line-height:1.25}
+.mkttip dl{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;margin:0;font-size:11px}
 .mkttip dt{color:var(--ink-3)}
 .mkttip dd{margin:0;color:var(--ink-2);font-weight:600;font-variant-numeric:tabular-nums;text-align:right}
 .mktlist{margin-top:20px;padding-top:14px;border-top:1px solid var(--line)}
 .mktlist h4{margin:0 0 4px;font-size:10px;font-weight:700;letter-spacing:.07em;
   text-transform:uppercase;color:var(--ink-3)}
-.mktlist .hint{margin:0 0 10px;font-size:12px;color:var(--ink-3)}
+.mktlist .hint{margin:0 0 10px;font-size:11.5px;color:var(--ink-3)}
 .mktlist .hdr,.mktlist .r{display:grid;grid-template-columns:1fr 168px 128px;
   gap:14px;padding:7px 8px;align-items:baseline}
 .mktlist .hdr{font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;
   color:var(--ink-3);padding-bottom:4px}
-.mktlist .r{border-top:1px solid var(--line-2);font-size:12.5px;cursor:default}
+.mktlist .r{border-top:1px solid var(--line-2);font-size:12px;cursor:default}
 .mktlist .r:hover,.mktlist .r.on{background:var(--line-2)}
 .mktlist .r:focus-visible{outline:2px solid var(--mid);outline-offset:-2px}
 .mktlist .r b{font-weight:600;color:var(--ink)}
@@ -1948,7 +1948,7 @@ table.raw td.num{font-variant-numeric:tabular-nums;text-align:center;white-space
   font-variant-numeric:tabular-nums}
 .mkt .cell.empty .n{color:var(--ink-3);font-weight:600}
 .mktleg{display:flex;gap:18px;flex-wrap:wrap;margin-top:14px;padding-top:12px;
-  border-top:1px solid var(--line);font-size:11.5px;color:var(--ink-3)}
+  border-top:1px solid var(--line);font-size:11px;color:var(--ink-3)}
 .mktleg span{display:flex;align-items:center;gap:8px}
 .mktleg i{width:9px;height:9px;border-radius:50%;display:block}
 
@@ -1969,13 +1969,13 @@ table.raw td.num{font-variant-numeric:tabular-nums;text-align:center;white-space
   color:var(--ink-3);margin:0 0 10px;display:flex;align-items:baseline;
   justify-content:space-between;gap:12px}
 .swot .sw ul{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:7px}
-.swot .sw li{font-size:13px;color:var(--ink-2);padding-left:14px;position:relative;line-height:1.5}
+.swot .sw li{font-size:12px;color:var(--ink-2);padding-left:14px;position:relative;line-height:1.5}
 .swot .sw li::before{content:"";position:absolute;left:0;top:8px;width:5px;height:5px;
   border-radius:50%;background:var(--acc-mid)}
 .swot .sw-help{box-shadow:inset 3px 0 0 var(--mid)}
 .swot .sw-help h3{color:var(--ink)}
 .swot .sw-help li::before{background:var(--acc-strong)}
-.swot .sw-note{grid-column:1/-1;font-size:11.5px;color:var(--ink-3);margin-top:4px;line-height:1.5}
+.swot .sw-note{grid-column:1/-1;font-size:11px;color:var(--ink-3);margin-top:4px;line-height:1.5}
 @media (max-width:820px){ .swot{grid-template-columns:1fr} .swot .cor{display:none} }
 
 
@@ -1998,14 +1998,14 @@ table.raw td.num{font-variant-numeric:tabular-nums;text-align:center;white-space
 .sl.rich:first-of-type{border-top:0}
 .sl.rich .ic{width:40px;height:40px;border-radius:12px;display:flex;
   align-items:center;justify-content:center;border:1px solid var(--line);
-  font-size:12.5px;font-weight:700;color:#12100D;letter-spacing:-.02em;hyphens:none}
-.sl.rich .nm{font-size:12.5px;line-height:1.45;color:var(--ink-2);min-width:0}
-.sl.rich .nm b{display:block;color:var(--ink);font-weight:700;font-size:14px;
+  font-size:12px;font-weight:700;color:#12100D;letter-spacing:-.02em;hyphens:none}
+.sl.rich .nm{font-size:12px;line-height:1.45;color:var(--ink-2);min-width:0}
+.sl.rich .nm b{display:block;color:var(--ink);font-weight:700;font-size:13px;
   margin-bottom:3px}
 .sl.rich .nm .need{display:block;margin-top:5px;color:var(--ink)}
-.sl.rich .v2{font-size:12.5px;color:var(--ink-2);font-variant-numeric:tabular-nums;
+.sl.rich .v2{font-size:12px;color:var(--ink-2);font-variant-numeric:tabular-nums;
   hyphens:none;padding-top:2px}
-.sl.rich .v2.big{font-size:17px;font-weight:700;color:var(--ink);letter-spacing:-.02em}
+.sl.rich .v2.big{font-size:15.5px;font-weight:700;color:var(--ink);letter-spacing:-.02em}
 @media (max-width:900px){
   .leghead{display:none}
   .sl.rich{grid-template-columns:44px 1fr;gap:10px}
@@ -2029,22 +2029,22 @@ table.raw td.num{font-variant-numeric:tabular-nums;text-align:center;white-space
    уже назван плашкой и цветом фигуры, третий раз повторять его фоном незачем.
    Тем более что ниш со статусом «идём» бывает несколько — выделять фоном
    «самую главную» значит вводить четвёртый статус, которого в данных нет. */
-.ncard2 .nh b{display:block;font-size:14.5px;font-weight:700;line-height:1.25}
+.ncard2 .nh b{display:block;font-size:13.5px;font-weight:700;line-height:1.25}
 .ncard2 .tot{display:flex;align-items:baseline;gap:9px;margin:9px 0 8px}
-.ncard2 .tot i{font-style:normal;font-size:26px;font-weight:700;letter-spacing:-.03em}
+.ncard2 .tot i{font-style:normal;font-size:23.5px;font-weight:700;letter-spacing:-.03em}
 .ncard2 .tot em{font-style:normal;font-size:10px;font-weight:700;letter-spacing:.07em;
   text-transform:uppercase;color:var(--ink-3)}
 .rkey{display:flex;align-items:center;gap:20px;flex-wrap:wrap;
   padding:14px 18px;border:1px solid var(--line);border-radius:16px;
   background:var(--card-solid);margin-bottom:12px}
-.rkey .rtext{font-size:12.5px;color:var(--ink-2);line-height:1.5;max-width:52ch}
+.rkey .rtext{font-size:12px;color:var(--ink-2);line-height:1.5;max-width:52ch}
 .rkey .rtext b{color:var(--ink)}
 
 /* Плашки статусов — из макета платформы, один в один, включая русские
    подписи. Английские Go / Maybe / No-Go в русском отчёте стоять не должны:
    для английской версии будут английские, для русской — русские. */
 .kchip{display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:999px;
-  font-size:12px;font-weight:600;hyphens:none}
+  font-size:11.5px;font-weight:600;hyphens:none}
 .kchip .d{width:7px;height:7px;border-radius:50%;flex:0 0 auto}
 .kchip-go{background:color-mix(in srgb, var(--acc-strong) 12%, var(--card-solid));color:var(--ink)}
 .kchip-go .d{background:var(--acc-strong)}
@@ -2060,7 +2060,7 @@ table.raw td.num{font-variant-numeric:tabular-nums;text-align:center;white-space
    расписан словами: сколько платят в месяц и сколько месяцев остаются. */
 .sigrows{display:flex;flex-direction:column;gap:0;margin-top:11px}
 .sigrow{display:grid;grid-template-columns:104px 1fr;gap:12px;padding:7px 0;
-  border-top:1px solid var(--line-2);font-size:12px;line-height:1.45}
+  border-top:1px solid var(--line-2);font-size:11.5px;line-height:1.45}
 .sigrow:first-child{border-top:0}
 .sigrow .k2{font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;
   color:var(--ink-3);padding-top:2px}
@@ -2072,7 +2072,7 @@ table.raw td.num{font-variant-numeric:tabular-nums;text-align:center;white-space
    идём — нужно, иначе ниша просто исчезает из разбора и через месяц никто не
    вспомнит, отбросили её по данным или забыли. */
 .ncard2.slim{grid-template-columns:1fr;opacity:.9}
-.ncard2.slim .why2{font-size:12.5px;color:var(--ink-2);line-height:1.5;margin-top:10px}
+.ncard2.slim .why2{font-size:12px;color:var(--ink-2);line-height:1.5;margin-top:10px}
 .ncard2.slim .why2 b{color:var(--ink);font-weight:600}
 
 /* Пометка «вывод» — для строк, у которых источника нет и быть не может:
@@ -2088,10 +2088,10 @@ table.raw td.num{font-variant-numeric:tabular-nums;text-align:center;white-space
 .ncard2.on{border-color:var(--mid);
   box-shadow:0 0 0 2px color-mix(in srgb, var(--mid) 45%, transparent)}
 .nbar{cursor:pointer}
-.nhint{font-size:12px;color:var(--ink-3);margin:10px 0 0;min-height:17px}
+.nhint{font-size:11.5px;color:var(--ink-3);margin:10px 0 0;min-height:17px}
 
 /* ── Разбор модуля: «как сейчас» рядом с «как предлагаю» ─────────────────── */
-.sech{font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
+.sech{font-size:11.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
   color:var(--ink-3);margin:34px 0 14px;display:flex;align-items:center;gap:14px}
 .sech::after{content:"";flex:1;height:1px;background:var(--line)}
 .two2{display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:start}
@@ -2099,7 +2099,7 @@ table.raw td.num{font-variant-numeric:tabular-nums;text-align:center;white-space
 /* Настоящая таблица отчёта — намеренно без украшений: она должна выглядеть
    ровно так, как выглядит сегодня, иначе сравнение нечестное. */
 .rawwrap{overflow-x:auto}
-table.raw{border-collapse:collapse;width:100%;font-size:11.5px;line-height:1.4}
+table.raw{border-collapse:collapse;width:100%;font-size:11px;line-height:1.4}
 table.raw th,table.raw td{border:1px solid var(--line);padding:6px 8px;
   text-align:left;vertical-align:top;hyphens:none}
 table.raw th{background:color-mix(in srgb, var(--ink) 4%, transparent);
@@ -2109,7 +2109,7 @@ table.raw td.num{font-variant-numeric:tabular-nums;text-align:center;white-space
 .verd{background:color-mix(in srgb, var(--sw-violet) 5%, var(--raise));
   border:1px solid color-mix(in srgb, var(--sw-violet) 24%, var(--line));
   border-radius:16px;padding:16px 20px;margin:12px 0 0}
-.verd p{margin:0 0 9px;font-size:13px;line-height:1.55;color:var(--ink-2)}
+.verd p{margin:0 0 9px;font-size:12px;line-height:1.55;color:var(--ink-2)}
 .verd p:last-child{margin-bottom:0}
 .verd b{color:var(--ink)}
 @media (max-width:1000px){ .two2{grid-template-columns:1fr} }
@@ -2117,7 +2117,7 @@ table.raw td.num{font-variant-numeric:tabular-nums;text-align:center;white-space
 .glue{border:1px dashed var(--line);border-radius:14px;padding:16px 18px;
   background:color-mix(in srgb, var(--mid) 5%, transparent)}
 .glue .gl{display:grid;grid-template-columns:1fr 92px 96px;gap:14px;padding:7px 0;
-  border-top:1px solid var(--line-2);font-size:12.5px;align-items:baseline}
+  border-top:1px solid var(--line-2);font-size:12px;align-items:baseline}
 .glue .gl:first-of-type{border-top:0}
 .glue .gl .n{text-align:right;font-variant-numeric:tabular-nums;font-weight:700;color:var(--ink)}
 .glue .gl .t{text-align:right;font-size:11px;color:var(--ink-3)}
@@ -2129,30 +2129,30 @@ table.raw td.num{font-variant-numeric:tabular-nums;text-align:center;white-space
   align-items:center;cursor:default;border-radius:10px}
 .semrow:hover,.semrow.on{background:var(--line-2)}
 .semrow:focus-visible{outline:2px solid var(--mid);outline-offset:-2px}
-.semrow .nm{font-size:12.5px;color:var(--ink-2);margin-bottom:5px;line-height:1.3}
+.semrow .nm{font-size:12px;color:var(--ink-2);margin-bottom:5px;line-height:1.3}
 .semrow.on .nm{color:var(--ink);font-weight:600}
 .semrow .rail{height:14px;background:var(--line-2)}
 .semrow .rail i{display:block;height:14px;background:var(--ink-3)}
 .semrow.on .rail i{background:var(--mid)}
-.semrow .n{text-align:right;font-size:12.5px;font-weight:700;color:var(--ink);
+.semrow .n{text-align:right;font-size:12px;font-weight:700;color:var(--ink);
   font-variant-numeric:tabular-nums}
 .sempanel{border:1px solid var(--line);border-radius:16px;padding:15px 16px;
   background:var(--card-solid);position:sticky;top:16px}
 .sempanel .cap{font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;
   color:var(--ink-3);margin-bottom:3px}
-.sempanel .who{font-size:13px;font-weight:700;color:var(--ink);margin-bottom:12px;line-height:1.3}
+.sempanel .who{font-size:12px;font-weight:700;color:var(--ink);margin-bottom:12px;line-height:1.3}
 .sempanel .note{margin-top:11px;padding-top:10px;border-top:1px solid var(--line-2);
-  font-size:11.5px;color:var(--ink-2);line-height:1.5}
+  font-size:11px;color:var(--ink-2);line-height:1.5}
 .sempanel .note b{color:var(--ink)}
 .serp{display:flex;flex-direction:column;gap:0}
 .serp .s{padding:13px 2px;border-top:1px solid var(--line-2)}
 .serp .s:first-child{border-top:0}
-.serp .s .t{font-size:13.5px;font-weight:600;line-height:1.35;margin-bottom:4px}
-.serp .s .u{font-size:11.5px;color:var(--ink-3);margin-bottom:8px;word-break:break-all}
+.serp .s .t{font-size:12.5px;font-weight:600;line-height:1.35;margin-bottom:4px}
+.serp .s .u{font-size:11px;color:var(--ink-3);margin-bottom:8px;word-break:break-all}
 .serp .s .meta{display:flex;gap:8px;flex-wrap:wrap;font-size:11px;color:var(--ink-3);
   margin-bottom:7px}
 .serp .s .meta b{color:var(--ink-2);font-weight:600}
-.serp .s .str{font-size:12.5px;color:var(--ink-2);line-height:1.5;
+.serp .s .str{font-size:12px;color:var(--ink-2);line-height:1.5;
   padding-left:14px;position:relative}
 .serp .s .str::before{content:'';position:absolute;left:0;top:7px;width:5px;height:5px;
   border-radius:50%;background:var(--mid)}
@@ -2160,7 +2160,7 @@ table.raw td.num{font-variant-numeric:tabular-nums;text-align:center;white-space
 .aud .a{display:grid;grid-template-columns:150px 1fr;gap:16px;padding:14px 2px;
   border-top:1px solid var(--line-2)}
 .aud .a:first-child{border-top:0}
-.aud .a .who{font-size:13px;font-weight:700;color:var(--ink);line-height:1.3}
+.aud .a .who{font-size:12px;font-weight:700;color:var(--ink);line-height:1.3}
 .aud .a .who span{display:block;font-size:11px;font-weight:600;color:var(--ink-3);
   margin-top:4px}
 .aud .a .freq{margin-top:8px}
@@ -2170,8 +2170,8 @@ table.raw td.num{font-variant-numeric:tabular-nums;text-align:center;white-space
 .aud .a .cols{display:grid;grid-template-columns:1fr 1fr;gap:16px}
 .aud .a .cols h5{margin:0 0 5px;font-size:10px;font-weight:700;letter-spacing:.05em;
   text-transform:uppercase;color:var(--ink-3)}
-.aud .a .cols p{margin:0;font-size:12.5px;color:var(--ink-2);line-height:1.5}
-.aud .a .themes{margin-top:10px;font-size:11.5px;color:var(--ink-3)}
+.aud .a .cols p{margin:0;font-size:12px;color:var(--ink-2);line-height:1.5}
+.aud .a .themes{margin-top:10px;font-size:11px;color:var(--ink-3)}
 .swot{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .sw{border:1px solid var(--line);border-radius:16px;padding:16px 18px;
   background:color-mix(in srgb, var(--ink) 2%, transparent)}
@@ -2179,11 +2179,11 @@ table.raw td.num{font-variant-numeric:tabular-nums;text-align:center;white-space
   color:var(--ink-3);margin-bottom:10px;display:flex;align-items:center;gap:8px}
 .sw h3 i{width:16px;height:3px;border-radius:2px;display:block}
 .sw ul{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:7px}
-.sw li{font-size:13px;color:var(--ink-2);padding-left:14px;position:relative;line-height:1.5}
+.sw li{font-size:12px;color:var(--ink-2);padding-left:14px;position:relative;line-height:1.5}
 .sw li::before{content:"";position:absolute;left:0;top:8px;width:5px;height:5px;
   border-radius:50%;background:var(--ink-3)}
 .sw{position:relative}
-.sw-note{grid-column:1/-1;font-size:11.5px;color:var(--ink-3);margin-top:2px;line-height:1.5}
+.sw-note{grid-column:1/-1;font-size:11px;color:var(--ink-3);margin-top:2px;line-height:1.5}
 .sw-help{box-shadow:inset 3px 0 0 var(--mid)}
 .sw-help h3{color:var(--ink)}
 .sw-help li::before{background:var(--acc-strong)}
@@ -2191,7 +2191,7 @@ table.raw td.num{font-variant-numeric:tabular-nums;text-align:center;white-space
 .mkt .hd{font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;
   color:var(--ink-3);display:flex;align-items:flex-end;justify-content:center;
   padding-bottom:7px;text-align:center;line-height:1.3}
-.mkt .rw{font-size:11.5px;font-weight:700;color:var(--ink-2);display:flex;
+.mkt .rw{font-size:11px;font-weight:700;color:var(--ink-2);display:flex;
   align-items:center;justify-content:flex-end;padding-right:12px;text-align:right;
   line-height:1.3}
 .mkt .cell{background:var(--line-2);min-height:74px;padding:9px;display:flex;
@@ -2215,19 +2215,19 @@ table.raw td.num{font-variant-numeric:tabular-nums;text-align:center;white-space
   background:var(--card-solid);border:1px solid var(--line);padding:10px 12px;min-width:186px;
   max-width:260px;box-shadow:0 6px 20px rgba(0,0,0,.12);transition:opacity .12s ease}
 .mkttip.on{opacity:1}
-.mkttip b{display:block;font-size:13px;font-weight:700;color:var(--ink);margin-bottom:7px;line-height:1.25}
-.mkttip dl{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;margin:0;font-size:11.5px}
+.mkttip b{display:block;font-size:12px;font-weight:700;color:var(--ink);margin-bottom:7px;line-height:1.25}
+.mkttip dl{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;margin:0;font-size:11px}
 .mkttip dt{color:var(--ink-3)}
 .mkttip dd{margin:0;color:var(--ink-2);font-weight:600;font-variant-numeric:tabular-nums;text-align:right}
 .mktlist{margin-top:20px;padding-top:14px;border-top:1px solid var(--line)}
 .mktlist h4{margin:0 0 4px;font-size:10px;font-weight:700;letter-spacing:.07em;
   text-transform:uppercase;color:var(--ink-3)}
-.mktlist .hint{margin:0 0 10px;font-size:12px;color:var(--ink-3)}
+.mktlist .hint{margin:0 0 10px;font-size:11.5px;color:var(--ink-3)}
 .mktlist .hdr,.mktlist .r{display:grid;grid-template-columns:1fr 168px 128px;
   gap:14px;padding:7px 8px;align-items:baseline}
 .mktlist .hdr{font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;
   color:var(--ink-3);padding-bottom:4px}
-.mktlist .r{border-top:1px solid var(--line-2);font-size:12.5px;cursor:default}
+.mktlist .r{border-top:1px solid var(--line-2);font-size:12px;cursor:default}
 .mktlist .r:hover,.mktlist .r.on{background:var(--line-2)}
 .mktlist .r:focus-visible{outline:2px solid var(--mid);outline-offset:-2px}
 .mktlist .r b{font-weight:600;color:var(--ink)}
@@ -2241,7 +2241,7 @@ table.raw td.num{font-variant-numeric:tabular-nums;text-align:center;white-space
   font-variant-numeric:tabular-nums}
 .mkt .cell.empty .n{color:var(--ink-3);font-weight:600}
 .mktleg{display:flex;gap:18px;flex-wrap:wrap;margin-top:14px;padding-top:12px;
-  border-top:1px solid var(--line);font-size:11.5px;color:var(--ink-3)}
+  border-top:1px solid var(--line);font-size:11px;color:var(--ink-3)}
 .mktleg span{display:flex;align-items:center;gap:8px}
 .mktleg i{width:9px;height:9px;border-radius:50%;display:block}
 .swot{display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:stretch}
@@ -2256,19 +2256,19 @@ table.raw td.num{font-variant-numeric:tabular-nums;text-align:center;white-space
   color:var(--ink-3);margin:0 0 10px;display:flex;align-items:baseline;
   justify-content:space-between;gap:12px}
 .swot .sw ul{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:7px}
-.swot .sw li{font-size:13px;color:var(--ink-2);padding-left:14px;position:relative;line-height:1.5}
+.swot .sw li{font-size:12px;color:var(--ink-2);padding-left:14px;position:relative;line-height:1.5}
 .swot .sw li::before{content:"";position:absolute;left:0;top:8px;width:5px;height:5px;
   border-radius:50%;background:var(--acc-mid)}
 .swot .sw-help{box-shadow:inset 3px 0 0 var(--mid)}
 .swot .sw-help h3{color:var(--ink)}
 .swot .sw-help li::before{background:var(--acc-strong)}
-.swot .sw-note{grid-column:1/-1;font-size:11.5px;color:var(--ink-3);margin-top:4px;line-height:1.5}
+.swot .sw-note{grid-column:1/-1;font-size:11px;color:var(--ink-3);margin-top:4px;line-height:1.5}
 .infer{font-size:10.5px;font-weight:600;letter-spacing:.03em;color:var(--ink-3);
   margin-left:6px;white-space:nowrap}
 .awrow{display:grid;grid-template-columns:210px 1fr;gap:16px;align-items:center;
   padding:11px 0;border-top:1px solid var(--line-2)}
 .awrow:first-child{border-top:0}
-.awrow .awnm{font-size:13px;font-weight:700;color:var(--ink);line-height:1.3}
+.awrow .awnm{font-size:12px;font-weight:700;color:var(--ink);line-height:1.3}
 .awrow .awnm span{display:block;font-size:11px;font-weight:600;color:var(--ink-3);
   margin-top:3px}
 .aw{display:flex;height:26px;gap:3px}
@@ -2280,11 +2280,11 @@ table.raw td.num{font-variant-numeric:tabular-nums;text-align:center;white-space
 .srcs{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:0 28px}
 .srow{display:grid;grid-template-columns:32px 1fr;gap:12px;padding:13px 0;
   border-top:1px solid var(--line-2);align-items:baseline}
-.srow .sn{font-size:11.5px;font-weight:700;color:var(--acc-mid-ink);
+.srow .sn{font-size:11px;font-weight:700;color:var(--acc-mid-ink);
   font-variant-numeric:tabular-nums;hyphens:none}
-.srow .sd{font-size:12.5px;line-height:1.45;min-width:0}
+.srow .sd{font-size:12px;line-height:1.45;min-width:0}
 .srow .sd .dom{display:flex;align-items:baseline;justify-content:space-between;gap:12px}
-.srow .sd .dom a{font-size:13.5px;font-weight:700;color:var(--acc-mid-ink);
+.srow .sd .dom a{font-size:12.5px;font-weight:700;color:var(--acc-mid-ink);
   text-decoration:none;border-bottom:1px solid color-mix(in srgb, var(--acc-mid-ink) 45%, transparent);
   overflow-wrap:break-word;hyphens:none}
 .srow .sd .dom a:hover{border-bottom-color:var(--acc-mid-ink)}
@@ -2295,8 +2295,8 @@ table.raw td.num{font-variant-numeric:tabular-nums;text-align:center;white-space
 .srow .sd .took{margin-top:8px}
 .srow .sd .took span{display:block;font-size:10px;font-weight:700;letter-spacing:.07em;
   text-transform:uppercase;color:var(--ink-3);margin-bottom:3px}
-.srow .sd .took em{font-style:normal;color:var(--ink-2);font-size:12.5px;line-height:1.45}
-.heat{width:100%;border-collapse:separate;border-spacing:3px;font-size:12px;table-layout:fixed}
+.srow .sd .took em{font-style:normal;color:var(--ink-2);font-size:12px;line-height:1.45}
+.heat{width:100%;border-collapse:separate;border-spacing:3px;font-size:11.5px;table-layout:fixed}
 .heat th{font-weight:600;color:var(--ink-3);font-size:10.5px;letter-spacing:.05em;
   text-transform:uppercase;padding:0 6px 6px;text-align:center;vertical-align:bottom}
 .heat th:first-child{text-align:left}
@@ -2311,7 +2311,7 @@ table.raw td.num{font-variant-numeric:tabular-nums;text-align:center;white-space
   border-radius:16px;display:flex;flex-direction:column;gap:12px;
   justify-content:space-between}
 .vq blockquote{margin:0;font-family:var(--serif);font-style:italic;
-  font-size:14px;line-height:1.5;color:var(--ink)}
+  font-size:13px;line-height:1.5;color:var(--ink)}
 .vq .vst{display:flex;align-items:center;gap:7px;font-size:10px;font-weight:700;
   letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3)}
 .vq .vst i{width:9px;height:9px;border-radius:50%;display:block;flex:0 0 auto}
@@ -2322,7 +2322,7 @@ table.raw td.num{font-variant-numeric:tabular-nums;text-align:center;white-space
 .vq .vf{display:flex;justify-content:space-between;align-items:center;gap:12px;
   padding-top:12px;border-top:1px solid var(--line-2)}
 .vq .vsrc{font-size:11px;color:var(--ink-3);line-height:1.4}
-.vq .vsrc b{display:block;color:var(--ink-2);font-weight:600;font-size:11.5px}
+.vq .vsrc b{display:block;color:var(--ink-2);font-weight:600;font-size:11px}
 .vq .vcnt{font-size:11px;font-weight:700;color:var(--ink);white-space:nowrap;
   display:flex;align-items:center;gap:7px}
 .vq .vcnt i{width:8px;height:8px;background:var(--mid);display:block}
@@ -2337,28 +2337,28 @@ table.raw td.num{font-variant-numeric:tabular-nums;text-align:center;white-space
   display:flex;align-items:center;justify-content:center;flex:0 0 auto}
 .ccard .ci svg{width:19px;height:19px;fill:none;stroke:var(--ink-2);stroke-width:1.6;
   stroke-linecap:round;stroke-linejoin:round;display:block}
-.ccard .cn{font-size:14px;font-weight:700;line-height:1.25}
+.ccard .cn{font-size:13px;font-weight:700;line-height:1.25}
 .ccard .cn span{display:block;font-size:11px;font-weight:600;color:var(--ink-3);
   margin-top:3px}
-.ccard .cd{font-size:12.5px;color:var(--ink-2);line-height:1.5}
+.ccard .cd{font-size:12px;color:var(--ink-2);line-height:1.5}
 .ccard .cf{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;
   padding-top:11px;border-top:1px solid var(--line-2);margin-top:auto}
 .ccard .cf div span{display:block;font-size:10px;font-weight:700;letter-spacing:.07em;
   text-transform:uppercase;color:var(--ink-3);margin-bottom:3px}
-.ccard .cf div b{font-size:12px;font-weight:700;color:var(--ink)}
+.ccard .cf div b{font-size:11.5px;font-weight:700;color:var(--ink)}
 .ccard .cf .r{text-align:right}
 .comp{display:flex;flex-direction:column;gap:12px}
-.ccard2 .cmeta{display:flex;gap:8px;flex-wrap:wrap;align-items:center;font-size:11.5px;
+.ccard2 .cmeta{display:flex;gap:8px;flex-wrap:wrap;align-items:center;font-size:11px;
   color:var(--ink-3)}
 .comp{display:flex;flex-direction:column;gap:12px}
-.ccard2 .cmeta{display:flex;gap:8px;flex-wrap:wrap;align-items:center;font-size:11.5px;
+.ccard2 .cmeta{display:flex;gap:8px;flex-wrap:wrap;align-items:center;font-size:11px;
   color:var(--ink-3)}
 .pers{display:grid;grid-template-columns:230px 1fr;gap:0;
   border:1px solid var(--line);border-radius:20px;overflow:hidden;margin-bottom:14px}
 .prow{display:grid;grid-template-columns:150px 1fr 1fr;gap:16px;
-  padding:12px 22px;border-top:1px solid var(--line-2);font-size:13px;line-height:1.5}
+  padding:12px 22px;border-top:1px solid var(--line-2);font-size:12px;line-height:1.5}
 .prow:first-child{border-top:0}
-.prow .p{color:var(--ink-3);font-size:11.5px;font-weight:600;padding-top:1px}
+.prow .p{color:var(--ink-3);font-size:11px;font-weight:600;padding-top:1px}
 .prow .v{color:var(--ink)}
 .prow .a{color:var(--acc-ink);font-weight:600}
 .lad{display:flex;flex-direction:column;gap:8px}
@@ -2367,15 +2367,15 @@ table.raw td.num{font-variant-numeric:tabular-nums;text-align:center;white-space
   padding:14px 26px 14px 18px;color:var(--ink);border-radius:12px 0 0 12px;
   /* один косой срез вместо стрелки: верх длиннее низа */
   clip-path:polygon(0 0, 100% 0, calc(100% - 20px) 100%, 0 100%)}
-.lleft .num{font-size:19px;font-weight:700;letter-spacing:-.02em;opacity:.5;
+.lleft .num{font-size:17px;font-weight:700;letter-spacing:-.02em;opacity:.5;
   min-width:28px;text-align:right}
-.lleft .nm{font-size:13px;font-weight:700;line-height:1.3;letter-spacing:-.01em}
+.lleft .nm{font-size:12px;font-weight:700;line-height:1.3;letter-spacing:-.01em}
 .lright{padding:14px 20px 14px 22px;margin-left:-14px;border-radius:0 12px 12px 0;
   background:color-mix(in srgb, var(--ink) 2%, transparent);
   display:flex;flex-direction:column;justify-content:center;gap:3px}
-.lright b{font-size:13px;font-weight:700;color:var(--ink);line-height:1.4}
-.lright span{font-size:12.5px;color:var(--ink-2);line-height:1.5}
-.lright .meta{margin-top:6px;font-size:11.5px;font-weight:600;
+.lright b{font-size:12px;font-weight:700;color:var(--ink);line-height:1.4}
+.lright span{font-size:12px;color:var(--ink-2);line-height:1.5}
+.lright .meta{margin-top:6px;font-size:11px;font-weight:600;
   color:var(--ink-3);display:flex;gap:16px;flex-wrap:wrap}
 .lright .meta i{font-style:normal}
 .lright .meta i.rk-high{color:var(--acc-mid-ink)}
@@ -2387,13 +2387,13 @@ table.raw td.num{font-variant-numeric:tabular-nums;text-align:center;white-space
 .lmeter{display:flex;align-items:center;gap:10px;margin-top:2px}
 .lmeter .rail3{flex:1;height:9px;background:var(--line-2)}
 .lmeter .rail3 i{display:block;height:100%}
-.lmeter b{font-size:11.5px;font-weight:700;color:var(--ink);white-space:nowrap;
+.lmeter b{font-size:11px;font-weight:700;color:var(--ink);white-space:nowrap;
   hyphens:none}
-.ltag .ename{font-size:14.5px;font-weight:700;color:var(--ink);line-height:1.25}
+.ltag .ename{font-size:13.5px;font-weight:700;color:var(--ink);line-height:1.25}
 .ltag .ename span{display:block;font-size:11px;font-weight:600;color:var(--ink-3);
   margin-top:4px}
 .llist{display:flex;flex-direction:column;gap:8px;padding:16px 18px 16px 6px}
-.llist div{font-family:var(--serif);font-size:13.5px;line-height:1.45;color:var(--ink);
+.llist div{font-family:var(--serif);font-size:12.5px;line-height:1.45;color:var(--ink);
   padding-left:16px;position:relative}
 .llist div::before{content:"";position:absolute;left:0;top:7.5px;width:5px;height:5px;
   /* Было «--c2» — такой переменной в файле нет вовсе, и точки рисовались
@@ -2414,11 +2414,11 @@ table.raw td.num{font-variant-numeric:tabular-nums;text-align:center;white-space
 .pyrow .bar{height:14px;flex:0 0 auto;min-width:3px}
 .pyrow .l .bar{background:var(--mid)}
 .pyrow .r .bar{background:var(--sw-violet)}
-.pyrow .s .v{font-size:11.5px;font-weight:700;color:var(--ink);
+.pyrow .s .v{font-size:11px;font-weight:700;color:var(--ink);
   font-variant-numeric:tabular-nums;min-width:38px}
 .pyrow .s.l .v{text-align:right;margin-right:9px}
 .pyrow .s.r .v{text-align:left;margin-left:9px}
-.pyrow .age{text-align:center;font-size:11.5px;color:var(--ink-2);font-weight:600;
+.pyrow .age{text-align:center;font-size:11px;color:var(--ink-2);font-weight:600;
   font-variant-numeric:tabular-nums}
 .val,.axis,.lbl,.gx,.dbar .n,.kpi .n,.pyrow .s .v,.gvol .v{hyphens:none;-webkit-hyphens:none}
 .pers-conf{margin-top:14px;padding-top:14px;border-top:1px solid rgba(23,21,18,.1)}
@@ -2426,11 +2426,11 @@ table.raw td.num{font-variant-numeric:tabular-nums;text-align:center;white-space
   text-transform:uppercase;color:var(--ink-3);margin-bottom:6px}
 .pers-conf .crail{display:block;height:9px;background:var(--line-2);margin-bottom:7px}
 .pers-conf .crail i{display:block;height:100%}
-.pers-conf b{font-size:13px;font-weight:700;color:var(--ink)}
+.pers-conf b{font-size:12px;font-weight:700;color:var(--ink)}
 .pers-conf span.sub2{display:block;font-size:11px;color:var(--ink-3);margin-top:3px}
 .inp{display:grid;gap:0}
 .inp .ir{display:grid;grid-template-columns:190px 1fr 128px;gap:16px;padding:10px 8px;
-  border-top:1px solid var(--line-2);font-size:12.5px;align-items:baseline}
+  border-top:1px solid var(--line-2);font-size:12px;align-items:baseline}
 .inp .ir:first-child{border-top:0}
 .inp .ir .k{color:var(--ink-3);font-weight:600}
 .inp .ir .v{color:var(--ink);line-height:1.5}
@@ -2445,15 +2445,15 @@ table.raw td.num{font-variant-numeric:tabular-nums;text-align:center;white-space
   color:var(--ink-3);margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid var(--line)}
 .kcard{border:1px solid var(--line);border-radius:14px;padding:13px 15px;margin-bottom:9px;
   background:var(--card-solid)}
-.kcard b{display:block;font-size:12.5px;margin-bottom:4px}
-.kcard span{display:block;font-size:11.5px;color:var(--ink-3);line-height:1.5}
+.kcard b{display:block;font-size:12px;margin-bottom:4px}
+.kcard span{display:block;font-size:11px;color:var(--ink-3);line-height:1.5}
 .kcard .met{margin-top:8px;padding-top:8px;border-top:1px solid var(--line-2);
   font-size:11px;color:var(--ink-2);font-weight:600}
 .kcard .met u{text-decoration:none;color:var(--acc-ink);font-weight:700}
 .pyr{display:flex;flex-direction:column;gap:13px}
 .pyr-head{display:grid;grid-template-columns:1fr 78px 1fr;align-items:center;
   margin-bottom:14px;padding-bottom:11px;border-bottom:1px solid var(--line);gap:8px}
-.pyr-head .t{font-size:16px;font-weight:700;letter-spacing:-.02em;color:var(--ink);
+.pyr-head .t{font-size:14.5px;font-weight:700;letter-spacing:-.02em;color:var(--ink);
   display:flex;align-items:center;gap:9px}
 .pyr-head .t.r{justify-content:flex-end}
 .pyr-head .t .sx{width:26px;height:26px;border-radius:8px;display:flex;
@@ -2471,11 +2471,11 @@ table.raw td.num{font-variant-numeric:tabular-nums;text-align:center;white-space
 .pyrow .bar{height:14px;flex:0 0 auto;min-width:3px}
 .pyrow .l .bar{background:var(--mid)}
 .pyrow .r .bar{background:var(--sw-violet)}
-.pyrow .s .v{font-size:11.5px;font-weight:700;color:var(--ink);
+.pyrow .s .v{font-size:11px;font-weight:700;color:var(--ink);
   font-variant-numeric:tabular-nums;min-width:38px}
 .pyrow .s.l .v{text-align:right;margin-right:9px}
 .pyrow .s.r .v{text-align:left;margin-left:9px}
-.pyrow .age{text-align:center;font-size:11.5px;color:var(--ink-2);font-weight:600;
+.pyrow .age{text-align:center;font-size:11px;color:var(--ink-2);font-weight:600;
   font-variant-numeric:tabular-nums}
 .val,.axis,.lbl,.gx,.dbar .n,.kpi .n,.pyrow .s .v,.gvol .v{hyphens:none;-webkit-hyphens:none}
 .bpain .dbar{grid-template-columns:1fr 190px 58px}
@@ -2493,7 +2493,7 @@ table.raw td.num{font-variant-numeric:tabular-nums;text-align:center;white-space
 .dsplit span{display:flex;align-items:center;justify-content:center;font-size:11px;
   font-weight:700;color:#12100D}
 .dbars{display:flex;flex-direction:column;gap:13px}
-.dbar{display:grid;grid-template-columns:46px 1fr 30px;gap:8px;align-items:center;font-size:11.5px}
+.dbar{display:grid;grid-template-columns:46px 1fr 30px;gap:8px;align-items:center;font-size:11px}
 .dbar .t{color:var(--ink-3)}
 .dbar .g{height:14px;background:var(--line-2)}
 .dbar .g i{display:block;height:100%;background:var(--mid)}
@@ -2505,7 +2505,7 @@ table.raw td.num{font-variant-numeric:tabular-nums;text-align:center;white-space
   align-items:center;justify-content:center;background:var(--line-2)}
 .chips figure svg{width:19px;height:19px;fill:none;stroke:var(--ink-2);
   stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;display:block}
-.chips figcaption{font-size:12.5px;font-weight:600;color:var(--ink-2);line-height:1.35}
+.chips figcaption{font-size:12px;font-weight:600;color:var(--ink-2);line-height:1.35}
 .demo.split{grid-template-columns:1fr 1fr;gap:0}
 .demo.split > div + div{border-left:1px solid var(--line);padding-left:24px}
 .demo.split > div:first-child{padding-right:24px}
@@ -2520,27 +2520,27 @@ table.raw td.num{font-variant-numeric:tabular-nums;text-align:center;white-space
   padding:0;display:flex;flex-direction:column;overflow:hidden}
 .vq2 .vtop{padding:15px 18px 0}
 .vq2 blockquote{margin:12px 0 0;font-family:var(--serif);font-style:italic;
-  font-size:15px;line-height:1.5;color:var(--ink)}
+  font-size:14px;line-height:1.5;color:var(--ink)}
 .vq2 .vtheme{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;
   margin:14px 0 0;padding:0 18px}
-.vq2 .vtheme b{font-size:13.5px;font-weight:700;color:var(--ink);letter-spacing:-.01em}
+.vq2 .vtheme b{font-size:12.5px;font-weight:700;color:var(--ink);letter-spacing:-.01em}
 .vq2 .seg2{display:inline-block;font-size:10px;font-weight:700;letter-spacing:.05em;
   text-transform:uppercase;color:var(--ink-2);background:var(--line-2);
   padding:3px 9px;border-radius:999px;hyphens:none}
-.vq2 .vsrc2{padding:5px 18px 0;font-size:11.5px;color:var(--ink-3)}
+.vq2 .vsrc2{padding:5px 18px 0;font-size:11px;color:var(--ink-3)}
 .vq2 .vnums{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:14px;
   padding:12px 18px;border-top:1px solid var(--line-2);
   background:color-mix(in srgb, var(--ink) 2%, transparent)}
 .vq2 .vnums .lab{display:block;font-size:10px;font-weight:700;letter-spacing:.07em;
   text-transform:uppercase;color:var(--ink-3);margin-bottom:5px}
-.vq2 .vnums .big2{font-size:15px;font-weight:700;color:var(--ink);letter-spacing:-.02em}
-.vq2 .vnums .big2 em{font-style:normal;font-size:11.5px;font-weight:600;
+.vq2 .vnums .big2{font-size:14px;font-weight:700;color:var(--ink);letter-spacing:-.02em}
+.vq2 .vnums .big2 em{font-style:normal;font-size:11px;font-weight:600;
   color:var(--ink-3);margin-left:4px}
 .pain{display:flex;align-items:center;gap:9px;margin-top:2px}
 .pain .rail2{flex:1;max-width:78px;height:9px;background:var(--line-2)}
 .pain .rail2 i{display:block;height:100%;background:var(--mid)}
-.pain b{font-size:12.5px;font-weight:700;color:var(--ink)}
-.vq2 .vans{padding:13px 18px;border-top:1px solid var(--line-2);font-size:12.5px;
+.pain b{font-size:12px;font-weight:700;color:var(--ink)}
+.vq2 .vans{padding:13px 18px;border-top:1px solid var(--line-2);font-size:12px;
   line-height:1.45;color:var(--ink)}
 .vq2 .vans span{display:block;font-size:10px;font-weight:700;letter-spacing:.07em;
   text-transform:uppercase;color:var(--ink-3);margin-bottom:3px}
@@ -2551,20 +2551,20 @@ table.raw td.num{font-variant-numeric:tabular-nums;text-align:center;white-space
   max-width:900px;padding:6px 0}
 .bias{background:color-mix(in srgb, var(--sw-grey) 8%, var(--raise));
   border:1px solid var(--line);border-radius:14px;padding:14px 18px;margin-top:14px;
-  font-size:12.5px;line-height:1.55;color:var(--ink-2)}
+  font-size:12px;line-height:1.55;color:var(--ink-2)}
 .bias b{color:var(--ink)}
 .rules{background:none;backdrop-filter:none;border:0;border-radius:0;overflow:visible;
   display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
 .rule-card{position:relative;overflow:hidden;
   background:var(--card);backdrop-filter:blur(14px);border:1px solid var(--line);
   border-radius:20px;padding:22px 24px 22px 26px;
-  font-size:13.6px;line-height:1.6;color:var(--ink-2);
+  font-size:13px;line-height:1.6;color:var(--ink-2);
   box-shadow:inset 0 1px 0 var(--hi), 0 10px 26px -20px rgba(45,36,22,.3);
   transition:box-shadow .4s ease, transform .4s cubic-bezier(.2,.8,.2,1)}
 .rule-card:hover{transform:translateY(-2px);
   box-shadow:inset 0 1px 0 var(--hi), 0 18px 34px -20px rgba(45,36,22,.4)}
 .rule-card b{position:absolute;right:16px;bottom:-14px;
-  font-size:74px;font-weight:700;line-height:1;
+  font-size:65px;font-weight:700;line-height:1;
   color:color-mix(in srgb, var(--ink) 12%, transparent);
   pointer-events:none;user-select:none}
 .rule-card::before{content:"";position:absolute;left:0;top:0;height:2px;width:0;
@@ -2594,25 +2594,25 @@ table.raw td.num{font-variant-numeric:tabular-nums;text-align:center;white-space
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--maybe-bg:rgba(255,255,255,.05)}}
 .side .navtile[disabled],.side .navrow[disabled]{opacity:.45}
 .coverdl{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px 26px;margin:22px 0 0;padding-top:18px;border-top:1px solid var(--line)}
-.coverdl>div{display:flex;gap:10px;align-items:baseline;font-size:13px}
+.coverdl>div{display:flex;gap:10px;align-items:baseline;font-size:12px}
 .coverdl dt{color:var(--ink-3);white-space:nowrap}
 .coverdl dd{margin:0;color:var(--ink);font-weight:600}
 .mods{display:flex;gap:7px;flex-wrap:wrap;margin-top:24px;padding-top:18px;border-top:1px solid var(--line)}
 .mods span{font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3);padding:4px 9px;border-radius:7px;border:1px solid var(--line)}
 .mods span.on{color:var(--ink);border-color:transparent;background:color-mix(in srgb, var(--mid) 14%, transparent)}
-.rli{font-size:13.5px;color:var(--ink-2);margin:5px 0;padding-left:15px;position:relative;max-width:74ch}
+.rli{font-size:12.5px;color:var(--ink-2);margin:5px 0;padding-left:15px;position:relative;max-width:74ch}
 .rli::before{content:"";position:absolute;left:0;top:8px;width:5px;height:5px;border-radius:50%;background:var(--mid)}
 :root{--glow:#06BDBD}
 :root{--nacre-img:url(data:image/jpeg;base64,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)}
 .nacre,.side .upsell{background:rgba(255,254,251,.86);backdrop-filter:blur(16px) saturate(150%);-webkit-backdrop-filter:blur(16px) saturate(150%);position:relative;isolation:isolate;border:1px solid rgba(255,255,255,.9);box-shadow:0 24px 42px -18px rgba(45,36,22,.34), 0 0 0 1px rgba(23,21,18,.06),inset 0 1px 0 rgba(255,255,255,.95)}
 .nacre::before,.side .upsell::before{content:"";position:absolute;inset:0;z-index:0;border-radius:inherit;pointer-events:none;opacity:.62;background:radial-gradient(48% 120px at 26% 0%, rgba(255,255,255,.86), rgba(255,255,255,0) 74%),linear-gradient(112deg,color-mix(in srgb, var(--glow) 11%, transparent) 0%,rgba(254,252,248,.28) 22%,rgba(235,230,244,.34) 44%,color-mix(in srgb, var(--mid) 10%, rgba(226,233,240,.24)) 63%,rgba(249,240,220,.32) 82%,color-mix(in srgb, var(--glow) 10%, transparent) 100%),var(--nacre-img) center/cover}
 .rules .eb{font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--ink-3);margin-bottom:7px;max-width:34ch}
-.rules .nm{font-size:15px;font-weight:700;color:var(--ink);line-height:1.3;margin-bottom:7px;max-width:34ch}
-.rules .q{font-family:var(--serif);font-size:15px;line-height:1.5;color:var(--ink);max-width:38ch}
-.rules .ft{margin-top:12px;padding-top:10px;border-top:1px solid var(--line);font-size:11.5px;color:var(--ink-3);line-height:1.5;max-width:36ch}
+.rules .nm{font-size:14px;font-weight:700;color:var(--ink);line-height:1.3;margin-bottom:7px;max-width:34ch}
+.rules .q{font-family:var(--serif);font-size:14px;line-height:1.5;color:var(--ink);max-width:38ch}
+.rules .ft{margin-top:12px;padding-top:10px;border-top:1px solid var(--line);font-size:11px;color:var(--ink-3);line-height:1.5;max-width:36ch}
 /* Источники свёрнуты: доказательство под рукой, но не поперёк отчёта. */
 .srcfold{margin:14px 0 22px}
-.srcfold>.srctoggle{display:block;width:100%;text-align:left;cursor:pointer;font:inherit;font-size:12.5px;color:var(--ink-3);padding:9px 0;background:none;border:0;border-top:1px solid var(--line-2);border-bottom:1px solid var(--line-2)}
+.srcfold>.srctoggle{display:block;width:100%;text-align:left;cursor:pointer;font:inherit;font-size:12px;color:var(--ink-3);padding:9px 0;background:none;border:0;border-top:1px solid var(--line-2);border-bottom:1px solid var(--line-2)}
 .srcfold>.srctoggle:before{content:"▸";display:inline-block;width:14px}
 .srcfold>.srctoggle[aria-expanded="true"]:before{content:"▾"}
 .srcfold>.srctoggle:hover{color:var(--ink-2)}
@@ -2622,17 +2622,17 @@ table.raw td.num{font-variant-numeric:tabular-nums;text-align:center;white-space
 /* Нечего мерить — нет и дорожки: две колонки вместо трёх. */
 .nomeasure .tcrow{grid-template-columns:minmax(0,1fr) auto}
 .topc .tcrow:first-child{border-top:0}
-.tcn{font-size:13.5px;line-height:1.35;color:var(--ink);min-width:0}
+.tcn{font-size:12.5px;line-height:1.35;color:var(--ink);min-width:0}
 .tcn .tci{display:inline-block;width:15px;height:15px;vertical-align:-2px;margin-right:6px}
 .tcn .tci svg{width:15px;height:15px;stroke:var(--ink-3);fill:none;stroke-width:1.6}
 .tcn a{color:var(--ink);text-decoration:none}
 .tcn a:hover{text-decoration:underline}
-.tcn span{display:block;font-size:11.5px;color:var(--ink-3);margin-top:3px}
-.tcv{text-align:right;font-size:13.5px;font-weight:700;color:var(--ink);font-variant-numeric:tabular-nums}
-.tcv span{display:block;font-size:11.5px;font-weight:600;color:var(--ink-3);margin-top:2px}
-.tch{grid-column:1/-1;font-family:var(--serif);font-size:13.5px;color:var(--ink-2);line-height:1.5;padding:2px 0 2px 2px}
+.tcn span{display:block;font-size:11px;color:var(--ink-3);margin-top:3px}
+.tcv{text-align:right;font-size:12.5px;font-weight:700;color:var(--ink);font-variant-numeric:tabular-nums}
+.tcv span{display:block;font-size:11px;font-weight:600;color:var(--ink-3);margin-top:2px}
+.tch{grid-column:1/-1;font-family:var(--serif);font-size:12.5px;color:var(--ink-2);line-height:1.5;padding:2px 0 2px 2px}
 .rules .q i{font-style:normal;font-family:var(--sans);font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3)}
-.rules .warnline{margin-top:10px;padding:7px 0 7px 11px;font-size:11.5px;color:var(--ink-2);line-height:1.5;box-shadow:inset 2px 0 0 var(--acc-mid);max-width:34ch}
+.rules .warnline{margin-top:10px;padding:7px 0 7px 11px;font-size:11px;color:var(--ink-2);line-height:1.5;box-shadow:inset 2px 0 0 var(--acc-mid);max-width:34ch}
 .msum{margin:2px 0 26px;padding:18px 22px 20px;border-radius:16px;background:color-mix(in srgb, var(--mid) 5%, transparent);box-shadow:inset 3px 0 0 var(--mid)}
 .msum-h{font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--acc-ink);margin-bottom:14px}
 /* Пропорция перевёрнута 15.09: «что узнали» — факты, их читают бегло, а
@@ -2645,22 +2645,22 @@ table.raw td.num{font-variant-numeric:tabular-nums;text-align:center;white-space
 .msum ul{margin:0;padding-left:17px;list-style:none}
 .msum li{position:relative;margin:8px 0}
 .msum li::before{content:"";position:absolute;left:-17px;top:8px;width:5px;height:5px;border-radius:50%;background:var(--mid)}
-.msum .sm-main li{font-family:var(--serif);font-size:13.5px;line-height:1.55;color:var(--ink)}
-.msum .sm-side li{font-size:12.5px;line-height:1.5;color:var(--ink-2);margin:6px 0}
+.msum .sm-main li{font-family:var(--serif);font-size:12.5px;line-height:1.55;color:var(--ink)}
+.msum .sm-side li{font-size:12px;line-height:1.5;color:var(--ink-2);margin:6px 0}
 .msum .sm-side li::before{top:7px;width:4px;height:4px;background:var(--ink-3)}
 .msum li b{color:var(--ink);font-weight:600}
 @media (max-width:860px){.msum-body{grid-template-columns:1fr}}
 .pers-side h3 .pflag{display:inline-block;margin-left:8px;padding:2px 8px;border-radius:999px;font-family:var(--sans);font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;vertical-align:middle;color:var(--ink);background:color-mix(in srgb, var(--sw-violet) 18%, transparent)}
 .rules .hooklist{margin:2px 0 10px;padding-left:16px;list-style:none;max-width:36ch}
-.rules .hooklist li{position:relative;font-family:var(--serif);font-size:13.5px;line-height:1.5;color:var(--ink);margin:5px 0}
+.rules .hooklist li{position:relative;font-family:var(--serif);font-size:12.5px;line-height:1.5;color:var(--ink);margin:5px 0}
 .rules .hooklist li::before{content:"";position:absolute;left:-16px;top:8px;width:5px;height:5px;border-radius:50%;background:var(--mid)}
 .bmk{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:0 26px}
 .bcell{padding:14px 0;border-top:1px solid var(--line-2)}
 .bcell .bk{display:block;font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--ink-3);margin-bottom:6px}
-.bcell .bv{display:block;font-size:19px;font-weight:700;color:var(--ink);font-variant-numeric:tabular-nums;line-height:1.2}
-.bcell .br{display:block;font-size:11.5px;color:var(--ink-2);margin-top:4px}
-.bcell .bn{display:block;font-size:11.5px;color:var(--ink-3);margin-top:2px}
-.bcell .bnote{display:block;font-size:11.5px;color:var(--ink-3);margin-top:6px;line-height:1.45}
+.bcell .bv{display:block;font-size:17px;font-weight:700;color:var(--ink);font-variant-numeric:tabular-nums;line-height:1.2}
+.bcell .br{display:block;font-size:11px;color:var(--ink-2);margin-top:4px}
+.bcell .bn{display:block;font-size:11px;color:var(--ink-3);margin-top:2px}
+.bcell .bnote{display:block;font-size:11px;color:var(--ink-3);margin-top:6px;line-height:1.45}
 .rules .rule-card.lead{box-shadow:inset 3px 0 0 var(--mid),inset 0 1px 0 var(--hi), 0 10px 26px -20px rgba(45,36,22,.3)}
 .bet .rule-card.wide{grid-column:1/-1}
 /* Последняя строка широкой карточки — служебная приписка «у соперников
@@ -2689,7 +2689,7 @@ body{overflow-x:clip}
 .serp .s .u{margin-bottom:6px}
 .serp .s .meta{margin-bottom:6px}
 .semrow{display:grid;grid-template-columns:minmax(0,210px) 1fr 64px;gap:14px;align-items:center;padding:4px 9px;cursor:pointer;background:none}
-.semrow .nm{margin-bottom:0;font-size:12.5px;line-height:1.3}
+.semrow .nm{margin-bottom:0;font-size:12px;line-height:1.3}
 @media (max-width:860px){.semrow{grid-template-columns:minmax(0,120px) 1fr 56px;gap:10px}}
 .semrow:hover,.semrow.on{background:none}
 .semrow .rail i{background:color-mix(in srgb, var(--mid) 42%, var(--line-2));transition:background .18s ease}
@@ -2713,7 +2713,7 @@ body{overflow-x:clip}
 .main .sl.rich .v2.big{white-space:nowrap}
 .nwrap{display:grid;grid-template-columns:minmax(0,1fr) 290px;gap:26px;align-items:start;margin-bottom:18px}
 .rkey-side{display:flex;flex-direction:column;align-items:flex-start;gap:12px;margin:0}
-.rkey-side .rtext{max-width:none;font-size:12.5px}
+.rkey-side .rtext{max-width:none;font-size:12px}
 @media (max-width:1000px){.main .seg{grid-template-columns:1fr!important}.nwrap{grid-template-columns:1fr}}
 @media (max-width:820px){.main .leghead{display:none}.main .sl.rich{grid-template-columns:40px 1fr;gap:6px 12px}}
 .tamwrap{display:grid;grid-template-columns:minmax(0,1fr) 220px;gap:24px;align-items:center}
@@ -2721,8 +2721,8 @@ body{overflow-x:clip}
 .tamrow{display:grid;grid-template-columns:52px 1fr;gap:10px;align-items:baseline;padding:9px 0;border-top:1px solid var(--line-2)}
 .tamrow:first-child{border-top:0}
 .tamrow .c{font-size:11px;font-weight:700;letter-spacing:.06em;color:var(--ink-3)}
-.tamrow b{font-size:16px;font-weight:700;color:var(--ink);font-variant-numeric:tabular-nums}
-.tamrow .rel{grid-column:2;font-size:11.5px;color:var(--ink-3)}
+.tamrow b{font-size:14.5px;font-weight:700;color:var(--ink);font-variant-numeric:tabular-nums}
+.tamrow .rel{grid-column:2;font-size:11px;color:var(--ink-3)}
 .tamrow{border-radius:9px;padding-left:8px;margin-left:-8px;transition:background .15s ease}
 .tamrow.on{background:color-mix(in srgb, var(--mid) 12%, transparent)}
 .tamwrap ellipse{cursor:default}
@@ -2733,19 +2733,19 @@ body{overflow-x:clip}
 .ibtn:hover{background:color-mix(in srgb, var(--ink) 6%, transparent)}
 .ibtn:hover svg{stroke:var(--ink)}
 .ibtn.ok svg{stroke:var(--acc-strong)}
-.main > .card > .chead h2{font-size:21px;letter-spacing:-.015em}
-.main > .card h2{font-size:16px;font-weight:600;margin:26px 0 8px}
-.main > .card h3{font-size:14px;font-weight:600;margin:20px 0 6px;color:var(--ink-2)}
-.main > .card h4{font-size:13px;font-weight:600;margin:16px 0 6px;color:var(--ink-2)}
+.main > .card > .chead h2{font-size:19px;letter-spacing:-.015em}
+.main > .card h2{font-size:14.5px;font-weight:600;margin:26px 0 8px}
+.main > .card h3{font-size:13px;font-weight:600;margin:20px 0 6px;color:var(--ink-2)}
+.main > .card h4{font-size:12px;font-weight:600;margin:16px 0 6px;color:var(--ink-2)}
 .main > .card > h2:first-of-type{margin-top:12px}
 .nicheband{margin:42px 0 16px;padding:0 0 12px;border-bottom:2px solid var(--mid)}
 .nicheband .lab{display:block;font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);margin-bottom:6px}
-.nicheband .nm{font-family:var(--serif);font-size:30px;font-weight:600;color:var(--ink);line-height:1.15;letter-spacing:-.02em}
+.nicheband .nm{font-family:var(--serif);font-size:26.5px;font-weight:600;color:var(--ink);line-height:1.15;letter-spacing:-.02em}
 .nicheband:first-of-type{margin-top:10px}
 .cover .chead{align-items:flex-start;gap:22px}
 .cover .eyebrow{display:block;font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);margin-bottom:8px}
-.cover .covername{font-family:var(--serif);font-size:34px;font-weight:600;margin:0;line-height:1.1;letter-spacing:-.02em}
-.cover .coversub{margin:8px 0 0;font-size:14px;color:var(--ink-2)}
+.cover .covername{font-family:var(--serif);font-size:30px;font-weight:600;margin:0;line-height:1.1;letter-spacing:-.02em}
+.cover .coversub{margin:8px 0 0;font-size:13px;color:var(--ink-2)}
 .cover .coveract{display:flex;align-items:center;gap:14px;flex-wrap:wrap;white-space:nowrap}
 .perslist{display:flex;flex-direction:column;gap:14px}
 .main .pers{grid-template-columns:minmax(0,230px) minmax(0,1fr);overflow:visible;border-radius:20px;margin-bottom:18px}
@@ -2761,10 +2761,10 @@ body{overflow-x:clip}
 .side .logo{display:block;width:100%;max-width:170px;height:auto}
 .side .navgrid{grid-template-columns:1fr 1fr;gap:7px}
 .side .navtile{transition:padding .22s ease, background .22s ease, color .22s ease, box-shadow .22s ease}
-.side .navtile[aria-current="page"]{grid-column:1/-1;flex-direction:row;align-items:center;gap:14px;padding:20px 18px;font-size:14px;font-weight:600}
+.side .navtile[aria-current="page"]{grid-column:1/-1;flex-direction:row;align-items:center;gap:14px;padding:20px 18px;font-size:13px;font-weight:600}
 .side .navtile[aria-current="page"] .ic{width:40px;height:40px;border-radius:13px;flex:0 0 auto}
 .side .navtile[aria-current="page"] .ic svg{width:20px;height:20px}
-.side .navtile:not([aria-current="page"]){grid-column:1/-1;padding:10px 12px;font-size:12px;flex-direction:row;align-items:center;gap:10px}
+.side .navtile:not([aria-current="page"]){grid-column:1/-1;padding:10px 12px;font-size:11.5px;flex-direction:row;align-items:center;gap:10px}
 .side .navtile:not([aria-current="page"]):not(:disabled):hover{padding:12px;box-shadow:0 8px 18px -12px rgba(23,21,18,.35)}
 .side .navtile:not([aria-current="page"]) .ic{width:24px;height:24px;border-radius:8px;flex:0 0 auto}
 .side .navtile:not([aria-current="page"]) .ic svg{width:13px;height:13px}
@@ -2773,28 +2773,28 @@ body{overflow-x:clip}
 .side .navlist a.navrow{display:flex;align-items:center;gap:10px;width:100%;text-decoration:none;color:var(--ink-2);opacity:1}
 .side .navlist a.navrow:hover{color:var(--ink)}
 .klist{margin:10px 0 0;padding-left:18px}
-.klist li{font-size:13.5px;color:var(--ink-2);line-height:1.55;margin:6px 0}
+.klist li{font-size:12.5px;color:var(--ink-2);line-height:1.55;margin:6px 0}
 .aud .a .freq .lab,.aw span,.ccard2 .cid,.ccard2 .price span,.cmark,.heat th,.vmark,.tbl th,table.raw th{font-size:10px}
-.aud .a .who span,.awleg,.awrow .awnm span,.ccard .cn span,.client i,.kcard .met,.llist div span,.ltag .ename span,.mklbl,.pers-conf span.sub2,.serp .s .meta,.srow .sd .dt,.tamrow .c{font-size:11.5px}
-.ccard .cf div b,.chead .note,.gvol .v,.gx,.heat,.mktlist .hint,.nhint,.sigrow{font-size:12.5px}
-.rule-card{font-size:13.5px}
-.dtbl .q,.rules .q,.llist div{font-size:13.5px}
-.rules .nm,.ccard2 .cnm{font-size:15px}
-.lbl{font-size:12.5px}
-.val{font-size:11.5px;font-weight:700}
+.aud .a .who span,.awleg,.awrow .awnm span,.ccard .cn span,.client i,.kcard .met,.llist div span,.ltag .ename span,.mklbl,.pers-conf span.sub2,.serp .s .meta,.srow .sd .dt,.tamrow .c{font-size:11px}
+.ccard .cf div b,.chead .note,.gvol .v,.gx,.heat,.mktlist .hint,.nhint,.sigrow{font-size:12px}
+.rule-card{font-size:12.5px}
+.dtbl .q,.rules .q,.llist div{font-size:12.5px}
+.rules .nm,.ccard2 .cnm{font-size:14px}
+.lbl{font-size:12px}
+.val{font-size:11px;font-weight:700}
 .infer{font-size:10px;font-weight:700}
 .prow .p{font-weight:600}
 .qarrow{color:var(--ink-3)}
-.fcard .name{font-size:14.5px}
-.fcard .foot b{font-size:12.5px}
+.fcard .name{font-size:13.5px}
+.fcard .foot b{font-size:12px}
 th{font-size:10px}
-.tamrow .c,.upsell b i,.kchip{font-size:11.5px}
+.tamrow .c,.upsell b i,.kchip{font-size:11px}
 :root{--fs-read:14.5px}
 .ltag .ename{font-size:var(--fs-item)}
-.aud .a .who,.awrow .awnm,.coverdl>div,.lleft .nm,.lright b,.pers-conf b,.prow,.sempanel .who,table{font-size:13.5px}
-.sl.rich .v2.big,.pers-side h3,.upsell b{font-size:19px}
-.pers-share b{font-size:30px}
-.main > .card > p{font-size:13.5px;line-height:1.6;color:var(--ink-2);max-width:74ch}
+.aud .a .who,.awrow .awnm,.coverdl>div,.lleft .nm,.lright b,.pers-conf b,.prow,.sempanel .who,table{font-size:12.5px}
+.sl.rich .v2.big,.pers-side h3,.upsell b{font-size:17px}
+.pers-share b{font-size:26.5px}
+.main > .card > p{font-size:12.5px;line-height:1.6;color:var(--ink-2);max-width:74ch}
 .aud .a .cols h5,.bmet h4,.bpain h4,.cbox h5,.ccard .cf div span,.ccard2 .scale,.cover .eyebrow,.dtbl .eb,.dtbl .tag,.dtbl .th,.geohead,.kcol h3,.leghead,.mkt .hd,.mktlist .hdr,.mktlist h4,.rules .eb,.sw h3,.swot .sw h3,.tbl th,table.raw th,th,.demo h4,.vis h4,.chnside h4{letter-spacing:.07em;font-weight:700}
 .grp,.heat th,.mods span,.nicheband .lab,.upsell b i,.vmark,.vq2 .seg2{letter-spacing:.07em;font-weight:700}
 :root{--fs-label:10px;--fs-caption:11.5px;--fs-ui:12px;--fs-small:12.5px;--fs-base:13px;--fs-body:13.5px;--fs-sub:14px;--fs-item:15px;--fs-block:16px;--fs-num:19px;--fs-module:21px;--fs-display:30px;--fs-hero:34px}
@@ -2827,13 +2827,13 @@ th{font-size:10px}
 .ncard2{display:block;padding:14px 16px}
 .ncard2 .nhd{display:grid;grid-template-columns:112px minmax(0,1fr);gap:14px;align-items:center}
 .ncard2 .nhd>div:first-child{display:flex;justify-content:center}
-.ncard2 .nh b{font-size:14px;line-height:1.25}
+.ncard2 .nh b{font-size:13px;line-height:1.25}
 .ncard2 .tot{margin:6px 0 7px}
 .ncard2 .sigrows{margin-top:10px;padding-top:10px;border-top:1px solid var(--line-2)}
-.ncard2 .ntake{margin-top:10px;padding:6px 12px;font-size:11.5px}
-.ncard2 .nh b{font-size:13.5px}
-.ncard2 .tot i{font-size:22px}
-.ncard2 .sigrow .v3{font-size:12px;line-height:1.45}
+.ncard2 .ntake{margin-top:10px;padding:6px 12px;font-size:11px}
+.ncard2 .nh b{font-size:12.5px}
+.ncard2 .tot i{font-size:20px}
+.ncard2 .sigrow .v3{font-size:11.5px;line-height:1.45}
 .ncard2.on{box-shadow:0 0 0 2px var(--mid), 0 18px 34px -20px rgba(45,36,22,.4)}
 .ncard2 .sigrow{display:block;padding:8px 0;grid-template-columns:none}
 .ncard2 .sigrow .k2{display:block;margin-bottom:3px}
@@ -2842,22 +2842,22 @@ th{font-size:10px}
 .rkey-side{display:grid;grid-template-columns:256px minmax(0,1fr);gap:14px 20px;align-items:start;margin:0}
 .rkey-side>div:first-child{min-width:0;overflow:hidden}
 .rkey-side>div:first-child{grid-row:1 / span 3}
-.rkey-side .rtext{max-width:none;font-size:12.5px}
+.rkey-side .rtext{max-width:none;font-size:12px}
 @media (max-width:760px){.rkey-side{grid-template-columns:1fr}.rkey-side>div:first-child{grid-row:auto}}
 /* Сноска мельче основного текста и со звёздочкой: иначе пояснение сливается
    с данными (владелица 16.09). */
-.note{font-size:11.5px}
+.note{font-size:11px}
 .note:not(.confleg):not(.nhint)::before{content:"* ";color:var(--ink-3)}
 /* Полный список просмотренного — под своей кнопкой, а не простынёй. */
 .srcall{display:none}
 .srcall.on{display:flex}
-.srcall-btn{margin-top:10px;font-size:11.5px;color:var(--ink-2);background:none;border:0;padding:0;cursor:pointer;text-decoration:underline}
+.srcall-btn{margin-top:10px;font-size:11px;color:var(--ink-2);background:none;border:0;padding:0;cursor:pointer;text-decoration:underline}
 /* География спроса в строгом пути: полоса объёма и плотность числом. */
 .geo{overflow-x:auto}
 .geo .th,.geo .tr{display:grid;grid-template-columns:minmax(140px,1.2fr) 170px 64px 78px minmax(0,1.4fr);gap:12px;align-items:center;min-width:660px}
 .geo .th{padding:0 0 8px;border-bottom:1px solid var(--line);font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--ink-3)}
-.geo .tr{padding:9px 0;border-top:1px solid var(--line-2);font-size:12.5px;color:var(--ink-2)}
-.geo .nm{font-size:13px;font-weight:700;color:var(--ink)}
+.geo .tr{padding:9px 0;border-top:1px solid var(--line-2);font-size:12px;color:var(--ink-2)}
+.geo .nm{font-size:12px;font-weight:700;color:var(--ink)}
 .geo .gvol{display:flex;align-items:center;gap:9px}
 .geo .rail{flex:1;height:14px;background:var(--line-2);border-radius:0;overflow:hidden}
 .geo .rail .b{display:block;height:14px;background:var(--mid)}
@@ -2875,25 +2875,25 @@ th{font-size:10px}
    кликабельный — раньше он налезал на соседнее поле (владелица 16.09). */
 .aud .a .who{display:flex;flex-direction:column;gap:3px;align-items:flex-start;min-width:0}
 .aud .a .who .whoname{display:flex;align-items:center}
-.aud .a .who .chlink{font-size:11.5px;color:var(--ink-2);overflow-wrap:anywhere;text-decoration:underline}
-.aud .a .who span{font-size:11.5px;color:var(--ink-3);overflow-wrap:anywhere}
+.aud .a .who .chlink{font-size:11px;color:var(--ink-2);overflow-wrap:anywhere;text-decoration:underline}
+.aud .a .who span{font-size:11px;color:var(--ink-3);overflow-wrap:anywhere}
 /* Сравнение каналов: решётка с полосами-долями от лучшего в столбце. */
 .chncmp{overflow-x:auto}
 .chncmp .th,.chncmp .tr{display:grid;grid-template-columns:minmax(150px,1.3fr) repeat(4,minmax(120px,1fr));gap:14px;align-items:center;min-width:700px}
 .chncmp .th{padding:0 0 8px;border-bottom:1px solid var(--line);font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--ink-3)}
-.chncmp .tr{padding:10px 0;border-top:1px solid var(--line-2);font-size:12.5px;color:var(--ink-2)}
+.chncmp .tr{padding:10px 0;border-top:1px solid var(--line-2);font-size:12px;color:var(--ink-2)}
 .chncmp .tr.mine{background:color-mix(in srgb, var(--mid) 7%, transparent)}
-.chncmp .nm{font-size:13px;font-weight:700;color:var(--ink);line-height:1.25}
+.chncmp .nm{font-size:12px;font-weight:700;color:var(--ink);line-height:1.25}
 .chncmp .nm i{display:block;font-style:normal;font-size:11px;font-weight:400;color:var(--ink-3)}
 .chncmp .cmpv{display:flex;align-items:center;gap:8px;min-width:0}
 .chncmp .cmpv .rail{flex:1;height:14px;background:var(--line-2);overflow:hidden}
 .chncmp .cmpv .rail .b{display:block;height:14px;background:var(--mid)}
 .chncmp .cmpv .v{font-variant-numeric:tabular-nums;white-space:nowrap}
-.chncmp .cmpv.no{color:var(--ink-3);font-size:11.5px}
+.chncmp .cmpv.no{color:var(--ink-3);font-size:11px}
 /* Разбор ценности под карточкой оффера: четыре части и слабое место. */
 .offval{margin:10px 0 0;padding:14px 18px;border:1px solid var(--line);border-radius:14px;background:color-mix(in srgb, var(--ink) 2%, transparent)}
 .offval .ovh{font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--ink-3);margin-bottom:10px}
-.offval .ovr,.offval .ovweak{display:grid;grid-template-columns:150px minmax(0,1fr);gap:6px 16px;padding:7px 0;border-top:1px solid var(--line-2);font-size:12.5px;line-height:1.5}
+.offval .ovr,.offval .ovweak{display:grid;grid-template-columns:150px minmax(0,1fr);gap:6px 16px;padding:7px 0;border-top:1px solid var(--line-2);font-size:12px;line-height:1.5}
 .offval .ovr:first-of-type{border-top:0}
 .offval .ovr span,.offval .ovweak span{font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--ink-3)}
 .offval .ovr b{font-weight:400;color:var(--ink-2)}
@@ -2905,60 +2905,60 @@ th{font-size:10px}
 .decomp{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px}
 .decomp .dstep{border:1px solid var(--line);border-radius:14px;padding:14px 16px;background:color-mix(in srgb, var(--ink) 2%, transparent);position:relative}
 .decomp .dk{display:block;font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--ink-3);margin-bottom:6px}
-.decomp .dv{display:block;font-size:17px;font-weight:700;color:var(--ink);line-height:1.25;overflow-wrap:anywhere}
-.decomp .dc{display:block;margin-top:8px;padding-top:8px;border-top:1px solid var(--line-2);font-size:11.5px;color:var(--ink-2)}
+.decomp .dv{display:block;font-size:15.5px;font-weight:700;color:var(--ink);line-height:1.25;overflow-wrap:anywhere}
+.decomp .dc{display:block;margin-top:8px;padding-top:8px;border-top:1px solid var(--line-2);font-size:11px;color:var(--ink-2)}
 /* «Где нам продвигаться» — решение модуля: карточка на площадку. */
 .plan{display:grid;grid-template-columns:repeat(auto-fit,minmax(360px,1fr));gap:12px}
 .plan .pcard{border:1px solid var(--line);border-radius:16px;padding:16px 18px;background:var(--card);position:relative;overflow:hidden;transition:box-shadow .4s ease, transform .4s cubic-bezier(.2,.8,.2,1)}
 .plan .pcard:hover{transform:translateY(-2px);box-shadow:0 18px 34px -20px rgba(45,36,22,.4)}
 .plan .ph{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:8px}
-.plan .ph .pn{font-size:22px;font-weight:700;color:var(--mid);letter-spacing:-.03em;line-height:1}
-.plan .ph b{font-size:15px;font-weight:700;color:var(--ink)}
-.plan .pcard>p{margin:0 0 10px;font-size:13px;line-height:1.55;color:var(--ink-2)}
-.plan .pf{display:block;margin-top:8px;padding-top:8px;border-top:1px solid var(--line-2);font-size:12.5px;line-height:1.5}
+.plan .ph .pn{font-size:20px;font-weight:700;color:var(--mid);letter-spacing:-.03em;line-height:1}
+.plan .ph b{font-size:14px;font-weight:700;color:var(--ink)}
+.plan .pcard>p{margin:0 0 10px;font-size:12px;line-height:1.55;color:var(--ink-2)}
+.plan .pf{display:block;margin-top:8px;padding-top:8px;border-top:1px solid var(--line-2);font-size:12px;line-height:1.5}
 /* Перечисления в портрете — плашками, а не строкой через точки: восемь
    интересов подряд читались стеной текста (владелица 18.09). */
 .pf>span{display:block;font-size:10px;font-weight:700;letter-spacing:.06em;
   text-transform:uppercase;color:var(--ink-3);margin-bottom:6px}
 .pchips{display:flex;flex-wrap:wrap;gap:6px}
 .pchip{display:inline-block;padding:4px 12px;border-radius:999px;font-style:normal;
-  font-size:12px;line-height:1.35;background:color-mix(in srgb, var(--mid) 12%, var(--card-solid));
+  font-size:11.5px;line-height:1.35;background:color-mix(in srgb, var(--mid) 12%, var(--card-solid));
   color:var(--ink);border:1px solid color-mix(in srgb, var(--mid) 26%, var(--line))}
-.pchip.quiet{background:var(--card-solid);color:var(--ink-3);border-color:var(--line-2);font-size:11.5px}
+.pchip.quiet{background:var(--card-solid);color:var(--ink-3);border-color:var(--line-2);font-size:11px}
 /* Роль — отдельной строкой под именем сегмента, а не в одну строку с ним:
    вместе они переносились по слогам и читались как одно длинное имя. */
-.prole{font-size:12.5px;color:var(--ink-2);line-height:1.45;margin:-4px 0 6px}
+.prole{font-size:12px;color:var(--ink-2);line-height:1.45;margin:-4px 0 6px}
 .plan .pf span{display:block;font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--ink-3);margin-bottom:3px}
 .plan .pf b{font-weight:400;color:var(--ink-2)}
 /* Сводка стратегии: куда идём и что выкладываем — одной решёткой. */
 .plantbl{overflow-x:auto;margin-bottom:18px}
 .plantbl .th,.plantbl .tr{display:grid;grid-template-columns:34px minmax(120px,.9fr) minmax(180px,1.6fr) minmax(110px,.9fr) minmax(140px,1.1fr) 108px;gap:12px;align-items:start;min-width:760px}
 .plantbl .th{padding:0 0 8px;border-bottom:1px solid var(--line);font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--ink-3)}
-.plantbl .tr{padding:11px 0;border-top:1px solid var(--line-2);font-size:12.5px;color:var(--ink-2);line-height:1.5}
-.plantbl .pn{font-weight:700;color:var(--mid);font-size:15px;line-height:1.2}
-.plantbl .nm{font-size:13px;font-weight:700;color:var(--ink);line-height:1.3}
+.plantbl .tr{padding:11px 0;border-top:1px solid var(--line-2);font-size:12px;color:var(--ink-2);line-height:1.5}
+.plantbl .pn{font-weight:700;color:var(--mid);font-size:14px;line-height:1.2}
+.plantbl .nm{font-size:12px;font-weight:700;color:var(--ink);line-height:1.3}
 /* Позиционирование по шагам: цепочка, итоговая фраза крупно внизу. */
 .poswrap{display:flex;flex-direction:column;gap:12px}
 .poscard{border:1px solid var(--line);border-radius:18px;padding:18px 22px;background:var(--card)}
 .poscard .posh{display:flex;align-items:baseline;gap:10px;margin-bottom:12px}
 .poscard .posh .eb{font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--ink-3)}
-.poscard .posh b{font-size:15px;font-weight:700;color:var(--ink)}
+.poscard .posh b{font-size:14px;font-weight:700;color:var(--ink)}
 .poscard .posline{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px}
 .poscard .posstep{padding:11px 13px;border-radius:12px;background:color-mix(in srgb, var(--ink) 3%, transparent)}
 .poscard .posstep span{display:block;font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3);margin-bottom:5px}
-.poscard .posstep b{display:block;font-size:12.5px;font-weight:400;color:var(--ink-2);line-height:1.5}
+.poscard .posstep b{display:block;font-size:12px;font-weight:400;color:var(--ink-2);line-height:1.5}
 .poscard .posfin{margin-top:14px;padding:14px 16px;border-radius:14px;box-shadow:inset 3px 0 0 var(--mid);background:color-mix(in srgb, var(--mid) 6%, transparent)}
 .poscard .posfin span{display:block;font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--ink-3);margin-bottom:6px}
-.poscard .posfin b{font-family:var(--serif);font-size:15px;font-weight:600;color:var(--ink);line-height:1.5}
-.poscard .posproof{margin-top:10px;font-size:11.5px;color:var(--ink-3);line-height:1.5}
+.poscard .posfin b{font-family:var(--serif);font-size:14px;font-weight:600;color:var(--ink);line-height:1.5}
+.poscard .posproof{margin-top:10px;font-size:11px;color:var(--ink-3);line-height:1.5}
 /* Панель разбора мягко проявляется при смене площадки. */
 .pinfo.pfade{animation:pfadein .28s ease}
 @keyframes pfadein{from{opacity:.35;transform:translateY(3px)}to{opacity:1;transform:none}}
 @media (prefers-reduced-motion:reduce){.plist .pbar i{transition:none}.pinfo.pfade{animation:none}}
 /* Части строки в комплекте площадок. */
-.plist .pnum{font-size:13px;font-weight:700;color:var(--mid);font-variant-numeric:tabular-nums}
-.plist .pname{font-size:13px;font-weight:700;color:var(--ink);line-height:1.25;overflow-wrap:anywhere;min-width:0}
-.plist .ppct{font-size:12.5px;color:var(--ink-2);font-variant-numeric:tabular-nums;text-align:right;white-space:nowrap}
+.plist .pnum{font-size:12px;font-weight:700;color:var(--mid);font-variant-numeric:tabular-nums}
+.plist .pname{font-size:12px;font-weight:700;color:var(--ink);line-height:1.25;overflow-wrap:anywhere;min-width:0}
+.plist .ppct{font-size:12px;color:var(--ink-2);font-variant-numeric:tabular-nums;text-align:right;white-space:nowrap}
 .pinfo .pih{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:8px}
 
 /* Значки площадок — один язык на весь отчёт: контур цветом чернил, без
@@ -2982,20 +2982,20 @@ th{font-size:10px}
   transition:background .18s ease}
 .chprow:hover,.chprow.on{background:color-mix(in srgb, var(--ink) 4%, transparent)}
 .chprow.on{box-shadow:inset 2px 0 0 var(--mid)}
-.chpnum{font-size:12.5px;font-weight:700;color:var(--mid);font-variant-numeric:tabular-nums}
-.chpname{display:flex;align-items:center;font-size:13px;font-weight:700;color:var(--ink);
+.chpnum{font-size:12px;font-weight:700;color:var(--mid);font-variant-numeric:tabular-nums}
+.chpname{display:flex;align-items:center;font-size:12px;font-weight:700;color:var(--ink);
   line-height:1.25;min-width:0;overflow-wrap:anywhere}
 .chpbar{display:block;height:14px;background:var(--line-2);overflow:hidden}
 .chpbar i{display:block;height:14px;background:var(--mid);transition:width .7s cubic-bezier(.2,.8,.2,1)}
-.chppct{font-size:12.5px;color:var(--ink-2);font-variant-numeric:tabular-nums;
+.chppct{font-size:12px;color:var(--ink-2);font-variant-numeric:tabular-nums;
   text-align:right;white-space:nowrap}
 .chpinfo{border:1px solid var(--line);border-radius:16px;padding:16px 18px;
   background:var(--card);min-width:0}
 .chpih{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px}
-.chpih b{display:inline-flex;align-items:center;font-size:15px;color:var(--ink);min-width:0}
-.chpwhy{margin:0 0 10px;font-size:13px;line-height:1.55;color:var(--ink-2)}
+.chpih b{display:inline-flex;align-items:center;font-size:14px;color:var(--ink);min-width:0}
+.chpwhy{margin:0 0 10px;font-size:12px;line-height:1.55;color:var(--ink-2)}
 .chpf{display:grid;grid-template-columns:132px minmax(0,1fr);gap:4px 14px;
-  padding:8px 0;border-top:1px solid var(--line-2);font-size:12.5px;line-height:1.5}
+  padding:8px 0;border-top:1px solid var(--line-2);font-size:12px;line-height:1.5}
 .chpf span{font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;
   color:var(--ink-3);padding-top:2px}
 .chpf b{font-weight:400;color:var(--ink-2);overflow-wrap:anywhere}
@@ -3010,13 +3010,13 @@ th{font-size:10px}
   gap:10px 14px;align-items:start;padding:9px 2px}
 .skipl .th{font-size:10.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
   color:var(--ink-3);border-bottom:1px solid var(--line)}
-.skipl .tr{border-bottom:1px solid var(--line-2);font-size:12.5px;line-height:1.5}
+.skipl .tr{border-bottom:1px solid var(--line-2);font-size:12px;line-height:1.5}
 .skipl .tr:last-child{border-bottom:0}
 .skipl .nm{display:flex;align-items:center;font-weight:600}
 @media (max-width:760px){.skipl .th{display:none}
   .skipl .tr{grid-template-columns:1fr;gap:4px}}
 /* Решение владельца по площадке: модуль советует, но берёт в работу человек. */
-.pltake{font:inherit;font-size:11.5px;font-weight:600;color:var(--ink-2);background:none;
+.pltake{font:inherit;font-size:11px;font-weight:600;color:var(--ink-2);background:none;
   border:1px solid var(--line);border-radius:999px;padding:5px 11px;cursor:pointer;
   white-space:nowrap;transition:background .18s ease,color .18s ease,border-color .18s ease}
 .pltake:hover{border-color:var(--mid);color:var(--ink)}
@@ -3029,12 +3029,12 @@ th{font-size:10px}
 .nomeas{display:block;margin-top:4px}
 .nmrow{display:grid;grid-template-columns:minmax(0,1.7fr) minmax(120px,.7fr) minmax(0,1fr);
   gap:10px 16px;align-items:baseline;padding:9px 2px;border-top:1px solid var(--line-2);
-  font-size:12.5px;line-height:1.5;color:var(--ink-2)}
+  font-size:12px;line-height:1.5;color:var(--ink-2)}
 .nmrow:first-child{border-top:0}
 .nmname{font-weight:600;color:var(--ink);overflow-wrap:anywhere}
 .nmname a{color:var(--ink);text-decoration:underline;text-underline-offset:2px}
 .nmplat{display:flex;align-items:center;color:var(--ink-3)}
-.nmmeta{color:var(--ink-3);font-size:11.5px;overflow-wrap:anywhere}
+.nmmeta{color:var(--ink-3);font-size:11px;overflow-wrap:anywhere}
 @media (max-width:760px){.nmrow{grid-template-columns:1fr;gap:3px}}
 /* Какой формат заходит: отдача по формату, полоса от лучшего. */
 .fmts{overflow-x:auto}
@@ -3042,19 +3042,19 @@ th{font-size:10px}
   gap:14px;align-items:center;min-width:660px}
 .fmts .th{padding:0 0 8px;border-bottom:1px solid var(--line);font-size:10px;font-weight:700;
   letter-spacing:.07em;text-transform:uppercase;color:var(--ink-3)}
-.fmts .tr{padding:10px 0;border-top:1px solid var(--line-2);font-size:12.5px;color:var(--ink-2)}
-.fmts .nm{font-size:13px;font-weight:700;color:var(--ink);text-transform:capitalize}
+.fmts .tr{padding:10px 0;border-top:1px solid var(--line-2);font-size:12px;color:var(--ink-2)}
+.fmts .nm{font-size:12px;font-weight:700;color:var(--ink);text-transform:capitalize}
 .fmts .v{font-variant-numeric:tabular-nums;white-space:nowrap}
 .fmts .fmtb{display:flex;align-items:center;gap:8px;min-width:0}
 .fmts .fmtb .rail{flex:1;height:14px;background:var(--line-2);overflow:hidden}
 .fmts .fmtb .rail .b{display:block;height:14px;background:var(--mid)}
-.fmts .fmtb .no{color:var(--ink-3);font-size:11.5px}
-.fmts .fmtp{color:var(--ink-3);font-size:11.5px;overflow-wrap:anywhere}
+.fmts .fmtb .no{color:var(--ink-3);font-size:11px}
+.fmts .fmtp{color:var(--ink-3);font-size:11px;overflow-wrap:anywhere}
 /* Сводка сбора: сколько чего принесли до работы модели. */
 .harvest{display:grid;grid-template-columns:repeat(auto-fit,minmax(132px,1fr));gap:10px;margin-bottom:10px}
 .harvest .hv{border:1px solid var(--line);border-radius:12px;padding:10px 12px;
   background:color-mix(in srgb, var(--ink) 2%, transparent)}
-.harvest .hv b{display:block;font-size:19px;font-weight:700;color:var(--ink);
+.harvest .hv b{display:block;font-size:17px;font-weight:700;color:var(--ink);
   font-variant-numeric:tabular-nums;line-height:1.1}
 .harvest .hv span{display:block;margin-top:4px;font-size:10.5px;color:var(--ink-3);line-height:1.35}
 .harvest .hv.zero b{color:var(--ink-3)}
@@ -3065,7 +3065,7 @@ th{font-size:10px}
 :root{--pd-red:#C0271F;--pd-red-soft:#FBEAE8}
 .pdwarn{display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;
   margin-left:6px;border-radius:50%;background:var(--pd-red);color:#fff;
-  font-size:12px;font-weight:700;line-height:1;vertical-align:-3px;cursor:help;
+  font-size:11.5px;font-weight:700;line-height:1;vertical-align:-3px;cursor:help;
   flex:0 0 auto;font-family:var(--sans);box-shadow:0 0 0 3px var(--pd-red-soft)}
 .pdwarn:hover,.pdwarn:focus{outline:2px solid var(--pd-red);outline-offset:2px}
 @media (prefers-color-scheme:dark){:root{--pd-red-soft:rgba(192,39,31,.22)}}
@@ -3074,14 +3074,14 @@ th{font-size:10px}
 .voices .vcard{border:1px solid var(--line);border-radius:16px;padding:14px 16px;
   background:var(--card);min-width:0}
 .voices .vh{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px}
-.voices .vh b{font-size:13.5px;color:var(--ink);min-width:0;overflow-wrap:anywhere}
+.voices .vh b{font-size:12.5px;color:var(--ink);min-width:0;overflow-wrap:anywhere}
 .voices .vh b a{color:var(--ink);text-decoration:underline;text-underline-offset:2px}
 .voices .vkind{font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
   color:var(--ink-3)}
-.voices .vsub{font-size:11.5px;color:var(--ink-3);font-variant-numeric:tabular-nums}
-.voices .vcard>p{margin:0 0 8px;font-size:12.5px;line-height:1.55;color:var(--ink-2)}
+.voices .vsub{font-size:11px;color:var(--ink-3);font-variant-numeric:tabular-nums}
+.voices .vcard>p{margin:0 0 8px;font-size:12px;line-height:1.55;color:var(--ink-2)}
 .voices .vf{display:block;margin-top:8px;padding-top:8px;border-top:1px solid var(--line-2);
-  font-size:12.5px;line-height:1.5}
+  font-size:12px;line-height:1.5}
 .voices .vf span{display:block;font-size:10px;font-weight:700;letter-spacing:.07em;
   text-transform:uppercase;color:var(--ink-3);margin-bottom:3px}
 .voices .vf b{font-weight:400;color:var(--ink-2);overflow-wrap:anywhere}
@@ -3091,11 +3091,11 @@ th{font-size:10px}
 .portraits .pcard2{border:1px solid var(--line);border-radius:16px;padding:14px 16px;
   background:var(--card);min-width:0}
 .portraits .ph2{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;margin-bottom:8px}
-.portraits .ph2 b{font-size:13.5px;color:var(--ink)}
-.portraits .ph2 span{font-size:11.5px;color:var(--ink-3)}
-.portraits .pcard2>p{margin:0 0 8px;font-size:12.5px;line-height:1.55;color:var(--ink-2)}
+.portraits .ph2 b{font-size:12.5px;color:var(--ink)}
+.portraits .ph2 span{font-size:11px;color:var(--ink-3)}
+.portraits .pcard2>p{margin:0 0 8px;font-size:12px;line-height:1.55;color:var(--ink-2)}
 .portraits .pf{display:block;margin-top:8px;padding-top:8px;border-top:1px solid var(--line-2);
-  font-size:12.5px;line-height:1.5}
+  font-size:12px;line-height:1.5}
 .portraits .pf span{display:block;font-size:10px;font-weight:700;letter-spacing:.07em;
   text-transform:uppercase;color:var(--ink-3);margin-bottom:3px}
 .portraits .pf b{font-weight:400;color:var(--ink-2);overflow-wrap:anywhere}
@@ -3111,12 +3111,12 @@ th{font-size:10px}
 .reach .th>span,.reach .tr>span{min-width:0;overflow-wrap:break-word}
 .reach .th{padding:0 0 8px;border-bottom:1px solid var(--line);font-size:10px;font-weight:700;
   letter-spacing:.07em;text-transform:uppercase;color:var(--ink-3)}
-.reach .tr{padding:11px 0;border-top:1px solid var(--line-2);font-size:12.5px;
+.reach .tr{padding:11px 0;border-top:1px solid var(--line-2);font-size:12px;
   color:var(--ink-2);line-height:1.5}
-.reach .nm{display:flex;align-items:baseline;flex-wrap:wrap;font-size:13px;font-weight:700;color:var(--ink)}
+.reach .nm{display:flex;align-items:baseline;flex-wrap:wrap;font-size:12px;font-weight:700;color:var(--ink)}
 .reach .nm a{color:var(--ink);text-decoration:underline;text-underline-offset:2px}
 .reach .nm i{display:block;width:100%;font-style:normal;font-size:11px;font-weight:400;color:var(--ink-3)}
-.reach .reachw{display:block;margin-top:5px;font-style:normal;font-size:11.5px;color:var(--ink-3)}
+.reach .reachw{display:block;margin-top:5px;font-style:normal;font-size:11px;color:var(--ink-3)}
 /* Охват — это ЦЕЛАЯ ФРАЗА («400 тыс. подписчиков канала; 11 323 просмотра
    ролика»), а не короткое число. Запрет переноса, поставленный когда здесь
    стояли одни цифры, растягивал ячейку и она наезжала на соседний столбец
@@ -3127,10 +3127,10 @@ th{font-size:10px}
 .intgrp{border:1px solid var(--line);border-radius:16px;padding:14px 16px;background:var(--card)}
 .inth{display:flex;align-items:baseline;justify-content:space-between;gap:10px;
   flex-wrap:wrap;margin-bottom:10px}
-.inth b{font-size:13.5px;color:var(--ink)}
+.inth b{font-size:12.5px;color:var(--ink)}
 .inth span{font-size:10.5px;color:var(--ink-3)}
 .introw{display:grid;grid-template-columns:minmax(0,1fr) 84px 118px;gap:10px;align-items:center;
-  padding:7px 0;border-top:1px solid var(--line-2);font-size:12.5px}
+  padding:7px 0;border-top:1px solid var(--line-2);font-size:12px}
 .introw:first-of-type{border-top:0}
 .intn{color:var(--ink-2);overflow-wrap:anywhere}
 /* Форматы: чем аудитория потребляет контент. Та же мера полосы, что и в
@@ -3138,13 +3138,13 @@ th{font-size:10px}
 .fmts{display:grid;gap:13px}
 .fmrow{display:grid;grid-template-columns:minmax(0,230px) minmax(0,1fr) 128px;gap:14px;
   align-items:center}
-.fmrow .t{color:var(--ink);font-weight:600;font-size:13px;overflow-wrap:anywhere}
+.fmrow .t{color:var(--ink);font-weight:600;font-size:12px;overflow-wrap:anywhere}
 .fmrow .t i{display:block;font-style:normal;font-weight:400;font-size:10.5px;
   color:var(--ink-3);margin-top:3px;line-height:1.35}
 .fmrow .g{height:14px;background:var(--line-2);overflow:hidden}
 .fmrow .g i{display:block;height:100%;background:var(--mid)}
 .fmrow .n{text-align:right;font-variant-numeric:tabular-nums;font-weight:600;
-  font-size:14px;white-space:nowrap;color:var(--ink)}
+  font-size:13px;white-space:nowrap;color:var(--ink)}
 .fmrow .n i{display:block;font-style:normal;font-weight:400;font-size:10px;
   letter-spacing:.05em;text-transform:uppercase;color:var(--ink-3);margin-top:2px;
   white-space:normal}
@@ -3153,7 +3153,7 @@ th{font-size:10px}
    как наблюдение, но глаз не принимает её за результат. */
 .fmrow.weak{opacity:.72}
 .fmlow{display:inline-block;margin-left:8px;padding:2px 8px;border-radius:999px;
-  font-size:9.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
+  font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
   color:var(--acc-quiet-ink);background:var(--card-solid);
   border:1px solid var(--line);vertical-align:middle}
 @media (max-width:700px){.fmrow{grid-template-columns:1fr;gap:5px}
@@ -3164,11 +3164,11 @@ th{font-size:10px}
 .intreal{margin:2px 0 6px 0;padding:6px 0 2px 14px;border-left:2px solid var(--line-2)}
 .intlab{display:block;font-size:10px;font-weight:700;letter-spacing:.06em;
   text-transform:uppercase;color:var(--ink-3);margin-bottom:2px}
-.introw.sub{border-top:none;padding:4px 0;font-size:12px}
+.introw.sub{border-top:none;padding:4px 0;font-size:11.5px}
 .introw.sub .intn{color:var(--ink-3)}
 .introw .rail{height:14px;background:var(--line-2);overflow:hidden}
 .introw .rail i{display:block;height:14px;background:var(--mid)}
 .intv{text-align:right;font-variant-numeric:tabular-nums;color:var(--ink);font-weight:600;
-  white-space:nowrap;font-size:12px}
+  white-space:nowrap;font-size:11.5px}
 .intv.no{color:var(--ink-3);font-weight:400;font-size:11px}
 
