@@ -3149,6 +3149,13 @@ th{font-size:10px}
   letter-spacing:.05em;text-transform:uppercase;color:var(--ink-3);margin-top:2px;
   white-space:normal}
 .fmrow.no .t,.fmrow.no .n{color:var(--ink-3)}
+/* Строка, на которой вывод строить нельзя: приглушена и подписана. Она видна
+   как наблюдение, но глаз не принимает её за результат. */
+.fmrow.weak{opacity:.72}
+.fmlow{display:inline-block;margin-left:8px;padding:2px 8px;border-radius:999px;
+  font-size:9.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
+  color:var(--acc-quiet-ink);background:var(--card-solid);
+  border:1px solid var(--line);vertical-align:middle}
 @media (max-width:700px){.fmrow{grid-template-columns:1fr;gap:5px}
   .fmrow .n{text-align:left}}
 /* Как эту тему спрашивают на самом деле: наша формулировка почти всегда
