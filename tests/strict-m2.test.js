@@ -26,7 +26,7 @@ globalThis.keywordSourceForMarket=function(){return 'yandex';};
 globalThis.blockScriptsM3=[];
 eval(SRC.slice(SRC.indexOf('const СЛУЖЕБНАЯ_МЕТКА'), SRC.indexOf('\n', SRC.indexOf('const СЛУЖЕБНАЯ_МЕТКА'))).replace('const ','globalThis.'));
 eval(взять('безСлужебныхМеток'));
-eval(взять('разметкаM2')); eval(взять('нишиИзСтрогогоM2')); eval(взять('текстИзСтрогогоM2'));
+eval(взять('воронкаИсточников')); eval(взять('разметкаM2')); eval(взять('нишиИзСтрогогоM2')); eval(взять('текстИзСтрогогоM2'));
 eval(взять('замерСпросаНишСтрогое'));
 var КОД=renderResearchHTML('', {}).js;
 
