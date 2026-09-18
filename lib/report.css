@@ -3101,8 +3101,14 @@ th{font-size:10px}
 .portraits .pf b{font-weight:400;color:var(--ink-2);overflow-wrap:anywhere}
 /* Через кого узнают о конкурентах. */
 .reach{overflow-x:auto}
-.reach .th,.reach .tr{display:grid;grid-template-columns:minmax(150px,1.2fr) minmax(110px,.8fr) 170px 110px minmax(0,1.4fr);
-  gap:14px;align-items:start;min-width:760px}
+.reach .th,.reach .tr{display:grid;
+  grid-template-columns:minmax(150px,1.2fr) minmax(110px,.8fr) 160px minmax(150px,1fr) minmax(0,1.4fr);
+  gap:14px;align-items:start;min-width:860px}
+/* Ячейки обязаны СЖИМАТЬСЯ и переносить строку. У элемента решётки ширина по
+   умолчанию не меньше содержимого, поэтому длинный охват («Канал: 400 тыс.
+   подписчиков; ролик: 11 323 просмотра») выползал на соседнюю колонку
+   (владелица 18.09). min-width:0 снимает этот запрет, перенос идёт по словам. */
+.reach .th>span,.reach .tr>span{min-width:0;overflow-wrap:break-word}
 .reach .th{padding:0 0 8px;border-bottom:1px solid var(--line);font-size:10px;font-weight:700;
   letter-spacing:.07em;text-transform:uppercase;color:var(--ink-3)}
 .reach .tr{padding:11px 0;border-top:1px solid var(--line-2);font-size:12.5px;
