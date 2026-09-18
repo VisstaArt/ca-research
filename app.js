@@ -1,6 +1,6 @@
 // СОБРАНО АВТОМАТИЧЕСКИ из app.jsx — не править руками.
 // Правки вносить в app.jsx, затем: osascript -l JavaScript tools/build.js
-// отпечаток-исходника: 18a2cb885950bb86
+// отпечаток-исходника: 76d8fbd460a9455c
 // Функции контракта живут в lib/contract.js. Разбираем их сюда, чтобы весь
 // остальной код обращался к ним по прежним именам и не менялся.
 const{GLOBAL_MODS,isPerNiche,dropOrphans,nichesOf,resKey,splitMdRow,isMdSeparator,parseMdTables,buildModuleEntry,pickTable,pickColumn,withStableIds}=CAContract;// Название модуля берётся из MODULES — это конфиг ИНТЕРФЕЙСА, и сборщик
@@ -839,9 +839,23 @@ const НЕ_ЗАМЕРЯТЬ=/(?:spark\.ru|otzyvmarketing|apps\.apple|apple\.com|
 // а мы оцениваем по девятнадцати каналам»). Ссылки внутри текста ничего не
 // стоят: страница уже скачана.
 function каналыИзТекста(текст){const найдено=String(текст||'').match(/https?:\/\/(?:www\.)?(?:t\.me|telegram\.me|vk\.com|vk\.ru|youtube\.com|rutube\.ru|dzen\.ru|ok\.ru)\/[^\s"'<>)\]]+/gi)||[];const чистые=[];for(const у of найдено){const у2=у.replace(/[.,;:!?)]+$/,'');// Служебные адреса площадок каналами не являются.
-if(/t\.me\/(?:share|joinchat|proxy|addstickers|iv\?)/i.test(у2))continue;if(/(?:vk|youtube|dzen|ok)\.(?:com|ru)\/(?:away|redirect|feed|search|results)/i.test(у2))continue;if(чистые.indexOf(у2)<0)чистые.push(у2);}return чистые;}async function замеритьВсеКанальныеСсылки(выдержки,максимум,бюджетМс){const кандидаты=[];const виден=new Set();// Сначала — адреса, найденные ВНУТРИ текста страниц: подборки каналов дают
+if(/t\.me\/(?:share|joinchat|proxy|addstickers|iv\?)/i.test(у2))continue;if(/(?:vk|youtube|dzen|ok)\.(?:com|ru)\/(?:away|redirect|feed|search|results)/i.test(у2))continue;if(чистые.indexOf(у2)<0)чистые.push(у2);}return чистые;}// Отсев мусора ПЕРЕД замером. 18.09 в сводку форматов попали: тайский спам с
+// охватом 94 000, ролик «Telegram Prepaid Task Scam Exposed», служебные
+// страницы вида «Join Group Chat» и каналы самого конкурента. Ни одно из этого
+// не аудитория клиента, а числа у них крупные — они и возглавляли рейтинг.
+function мусорныйКанал(url,заголовок,конкуренты){const у=String(url||'').toLowerCase();const з=String(заголовок||'');// Служебные страницы площадок: приглашения, превью, вход в группу.
+if(/t\.me\/(?:joinchat|\+|addstickers|share|proxy)/i.test(у))return true;if(/^(?:telegram: )?(?:join group chat|view @|telegram: contact)/i.test(з.trim()))return true;if(/\/(?:login|signup|register|search|results|away|redirect)\b/i.test(у))return true;// Канал самого конкурента: там сидят его клиенты, а не наша аудитория.
+for(const к of конкуренты||[]){const имя=String(к||'').toLowerCase().replace(/[^a-zа-яё0-9]/gi,'');if(имя.length<4)continue;if(у.replace(/[^a-zа-яё0-9]/gi,'').includes(имя))return true;if(з.toLowerCase().replace(/[^a-zа-яё0-9]/gi,'').includes(имя))return true;}// ОТДЕЛЬНАЯ ПУБЛИКАЦИЯ — не источник. Массовый замер собирает КАНАЛЫ: у них
+// есть подписчики и ритм, и по ним считается формат ниши. Один ролик или пост
+// мерить бессмысленно — его просмотры говорят о нём, а не о площадке. Так в
+// сводку попал ролик «Telegram Prepaid Task Scam Exposed»: чужая тема, но
+// крупные просмотры. Публикации разбирает модель в «через кого узнают», там
+// они и замеряются отдельно.
+if(/youtube\.com\/(?:watch|shorts)|youtu\.be\//i.test(у))return true;if(/vk\.com\/wall|dzen\.ru\/a\/|rutube\.ru\/video\//i.test(у))return true;// Чужой язык: заголовок, где больше трети знаков вне кириллицы и латиницы,
+// к русской нише отношения не имеет.
+const буквы=(з.match(/\p{L}/gu)||[]).length;if(буквы>=6){const свои=(з.match(/[a-zA-Zа-яА-ЯёЁ]/g)||[]).length;if(свои/буквы<0.67)return true;}return false;}async function замеритьВсеКанальныеСсылки(выдержки,максимум,бюджетМс,конкуренты){const кандидаты=[];const виден=new Set();// Сначала — адреса, найденные ВНУТРИ текста страниц: подборки каналов дают
 // их десятками, и это самый плотный источник.
-const изТекста=[];for(const э of выдержки||[]){for(const у of каналыИзТекста(э&&э.content||'')){изТекста.push({url:у,title:'',content:'',date:'',откуда:э&&э.url||''});}}const всеИсточники=(выдержки||[]).concat(изТекста);for(const э of всеИсточники){const u=String(э&&э.url||'');if(!ЗАМЕРЯЕМЫЕ.test(u)||НЕ_ЗАМЕРЯТЬ.test(u))continue;// Один канал часто попадается несколькими страницами и разными постами —
+const изТекста=[];for(const э of выдержки||[]){for(const у of каналыИзТекста(э&&э.content||'')){изТекста.push({url:у,title:'',content:'',date:'',откуда:э&&э.url||''});}}const всеИсточники=(выдержки||[]).concat(изТекста);for(const э of всеИсточники){const u=String(э&&э.url||'');if(!ЗАМЕРЯЕМЫЕ.test(u)||НЕ_ЗАМЕРЯТЬ.test(u))continue;if(мусорныйКанал(u,э&&э.title,конкуренты))continue;// Один канал часто попадается несколькими страницами и разными постами —
 // замеряем его РАЗ. Ключ — площадка плюс имя канала, без номера поста:
 // t.me/shop/123 и t.me/s/shop это один и тот же канал.
 const ключ=(()=>{const б=u.toLowerCase().replace(/[?#].*$/,'').replace(/\/$/,'').replace(/^https?:\/\/(?:www\.)?/,'').replace(/^t\.me\/s\//,'t.me/');const ч=б.split('/');return ч.slice(0,2).join('/');})();if(виден.has(ключ))continue;виден.add(ключ);кандидаты.push(э);if(кандидаты.length>=(максимум||400))break;}const срок=Date.now()+(бюджетМс||8*60*1000);const готово=[];const ПАЧКА=5;// грузим по пять сразу: это страницы, а не вызовы модели
@@ -925,7 +939,7 @@ const места=await gatherEvidence(местные,13,20,{raw:false,contentCha
 const назв=comps.map(c=>String(c).toLowerCase()).filter(Boolean);const важные=вместе.filter(э=>э&&э.url&&назв.some(н=>(String(э.title||'')+' '+String(э.content||'')).toLowerCase().includes(н))).slice(0,12);const срок=Date.now()+3*60*1000;// дочитывание не должно растягивать прогон
 for(const э of важные){if(Date.now()>срок)break;try{const r=await загрузитьСтраницу(э.url,15000);if(!r.ok)continue;const html=await r.text();const текст=html.replace(/<(script|style|nav|header|footer|aside)[\s\S]*?<\/\1>/gi,' ').replace(/<[^>]+>/g,' ').replace(/&[a-z]+;|&#\d+;/gi,' ').replace(/\s+/g,' ').trim();if(текст.length>(э.content||'').length){э.content=текст.slice(0,2500);э.дочитано=true;}}catch(e){/* не дочитали — остаётся выдержка из поиска */}}// ЗАМЕРЯЕМ ВСЕ НАЙДЕННЫЕ КАНАЛЫ, а не те, что заметит модель. Отобранные по
 // охвату идут в разбор первыми — с уже снятыми числами.
-const каналы=await замеритьВсеКанальныеСсылки(вместе,600,12*60*1000);if(window.console)console.log('M4A: замерено каналов '+каналы.length+' из '+((каналы.воронка||{}).кандидатов||0)+' найденных');вместе.каналыЗамеренные=каналы;вместе.воронка.кандидатовКаналов=(каналы.воронка||{}).кандидатов||0;вместе.воронка.изТекстаСтраниц=(каналы.воронка||{}).изТекстаСтраниц||0;вместе.воронка.замереноКаналов=(каналы.воронка||{}).замерено||0;return вместе;}// M8 (тренд-монитор): в отличие от остальных gather-функций явно ограничена
+const каналы=await замеритьВсеКанальныеСсылки(вместе,600,12*60*1000,comps);if(window.console)console.log('M4A: замерено каналов '+каналы.length+' из '+((каналы.воронка||{}).кандидатов||0)+' найденных');вместе.каналыЗамеренные=каналы;вместе.воронка.кандидатовКаналов=(каналы.воронка||{}).кандидатов||0;вместе.воронка.изТекстаСтраниц=(каналы.воронка||{}).изТекстаСтраниц||0;вместе.воронка.замереноКаналов=(каналы.воронка||{}).замерено||0;return вместе;}// M8 (тренд-монитор): в отличие от остальных gather-функций явно ограничена
 // свежестью (days) — модуль отвечает на вопрос «что изменилось НЕДАВНО», а не
 // общий срез рынка.
 async function gatherTrendEvidence(brief){const market=brief.geoMarket||brief.geoCompany||'';const product=brief.niche||brief.name||'';const niche=brief.selectedNiche||'';const topic=niche||product;const queries=[topic+' '+market+' новости тренды',topic+' '+market+' новые игроки продукты запуск',topic+' '+market+' форум обсуждение свежие жалобы проблемы',topic+' '+market+' инфоповод событие'];return gatherEvidence(queries,8,5,{days:30});}// Единый блок «работай только с этим материалом» для промптов
