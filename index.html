@@ -318,6 +318,51 @@ html[data-embed] #root { max-width: none; padding: 0; }
 .nd-face b { display: block; font-size: 12.5px; color: var(--ink); line-height: 1.35; }
 .nd-face .i { font-size: 11px; color: var(--ink-2); margin-top: 7px; line-height: 1.5; }
 .nd-face .r { font-size: 10.5px; color: var(--ink-3); margin-top: 5px; line-height: 1.45; }
+/* Карта рынка — точки, название всплывает при наведении (владелица 19.09:
+   большую таблицу со всеми конкурентами выкладывать неудобно). */
+.nd-map { display: grid; gap: 1px; background: var(--line-2); }
+.nd-map > span { background: var(--card-solid); padding: 9px 11px; min-width: 0; }
+.nd-map .col { font-size: 10px; letter-spacing: .05em; text-transform: uppercase;
+  color: var(--ink-3); text-align: center; }
+.nd-map .row { font-size: 11px; font-weight: 600; color: var(--ink-2);
+  display: flex; align-items: center; }
+.nd-map .cell { display: flex; flex-direction: column; justify-content: space-between;
+  gap: 10px; min-height: 58px; }
+.nd-map .cell.on { background: color-mix(in srgb, var(--mid) 10%, var(--card-solid)); }
+.nd-map .dots { display: flex; flex-wrap: wrap; gap: 5px; }
+.nd-map .dots i { width: 9px; height: 9px; border-radius: 50%; background: var(--ink-3);
+  display: block; cursor: help; }
+.nd-map .dots i.me { background: var(--card-solid); border: 2px solid var(--mid); }
+.nd-map .cell b { font-size: 11px; font-weight: 700; color: var(--ink-2);
+  font-variant-numeric: tabular-nums; }
+/* Где продвигаться: номер, знак площадки, имя, полоса, доля. */
+.nd-plan { display: grid; gap: 4px; }
+.nd-plan .r { display: grid; grid-template-columns: 22px 20px minmax(0, 132px) minmax(0, 1fr) 44px;
+  gap: 10px; align-items: center; padding: 7px 10px; border-radius: 12px; }
+.nd-plan .r.first { background: var(--line-2); box-shadow: inset 2px 0 0 var(--mid); }
+.nd-plan .num { font-size: 12px; font-weight: 700; color: var(--mid); text-align: center; }
+.nd-plan .ico svg { width: 17px; height: 17px; fill: none; stroke: var(--ink-3);
+  stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; display: block; }
+.nd-plan .nm { font-size: 12.5px; font-weight: 600; color: var(--ink); overflow-wrap: anywhere; }
+.nd-plan .track { height: 14px; background: var(--line-2); display: block; }
+.nd-plan .track i { display: block; height: 100%; background: var(--mid); }
+.nd-plan .pct { font-size: 12px; color: var(--ink-2); text-align: right;
+  font-variant-numeric: tabular-nums; }
+/* Доля внимания — кольцо и список справа. */
+.nd-ring { display: grid; grid-template-columns: 184px minmax(0, 1fr); gap: 18px;
+  align-items: center; }
+.nd-ring .leg { display: grid; gap: 7px; min-width: 0; }
+.nd-ring .leg > div { display: grid; grid-template-columns: 12px minmax(0, 1fr) 46px 62px;
+  gap: 8px; align-items: baseline; font-size: 11.5px; color: var(--ink-2); }
+.nd-ring .leg i { width: 11px; height: 8px; display: block; }
+.nd-ring .leg .n { color: var(--ink); overflow-wrap: anywhere; }
+.nd-ring .leg .d, .nd-ring .leg .q { text-align: right; font-variant-numeric: tabular-nums; }
+.nd-ring .leg .q { color: var(--ink-3); }
+/* Два числа под дугой осведомлённости. */
+.nd-arcnums { display: flex; gap: 22px; margin-top: 14px; }
+.nd-arcnums div { text-align: center; }
+.nd-arcnums b { display: block; font-size: 14.5px; font-weight: 700; color: var(--ink); }
+.nd-arcnums span { font-size: 11px; color: var(--ink-3); }
 /* Две колонки «выигрываем / проигрываем». */
 .nd-vs { display: grid; gap: 18px 24px; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
 .nd-vs h5 { margin: 0 0 9px; font-size: 11.5px; font-weight: 700; color: var(--ink); }
@@ -337,6 +382,6 @@ html[data-embed] #root { max-width: none; padding: 0; }
      без сборки — как и весь остальной проект. -->
 <script src="lib/contract.js?v=c5d82d20"></script>
 <script src="lib/auth.js?v=a2c796f5"></script>
-<script src="app.js?v=4b695ea1"></script>
+<script src="app.js?v=522dc024"></script>
 </body>
 </html>
