@@ -255,6 +255,12 @@ html[data-embed] #root { max-width: none; padding: 0; }
 .nd-stat .v.long { font-size: 16px; }
 .nd-stat .s { font-size: 10px; color: var(--ink-3); margin-top: 5px; line-height: 1.4; }
 .nd-grid2 { display: grid; grid-template-columns: 1.35fr 1fr; gap: 10px; margin-bottom: 10px; }
+/* Ряды, где оба блока равнозначны (кого искали / где сидит аудитория,
+   осведомлённость / что ищут) — пополам, иначе правый выглядит обрезком. */
+.nd-grid2.even { grid-template-columns: 1fr 1fr; }
+/* Одинокий блок в ряду занимает всю ширину: пустое место справа от карты
+   рынка владелица 19.09 отметила отдельно. */
+.nd-grid2 > *:only-child { grid-column: 1 / -1; }
 .nd-card { background: var(--card-solid); border: 1px solid var(--line);
   border-radius: 18px; padding: 16px 18px; box-shadow: inset 0 1px 0 var(--hi); min-width: 0; }
 .nd-chead { display: flex; align-items: baseline; justify-content: space-between;
@@ -342,8 +348,21 @@ html[data-embed] #root { max-width: none; padding: 0; }
 .nd-map .cell.on { background: color-mix(in srgb, var(--mid) 10%, var(--card-solid)); }
 .nd-map .dots { display: flex; flex-wrap: wrap; gap: 5px; }
 .nd-map .dots i { width: 9px; height: 9px; border-radius: 50%; background: var(--ink-3);
-  display: block; cursor: help; }
+  display: block; cursor: default; position: relative; }
 .nd-map .dots i.me { background: var(--card-solid); border: 2px solid var(--mid); }
+.nd-map .dots i:hover { background: var(--mid); }
+/* Своя подсказка: появляется СРАЗУ и НАД точкой. Браузерная всплывает через
+   секунду и снизу — владелица 19.09: «ощущение, что там ничего нет». */
+.nd-map .dots i em { position: absolute; bottom: 150%; left: 50%; transform: translateX(-50%);
+  background: var(--ink); color: var(--card-solid); font-style: normal; font-size: 11px;
+  font-weight: 600; line-height: 1.3; padding: 5px 9px; border-radius: 8px;
+  white-space: nowrap; opacity: 0; pointer-events: none; transition: opacity .08s;
+  z-index: 20; box-shadow: 0 6px 18px -8px rgba(45,36,22,.6); }
+.nd-map .dots i em::after { content: ''; position: absolute; top: 100%; left: 50%;
+  transform: translateX(-50%); border: 4px solid transparent; border-top-color: var(--ink); }
+.nd-map .dots i:hover em { opacity: 1; }
+/* Клетка не должна обрезать подсказку. */
+.nd-map .cell { overflow: visible; }
 .nd-map .cell b { font-size: 11px; font-weight: 700; color: var(--ink-2);
   font-variant-numeric: tabular-nums; }
 /* Где продвигаться: номер, знак площадки, имя, полоса, доля. */
@@ -400,6 +419,6 @@ html[data-embed] #root { max-width: none; padding: 0; }
      без сборки — как и весь остальной проект. -->
 <script src="lib/contract.js?v=c5d82d20"></script>
 <script src="lib/auth.js?v=a2c796f5"></script>
-<script src="app.js?v=2a0adbba"></script>
+<script src="app.js?v=969b0d61"></script>
 </body>
 </html>
