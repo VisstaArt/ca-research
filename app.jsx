@@ -6276,13 +6276,13 @@ function дашбордНиши(результаты, ниша) {
       .map(х => [непусто2(х.площадка), Number(х.доля_контента) || 0])
       .filter(([, д]) => д > 0)
       .sort((а, б) => б[1] - а[1]).slice(0, 6);
-    if (п.length >= 2) графики.push(['Куда идём с контентом', п, '%']);
+    if (п.length >= 2) графики.push(['куда', 'Куда идём с контентом', п, '%']);
   }
   // Что заходит: форматы у лидеров ниши.
   if (по.M4A) {
     const ф = сводкаФорматовАудитории(по.M4A);
     const топ = (ф.топ || []).slice(0, 6).map(т => [т.вид, т.доля]);
-    if (топ.length >= 2) графики.push(['Что заходит у лидеров ниши', топ, '%']);
+    if (топ.length >= 2) графики.push(['форматы', 'Что заходит у лидеров ниши', топ, '%']);
   }
   // Чем живёт аудитория: самые частые интересы, замер частотности.
   if (по.M4A && (по.M4A.интересыЗамер || []).length) {
@@ -6293,14 +6293,64 @@ function дашбордНиши(результаты, ниша) {
       }
     }
     все.sort((а, б) => б[1] - а[1]);
-    if (все.length >= 2) графики.push(['Что аудитория ищет чаще всего', все.slice(0, 6), ' в месяц']);
+    if (все.length >= 2) графики.push(['интересы', 'Что аудитория ищет чаще всего', все.slice(0, 6), ' в месяц']);
   }
   // Конкуренты по известности — числа из ЗАМЕРА брендового спроса, а не из
   // слова «лидер»: доли уже посчитаны отчётом, берём их как есть.
   if (зам3 && !зам3.нет && (зам3.доли || []).length >= 2) {
     const к = (зам3.доли || []).slice(0, 6)
       .map(([имя, , n]) => [непусто2(имя), Number(n) || 0]).filter(([и, n]) => и && n);
-    if (к.length >= 2) графики.push(['Кого ищут по названию', к, ' запросов в месяц']);
+    if (к.length >= 2) графики.push(['известность', 'Кого ищут по названию', к, ' запросов в месяц']);
+  }
+
+  // ── ГДЕ ВЫИГРЫВАЕМ И ГДЕ ПРОИГРЫВАЕМ. Берём из гэп-анализа M3: там уже
+  // стоит статус по каждому критерию и сказано, что лучшее нашлось у них.
+  let сравнение = null;
+  if (по.M3 && (по.M3.гэп || []).length) {
+    const строка = г => ({ критерий: непусто2(г.критерий), у_нас: непусто2(г.у_нас),
+      у_них: непусто2(г.лучшее_у_них), уверены: непусто2(г.насколько_уверены) });
+    const выиг = (по.M3.гэп || []).filter(г => г && г.статус === 'выигрываем')
+      .map(строка).filter(г => г.критерий).slice(0, 5);
+    const проиг = (по.M3.гэп || []).filter(г => г && г.статус === 'проигрываем')
+      .map(строка).filter(г => г.критерий).slice(0, 5);
+    const наравне = (по.M3.гэп || []).filter(г => г && г.статус === 'наравне').length;
+    if (выиг.length || проиг.length) сравнение = { выиг, проиг, наравне,
+      всего: (по.M3.гэп || []).length };
+  }
+
+  // ── КОГО ИСКАЛИ. Портреты из M4A: по ним строился весь поиск каналов.
+  let портреты = [];
+  if (по.M4A) {
+    портреты = (по.M4A.портретыАудитории || []).filter(п => п && (п.сегмент || п.роль))
+      .slice(0, 4).map(п => ({
+        сегмент: непусто2(п.сегмент) || непусто2(п.роль),
+        роль: непусто2(п.роль),
+        интересы: (п.интересы || []).map(и => непусто2(и)).filter(Boolean).slice(0, 5),
+        читают: (п.что_читают || []).map(и => непусто2(и)).filter(Boolean).slice(0, 4),
+      }));
+  }
+
+  // ── ОСВЕДОМЛЁННОСТЬ. Пять ступеней Шварца по главной персоне M6.
+  let ступени = null;
+  if (по.M6 && (по.M6.осведомлённость || []).length) {
+    const первая = (по.M6.осведомлённость || [])
+      .find(х => х && Array.isArray(х.доли) && х.доли.length === 5);
+    if (первая) {
+      const ИМЕНА = ['не знает о проблеме', 'осознаёт проблему', 'ищет решение',
+                     'сравнивает продукты', 'готов купить'];
+      ступени = { персона: непусто2(первая.персона), доминирующий: непусто2(первая.доминирующий),
+        ряды: ИМЕНА.map((и, i) => [и, Number(первая.доли[i]) || 0]),
+        как_думает: непусто2(первая.как_думает) };
+    }
+  }
+
+  // ── ПУТЬ КЛИЕНТА. Этапы M6 по порядку: где происходит и из-за чего уходит.
+  let путь = [];
+  if (по.M6 && (по.M6.путь || []).length) {
+    путь = (по.M6.путь || []).filter(э => э && непусто2(э.этап)).slice(0, 8).map(э => ({
+      этап: непусто2(э.этап), цель: непусто2(э.цель), канал: непусто2(э.канал),
+      риск: непусто2(э.риск_потери), доля: э.доля_дошедших == null ? null : Number(э.доля_дошедших),
+    }));
   }
 
   // ── Одна строка вывода на модуль: что это значит.
@@ -6356,8 +6406,8 @@ function дашбордНиши(результаты, ниша) {
     }
   }
 
-  return { плитки: плитки.filter(([з]) => з), карта, графики, цитаты,
-    выводы: выводы.filter(в => в[2]) };
+  return { плитки: плитки.filter(([з]) => з), карта, сравнение, графики,
+    портреты, цитаты, ступени, путь, выводы: выводы.filter(в => в[2]) };
 }
 
 function разметкаM4A(д, brief) {
@@ -18467,61 +18517,220 @@ function App() {
                         </p>
                       </div>
                     )}
-                    {/* Полосы: мера та же, что в отчёте — дорожка 14px, шаг 13px. */}
-                    {д.графики.map(([имя, ряды, ед], gi) => {
-                      const макс = Math.max(1, ...ряды.map(([, v]) => v || 0));
-                      return (
-                        <div key={gi} style={{marginBottom:26}}>
-                          <p style={{fontSize:11,fontWeight:700,letterSpacing:'.06em',
-                            textTransform:'uppercase',color:'var(--ink-3)',margin:'0 0 12px'}}>{имя}</p>
-                          <div style={{display:'grid',gap:13}}>
-                            {ряды.map(([т, v], ri) => (
-                              <div key={ri} style={{display:'grid',
-                                  gridTemplateColumns:'minmax(0,210px) minmax(0,1fr) 112px',
-                                  gap:12,alignItems:'center'}}>
-                                <span style={{fontSize:12,color:'var(--ink-2)',
-                                  overflowWrap:'anywhere'}}>{т}</span>
-                                <span style={{height:14,background:'var(--line-2)',display:'block'}}>
-                                  <i style={{display:'block',height:'100%',background:'var(--mid)',
-                                    width:Math.max(3, Math.round((v||0)/макс*100)) + '%'}}/>
-                                </span>
-                                <span style={{fontSize:12,fontWeight:600,textAlign:'right',
-                                  fontVariantNumeric:'tabular-nums',color:'var(--ink)',
-                                  whiteSpace:'nowrap'}}>{чис(v)}{ед}</span>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      );
-                    })}
-                    {/* Голос клиента — плитками с живой речью, как в эталоне. */}
-                    {д.цитаты.length > 0 && (
-                      <div style={{marginBottom:26}}>
+                    {/* ── РАЗДЕЛЫ В ПОРЯДКЕ, СОГЛАСОВАННОМ 19.09: карта рынка →
+                        где выигрываем → где продвигаться → какими форматами →
+                        кого искали → голос клиента → осведомлённость → путь.
+                        Порядок не менять без её слова: он отвечает на вопросы
+                        в том виде, в каком они возникают. */}
+                    {(() => {
+                      // Полоса — мера та же, что в отчёте: дорожка 14px, шаг 13px,
+                      // торцы прямые. Раздел с пустыми данными не рисуется вовсе.
+                      const заголовок = т => (
                         <p style={{fontSize:11,fontWeight:700,letterSpacing:'.06em',
-                          textTransform:'uppercase',color:'var(--ink-3)',margin:'0 0 12px'}}>
-                          Голос клиента — как говорят сами
-                        </p>
-                        <div style={{display:'grid',gap:12,
-                            gridTemplateColumns:'repeat(auto-fit,minmax(240px,1fr))'}}>
-                          {д.цитаты.map((ц, i) => (
-                            <div key={i} style={{border:'1px solid var(--line)',borderRadius:16,
-                                padding:'15px 17px',background:'var(--card-solid)'}}>
-                              <p style={{margin:0,fontFamily:'var(--serif, Georgia, serif)',
-                                fontStyle:'italic',fontSize:13,lineHeight:1.45,
-                                color:'var(--ink)'}}>«{ц.текст}»</p>
-                              {(ц.тема || ц.откуда) && (
-                                <p style={{margin:'9px 0 0',fontSize:10,
-                                  letterSpacing:'.04em',textTransform:'uppercase',
-                                  color:'var(--ink-3)'}}>
-                                  {[ц.тема, ц.откуда].filter(Boolean).join(' · ')}
+                          textTransform:'uppercase',color:'var(--ink-3)',
+                          margin:'0 0 12px'}}>{т}</p>
+                      );
+                      const полосы = ключ => {
+                        const г = (д.графики || []).find(x => x[0] === ключ);
+                        if (!г) return null;
+                        const [, имя, ряды, ед] = г;
+                        const макс = Math.max(1, ...ряды.map(([, v]) => v || 0));
+                        return (
+                          <div style={{marginBottom:26}}>
+                            {заголовок(имя)}
+                            <div style={{display:'grid',gap:13}}>
+                              {ряды.map(([т, v], ri) => (
+                                <div key={ri} style={{display:'grid',
+                                    gridTemplateColumns:'minmax(0,210px) minmax(0,1fr) 112px',
+                                    gap:12,alignItems:'center'}}>
+                                  <span style={{fontSize:12,color:'var(--ink-2)',
+                                    overflowWrap:'anywhere'}}>{т}</span>
+                                  <span style={{height:14,background:'var(--line-2)',display:'block'}}>
+                                    <i style={{display:'block',height:'100%',background:'var(--mid)',
+                                      width:Math.max(3, Math.round((v||0)/макс*100)) + '%'}}/>
+                                  </span>
+                                  <span style={{fontSize:12,fontWeight:600,textAlign:'right',
+                                    fontVariantNumeric:'tabular-nums',color:'var(--ink)',
+                                    whiteSpace:'nowrap'}}>{чис(v)}{ед}</span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        );
+                      };
+                      return (
+                        <React.Fragment>
+                          {/* Где выигрываем и где проигрываем — два столбца. */}
+                          {д.сравнение && (
+                            <div style={{marginBottom:26}}>
+                              {заголовок('Где выигрываем, где проигрываем')}
+                              <div style={{display:'grid',gap:'18px 24px',
+                                  gridTemplateColumns:'repeat(auto-fit,minmax(250px,1fr))'}}>
+                                {[['Выигрываем', д.сравнение.выиг],
+                                  ['Проигрываем', д.сравнение.проиг]].map(([имя, список]) => (
+                                  список.length ? (
+                                    <div key={имя}>
+                                      <p style={{margin:'0 0 9px',fontSize:11.5,fontWeight:700,
+                                        color:'var(--ink)'}}>{имя}</p>
+                                      <div style={{display:'grid',gap:10}}>
+                                        {список.map((г, i) => (
+                                          <div key={i} style={{paddingTop:9,
+                                              borderTop:'1px solid var(--line-2)'}}>
+                                            <div style={{fontSize:12,color:'var(--ink)',
+                                              lineHeight:1.4}}>{г.критерий}</div>
+                                            {г.у_них && (
+                                              <div style={{fontSize:10.5,color:'var(--ink-3)',
+                                                marginTop:3,lineHeight:1.45}}>
+                                                у них: {г.у_них}
+                                              </div>
+                                            )}
+                                          </div>
+                                        ))}
+                                      </div>
+                                    </div>
+                                  ) : null
+                                ))}
+                              </div>
+                              <p style={{fontSize:10.5,color:'var(--ink-3)',margin:'10px 0 0'}}>
+                                Сравнили по {д.сравнение.всего} {plural(д.сравнение.всего,
+                                  'критерию','критериям','критериям')}
+                                {д.сравнение.наравне ? ', наравне — ' + д.сравнение.наравне : ''}.
+                              </p>
+                            </div>
+                          )}
+                          {/* Где продвигаться и какими форматами. */}
+                          {полосы('куда')}
+                          {полосы('форматы')}
+                          {полосы('известность')}
+                          {полосы('интересы')}
+                          {/* Кого искали — портреты, по которым шёл поиск. */}
+                          {д.портреты.length > 0 && (
+                            <div style={{marginBottom:26}}>
+                              {заголовок('Кого искали')}
+                              <div style={{display:'grid',gap:12,
+                                  gridTemplateColumns:'repeat(auto-fit,minmax(230px,1fr))'}}>
+                                {д.портреты.map((п, i) => (
+                                  <div key={i} style={{paddingTop:12,
+                                      borderTop:'1px solid var(--line-2)'}}>
+                                    <div style={{fontSize:12.5,fontWeight:600,
+                                      color:'var(--ink)',lineHeight:1.35}}>{п.сегмент}</div>
+                                    {п.интересы.length > 0 && (
+                                      <div style={{fontSize:11,color:'var(--ink-2)',marginTop:6,
+                                        lineHeight:1.45}}>{п.интересы.join(' · ')}</div>
+                                    )}
+                                    {п.читают.length > 0 && (
+                                      <div style={{fontSize:10.5,color:'var(--ink-3)',marginTop:5,
+                                        lineHeight:1.45}}>читает: {п.читают.join(', ')}</div>
+                                    )}
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                          {/* Голос клиента — живой речью, как в эталоне: плитки
+                              с цитатой курсивом. Пересказ здесь не работает. */}
+                          {д.цитаты.length > 0 && (
+                            <div style={{marginBottom:26}}>
+                              {заголовок('Голос клиента — как говорят сами')}
+                              <div style={{display:'grid',gap:12,
+                                  gridTemplateColumns:'repeat(auto-fit,minmax(240px,1fr))'}}>
+                                {д.цитаты.map((ц, i) => (
+                                  <div key={i} style={{border:'1px solid var(--line)',
+                                      borderRadius:16,padding:'15px 17px',
+                                      background:'var(--card-solid)'}}>
+                                    <p style={{margin:0,
+                                      fontFamily:'var(--serif, Georgia, serif)',
+                                      fontStyle:'italic',fontSize:13,lineHeight:1.45,
+                                      color:'var(--ink)'}}>«{ц.текст}»</p>
+                                    {(ц.тема || ц.откуда) && (
+                                      <p style={{margin:'9px 0 0',fontSize:10,
+                                        letterSpacing:'.04em',textTransform:'uppercase',
+                                        color:'var(--ink-3)'}}>
+                                        {[ц.тема, ц.откуда].filter(Boolean).join(' · ')}
+                                      </p>
+                                    )}
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                          {/* Осведомлённость — пять ступеней Шварца по главной
+                              персоне: с какими словами к ней вообще заходить. */}
+                          {д.ступени && (
+                            <div style={{marginBottom:26}}>
+                              {заголовок('На какой ступени осведомлённости аудитория')}
+                              <div style={{display:'grid',gap:13}}>
+                                {д.ступени.ряды.map(([имя, доля], i) => (
+                                  <div key={i} style={{display:'grid',
+                                      gridTemplateColumns:'minmax(0,210px) minmax(0,1fr) 112px',
+                                      gap:12,alignItems:'center'}}>
+                                    <span style={{fontSize:12,
+                                      color: имя === д.ступени.доминирующий
+                                        ? 'var(--ink)' : 'var(--ink-2)',
+                                      fontWeight: имя === д.ступени.доминирующий ? 600 : 400,
+                                      overflowWrap:'anywhere'}}>{имя}</span>
+                                    <span style={{height:14,background:'var(--line-2)',
+                                      display:'block'}}>
+                                      <i style={{display:'block',height:'100%',
+                                        background:'var(--mid)',
+                                        width:Math.max(2, Math.round(доля)) + '%'}}/>
+                                    </span>
+                                    <span style={{fontSize:12,fontWeight:600,textAlign:'right',
+                                      fontVariantNumeric:'tabular-nums',color:'var(--ink)',
+                                      whiteSpace:'nowrap'}}>{доля}%</span>
+                                  </div>
+                                ))}
+                              </div>
+                              {д.ступени.как_думает && (
+                                <p style={{fontSize:10.5,color:'var(--ink-3)',margin:'10px 0 0',
+                                  lineHeight:1.45}}>
+                                  {д.ступени.персона ? д.ступени.персона + ': ' : ''}
+                                  «{д.ступени.как_думает}»
                                 </p>
                               )}
                             </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-
+                          )}
+                          {/* Путь клиента — этапы по порядку: где происходит и
+                              из-за чего человек уходит. */}
+                          {д.путь.length > 0 && (
+                            <div style={{marginBottom:26}}>
+                              {заголовок('Путь клиента')}
+                              <div style={{display:'grid',gap:11}}>
+                                {д.путь.map((э, i) => (
+                                  <div key={i} style={{display:'grid',
+                                      gridTemplateColumns:'20px minmax(0,150px) minmax(0,1fr)',
+                                      gap:12,paddingTop:10,
+                                      borderTop:'1px solid var(--line-2)',alignItems:'baseline'}}>
+                                    <span style={{fontSize:11,color:'var(--ink-3)',
+                                      fontVariantNumeric:'tabular-nums'}}>{i + 1}</span>
+                                    <span style={{fontSize:12,fontWeight:600,color:'var(--ink)',
+                                      lineHeight:1.35,overflowWrap:'anywhere'}}>
+                                      {э.этап}
+                                      {э.доля != null && (
+                                        <span style={{fontWeight:400,color:'var(--ink-3)'}}>
+                                          {' '}· {э.доля}%
+                                        </span>
+                                      )}
+                                    </span>
+                                    <span style={{fontSize:11.5,color:'var(--ink-2)',
+                                      lineHeight:1.45,minWidth:0}}>
+                                      {э.цель}
+                                      {э.канал ? ' — ' + э.канал : ''}
+                                      {э.риск && (
+                                        <span style={{display:'block',fontSize:10.5,
+                                          color:'var(--ink-3)',marginTop:3}}>
+                                          уходит, если: {э.риск}
+                                        </span>
+                                      )}
+                                    </span>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </React.Fragment>
+                      );
+                    })()}
                     {/* И по одной строке вывода на модуль — что это значит. */}
                     {д.выводы.length > 0 && (
                       <div style={{display:'grid',gap:14,paddingTop:18,
