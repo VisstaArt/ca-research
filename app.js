@@ -1,6 +1,6 @@
 // СОБРАНО АВТОМАТИЧЕСКИ из app.jsx — не править руками.
 // Правки вносить в app.jsx, затем: osascript -l JavaScript tools/build.js
-// отпечаток-исходника: b8ba73c14c446c5b
+// отпечаток-исходника: 51f1f913949fbfff
 // Функции контракта живут в lib/contract.js. Разбираем их сюда, чтобы весь
 // остальной код обращался к ним по прежним именам и не менялся.
 const{GLOBAL_MODS,isPerNiche,dropOrphans,nichesOf,resKey,splitMdRow,isMdSeparator,parseMdTables,buildModuleEntry,pickTable,pickColumn,withStableIds}=CAContract;// Название модуля берётся из MODULES — это конфиг ИНТЕРФЕЙСА, и сборщик
@@ -868,7 +868,11 @@ if(т.indexOf(сл.slice(0,Math.max(5,сл.length-2)))>=0)return true;}return fa
 // пятидесяти (владелица 18.09 — «20 каналов это ни о чём»). Поэтому страницы,
 // похожие на подборку, ДОЧИТЫВАЕМ целиком своим прокси: поисковых кредитов
 // это не стоит.
-const изТекста=[];const похожеНаПодборку=э=>{const т=(String(э&&э.title||'')+' '+String(э&&э.url||'')).toLowerCase();return /топ[\s-]?\d|подборк|лучши|рейтинг|список|каналов|чатов|сообществ|куда подписаться|kanal|top-?\d/i.test(т);};const подборки=(выдержки||[]).filter(похожеНаПодборку).slice(0,25);const срокПодборок=Date.now()+4*60*1000;for(const э of подборки){if(Date.now()>срокПодборок||прогонОстановлен())break;try{const r=await загрузитьСтраницу(э.url,15000);if(!r.ok)continue;const html=await r.text();for(const у of каналыИзТекста(html)){изТекста.push({url:у,title:'',content:'',date:'',откуда:э.url});}}catch(e){/* не дочитали — остаётся то, что было в выдержке */}}for(const э of выдержки||[]){for(const у of каналыИзТекста(э&&э.content||'')){изТекста.push({url:у,title:'',content:'',date:'',откуда:э&&э.url||''});}}const всеИсточники=(выдержки||[]).concat(изТекста);for(const э of всеИсточники){const u=String(э&&э.url||'');if(!ЗАМЕРЯЕМЫЕ.test(u)||НЕ_ЗАМЕРЯТЬ.test(u))continue;if(мусорныйКанал(u,э&&э.title,конкуренты))continue;// Один канал часто попадается несколькими страницами и разными постами —
+const изТекста=[];const похожеНаПодборку=э=>{const т=(String(э&&э.title||'')+' '+String(э&&э.url||'')).toLowerCase();return /топ[\s-]?\d|подборк|лучши|рейтинг|список|каналов|чатов|сообществ|куда подписаться|kanal|top-?\d/i.test(т);};// Двадцать пять подборок были МОИМ лимитом, а не тем, сколько их нашлось
+// (владелица 19.09: «почему так мало?»). Их дочитывание — самый плотный
+// источник каналов: двадцать пять штук дали сто пятьдесят пять адресов.
+// Берём до шестидесяти и грузим пачками, а не по одной.
+const подборки=(выдержки||[]).filter(похожеНаПодборку).slice(0,60);const срокПодборок=Date.now()+6*60*1000;const ПАЧКА_СТРАНИЦ=5;for(let i=0;i<подборки.length;i+=ПАЧКА_СТРАНИЦ){if(Date.now()>срокПодборок||прогонОстановлен())break;const пачка=подборки.slice(i,i+ПАЧКА_СТРАНИЦ);const тексты=await Promise.all(пачка.map(async э=>{try{const r=await загрузитьСтраницу(э.url,15000);if(!r.ok)return null;return{url:э.url,html:await r.text()};}catch(e){return null;}}));for(const т of тексты){if(!т)continue;for(const у of каналыИзТекста(т.html)){изТекста.push({url:у,title:'',content:'',date:'',откуда:т.url});}}}for(const э of выдержки||[]){for(const у of каналыИзТекста(э&&э.content||'')){изТекста.push({url:у,title:'',content:'',date:'',откуда:э&&э.url||''});}}const всеИсточники=(выдержки||[]).concat(изТекста);for(const э of всеИсточники){const u=String(э&&э.url||'');if(!ЗАМЕРЯЕМЫЕ.test(u)||НЕ_ЗАМЕРЯТЬ.test(u))continue;if(мусорныйКанал(u,э&&э.title,конкуренты))continue;// Один канал часто попадается несколькими страницами и разными постами —
 // замеряем его РАЗ. Ключ — площадка плюс имя канала, без номера поста:
 // t.me/shop/123 и t.me/s/shop это один и тот же канал.
 const ключ=(()=>{const б=u.toLowerCase().replace(/[?#].*$/,'').replace(/\/$/,'').replace(/^https?:\/\/(?:www\.)?/,'').replace(/^t\.me\/s\//,'t.me/');const ч=б.split('/');return ч.slice(0,2).join('/');})();if(виден.has(ключ))continue;виден.add(ключ);кандидаты.push(э);if(кандидаты.length>=(максимум||400))break;}const срок=Date.now()+(бюджетМс||8*60*1000);const готово=[];const ПАЧКА=5;// грузим по пять сразу: это страницы, а не вызовы модели
