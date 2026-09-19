@@ -231,6 +231,103 @@ html[data-embed] #root { max-width: none; padding: 0; }
 }
 
 .field-opt { font-size: var(--fs-caption); color: var(--ink-3); text-transform: none; letter-spacing: 0; }
+
+/* ══ ДАШБОРД НИШИ ══════════════════════════════════════════════════════════
+   Формы взяты из эталона (lib/report.css) ДОСЛОВНО по геометрии: плитки
+   цифр, карточка с заголовком, дуга-полукруг, карточки этапов, лента цитат,
+   таблица с круглыми инициалами. Сам report.css сюда подключать нельзя —
+   его страничные правила (.card, .main) перебивают раскладку инструмента,
+   поэтому те же правила лежат здесь с префиксом nd-.
+   Владелица 19.09: «не похоже на то, что я прошу — сделай красиво, наглядно;
+   информация компактно и визуально, а не списками с техпометками». */
+.nd { margin-top: 4px; }
+/* Раскрытая ниша не рисует свою плашку: внутри лежат карточки эталона, и
+   плашка под ними читалась бы как «фон на фоне» (владелица 18.09). */
+.nd-open { background: transparent !important; border: none !important;
+  box-shadow: none !important; overflow: visible !important; }
+.nd-open .nd-head { padding-left: 0 !important; padding-right: 0 !important; }
+.nd-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 14px; }
+.nd-stat { background: var(--card-solid); border: 1px solid var(--line);
+  border-radius: 20px; padding: 18px 20px; box-shadow: inset 0 1px 0 var(--hi); min-width: 0; }
+.nd-stat .k { font-size: 11.5px; color: var(--ink-3); margin-bottom: 8px; line-height: 1.4; }
+.nd-stat .v { font-size: 22.5px; font-weight: 700; letter-spacing: -.02em; color: var(--ink);
+  font-variant-numeric: tabular-nums; line-height: 1.15; overflow-wrap: anywhere; }
+.nd-stat .v.long { font-size: 17px; }
+.nd-stat .s { font-size: 10.5px; color: var(--ink-3); margin-top: 6px; line-height: 1.45; }
+.nd-grid2 { display: grid; grid-template-columns: 1.35fr 1fr; gap: 14px; margin-bottom: 14px; }
+.nd-card { background: var(--card-solid); border: 1px solid var(--line);
+  border-radius: 22px; padding: 22px 24px; box-shadow: inset 0 1px 0 var(--hi); min-width: 0; }
+.nd-chead { display: flex; align-items: baseline; justify-content: space-between;
+  margin-bottom: 16px; gap: 10px; flex-wrap: wrap; }
+.nd-chead h3 { font-size: 14.5px; font-weight: 700; color: var(--ink); margin: 0; }
+.nd-chead .n { font-size: 11.5px; color: var(--ink-3); }
+/* Полоса — мера эталона: дорожка 14px, шаг 13px, торцы прямые. */
+.nd-bars { display: grid; gap: 13px; }
+.nd-bar { display: grid; grid-template-columns: minmax(0, 190px) minmax(0, 1fr) 96px;
+  gap: 12px; align-items: center; }
+.nd-bar .t { font-size: 12px; color: var(--ink-2); overflow-wrap: anywhere; }
+.nd-bar .t.on { color: var(--ink); font-weight: 600; }
+.nd-bar .track { height: 14px; background: var(--line-2); display: block; }
+.nd-bar .track i { display: block; height: 100%; background: var(--mid); }
+.nd-bar .v { font-size: 12px; font-weight: 600; text-align: right; color: var(--ink);
+  font-variant-numeric: tabular-nums; white-space: nowrap; }
+/* Дуга осведомлённости — как в эталоне: полукруг, пять ступеней, в центре
+   главное число, под ним легенда. */
+.nd-arc { display: flex; flex-direction: column; align-items: center; }
+.nd-legend { display: flex; gap: 14px; flex-wrap: wrap; font-size: 11.5px;
+  color: var(--ink-2); margin-top: 12px; }
+.nd-legend i { width: 11px; height: 8px; display: inline-block; margin-right: 6px; }
+/* Этапы пути — карточками в ряд, точка задаёт положение на пути. */
+.nd-flow { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 14px; }
+.nd-stage { background: var(--card-solid); border: 1px solid var(--line);
+  border-radius: 18px; padding: 16px 18px; box-shadow: inset 0 1px 0 var(--hi); min-width: 0; }
+.nd-stage .dot { width: 9px; height: 9px; border-radius: 50%; margin-bottom: 10px; }
+.nd-stage .n { font-size: 10.5px; color: var(--ink-3); letter-spacing: .05em; text-transform: uppercase; }
+.nd-stage h4 { font-size: 13px; margin: 5px 0 3px; font-weight: 700; color: var(--ink); line-height: 1.3; }
+.nd-stage .r { font-size: 11px; color: var(--ink-2); line-height: 1.45; }
+/* Таблица рынка — круглые инициалы вместо текстовой метки. */
+.nd-tbl { overflow-x: auto; }
+.nd-tbl table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.nd-tbl th { text-align: left; font-weight: 600; color: var(--ink-3); font-size: 10.5px;
+  letter-spacing: .05em; text-transform: uppercase; padding: 0 12px 10px 0; white-space: nowrap; }
+.nd-tbl td { padding: 10px 12px 10px 0; border-top: 1px solid var(--line-2);
+  color: var(--ink-2); vertical-align: middle; }
+.nd-tbl td b { color: var(--ink); font-weight: 600; }
+.nd-who { display: flex; align-items: center; gap: 10px; }
+.nd-circ { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center;
+  justify-content: center; font-size: 11px; font-weight: 700; flex: 0 0 auto;
+  background: var(--line-2); color: var(--ink-2); border: 1px solid var(--line); }
+.nd-circ.me { background: var(--mid); color: #fff; border-color: var(--mid); }
+.nd-pill { display: inline-block; font-size: 10.5px; padding: 3px 9px; border-radius: 9px;
+  background: var(--line-2); color: var(--ink-2); white-space: nowrap; }
+/* Голос клиента — лента с горизонтальной прокруткой, как в эталоне. */
+.nd-qstrip { display: flex; gap: 12px; overflow-x: auto; scroll-snap-type: x mandatory;
+  scrollbar-width: none; padding-bottom: 2px; }
+.nd-qstrip::-webkit-scrollbar { display: none; }
+.nd-qtile { flex: 0 0 auto; width: 236px; scroll-snap-align: start; background: var(--card-solid);
+  border: 1px solid var(--line); border-radius: 16px; padding: 15px 17px;
+  box-shadow: inset 0 1px 0 var(--hi); }
+.nd-qtile p { margin: 0 0 9px; font-family: var(--serif, Georgia, serif); font-style: italic;
+  font-size: 12.5px; line-height: 1.45; color: var(--ink);
+  display: -webkit-box; -webkit-line-clamp: 5; -webkit-box-orient: vertical; overflow: hidden; }
+.nd-qtile cite { font-style: normal; font-size: 11px; color: var(--ink-3); }
+/* Кого искали — карточка портрета. */
+.nd-who-grid { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); }
+.nd-face { border: 1px solid var(--line); border-radius: 16px; padding: 15px 17px;
+  background: var(--card-solid); box-shadow: inset 0 1px 0 var(--hi); min-width: 0; }
+.nd-face b { display: block; font-size: 12.5px; color: var(--ink); line-height: 1.35; }
+.nd-face .i { font-size: 11px; color: var(--ink-2); margin-top: 7px; line-height: 1.5; }
+.nd-face .r { font-size: 10.5px; color: var(--ink-3); margin-top: 5px; line-height: 1.45; }
+/* Две колонки «выигрываем / проигрываем». */
+.nd-vs { display: grid; gap: 18px 24px; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
+.nd-vs h5 { margin: 0 0 9px; font-size: 11.5px; font-weight: 700; color: var(--ink); }
+.nd-vs .row { padding-top: 9px; border-top: 1px solid var(--line-2); }
+.nd-vs .row .c { font-size: 12px; color: var(--ink); line-height: 1.4; }
+.nd-vs .row .u { font-size: 10.5px; color: var(--ink-3); margin-top: 3px; line-height: 1.45; }
+@media (max-width: 1100px) {
+  .nd-stats { grid-template-columns: repeat(2, 1fr); }
+  .nd-grid2, .nd-flow { grid-template-columns: 1fr; }
+}
 </style>
 </head>
 <body>
@@ -240,6 +337,6 @@ html[data-embed] #root { max-width: none; padding: 0; }
      без сборки — как и весь остальной проект. -->
 <script src="lib/contract.js?v=c5d82d20"></script>
 <script src="lib/auth.js?v=a2c796f5"></script>
-<script src="app.js?v=6573aee3"></script>
+<script src="app.js?v=4b695ea1"></script>
 </body>
 </html>

@@ -18464,8 +18464,14 @@ function App() {
             const готово = (proj?.results || []).filter(r => r && (r.niche || '') === н && !r.черновик).length;
             const чис = x => String(x).replace(/\B(?=(\d{3})+(?!\d))/g, '\u00A0');
             return (
-              <div key={н} className="card" style={{marginBottom:10,padding:0,overflow:'hidden'}}>
+              /* РАСКРЫТАЯ НИША — БЕЗ СВОЕЙ ПЛАШКИ. Внутри лежат карточки
+                 эталона (плитки, графики, этапы); если оставить плашку и на
+                 самой нише, выходит карточка внутри карточки — «фон на фоне»
+                 (владелица 18.09). Закрытая ниша остаётся строкой-плашкой. */
+              <div key={н} className={'card' + (открыта ? ' nd-open' : '')}
+                style={{marginBottom:10,padding:0,overflow:'hidden'}}>
                 <div onClick={()=>setРазвёрнутаяНиша(открыта ? '' : н)}
+                  className={открыта ? 'nd-head' : ''}
                   style={{display:'flex',alignItems:'center',gap:10,padding:'15px 20px',cursor:'pointer'}}>
                   <span className="tag">Ниша</span>
                   <span style={{flex:1,fontSize:16,fontWeight:600,color:'var(--ink)'}}>{н}</span>
@@ -18493,129 +18499,83 @@ function App() {
                     })()}
                   </p>
                 ) : (
-                  <div style={{padding:'4px 22px 24px'}}>
-                    {/* Крупные числа: ответ на «сколько» без чтения таблиц. */}
-                    {/* Плитки БЕЗ заливки и рамки — только тонкая линия сверху, как
-                        в эталоне (.rb-item). Карточка внутри карточки даёт фон на
-                        фоне и съедает воздух (владелица 18.09). */}
-                    {д.плитки.length > 0 && (
-                      <div style={{display:'grid',gap:'20px 24px',marginBottom:26,
-                          gridTemplateColumns:'repeat(auto-fit,minmax(170px,1fr))'}}>
-                        {д.плитки.map(([знач, имя, пояснение], i) => (
-                          <div key={i} style={{paddingTop:14,
-                              borderTop:'1px solid var(--line-2)'}}>
-                            <div style={{fontSize:String(знач).length > 9 ? 18 : 26,
-                              fontWeight:700,color:'var(--ink)',
-                              fontVariantNumeric:'tabular-nums',lineHeight:1.15,
-                              overflowWrap:'anywhere'}}>{знач}</div>
-                            <div style={{fontSize:12,color:'var(--ink-2)',marginTop:7,
-                              lineHeight:1.45}}>{имя}</div>
-                            {пояснение && (
-                              <div style={{fontSize:10.5,color:'var(--ink-3)',marginTop:4,
-                                lineHeight:1.45}}>{пояснение}</div>
-                            )}
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                    {/* КАРТА РЫНКА — первый раздел по согласованию 19.09.
-                        Решётка «цена × известность»: обе оси независимы, поэтому
-                        не один рейтинг, а сетка. Своя строка помечена. */}
-                    {д.карта && (
-                      <div style={{marginBottom:26}}>
-                        <p style={{fontSize:11,fontWeight:700,letterSpacing:'.06em',
-                          textTransform:'uppercase',color:'var(--ink-3)',margin:'0 0 12px'}}>
-                          Карта рынка и конкурентов
-                        </p>
-                        <div style={{overflowX:'auto'}}>
-                          <div style={{display:'grid',gap:1,minWidth:520,
-                              background:'var(--line-2)',
-                              gridTemplateColumns:'minmax(86px,110px) repeat('
-                                + д.карта.столбцы.length + ',minmax(0,1fr))'}}>
-                            <div style={{background:'var(--card-solid)'}}/>
-                            {д.карта.столбцы.map(у => (
-                              <div key={у} style={{background:'var(--card-solid)',
-                                  padding:'8px 10px',fontSize:10,letterSpacing:'.04em',
-                                  textTransform:'uppercase',color:'var(--ink-3)',
-                                  textAlign:'center'}}>{у}</div>
-                            ))}
-                            {д.карта.строки.map(([ключ, имя]) => (
-                              <React.Fragment key={ключ}>
-                                <div style={{background:'var(--card-solid)',padding:'10px',
-                                  fontSize:11,fontWeight:600,color:'var(--ink-2)',
-                                  display:'flex',alignItems:'center'}}>{имя}</div>
-                                {д.карта.столбцы.map(у => {
-                                  const тут = д.карта.клетки[ключ + '|' + у] || [];
-                                  return (
-                                    <div key={у} style={{background:'var(--card-solid)',
-                                        padding:'9px 10px',display:'flex',
-                                        flexDirection:'column',gap:4,minHeight:44}}>
-                                      {тут.slice(0,4).map((к,ki) => (
-                                        <span key={ki} style={{fontSize:11.5,lineHeight:1.3,
-                                          overflowWrap:'anywhere',
-                                          fontWeight:к.мы?700:400,
-                                          color:к.мы?'var(--ink)':'var(--ink-2)'}}>
-                                          {к.имя}{к.мы?' — мы':''}
-                                        </span>
-                                      ))}
-                                      {тут.length > 4 && (
-                                        <span style={{fontSize:10,color:'var(--ink-3)'}}>
-                                          и ещё {тут.length - 4}
-                                        </span>
-                                      )}
-                                    </div>
-                                  );
-                                })}
-                              </React.Fragment>
-                            ))}
-                          </div>
-                        </div>
-                        <p style={{fontSize:10.5,color:'var(--ink-3)',margin:'9px 0 0',
-                          lineHeight:1.45}}>
-                          Размещено {д.карта.размещено} из {д.карта.всего} найденных.
-                          {д.карта.медиана ? ' Ценовой уровень посчитан от этого рынка: медиана '
-                            + чис(Math.round(д.карта.медиана)) + ' ₽/мес.' : ''}
-                          {д.карта.безЦены > 0 ? ' Без публичной цены — ' + д.карта.безЦены
-                            + ': «по запросу» это не «дёшево», уровень им не ставим.' : ''}
-                        </p>
-                      </div>
-                    )}
-                    {/* ── РАЗДЕЛЫ В ПОРЯДКЕ, СОГЛАСОВАННОМ 19.09: карта рынка →
-                        где выигрываем → где продвигаться → какими форматами →
-                        кого искали → голос клиента → осведомлённость → путь.
-                        Порядок не менять без её слова: он отвечает на вопросы
-                        в том виде, в каком они возникают. */}
+                  <div className="nd" style={{padding:'4px 0 24px'}}>
+                    {/* ── ВИД ПО ЭТАЛОНУ. Владелица 19.09: «не похоже на то, что
+                        я прошу — сделай красиво, наглядно, компактно и
+                        визуально, а не списками с техпометками». Формы взяты из
+                        собранной с ней страницы: плитки цифр, карточка с
+                        заголовком, дуга-полукруг у осведомлённости, карточки
+                        этапов у пути, лента цитат у голоса клиента. Порядок
+                        разделов согласован и не меняется. */}
                     {(() => {
-                      // Полоса — мера та же, что в отчёте: дорожка 14px, шаг 13px,
-                      // торцы прямые. Раздел с пустыми данными не рисуется вовсе.
-                      const заголовок = т => (
-                        <p style={{fontSize:11,fontWeight:700,letterSpacing:'.06em',
-                          textTransform:'uppercase',color:'var(--ink-3)',
-                          margin:'0 0 12px'}}>{т}</p>
+                      const ЧИС = x => String(x).replace(/\B(?=(\d{3})+(?!\d))/g, '\u00A0');
+                      // Шкала графита из эталона: пять ступеней от светлой к
+                      // тёмной. Фирменный цвет — ровно на одну величину.
+                      const ГРАФИТ = ['#EBE9E3','#D7D5CF','#BCBBB5','#94928E','#171512'];
+                      const ПУТЬ_ЦВЕТ = ['#8E8C87','#4D66F7','#4DD1F7','#06BDBD'];
+                      const шапка = (имя, справа) => (
+                        <div className="nd-chead"><h3>{имя}</h3>
+                          {справа ? <span className="n">{справа}</span> : null}</div>
                       );
-                      const полосы = ключ => {
+                      const полосы = (ключ, подпись) => {
                         const г = (д.графики || []).find(x => x[0] === ключ);
                         if (!г) return null;
                         const [, имя, ряды, ед] = г;
                         const макс = Math.max(1, ...ряды.map(([, v]) => v || 0));
                         return (
-                          <div style={{marginBottom:26}}>
-                            {заголовок(имя)}
-                            <div style={{display:'grid',gap:13}}>
+                          <div className="nd-card">
+                            {шапка(имя, подпись)}
+                            <div className="nd-bars">
                               {ряды.map(([т, v], ri) => (
-                                <div key={ri} style={{display:'grid',
-                                    gridTemplateColumns:'minmax(0,210px) minmax(0,1fr) 112px',
-                                    gap:12,alignItems:'center'}}>
-                                  <span style={{fontSize:12,color:'var(--ink-2)',
-                                    overflowWrap:'anywhere'}}>{т}</span>
-                                  <span style={{height:14,background:'var(--line-2)',display:'block'}}>
-                                    <i style={{display:'block',height:'100%',background:'var(--mid)',
-                                      width:Math.max(3, Math.round((v||0)/макс*100)) + '%'}}/>
-                                  </span>
-                                  <span style={{fontSize:12,fontWeight:600,textAlign:'right',
-                                    fontVariantNumeric:'tabular-nums',color:'var(--ink)',
-                                    whiteSpace:'nowrap'}}>{чис(v)}{ед}</span>
+                                <div className="nd-bar" key={ri}>
+                                  <span className="t">{т}</span>
+                                  <span className="track"><i style={{width:
+                                    Math.max(3, Math.round((v||0)/макс*100)) + '%'}}/></span>
+                                  <span className="v">{ЧИС(v)}{ед}</span>
                                 </div>
+                              ))}
+                            </div>
+                          </div>
+                        );
+                      };
+                      // Дуга-полукруг: пять ступеней осведомлённости, в центре
+                      // главное число. Один в один с эталоном (R 76, ширина 16).
+                      const дуга = ст => {
+                        const всего = ст.ряды.reduce((н, [, д2]) => н + д2, 0) || 1;
+                        const R = 76, CX = 110, CY = 100, SW = 16, GAP = 0.012;
+                        const тчк = a => [CX + R*Math.cos(a*Math.PI/180),
+                                          CY + R*Math.sin(a*Math.PI/180)];
+                        let a0 = 180;
+                        const дуги = ст.ряды.map(([имя, доля], i) => {
+                          const a1 = a0 + (доля/всего)*180;
+                          const g0 = a0 + GAP*180, g1 = a1 - GAP*180;
+                          a0 = a1;
+                          if (!(g1 > g0)) return null;
+                          const p0 = тчк(g0), p1 = тчк(g1);
+                          return (
+                            <path key={i} fill="none" strokeWidth={SW} strokeLinecap="butt"
+                              stroke={i === 4 ? 'var(--mid)' : ГРАФИТ[i]}
+                              d={'M ' + p0[0] + ' ' + p0[1] + ' A ' + R + ' ' + R
+                                 + ' 0 ' + ((g1-g0) > 180 ? 1 : 0) + ' 1 ' + p1[0] + ' ' + p1[1]}/>
+                          );
+                        });
+                        const готовы = Math.round((ст.ряды[4][1]/всего)*100);
+                        return (
+                          <div className="nd-arc">
+                            <svg viewBox="0 0 220 116" width="220" height="116">
+                              {дуги}
+                              <text x={CX} y={CY-6} textAnchor="middle"
+                                style={{fill:'var(--ink)',fontSize:24,fontWeight:700,
+                                  letterSpacing:'-.02em'}}>{готовы}%</text>
+                              <text x={CX} y={CY+12} textAnchor="middle"
+                                style={{fill:'var(--ink-3)',fontSize:10.5}}>готовы купить</text>
+                            </svg>
+                            <div className="nd-legend">
+                              {ст.ряды.map(([имя, доля], i) => (
+                                <span key={i}>
+                                  <i style={{background: i === 4 ? 'var(--mid)' : ГРАФИТ[i]}}/>
+                                  {имя} {доля}%
+                                </span>
                               ))}
                             </div>
                           </div>
@@ -18623,198 +18583,183 @@ function App() {
                       };
                       return (
                         <React.Fragment>
-                          {/* Где выигрываем и где проигрываем — два столбца. */}
+                          {/* Крупные числа — плитками, как в эталоне. */}
+                          {д.плитки.length > 0 && (
+                            <div className="nd-stats">
+                              {д.плитки.slice(0, 8).map(([знач, имя, пояснение], i) => (
+                                <div className="nd-stat" key={i}>
+                                  <div className="k">{имя}</div>
+                                  <div className={'v' + (String(знач).length > 9 ? ' long' : '')}>{знач}</div>
+                                  {пояснение ? <div className="s">{пояснение}</div> : null}
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                          {/* Карта рынка и осведомлённость — в один ряд. */}
+                          {(д.карта || д.ступени) && (
+                            <div className="nd-grid2">
+                              {д.карта && (
+                                <div className="nd-card">
+                                  {шапка('Карта рынка', 'цена × известность')}
+                                  <div className="nd-tbl">
+                                    <table>
+                                      <thead><tr><th/>{д.карта.столбцы.map(у =>
+                                        <th key={у} style={{textAlign:'center'}}>{у}</th>)}</tr></thead>
+                                      <tbody>
+                                        {д.карта.строки.map(([ключ, имя]) => (
+                                          <tr key={ключ}>
+                                            <td><b>{имя}</b></td>
+                                            {д.карта.столбцы.map(у => {
+                                              const тут = д.карта.клетки[ключ + '|' + у] || [];
+                                              return (
+                                                <td key={у}>
+                                                  {тут.slice(0, 3).map((к, ki) => (
+                                                    <div className="nd-who" key={ki}
+                                                      style={{marginBottom: ki < тут.length-1 ? 6 : 0}}>
+                                                      <span className={'nd-circ' + (к.мы ? ' me' : '')}>
+                                                        {String(к.имя || '?').trim().charAt(0).toUpperCase()}
+                                                      </span>
+                                                      <span style={{overflowWrap:'anywhere'}}>
+                                                        {к.мы ? <b>{к.имя}</b> : к.имя}
+                                                      </span>
+                                                    </div>
+                                                  ))}
+                                                  {тут.length > 3 && (
+                                                    <span className="nd-pill">
+                                                      и ещё {тут.length - 3}
+                                                    </span>
+                                                  )}
+                                                </td>
+                                              );
+                                            })}
+                                          </tr>
+                                        ))}
+                                      </tbody>
+                                    </table>
+                                  </div>
+                                </div>
+                              )}
+                              {д.ступени && (
+                                <div className="nd-card">
+                                  {шапка('Осведомлённость', д.ступени.персона)}
+                                  {дуга(д.ступени)}
+                                </div>
+                              )}
+                            </div>
+                          )}
+                          {/* Где продвигаться и что заходит — два графика в ряд. */}
+                          {((д.графики || []).some(г => г[0] === 'куда')
+                            || (д.графики || []).some(г => г[0] === 'форматы')) && (
+                            <div className="nd-grid2">
+                              {полосы('куда', 'доля усилий')}
+                              {полосы('форматы', 'у лидеров ниши')}
+                            </div>
+                          )}
+                          {/* Где выигрываем и где проигрываем. */}
                           {д.сравнение && (
-                            <div style={{marginBottom:26}}>
-                              {заголовок('Где выигрываем, где проигрываем')}
-                              <div style={{display:'grid',gap:'18px 24px',
-                                  gridTemplateColumns:'repeat(auto-fit,minmax(250px,1fr))'}}>
+                            <div className="nd-card" style={{marginBottom:14}}>
+                              {шапка('Где выигрываем, где проигрываем',
+                                'сравнили по ' + д.сравнение.всего
+                                + (д.сравнение.наравне ? ', наравне ' + д.сравнение.наравне : ''))}
+                              <div className="nd-vs">
                                 {[['Выигрываем', д.сравнение.выиг],
                                   ['Проигрываем', д.сравнение.проиг]].map(([имя, список]) => (
                                   список.length ? (
                                     <div key={имя}>
-                                      <p style={{margin:'0 0 9px',fontSize:11.5,fontWeight:700,
-                                        color:'var(--ink)'}}>{имя}</p>
-                                      <div style={{display:'grid',gap:10}}>
-                                        {список.map((г, i) => (
-                                          <div key={i} style={{paddingTop:9,
-                                              borderTop:'1px solid var(--line-2)'}}>
-                                            <div style={{fontSize:12,color:'var(--ink)',
-                                              lineHeight:1.4}}>{г.критерий}</div>
-                                            {г.у_них && (
-                                              <div style={{fontSize:10.5,color:'var(--ink-3)',
-                                                marginTop:3,lineHeight:1.45}}>
-                                                у них: {г.у_них}
-                                              </div>
-                                            )}
-                                          </div>
-                                        ))}
-                                      </div>
+                                      <h5>{имя}</h5>
+                                      {список.map((г, i) => (
+                                        <div className="row" key={i}>
+                                          <div className="c">{г.критерий}</div>
+                                          {г.у_них ? <div className="u">у них: {г.у_них}</div> : null}
+                                        </div>
+                                      ))}
                                     </div>
                                   ) : null
                                 ))}
                               </div>
-                              <p style={{fontSize:10.5,color:'var(--ink-3)',margin:'10px 0 0'}}>
-                                Сравнили по {д.сравнение.всего} {plural(д.сравнение.всего,
-                                  'критерию','критериям','критериям')}
-                                {д.сравнение.наравне ? ', наравне — ' + д.сравнение.наравне : ''}.
-                              </p>
                             </div>
                           )}
-                          {/* Где продвигаться и какими форматами. */}
-                          {полосы('куда')}
-                          {полосы('форматы')}
-                          {полосы('известность')}
-                          {полосы('интересы')}
-                          {/* Кого искали — портреты, по которым шёл поиск. */}
+                          {/* Путь клиента — карточками этапов. */}
+                          {д.путь.length > 0 && (
+                            <React.Fragment>
+                              {шапка('Путь клиента', д.путь.length + ' '
+                                + plural(д.путь.length, 'этап', 'этапа', 'этапов'))}
+                              <div className="nd-flow">
+                                {д.путь.map((э, i) => (
+                                  <div className="nd-stage" key={i}>
+                                    <div className="dot" style={{background:
+                                      ПУТЬ_ЦВЕТ[Math.min(i, ПУТЬ_ЦВЕТ.length-1)]}}/>
+                                    <div className="n">
+                                      Этап {i+1}{э.доля != null ? ' · ' + э.доля + '%' : ''}
+                                    </div>
+                                    <h4>{э.этап}</h4>
+                                    {э.канал ? <div className="r">{э.канал}</div> : null}
+                                    {э.риск ? <div className="r" style={{marginTop:4}}>
+                                      уходит: {э.риск}</div> : null}
+                                  </div>
+                                ))}
+                              </div>
+                            </React.Fragment>
+                          )}
+                          {/* Голос клиента — лентой, цитата целиком видна. */}
+                          {д.цитаты.length > 0 && (
+                            <div className="nd-card" style={{marginBottom:14}}>
+                              {шапка('Голос клиента', 'как говорят сами')}
+                              <div className="nd-qstrip">
+                                {д.цитаты.map((ц, i) => (
+                                  <div className="nd-qtile" key={i}>
+                                    <p>«{ц.текст}»</p>
+                                    <cite>{[ц.тема, ц.откуда].filter(Boolean).join(' · ')}</cite>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                          {/* Кого искали — портреты. */}
                           {д.портреты.length > 0 && (
-                            <div style={{marginBottom:26}}>
-                              {заголовок('Кого искали')}
-                              <div style={{display:'grid',gap:12,
-                                  gridTemplateColumns:'repeat(auto-fit,minmax(230px,1fr))'}}>
+                            <div className="nd-card" style={{marginBottom:14}}>
+                              {шапка('Кого искали', 'по этим словам шёл поиск')}
+                              <div className="nd-who-grid">
                                 {д.портреты.map((п, i) => (
-                                  <div key={i} style={{paddingTop:12,
-                                      borderTop:'1px solid var(--line-2)'}}>
-                                    <div style={{fontSize:12.5,fontWeight:600,
-                                      color:'var(--ink)',lineHeight:1.35}}>{п.сегмент}</div>
+                                  <div className="nd-face" key={i}>
+                                    <b>{п.сегмент}</b>
                                     {п.интересы.length > 0 && (
-                                      <div style={{fontSize:11,color:'var(--ink-2)',marginTop:6,
-                                        lineHeight:1.45}}>{п.интересы.join(' · ')}</div>
+                                      <div className="i">{п.интересы.join(' · ')}</div>
                                     )}
                                     {п.читают.length > 0 && (
-                                      <div style={{fontSize:10.5,color:'var(--ink-3)',marginTop:5,
-                                        lineHeight:1.45}}>читает: {п.читают.join(', ')}</div>
+                                      <div className="r">читает: {п.читают.join(', ')}</div>
                                     )}
                                   </div>
                                 ))}
                               </div>
                             </div>
                           )}
-                          {/* Голос клиента — живой речью, как в эталоне: плитки
-                              с цитатой курсивом. Пересказ здесь не работает. */}
-                          {д.цитаты.length > 0 && (
-                            <div style={{marginBottom:26}}>
-                              {заголовок('Голос клиента — как говорят сами')}
-                              <div style={{display:'grid',gap:12,
-                                  gridTemplateColumns:'repeat(auto-fit,minmax(240px,1fr))'}}>
-                                {д.цитаты.map((ц, i) => (
-                                  <div key={i} style={{border:'1px solid var(--line)',
-                                      borderRadius:16,padding:'15px 17px',
-                                      background:'var(--card-solid)'}}>
-                                    <p style={{margin:0,
-                                      fontFamily:'var(--serif, Georgia, serif)',
-                                      fontStyle:'italic',fontSize:13,lineHeight:1.45,
-                                      color:'var(--ink)'}}>«{ц.текст}»</p>
-                                    {(ц.тема || ц.откуда) && (
-                                      <p style={{margin:'9px 0 0',fontSize:10,
-                                        letterSpacing:'.04em',textTransform:'uppercase',
-                                        color:'var(--ink-3)'}}>
-                                        {[ц.тема, ц.откуда].filter(Boolean).join(' · ')}
-                                      </p>
-                                    )}
-                                  </div>
-                                ))}
-                              </div>
-                            </div>
-                          )}
-                          {/* Осведомлённость — пять ступеней Шварца по главной
-                              персоне: с какими словами к ней вообще заходить. */}
-                          {д.ступени && (
-                            <div style={{marginBottom:26}}>
-                              {заголовок('На какой ступени осведомлённости аудитория')}
-                              <div style={{display:'grid',gap:13}}>
-                                {д.ступени.ряды.map(([имя, доля], i) => (
-                                  <div key={i} style={{display:'grid',
-                                      gridTemplateColumns:'minmax(0,210px) minmax(0,1fr) 112px',
-                                      gap:12,alignItems:'center'}}>
-                                    <span style={{fontSize:12,
-                                      color: имя === д.ступени.доминирующий
-                                        ? 'var(--ink)' : 'var(--ink-2)',
-                                      fontWeight: имя === д.ступени.доминирующий ? 600 : 400,
-                                      overflowWrap:'anywhere'}}>{имя}</span>
-                                    <span style={{height:14,background:'var(--line-2)',
-                                      display:'block'}}>
-                                      <i style={{display:'block',height:'100%',
-                                        background:'var(--mid)',
-                                        width:Math.max(2, Math.round(доля)) + '%'}}/>
-                                    </span>
-                                    <span style={{fontSize:12,fontWeight:600,textAlign:'right',
-                                      fontVariantNumeric:'tabular-nums',color:'var(--ink)',
-                                      whiteSpace:'nowrap'}}>{доля}%</span>
-                                  </div>
-                                ))}
-                              </div>
-                              {д.ступени.как_думает && (
-                                <p style={{fontSize:10.5,color:'var(--ink-3)',margin:'10px 0 0',
-                                  lineHeight:1.45}}>
-                                  {д.ступени.персона ? д.ступени.персона + ': ' : ''}
-                                  «{д.ступени.как_думает}»
-                                </p>
-                              )}
-                            </div>
-                          )}
-                          {/* Путь клиента — этапы по порядку: где происходит и
-                              из-за чего человек уходит. */}
-                          {д.путь.length > 0 && (
-                            <div style={{marginBottom:26}}>
-                              {заголовок('Путь клиента')}
-                              <div style={{display:'grid',gap:11}}>
-                                {д.путь.map((э, i) => (
-                                  <div key={i} style={{display:'grid',
-                                      gridTemplateColumns:'20px minmax(0,150px) minmax(0,1fr)',
-                                      gap:12,paddingTop:10,
-                                      borderTop:'1px solid var(--line-2)',alignItems:'baseline'}}>
-                                    <span style={{fontSize:11,color:'var(--ink-3)',
-                                      fontVariantNumeric:'tabular-nums'}}>{i + 1}</span>
-                                    <span style={{fontSize:12,fontWeight:600,color:'var(--ink)',
-                                      lineHeight:1.35,overflowWrap:'anywhere'}}>
-                                      {э.этап}
-                                      {э.доля != null && (
-                                        <span style={{fontWeight:400,color:'var(--ink-3)'}}>
-                                          {' '}· {э.доля}%
-                                        </span>
-                                      )}
-                                    </span>
-                                    <span style={{fontSize:11.5,color:'var(--ink-2)',
-                                      lineHeight:1.45,minWidth:0}}>
-                                      {э.цель}
-                                      {э.канал ? ' — ' + э.канал : ''}
-                                      {э.риск && (
-                                        <span style={{display:'block',fontSize:10.5,
-                                          color:'var(--ink-3)',marginTop:3}}>
-                                          уходит, если: {э.риск}
-                                        </span>
-                                      )}
-                                    </span>
-                                  </div>
-                                ))}
-                              </div>
+                          {/* Остальные полосы — ниже, они дополняют картину. */}
+                          {((д.графики || []).some(г => г[0] === 'известность')
+                            || (д.графики || []).some(г => г[0] === 'интересы')) && (
+                            <div className="nd-grid2">
+                              {полосы('известность', 'брендовый спрос')}
+                              {полосы('интересы', 'замер частотности')}
                             </div>
                           )}
                         </React.Fragment>
                       );
                     })()}
-                    {/* И по одной строке вывода на модуль — что это значит. */}
+                    {/* Что это значит — по строке на модуль. */}
                     {д.выводы.length > 0 && (
-                      <div style={{display:'grid',gap:14,paddingTop:18,
-                          borderTop:'1px solid var(--line-2)'}}>
+                      <div className="nd-card">
                         {д.выводы.map(([ид, имя, текст], i) => (
                           <div key={i} style={{display:'grid',
-                              gridTemplateColumns:'minmax(0,160px) minmax(0,1fr)',gap:12}}>
-                            <span style={{display:'flex',alignItems:'baseline',gap:8}}>
-                              <span className="tag">{ид}</span>
-                              <span style={{fontSize:12,fontWeight:600,color:'var(--ink)'}}>{имя}</span>
-                            </span>
+                              gridTemplateColumns:'minmax(0,150px) minmax(0,1fr)',gap:12,
+                              paddingTop: i ? 12 : 0, marginTop: i ? 12 : 0,
+                              borderTop: i ? '1px solid var(--line-2)' : 'none'}}>
+                            <span style={{fontSize:12,fontWeight:700,color:'var(--ink)'}}>{имя}</span>
                             <span style={{fontSize:12,color:'var(--ink-2)',lineHeight:1.5,
                               minWidth:0}}>{typeof текст === 'string' ? текст : ''}</span>
                           </div>
                         ))}
                       </div>
                     )}
-                    <p className="note" style={{marginTop:12}}>
-                      Картина по нише: числа и доли посчитаны по данным модулей.
-                      Подробности — в карточках модулей ниже.
-                    </p>
                   </div>
                 ))}
               </div>
