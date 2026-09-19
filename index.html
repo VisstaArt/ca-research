@@ -345,16 +345,12 @@ html[data-embed] #root { max-width: none; padding: 0; }
   display: flex; align-items: center; }
 .nd-map .cell { display: flex; flex-direction: column; justify-content: space-between;
   gap: 10px; min-height: 58px; }
-.nd-map .cell.on { background: color-mix(in srgb, var(--mid) 12%, var(--card-solid));
-  box-shadow: inset 0 0 0 1.5px var(--mid); }
+.nd-map .cell.on { background: var(--card-solid); box-shadow: inset 0 0 0 1.5px var(--mid); }
 .nd-map .dots { display: flex; flex-wrap: wrap; gap: 5px; }
 .nd-map .dots i { width: 9px; height: 9px; border-radius: 50%; background: var(--ink-3);
   display: block; cursor: default; position: relative; }
 .nd-map .dots i.me { width: 13px; height: 13px; margin: -2px; background: var(--mid);
-  border: 2px solid var(--card-solid); box-shadow: 0 0 0 2px var(--mid); }
-.nd-map .me-tag { font-size: 9.5px; font-weight: 700; color: #fff; background: var(--mid);
-  border-radius: 7px; padding: 2px 7px; align-self: flex-start; white-space: nowrap;
-  max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--mid) 30%, transparent); }
 /* Легенда в шапке карты: сразу видно, каким цветом отмечены мы. */
 .nd-me-leg { display: inline-flex; align-items: center; gap: 6px; font-size: 10.5px;
   font-weight: 600; color: var(--ink); }
@@ -431,6 +427,6 @@ html[data-embed] #root { max-width: none; padding: 0; }
      без сборки — как и весь остальной проект. -->
 <script src="lib/contract.js?v=c5d82d20"></script>
 <script src="lib/auth.js?v=a2c796f5"></script>
-<script src="app.js?v=27f9bef7"></script>
+<script src="app.js?v=a6cf8015"></script>
 </body>
 </html>
