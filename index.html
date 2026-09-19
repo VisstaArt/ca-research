@@ -352,8 +352,14 @@ html[data-embed] #root { max-width: none; padding: 0; }
   display: block; cursor: default; position: relative; }
 .nd-map .dots i.me { width: 13px; height: 13px; margin: -2px; background: var(--mid);
   border: 2px solid var(--card-solid); box-shadow: 0 0 0 2px var(--mid); }
-.nd-map .me-tag { font-size: 9.5px; font-weight: 700; letter-spacing: .05em;
-  text-transform: uppercase; color: var(--mid); align-self: flex-start; }
+.nd-map .me-tag { font-size: 9.5px; font-weight: 700; color: #fff; background: var(--mid);
+  border-radius: 7px; padding: 2px 7px; align-self: flex-start; white-space: nowrap;
+  max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
+/* Легенда в шапке карты: сразу видно, каким цветом отмечены мы. */
+.nd-me-leg { display: inline-flex; align-items: center; gap: 6px; font-size: 10.5px;
+  font-weight: 600; color: var(--ink); }
+.nd-me-leg i { width: 11px; height: 11px; border-radius: 50%; background: var(--mid);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--mid) 35%, transparent); flex: 0 0 auto; }
 .nd-map .dots i:hover { background: var(--mid); }
 /* Своя подсказка: появляется СРАЗУ и НАД точкой. Браузерная всплывает через
    секунду и снизу — владелица 19.09: «ощущение, что там ничего нет». */
@@ -425,6 +431,6 @@ html[data-embed] #root { max-width: none; padding: 0; }
      без сборки — как и весь остальной проект. -->
 <script src="lib/contract.js?v=c5d82d20"></script>
 <script src="lib/auth.js?v=a2c796f5"></script>
-<script src="app.js?v=003a57f3"></script>
+<script src="app.js?v=27f9bef7"></script>
 </body>
 </html>
